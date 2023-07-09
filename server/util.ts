@@ -1,7 +1,5 @@
-// Important
-// Express does not handle failed async route handlers by default.
-
 import { NextFunction, Request, Response } from "express";
+import pino from 'pino';
 import * as fs from "fs-extra";
 
 // We use this route to 'throw' an error when an async route has an unhandled exception.
@@ -93,7 +91,20 @@ export const getFilesInFolderFlat = async (folder: string, showHidden?: boolean,
     }[];
 }
 
-// getFilesInFolder("./", 1)
-//     .then(res => console.log("files in folders", res))
-//     .catch(err => console.error(err))
+export const logger = pino(pino.transport({
+    targets: [
+        {
+            level: 'trace',
+            target: 'pino/file',
+            options: {
+                destination: `log/verbose-${process.pid}.log`,
+                mkdir: true
+            },
+        },
+        {
+            target: 'pino/file', level: 'trace', options: { destination: 1 }
+        }
+    ]
+}));
 
+logger.info({ message: "Application Bootup" });
