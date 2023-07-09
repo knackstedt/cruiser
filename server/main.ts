@@ -1,12 +1,12 @@
 import express, { Express } from 'express';
 import helmet from 'helmet';
-import http from 'http'
+import http from 'http';
 
 import { ErrorHandler } from './errors';
 import { FilesystemApi } from "./api/files";
 import { RestApi } from './api/rest';
-import { PipelineApi } from './api/pipelines';
 import { logger } from './util';
+import { DatabaseTableApi } from './api/database-controller';
 
 const onFinished = require('on-finished');
 
@@ -78,8 +78,16 @@ const getDuration = (req, res) => {
 
     app.use("/api/filesystem", FilesystemApi);
     app.use("/api/rest", RestApi);
-    app.use("/api/pipeline", PipelineApi);
-    app.use("/api/agent", PipelineApi);
+
+    app.use("/api/agent", DatabaseTableApi("agent"));
+    app.use("/api/artifacts", DatabaseTableApi("pipelineArtifact"));
+    app.use("/api/pipeline/task", DatabaseTableApi("pipelineTask"));
+    app.use("/api/pipeline/job", DatabaseTableApi("pipelineJob"));
+    app.use("/api/pipeline/stage", DatabaseTableApi("pipelineStage"));
+    app.use("/api/pipeline", DatabaseTableApi("pipeline"));
+
+    app.use("/api/secrets", DatabaseTableApi("secret"));
+    app.use("/api/environment-variables", DatabaseTableApi("environmentVariable"));
 
 
     // Listen on the specified port.
