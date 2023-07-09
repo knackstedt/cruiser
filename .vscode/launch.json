@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "client",
+      "name": "Client",
       "type": "chrome",
       "request": "launch",
       "preLaunchTask": "npm: start",
@@ -20,20 +20,16 @@
       "runtimeArgs": [
         "--nolazy",
         "-r",
-        "ts-node/register"
+        "ts-node/register",
+        // "--loader=ts-node/esm",
+        // "--experimental-specifier-resolution=node",
       ],
       "sourceMaps": true,
       "cwd": "${workspaceRoot}/server",
     },
     {
-      "name": "XPRA",
-      "preLaunchTask": "xpra",
-      "type": "msedge",
-      "request": "attach"
-    },
-    {
-      "name": "Broadway",
-      "preLaunchTask": "broadway",
+      "name": "Database",
+      "preLaunchTask": "surrealdb",
       "type": "msedge",
       "request": "attach"
     }

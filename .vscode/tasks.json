@@ -39,37 +39,12 @@
       }
     },
     {
-      "label": "xpra",
+      "label": "surrealdb",
       "type": "shell",
-      "command": "xpra",
+      "command": "bash",
       "args": [
-        "--no-daemon",
-        "--sharing=yes",
-        "--bind-wss=127.0.0.1:3300",
-        "--html=off",
-        "--start-via-proxy=no",
-        "--mdns=no",
-        "--webcam=no",
-        "--terminate-children=yes",
-        "--start-env=",
-        "--pulseaudio=yes",
-        "--sharing=yes", // needs review.
-        // "--speaker=on",
-        // "--speaker-codec=flac+ogg",
-        "--video-scaling=0",
-        "--min-quality=100",
-        "--ssl-cert=./static/generated.crt",
-        "--ssl-key=./static/generated.key",
-        "start"
-      ],
-    },
-    {
-      "label": "broadway",
-      "type": "shell",
-      "command": "broadwayd",
-      "args": [
-        "-p",
-        "8080"
+        "-c",
+        "database/debug.sh"
       ],
     }
   ]
