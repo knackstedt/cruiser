@@ -1,0 +1,87 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: dev.ci.dotglitch-ingress
+spec:
+  entryPoints:
+   - web
+  routes:
+    - match: Host(`dev.ci.dotglitch.dev`)
+      kind: Rule
+      services:
+      - name: dot-ops-server
+        port: 80
+
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: dev.ci.dotglitch-secure-ingress
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`dev.ci.dotglitch.dev`)
+      services:
+        - name: dot-ops-server
+          port: 80
+  tls:
+    secretName: dev.ci.dotglitch.dev-tls
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: dot-ops-server
+spec:
+  selector:
+    app: dot-ops-server
+  ports:
+  - protocol: "TCP"
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dot-ops-server
+spec:
+  selector:
+    matchLabels:
+      app: dot-ops-server
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: dot-ops-server
+    spec:
+      containers:
+      - name: dot-ops
+        image: harbor.dotglitch.dev/library/dot-ops:latest
+        ports:
+        - containerPort: 80
+      imagePullSecrets:
+      - name: harbor-key
+
+---
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: dev.ci.dotglitch.dev
+spec:
+  commonName: dev.ci.dotglitch.dev
+  dnsNames:
+    - dev.ci.dotglitch.dev
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  secretName: dev.ci.dotglitch.dev-tls
+
+

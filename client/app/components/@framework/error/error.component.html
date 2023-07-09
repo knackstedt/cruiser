@@ -1,0 +1,24 @@
+<div id="errorOverlay-container">
+    <div>
+        <div class="error-header">
+            <div class="error-Summary">
+                <div class="error-Summary-ErrorIcon"></div>
+                <div class="error-Summary-Title">{{error.name}}</div>
+            </div>
+        </div>
+        <div class="error-list">
+            <div class="error-JSException">
+                <div class="error-header error-message">
+                    <div class="error-code">{{error.status}}</div>
+                    <div class="errorTag errorTag--client">{{error.title}}</div>
+                </div>
+                <div class="error-message">{{error.message}}</div>
+
+                <br />
+                {{stacktrace}}
+
+                {{codeSnippet}}
+            </div>
+        </div>
+    </div>
+</div>

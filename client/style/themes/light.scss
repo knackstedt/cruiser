@@ -1,0 +1,69 @@
+
+@mixin light-theme() {
+
+    --background-color: #f7f7f8;
+    --dim-background-color: #f1f1f1;
+    --panel-background-color: #fff;
+
+    --text-color: #212121;
+    --text-subdued-color: rgba(0, 0, 0, 0.54);
+    // --text-secondary-color: darkslategray
+    --text-header-color: #0d47a1;
+    --text-muted-color: #5a5a5a;
+
+    --link-text-color: #0d47a1;
+
+    --table-row-alt-background-color: #efefef;
+    --table-row-hover-background-color: #ececec;
+    --table-header-background-color: #f4f5f9;
+    --table-header-border-color: #f4f5f9;
+    --table-row-border-color: #ccc;
+
+    --list-row-hover-background-color: #cacbd3;
+    --input-background-color: #fff;
+
+    // Popup menu colors
+    --menu-background: linear-gradient(180deg, #818181, #e1e2eb 32px);
+    --menu-background-color: #e1e2eb;
+    --menu-hover-background-color: #cacbd3;
+
+    --dialog-background-color: #fff;
+    --dialog-text-color: #000;
+    --dialog-dark-background-color: #fff;
+    --dialog-dark-text-color: #fff;
+    --dialog-dark-disabled-text-color: #999;
+    --dialog-titlebar-background-color: #363636;
+    --dialog-titlebar-text-color: #efefef;
+
+    // Progress spinner color
+    --mdc-circular-progress-active-indicator-color: #fff;
+    --mdc-dialog-container-color: #0000;
+
+    // Context Menu coloring
+    --ctx-menu-text-color: #333;
+    --ctx-menu-disabled-text-color: #666;
+    --ctx-menu-background-color: #d1d1d1;
+    --ctx-menu-hover-background-color: #81d4fa;
+    --ctx-menu-hover-text-color: #000;
+    --ctx-menu-shortcut-text-color: #444;
+    --ctx-menu-separator-color: #e2e2e2;
+
+    // General palette colors
+    --palette-red-background-color: #f44336;
+    --palette-red-color: #fff;
+    --palette-amber-background-color: #ffc107;
+    --palette-amber-color: #121212;
+    --palette-green-background-color: #4caf50;
+    --palette-green-color: #fff;
+    --palette-gray-background-color: #8d8d8d;
+    --palette-gray-color: #fff;
+
+
+    --json-base-text-color: #000;
+    --json-base-background-color: #fff;
+    --json-string-text-color: #a31515;
+    --json-boolean-text-color: #0000ff;
+    --json-null-text-color: #0000ff;
+    --json-number-text-color: #098658;
+    --json-key-text-color: #0451a5;
+}

@@ -1,0 +1,57 @@
+
+@mixin dark-theme() {
+
+    --background-color: #121212;
+    --panel-background-color: #2f2f2f;
+    --text-color: #dfdfdf;
+    --text-bright-color: #fff;
+    --text-subdued-color: #fff9;
+
+    --splitter-background-color: #242424;
+
+    --scrollbar-thumb-color: #444;
+    --scrollbar-thumb-hover-color: #555;
+    --scrollbar-size: 4px;
+    --scrollbar-hover-size: 8px;
+
+    --menu-background: linear-gradient(180deg, #818181, #e1e2eb 32px);
+    --menu-background-color: #212121;
+    --menu-hover-background-color: #272727;
+
+    --table-row-border-color: #646464;
+    --table-header-border-color: #555;
+    --table-row-alt-background-color: #292929;
+    --table-row-hover-background-color: #2c2c2c;
+    --input-background-color: #212121;
+
+    --dialog-background-color: #333;
+    --dialog-text-color: #ddd;
+    --dialog-dark-background-color: #fff;
+    --dialog-dark-text-color: #fff;
+    --dialog-titlebar-background-color: #363636;
+    --dialog-titlebar-text-color: #efefef;
+
+    --palette-red-background-color: #f44336;
+    --palette-red-color: #fff;
+    --palette-amber-background-color: #ffc107;
+    --palette-amber-color: #121212;
+    --palette-green-background-color: #4caf50;
+    --palette-green-color: #fff;
+    --palette-gray-background-color: #8d8d8d;
+    --palette-gray-color: #fff;
+
+
+    --json-base-text-color: #fff;
+    --json-base-background-color: #1e1e1e;
+    --json-string-text-color: #ce9178;
+    --json-boolean-text-color: #569cd6;
+    --json-null-text-color: #569cd6;
+    --json-number-text-color: #b5cea8;
+    --json-key-text-color: #9cdcfe;
+
+    --mdc-protected-button-disabled-label-text-color: #ccc;
+    --mdc-tab-indicator-active-indicator-color: #fbb86c;
+
+    --scrollbar-thumb-color: rgb(0 0 0 / 48%);
+}
+

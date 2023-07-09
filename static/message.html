@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>An error occured</title>
+
+    <style>
+        :root {
+            --bun-error-color: #e33737;
+            --bun-error-monospace: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
+            --bun-error-width: 512px
+        }
+
+        :root a {
+            color: inherit;
+            text-decoration: none
+        }
+
+        :root a:hover {
+            text-decoration: underline
+        }
+
+        #errorOverlay-container {
+            box-shadow: 0 16px 24px #0000000f, 0 2px 6px #0000001a, 0 0 1px #0000000a;
+            backdrop-filter: blur(42px);
+            backface-visibility: visible;
+            border: inset 1px solid rgba(0, 0, 0, .2);
+            border-radius: 17px;
+            background-color: #ffffffeb;
+            width: var(--bun-error-width);
+            position: fixed;
+            top: 120px;
+            right: 48px;
+            z-index: 999999;
+            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", Segoe UI Symbol
+        }
+
+        .errorRoot--FullPage #errorOverlay-container {
+            position: static;
+            top: unset;
+            right: unset;
+            margin: 60px auto
+        }
+
+        .error-message--quoted {
+            color: #192e09
+        }
+
+        :root a {
+            color: inherit
+        }
+
+        .error-Summary-ErrorIcon {
+            content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACIAAAAgCAYAAAB3j6rJAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJiSURBVHgBzZdLUttAEIa7RwpVeKUD4Ip8hFSB7V3kG8AJgBPgG+CcAG4QcwPfIFpiigU5gRWcqmy1AVwVaTo9Y+yyiEeakc3jX7j0GEmfe7r/6QH4IELYUJNuN/LyPMwRU2g04lYcp1BDtUEYIPSJvvNhtHI5QcTB3vX1FThKQE0xxI8XEEohEQ2n+/sROKoWyP3BwYn6qHGA553DW4CgEFUfin6328fwmiDTbldBhFXjiHNlEkUBWMoJRCUoSNm3HB6Kx0fbsW4gnpQDQLT/l4hntlGxBlHR4NJ0mndW4D08WCWuNYgv5YXhVsJmNASi0bqbnNj9P2pKtwGiyxXxcM2tJNvd/bI3Hp82b26OJOK3dc9nc+PbHMRUrhyJgqV7QowMr4iqTK4SpNK8VvRXSnNiVphcKYhO0BLzIkvAZ5WaXCmID6AeDGFLYpO7NJWzEUSbF9EAHKTagYohgcnkjCDavKoVgqNMJrcWpKZ5AQlh46LBp6enCysQ36LuFy8tnBFZ2Tkn+cnLcv6vQ1PlypViC6I+PsiEUB3ZomMLLZ+Mm+Nxzwgy7XQmsMVKKVWe95q3t7E6LEyNi3ktRZSWrTWl8rxl5JcgVeZlUJI1Gq3FWsM+cQpuCn91Ov0CiEd0Bo7RkERXq2tNPps5R4UBzlU5axAdDQDrbmr5EsSvhQs7OxG4S5ucTtb7dntYxzeeNWLzi3MhWpwnxy4d3IpSX/0yxGeor0OGmPcqWHu/FixypNY2cZvSINxZ/YT3VTIHmc0u1Qm8k9R+WYO07u7SDLHH+1bnzfNGYjPkhfJIbdr/AfAS02LsKGiuAAAAAElFTkSuQmCC);
+            width: 20px;
+            height: 19px;
+            margin-right: 6px;
+            display: block
+        }
+
+        .error-Summary-CloseIcon:hover {
+            transform: scale(1.2);
+            background-color: #fff
+        }
+
+        .error-Summary {
+            display: grid;
+            grid-template-columns: min-content auto min-content min-content;
+            grid-template-rows: 46px;
+            align-items: center;
+            padding: 0 18px;
+            border-bottom: 1px solid rgb(220, 220, 220);
+            width: 100%;
+        }
+
+        .error-footer {
+            display: flex;
+            border-top: 1px solid rgb(220, 220, 220);
+            align-items: center;
+            grid-template-columns: auto auto;
+            justify-content: space-between
+        }
+
+        .error-footerItem {
+            padding: 12px 18px
+        }
+
+        .error-Summary-Title {
+            font-weight: 500;
+            letter-spacing: .36px
+        }
+
+        .errorTag,
+        .error-code {
+            color: #a5a5a5;
+            font-weight: 500;
+            font-size: 12pt
+        }
+
+        .errorTag {
+            font-size: 14px;
+            text-transform: uppercase;
+            font-weight: 300
+        }
+
+        .error-header {
+            display: flex;
+            align-items: center;
+            gap: .5ch
+        }
+
+        .error-message {
+            color: var(--bun-error-color);
+            font-size: 16pt;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .error-list {
+            margin-top: 14px;
+            gap: 14px
+        }
+
+        .error-subtitle,
+        .error-message {
+            padding-left: 18px;
+            padding-right: 18px
+        }
+
+        .error-subtitle {
+            font-size: 500
+        }
+
+        .error-NativeStackTrace {
+            margin-top: 0;
+            width: 100%;
+            overflow: auto;
+            border-top: 1px solid rgb(220, 220, 220);
+        }
+
+        .error-NativeStackTrace-filename {
+            padding: 8px 18px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            font-weight: 500;
+            letter-spacing: .36px;
+            margin-bottom: 8px;
+            display: block
+        }
+
+        .error-NativeStackTrace-filename:hover {
+            text-decoration: underline
+        }
+
+        .error-SourceLines-lines a {
+            text-decoration: none
+        }
+
+        .error-SourceLine-text::selection,
+        .error-SourceLine-text *::selection {
+            background-color: #6437e3;
+            color: #fff
+        }
+
+        .error-SourceLine-text:active:before {
+            width: 61px;
+            z-index: -1;
+            pointer-events: none
+        }
+
+        .error-SourceLine {
+            display: grid;
+            grid-template-columns: min-content auto
+        }
+
+        .error-SourceLines {
+            font-size: 14px;
+            align-items: center;
+            overflow-x: auto
+        }
+
+        .error-SourceLine-text {
+            white-space: pre;
+            cursor: text;
+            display: block;
+            position: relative;
+            font-family: var(--bun-error-monospace)
+        }
+
+        .error-SourceLine-number {
+            font-variant: tabular-nums;
+            display: block;
+            border-left: 4px solid transparent;
+            margin-left: -1px;
+            cursor: pointer;
+            padding-left: 14px;
+            padding-right: 12px;
+            text-align: right;
+            text-decoration: none;
+            position: relative
+        }
+
+        .error-SourceLine-number,
+        .error-SourceLine-number * {
+            user-select: none;
+            -webkit-user-select: none
+        }
+
+        .error-SourceLine-number:active+.error-SourceLine-text {
+            background-color: #6437e3;
+            color: #fff
+        }
+
+        .error-SourceLine-number:hover {
+            background-color: #7443fa;
+            color: #fff
+        }
+
+        .error-SourceLine:hover .error-SourceLine-number {
+            border-left-color: #7443fa
+        }
+
+        .error-SourceLine-number--empty {
+            color: #a5a5a5
+        }
+
+        .error-SourceLine-number,
+        .error-SourceLine-text {
+            height: 18px
+        }
+
+        #error-SourceLine-text-highlightExpression {
+            font-weight: 700;
+            text-decoration-style: wavy
+        }
+
+        .error-JSException--TypeError #error-SourceLine-text-highlightExpression {
+            border: 1px solid rgba(0, 0, 0, .2)
+        }
+
+        .error-Indented {
+            display: inline-block;
+            user-select: none;
+            -webkit-user-select: none
+        }
+
+        .error-divet {
+            vertical-align: bottom;
+            user-select: none;
+            -webkit-user-select: none
+        }
+
+        .error-typename {
+            font-family: var(--bun-error-monospace);
+            color: #e39437;
+            font-weight: 700
+        }
+
+        .error-muted {
+            font-weight: 400;
+            user-select: none;
+            -webkit-user-select: none
+        }
+
+        .error-muted,
+        .error-StackFrame--muted {
+            color: #a5a5a5
+        }
+
+        .error-NativeStackTrace .error-typename {
+            user-select: none;
+            -webkit-user-select: none
+        }
+
+        .error-StackFrame-link {
+            text-align: right
+        }
+
+        .error-StackFrame-link-content {
+            display: flex;
+            justify-content: flex-end;
+            text-align: right;
+            gap: .25ch;
+            white-space: nowrap
+        }
+
+        .error-StackFrame {
+            display: table-row
+        }
+
+        .error-StackFrame:hover {
+            border-left-color: #5865f2
+        }
+
+        .error-StackFrame-identifier {
+            padding-right: 18px;
+            font-size: .8em;
+            font-family: var(--bun-error-monospace);
+            letter-spacing: .49px;
+            width: var(--max-length, auto);
+            max-width: 48ch;
+            white-space: nowrap;
+            text-overflow: clip;
+            overflow: hidden
+        }
+
+        .error-message--mono {
+            font-family: var(--bun-error-monospace)
+        }
+
+        .error-StackFrame-identifier,
+        .error-StackFrame-link {
+            display: table-cell;
+            font-weight: 500
+        }
+
+        .error-BuildError {
+            padding-bottom: 18px
+        }
+
+        .error-StackFrame-link-content {
+            font-size: .8em
+        }
+
+        .error-StackFrames {
+            display: table;
+            table-layout: auto;
+            width: 100%;
+            box-sizing: border-box;
+            margin: 0 auto;
+            border-radius: 4px;
+            line-height: 1.2;
+            border-collapse: separate;
+            border-spacing: 12px 6px;
+            background-color: #f4f4f4
+        }
+
+        .error-StackFrames-container {
+            overflow-x: auto;
+            max-width: var(--bun-error-width)
+        }
+
+
+        .marker,
+        .marker-line {
+            position: relative;
+        }
+
+        .marker::after,
+        .marker-line::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+        }
+
+        .marker::after {
+            content: "^";
+            height: 3px;
+            font-family: monospace;
+            font-weight: bolder;
+            margin-top: -3px;
+            color: red;
+        }
+
+        .marker-line::after {
+            height: 2px;
+            margin-top: -2px;
+            background: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <style>
+            .waves {
+                position: absolute;
+                background: linear-gradient(135deg, #1670c8, #4c168e);
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+            }
+
+            #rail-blob {
+                position: absolute;
+                top: 0%;
+            }
+
+            #tr-blob {
+                transform: translate(30%, -100%);
+            }
+        </style>
+        <svg class="waves" [class.frozen]="loggedIn" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"
+            shape-rendering="auto" version="1.1" id="svg854" sodipodi:docname="waves-custom.svg" width="1920"
+            height="1080" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"
+            xmlns:svg="http://www.w3.org/2000/svg">
+            <defs>
+                <path id="gentle-wave" style="transform: translate3d(0px, 0px, 0px);"
+                    d="m -1504.3038,956.19262 c 442.1656,0 854.85345,-583.70849 1297.01901,-583.70849 442.16553,0 854.85343,583.70849 1297.01889,583.70849 442.1657,0 854.8534,-583.70849 1297.019,-583.70849 442.1655,0 854.8534,583.70849 1297.019,583.70849 V 2383.0355 h -5188.0759 z" />
+
+                <linearGradient id="blueGradient" x1="100%" y1="100%" x2="0" y2="0">
+                    <stop offset="0%" style="stop-opacity:0"></stop>
+                    <stop offset="50%" style="stop-opacity:0"></stop>
+                    <stop offset="100%" style="stop-color:rgb(3,169,244); stop-opacity:.3"></stop>
+                </linearGradient>
+                <linearGradient id="purpleGradient" x1="0" y1="0" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-opacity:0"></stop>
+                    <stop offset="30%" style="stop-opacity:0"></stop>
+                    <stop offset="100%" style="stop-color:rgb(103,58,183); stop-opacity:.3"></stop>
+                </linearGradient>
+            </defs>
+            <g class="parallax">
+                <use xlink:href="#gentle-wave" x="0" y="100" width="100%" height="100%"
+                    style="fill: rgba(113,47,144,0.2); animation-delay: -30s; animation-duration: 50s;" />
+                <use xlink:href="#gentle-wave" x="0" y="200" width="100%" height="100%"
+                    style="fill: rgba(28,108,212,0.3); animation-delay: -17s; animation-duration: 25s;" />
+                <use xlink:href="#gentle-wave" x="0" y="400" width="100%" height="100%"
+                    style="fill: rgba(94,68,167,0.5);  animation-delay: -18s; animation-duration: 20s;" />
+                <use xlink:href="#gentle-wave" x="0" y="600" width="100%" height="100%"
+                    style="fill: rgba(37,131,238,8);   animation-delay: -7s; animation-duration: 20s;" />
+            </g>
+            <g id="tr-blob" style="fill: #1a6cbe; fill-opacity: 0.5;">
+                <path
+                    d="m 1988.27,582.638 c -12.9,-115.829 -66.16,-222.627 -149.59,-299.995 -105.12,-97.82 -247.54,-146.25 -388.3,-148.364 -150.7,-1.922 -299.37,45.931 -450.06,41.511 C 735.694,168.103 446.44,-103.449 186.038,43.5696 59.2368,115.061 -9.12551,274.187 0.981832,425.049 11.0892,575.912 90.1103,713.321 195.962,816.715 c 55.131,53.426 118.899,99.357 161.166,164.699 126.617,195.446 6.616,528.306 253.419,642.076 165.393,76.87 296.053,-26.33 409.073,-144.9 56.42,-59.19 109.16,-129.53 176.79,-174.89 74.79,-49.97 163.18,-74.37 249.55,-90.9 100.16,-19.22 204.17,-30.75 294.04,-80.14 98.95,-57.81 174.54,-151.133 212.8,-262.711 33.93,-91.346 46.1,-189.95 35.47,-287.311 z">
+                </path>
+            </g>
+            <rect x="0" y="0" width="100%" height="100%" fill="url(#blueGradient)"></rect>
+            <rect x="0" y="0" width="100%" height="100%" fill="url(#purpleGradient)"></rect>
+        </svg>
+        <div class="initLoader" *ngIf="loading">
+            <mat-progress-spinner color="primary" mode="indeterminate"></mat-progress-spinner>
+        </div>
+    </div>
+    <div>
+        <div class="errorRoot--FullPage">
+            <div id="errorOverlay-container">
+                <div>
+                    <div class="error-header">
+                        <div class="error-Summary">
+                            <div class="error-Summary-ErrorIcon"></div>
+                            <div class="error-Summary-Title">{{error.name}}</div>
+                        </div>
+                    </div>
+                    <div class="error-list">
+                        <div class="error-JSException">
+                            <div class="error-header error-message">
+                                <div class="error-code">{{error.status}}</div>
+                                <div class="errorTag errorTag--client">{{error.title}}</div>
+                            </div>
+                            <div class="error-message">{{error.message}}</div>
+
+                            <br />
+                            {{stacktrace}}
+
+                            {{codeSnippet}}
+                        </div>
+                    </div>
+                    <br />
+                    <div>
+                        <div style="padding: 0px 10px 10px 20px;">
+                            This incident has been recorded; You can contact admin@example.com for additional support.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

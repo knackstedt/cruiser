@@ -1,0 +1,11 @@
+{
+    "/api": {
+        "target": "https://localhost:3000",
+        "secure": false
+    },
+    "/ws": {
+        "target": "https://localhost:3000",
+        "secure": false,
+        "ws": true
+    }
+}

@@ -1,0 +1,47 @@
+:host {
+    display: contents
+}
+
+div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    position: absolute;
+    z-index: 9999;
+    // background: #212121;
+    width: 100%;
+    height: 100%;
+    color: #eee;
+    --mdc-circular-progress-active-indicator-color: #212121;
+
+    transition: opacity 300ms ease-in-out;
+
+    &.clear {
+        opacity: 0
+    }
+}
+
+h3 {
+    color: #212121;
+}
+
+path {
+    transition-property: fill, fill-opacity;
+    transition-duration: 100ms;
+    transition-timing-function: ease;
+}
+
+svg {
+    // animation: rotate 2000ms linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate3D(0, 1, 0, 180deg) rotate(359.99deg);
+    }
+
+    to {
+        transform: rotate3D(0, 1, 0, 180deg) rotate(0deg);
+    }
+}

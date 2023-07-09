@@ -1,0 +1,74 @@
+<!-- 200px expanded; 56px collapsed. 300px when expanded on mobile -->
+<div class="menu" [class.collapsed]="collapsed">
+    <app-logo style="width: calc(100% - 8px); height: 40px; gap: 0" [showText]="!collapsed"></app-logo>
+
+
+    <!-- --------- -->
+    <hr/>
+
+    <!-- Create a side-by-side pane that can transition between views -->
+    <ng-container *ngFor="let page of pages">
+        <a
+            class="item"
+            *ngIf="page.link"
+            [matTooltip]="collapsed ? page.label : null"
+            [href]="page.link ? page.link : null"
+            [target]="page.linkTarget || null"
+        >
+            <span class="icon">
+                <mat-icon *ngIf="!matIconRx.test(page.icon)" [fontIcon]="page.icon" [style.color]="page['color']" />
+                <img *ngIf="matIconRx.test(page.icon)" src="{{page.icon}}"/>
+            </span>
+            <span class="label">
+                {{page.label}}
+                <mat-icon *ngIf="page.linkTarget != '_self'" style="width: 16px; height: 16px; font-size: 16px; vertical-align: middle;">open_in_new</mat-icon>
+            </span>
+        </a>
+
+        <div
+            class="item"
+            *ngIf="!page.link"
+            [matTooltip]="collapsed ? page.label : null"
+            [ngx-app-menu]="page['children']"
+            [ngx-app-menu-config]="{ position: 'right', alignment: 'start', customClass: ['dt-menu'] }"
+        >
+            <span class="icon">
+                <mat-icon *ngIf="!matIconRx.test(page.icon)" [fontIcon]="page.icon" [style.color]="page['color']" />
+                <img *ngIf="matIconRx.test(page.icon)" src="{{page.icon}}"/>
+            </span>
+            <span class="label">{{page.label}}</span>
+        </div>
+    </ng-container>
+
+
+    <span style="flex: 1"></span>
+
+    <!-- --------- -->
+    <hr/>
+
+    <div class="item"
+        [matTooltip]="collapsed ? 'Expand Dock' : null"
+        (click)="collapsed = !collapsed"
+    >
+        <!-- Overlay search functionality -->
+
+        <span class="icon">
+            <mat-icon [fontIcon]="collapsed ? 'keyboard_double_arrow_right' : 'keyboard_double_arrow_left'"></mat-icon>
+        </span>
+        <span class="label">Collapse</span>
+    </div>
+
+    <div class="item"
+        [matTooltip]="collapsed ? 'Jane Doe' : null"
+        [ngx-app-menu]="profileLinks"
+        [ngx-app-menu-config]="{ position: 'right', alignment: 'end', customClass: ['nav-menu']}"
+        [ngx-app-menu-context]=""
+    >
+        <!-- Overlay search functionality -->
+        <span class="icon">
+            <mat-icon>manage_accounts</mat-icon>
+        </span>
+        <span class="label">Settings</span>
+        <!-- <span class="label">Jane Doe</span> -->
+    </div>
+</div>
