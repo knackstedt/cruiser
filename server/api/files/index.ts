@@ -7,7 +7,6 @@ import fs from "fs-extra";
 import crypto from 'crypto';
 import { secureWipe } from './util';
 import { readZipFolder } from './zip';
-import { parseFile, IAudioMetadata } from 'music-metadata';
 
 
 const router = express.Router();
@@ -74,9 +73,9 @@ router.post('/file', route(async (req, res, next) => {
         let stats = await stat(file);
 
         // get the audio stats
-        let metadata: Promise<IAudioMetadata>;
+        let metadata: Promise<any>;
         if (isAudioFile.test(file)) {
-            metadata = parseFile(file).catch(e => null);
+            // metadata = parseFile(file).catch(e => null);
         }
 
         if (isText(file)) {

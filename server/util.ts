@@ -1,11 +1,11 @@
 // Important
 // Express does not handle failed async route handlers by default.
 
-import { RequestHandler } from "express";
+import { NextFunction, Request, Response } from "express";
 import * as fs from "fs-extra";
 
 // We use this route to 'throw' an error when an async route has an unhandled exception.
-export const route = (fn: RequestHandler) => (req, res, next) => {
+export const route = (fn: (req: Request, res: Response, next: NextFunction) => any) => (req, res, next) => {
     try {
         // @ts-ignore
         fn(req, res, next).catch(ex => next(ex));
