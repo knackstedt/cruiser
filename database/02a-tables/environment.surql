@@ -1,20 +1,20 @@
 
-DEFINE TABLE environmentVariables SCHEMAFULL;
-    DEFINE FIELD name ON TABLE environmentVariables TYPE string
+DEFINE TABLE environmentVariable SCHEMAFULL;
+    DEFINE FIELD name ON TABLE environmentVariable TYPE string
         ASSERT $value != NONE;
-    DEFINE FIELD [value] ON TABLE environmentVariables TYPE string
+    DEFINE FIELD "value" ON TABLE environmentVariable TYPE string
         ASSERT $value != NONE;
-    DEFINE FIELD description ON TABLE environmentVariables TYPE string;
-    DEFINE FIELD target ON TABLE environmentVariables TYPE record
+    DEFINE FIELD description ON TABLE environmentVariable TYPE string;
+    DEFINE FIELD target ON TABLE environmentVariable TYPE record
         ASSERT $value != NONE;
 
 
-DEFINE TABLE secrets SCHEMAFULL;
-    DEFINE FIELD key ON TABLE secrets TYPE string
+DEFINE TABLE secret SCHEMAFULL;
+    DEFINE FIELD key ON TABLE secret TYPE string
         ASSERT $value != NONE;
-    DEFINE FIELD [value] ON TABLE secrets TYPE string
+    DEFINE FIELD "value" ON TABLE secret TYPE string
         ASSERT $value != NONE;
-    DEFINE FIELD description ON TABLE secrets TYPE string;
-    DEFINE FIELD target ON TABLE secrets TYPE record
+    DEFINE FIELD description ON TABLE secret TYPE string;
+    DEFINE FIELD target ON TABLE secret TYPE record
         ASSERT $value != NONE;
 

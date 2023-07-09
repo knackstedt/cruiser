@@ -42,7 +42,7 @@ const db = new Surreal('http://127.0.0.1:8000/rpc');
                     return db.query(
                         await fs.readFile(dir + '/' + f, "utf-8"))
                             .then(e => console.log("\x1b[1;30m    Applied ", f))
-                            .catch(e => { errors++; console.error("\x1b[1;31m    Failed to apply " + f + " " + e.message) })
+                            .catch(e => { errors++; console.error("\x1b[1;31m    Failed to apply '" + f + "'\n        : " + e.message) })
                     }
                 )
         )
