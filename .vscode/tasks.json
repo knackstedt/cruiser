@@ -46,6 +46,28 @@
         "-c",
         "database/debug.sh"
       ],
+      "isBackground": true,
+        "problemMatcher": {
+            "owner": "surrealdb",
+            "pattern": [
+                {
+                    "severity": 1,
+                    "message": 3,
+                    "file": 2,
+                    "kind": "file",
+                    "regexp": "^([^ ]+)  ([A-Z]+) ([^ ]+): (.+)$"
+                }
+            ],
+            "background": {
+                "activeOnStart": true,
+                "beginsPattern": {
+                    "regexp": "Connecting to Surreal..."
+                },
+                "endsPattern": {
+                    "regexp": "Done applying database template."
+                }
+            }
+        }
     }
   ]
 }

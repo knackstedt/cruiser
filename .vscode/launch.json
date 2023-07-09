@@ -14,7 +14,7 @@
       "type": "node",
       "request": "launch",
       "args": [
-        "main.ts",
+        "server/main.ts",
         "--project"
       ],
       "runtimeArgs": [
@@ -25,12 +25,12 @@
         // "--experimental-specifier-resolution=node",
       ],
       "sourceMaps": true,
-      "cwd": "${workspaceRoot}/server",
+      "cwd": "${workspaceRoot}",
     },
     {
       "name": "Database",
       "preLaunchTask": "surrealdb",
-      "type": "msedge",
+      "type": "chrome",
       "request": "attach"
     }
   ]

@@ -14,7 +14,7 @@ DEFINE TABLE pipelineTask SCHEMAFULL;
     DEFINE FIELD label ON TABLE pipelineTask TYPE string;
     DEFINE FIELD description ON TABLE pipelineTask TYPE string;
     DEFINE FIELD workingDirectory ON TABLE pipelineTask TYPE string;
-    DEFINE FIELD "order" ON TABLE pipelineTask TYPE int
+    DEFINE FIELD `order` ON TABLE pipelineTask TYPE int
         ASSERT $value != NONE
         VALUE $value OR 0;
     -- True by default
@@ -36,7 +36,7 @@ DEFINE TABLE pipelineTaskGroup SCHEMAFULL;
     DEFINE FIELD label ON TABLE pipelineTaskGroup TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipelineTaskGroup TYPE string;
-    DEFINE FIELD "order" ON TABLE pipelineTask TYPE int
+    DEFINE FIELD `order` ON TABLE pipelineTask TYPE int
         ASSERT $value != NONE
         VALUE $value OR 0;
 
@@ -50,11 +50,11 @@ DEFINE TABLE pipelineJob SCHEMAFULL;
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipelineJob TYPE string;
     DEFINE FIELD elasticAgentId ON TABLE pipelineJob TYPE string;
-    DEFINE FIELD "order" ON TABLE pipelineTask TYPE int
+    DEFINE FIELD `order` ON TABLE pipelineTask TYPE int
         ASSERT $value != NONE
         VALUE $value OR 0;
 
-    DEFINE FIELD [timeout] ON TABLE pipelineJob TYPE string
+    DEFINE FIELD `timeout` ON TABLE pipelineJob TYPE string
         ASSERT $value != NONE
         VALUE $value OR 30; // never, 1h, 30s, 1d
 
@@ -71,7 +71,7 @@ DEFINE TABLE pipelineStage SCHEMAFULL;
     DEFINE FIELD name ON TABLE pipelineStage TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipelineStage TYPE string;
-    DEFINE FIELD "order" ON TABLE pipelineTask TYPE int
+    DEFINE FIELD `order` ON TABLE pipelineTask TYPE int
         ASSERT $value != NONE
         VALUE $value OR 0;
     DEFINE FIELD onlyOnPreviousSuccess ON TABLE pipelineStage TYPE string;
@@ -87,7 +87,7 @@ DEFINE TABLE pipeline SCHEMAFULL;
     DEFINE FIELD name ON TABLE pipeline TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipeline TYPE string;
-    DEFINE FIELD "order" ON TABLE pipelineTask TYPE int
+    DEFINE FIELD `order` ON TABLE pipelineTask TYPE int
         ASSERT $value != NONE
         VALUE $value OR 0;
     DEFINE FIELD stages.* ON TABLE pipeline TYPE record(pipelineStage);
