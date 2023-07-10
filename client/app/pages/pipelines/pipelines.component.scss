@@ -1,0 +1,54 @@
+:host {
+    display: block;
+    height: 100%;
+    padding: 24px;
+}
+
+
+.placeholder {
+    background: var(--panel-background-color);
+    border: dotted 3px #999;
+    min-height: 48px;
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+
+.label {
+    display: flex;
+    align-items: center;
+}
+
+
+.empty-placeholder {
+    position: relative;
+    text-align: center;
+    z-index: 1;
+    color: var(--text-subdued-color);
+
+    span {
+        background-color: var(--panel-background-color);
+        padding: 2px 12px;
+    }
+
+    &::before {
+        content: " ";
+        position: absolute;
+        top: calc(50% - .5px);
+        left: 0;
+        right: 0;
+        height: 1px;
+        background-color: var(--table-header-border-color);
+        display: block;
+        z-index: -1;
+    }
+}
+
+.add-button {
+    transition: opacity 250ms ease;
+}
+
+:host ::ng-deep {
+    .mat-expansion-panel {
+        background-color: var(--panel-background-color);
+    }
+}
