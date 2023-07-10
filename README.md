@@ -44,6 +44,7 @@ solidifying the base of the framework and stabilizing the architecture.
  - [ ] Add support for non-git based code repos
  - [ ] Record error messages over time and provide "smart" analysis
  - [ ] Support for hosting git repos
+ - [ ] Support for load testing quality gate metric integration
  - [ ] Destroy all humans
 
 
