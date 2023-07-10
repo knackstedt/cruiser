@@ -1,20 +1,10 @@
-import { readFileSync, existsSync } from "fs";
 import * as express from "express";
 
-// const v8 = require('v8');
-// v8.setFlagsFromString('--stack-size=256');
-
 export const router = express.Router();
-
 const isProduction = process.env["NODE_ENV"]?.toLowerCase() == "production";
-
 
 // Catch-all error handler.
 export const ErrorHandler = (err, req, res, next) => {
-
-    // Check request 'accept' header to see if there is a document request.
-    const wantsHtml = /(text\/html|application\/xhtml\+xml)/.test(req.headers.accept);
-
     let jsonResult: any = {};
 
     switch (true) {
