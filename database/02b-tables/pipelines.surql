@@ -117,7 +117,7 @@ DEFINE TABLE pipeline SCHEMAFULL;
     DEFINE FIELD label ON TABLE pipeline TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipeline TYPE string;
-    DEFINE FIELD grouyp ON TABLE pipeline TYPE string
+    DEFINE FIELD `group` ON TABLE pipeline TYPE string
         VALUE $value OR 'default';
     DEFINE FIELD labelTemplate ON TABLE pipeline TYPE string;
 
