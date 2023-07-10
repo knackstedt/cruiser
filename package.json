@@ -13,6 +13,7 @@
   },
   "private": true,
   "dependencies": {
+    "@dotglitch/ngx-web-components": "^0.0.9",
     "@fontsource/material-icons-outlined": "^5.0.4",
     "adm-zip": "^0.5.9",
     "connect-redis": "^6.1.3",
