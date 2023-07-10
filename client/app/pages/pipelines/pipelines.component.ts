@@ -6,6 +6,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Pipeline } from 'client/types/pipeline';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { DialogService } from 'client/app/services/dialog.service';
+import { NgxLazyLoaderService } from '@dotglitch/ngx-lazy-loader';
 
 @Component({
     selector: 'app-pipelines',
@@ -35,14 +37,24 @@ export class PipelinesComponent implements OnInit {
     ]
 
     constructor(
-        private viewContainer: ViewContainerRef
-    ) { }
+        private viewContainer: ViewContainerRef,
+        private dialog: DialogService,
+        private lazyLoader: NgxLazyLoaderService
+    ) {
+        if (!lazyLoader.isComponentRegistered("pipeline-editor", "dynamic")) {
+            lazyLoader.registerComponent({
+                id: "pipeline-editor",
+                group: "dynamic",
+                load: () => import('./pipeline-editor/pipeline-editor.component')
+            })
+        }
+    }
 
     ngOnInit() {
     }
 
     createPipeline(pipeline: Partial<Pipeline>) {
-
+        this.dialog.open("pipeline-editor", { group: "dynamic", inputs: { pipeline } })
     }
 
     drop(event: CdkDragDrop<any, any, any>) {

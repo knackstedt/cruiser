@@ -1,0 +1,43 @@
+<mat-form-field appearance="outline">
+    <input matInput type="text" [(ngModel)]="source.label">
+</mat-form-field>
+
+<mat-form-field appearance="outline">
+    <textarea matInput type="text" [(ngModel)]="source.description"></textarea>
+</mat-form-field>
+<mat-form-field appearance="outline">
+    <input matInput type="text" [(ngModel)]="source.targetPath">
+</mat-form-field>
+
+<mat-form-field appearance="outline">
+    <input matInput type="text" [(ngModel)]="source.type">
+</mat-form-field>
+<mat-form-field appearance="outline">
+    <input matInput type="text" [(ngModel)]="source.branch">
+</mat-form-field>
+<mat-form-field appearance="outline">
+    <input matInput type="text" [(ngModel)]="source.username">
+</mat-form-field>
+
+<mat-form-field appearance="outline">
+    <input matInput type="text" [(ngModel)]="source.password">
+</mat-form-field>
+
+<mat-form-field appearance="outline">
+    <input matInput type="number" [(ngModel)]="source.cloneDepth">
+</mat-form-field>
+
+<mat-form-field appearance="outline">
+    <input matInput type="text" [(ngModel)]="source.pollingBehavior">
+</mat-form-field>
+<mat-form-field appearance="outline">
+    <textarea matInput type="text" [(ngModel)]="source.denyList"></textarea>
+</mat-form-field>
+
+<mat-checkbox [value]="source.invertFilter ? 'true' : 'false'">
+    Run only on new source
+</mat-checkbox>
+
+<mat-form-field appearance="outline">
+    <input matInput type="text" [(ngModel)]="source.url">
+</mat-form-field>

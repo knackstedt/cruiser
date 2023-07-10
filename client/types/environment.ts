@@ -1,5 +1,5 @@
 export type EnvironmentVariable = {
-    name: string,
+    label: string,
     value: string,
     description: string
 }

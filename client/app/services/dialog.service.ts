@@ -5,9 +5,7 @@ import { NgxLazyLoaderService, NgxLazyLoaderComponent } from '@dotglitch/ngx-laz
 const { log, warn } = console;
 
 export type DialogOptions = Partial<Omit<MatDialogConfig<any>, 'data'> & {
-    isResizable: boolean,
-    icon: string,
-    title: string,
+    group: string,
     inputs: { [key: string]: any; },
     outputs: { [key: string]: Function; };
 }>;
@@ -34,13 +32,13 @@ export class DialogService {
      * @param name Which dialog to open
      * @returns promise<result>
      */
-    open(name: string, group = "defualt", data: DialogOptions = {}): Promise<any> {
+    open(name: string, data: DialogOptions = {}): Promise<any> {
         log("Open dialog " + name, data);
 
         return new Promise((resolve, reject) => {
 
-            if (!this.lazyLoader.isComponentRegistered(name, group)) {
-                console.warn(name, "does not exist in", group)
+            if (!this.lazyLoader.isComponentRegistered(name, data.group)) {
+                console.warn(name, "does not exist in", data.group)
                 return;
             }
             // default options. can be overridden.
@@ -57,7 +55,7 @@ export class DialogService {
                 ...data,
                 data: {
                     id: name,
-                    group,
+                    group: data.group,
                     inputs: data.inputs || {},
                     outputs: data.outputs || {}
                 }

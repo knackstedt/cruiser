@@ -1,0 +1,89 @@
+<h2>{{pipeline.label}}</h2>
+
+<mat-tab-group>
+    <mat-tab label="General">
+        <h4>Basic Settings</h4>
+
+        <mat-form-field appearance="outline">
+            <input matInput type="text" [(ngModel)]="pipeline.label">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+            <input matInput type="text" [(ngModel)]="pipeline.group">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+            <textarea matInput type="text" [(ngModel)]="pipeline.description"></textarea>
+        </mat-form-field>
+
+        <h5>Label Template</h5>
+        <app-vscode [(code)]="pipeline.labelTemplate" [minimapEnabled]="false" style="height: 240px"></app-vscode>
+
+        <!-- automatic pipeline scheduling -->
+        <mat-checkbox>
+            Automatically run
+        </mat-checkbox>
+
+        <mat-checkbox [value]="pipeline.cronRunOnlyOnNewSource ? 'true' : 'false'">
+            Run only on new source
+        </mat-checkbox>
+
+
+        <h4>Timer Settings</h4>
+        <h5>Cron timer specification</h5>
+        <mat-form-field appearance="outline">
+            <input matInput type="text" [(ngModel)]="pipeline.cronSchedule">
+        </mat-form-field>
+
+        <h4>Pipeline locking behavior</h4>
+        <mat-radio-group [value]="pipeline.lockingBehavior" (change)="pipeline.lockingBehavior = $event.value" aria-label="Select an option">
+            <mat-radio-button value="singleton">Run single instance of pipeline at a time</mat-radio-button>
+            <mat-radio-button value="singletonNoFail">Run single instance of pipeline and lock on failure</mat-radio-button>
+            <mat-radio-button value="multiple">Run multiple instances(default)</mat-radio-button>
+        </mat-radio-group>
+
+    </mat-tab>
+    <mat-tab label="Project Management">
+        <h4>Tracking Tool Integration</h4>
+        <h5>Pattern</h5>
+        <mat-form-field appearance="outline">
+            <input matInput type="text" [(ngModel)]="pipeline.trackingToolPattern">
+        </mat-form-field>
+
+        <h5>URI</h5>
+        <mat-form-field appearance="outline">
+            <input matInput type="text" [(ngModel)]="pipeline.trackingToolUri">
+        </mat-form-field>
+    </mat-tab>
+    <mat-tab label="Sources">
+        <button
+            #btn
+            mat-icon-button
+            matTooltip="Add a source"
+            (click)="createSource()"
+        >
+            <mat-icon>add</mat-icon>
+        </button>
+        <app-pipeline-source *ngFor="let source of pipeline.sources"></app-pipeline-source>
+    </mat-tab>
+    <mat-tab label="Stages">
+        <button
+            #btn
+            mat-icon-button
+            matTooltip="Add a stage"
+            (click)="createStage()"
+        >
+            <mat-icon>add</mat-icon>
+        </button>
+    </mat-tab>
+    <mat-tab label="Environment Variables">
+        <button
+            #btn
+            mat-icon-button
+            matTooltip="Add an environment variable"
+            (click)="createEnvironmentVariable()"
+        >
+            <mat-icon>add</mat-icon>
+        </button>
+    </mat-tab>
+    <!-- <mat-tab label="Parameters"></mat-tab> -->
+    <!-- <mat-tab label="Automation (WIP)"></mat-tab> -->
+</mat-tab-group>
