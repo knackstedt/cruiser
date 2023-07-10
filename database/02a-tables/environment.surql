@@ -1,6 +1,6 @@
 
 DEFINE TABLE environmentVariable SCHEMAFULL;
-    DEFINE FIELD name ON TABLE environmentVariable TYPE string
+    DEFINE FIELD label ON TABLE environmentVariable TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD `value` ON TABLE environmentVariable TYPE string
         ASSERT $value != NONE;
