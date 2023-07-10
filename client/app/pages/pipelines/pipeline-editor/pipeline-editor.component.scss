@@ -3,13 +3,27 @@
     width: 1080px;
     height: 780px;
     overflow: hidden;
-    padding: 24px;
+
+    padding: 24px 0;
+}
+:host ::ng-deep {
+    .mat-mdc-tab-labels {
+        padding: 0 24px;
+    }
+    .mat-mdc-tab-body-content {
+        padding: 0 24px 24px 24px;
+    }
 }
 
 hr {
     border-color: var(--table-header-border-color);
 }
 
+.exit-btn {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+}
 
 input[type="color"] {
     width: calc(100% - 54px);

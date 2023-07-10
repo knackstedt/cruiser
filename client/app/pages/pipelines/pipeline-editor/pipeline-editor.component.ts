@@ -73,4 +73,8 @@ export class PipelineEditorComponent implements OnInit {
     createEnvironmentVariable() {
         this.dialog.open("", )
     };
+
+    tryClose() {
+        // Alert("are you sure you want to close")
+    }
 }

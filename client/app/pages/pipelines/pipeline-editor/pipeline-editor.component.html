@@ -1,16 +1,21 @@
-<h2>{{pipeline.label}}</h2>
+<div>{{pipeline.label || "My Pipeline"}}</div>
+
+<button class="exit-btn" mat-icon-button (click)="tryClose()"><mat-icon>close</mat-icon></button>
 
 <mat-tab-group>
     <mat-tab label="General">
         <h4>Basic Settings</h4>
 
         <mat-form-field appearance="outline">
+            <mat-label>Name</mat-label>
             <input matInput type="text" [(ngModel)]="pipeline.label">
         </mat-form-field>
         <mat-form-field appearance="outline">
+            <mat-label>Group</mat-label>
             <input matInput type="text" [(ngModel)]="pipeline.group">
         </mat-form-field>
         <mat-form-field appearance="outline">
+            <mat-label>Description</mat-label>
             <textarea matInput type="text" [(ngModel)]="pipeline.description"></textarea>
         </mat-form-field>
 
