@@ -1,3 +1,68 @@
-<p>
-  agents works!
-</p>
+<h1>
+    Agent Groups
+</h1>
+
+<mat-tab-group>
+    <mat-tab label="Static Agents">
+        <div #scroller (scroll)="onScroll(scroller)" cdkDropListGroup style="height: 100%; overflow: auto">
+            <!-- NgFor swimlane -->
+            <mat-accordion displayMode="flat" [multi]="true" *ngFor="let group of agentGroups">
+                <mat-expansion-panel expanded="true">
+                    <mat-expansion-panel-header>
+                        <div class="label">
+                            {{group.label}}
+                        </div>
+                    </mat-expansion-panel-header>
+
+                    <div
+                        style="display: flex; flex-direction: column; gap: 6px"
+                        cdkDropList
+                        [cdkDropListData]="group.items"
+                        (cdkDropListDropped)="drop($event)"
+                        [cdkDropListSortingDisabled]="true"
+                        (pointerenter)="btn['_hover'] = true"
+                        (pointerleave)="btn['_hover'] = false"
+                    >
+                        <button
+                            #btn
+                            mat-icon-button
+                            matTooltip="Add a pipeline"
+                            class="add-button"
+                            [style.opacity]="btn['_hover'] ? 1 : 0"
+                            (click)="createPipeline({group: group.label})"
+                        >
+                            <mat-icon>add</mat-icon>
+                        </button>
+
+                        <div cdkDrag *ngFor="let data of group.items">
+                            <div class="placeholder" *cdkDragPlaceholder></div>
+                            <div>
+                                <!-- <mat-icon [fontIcon]="data._icon || 'task'"></mat-icon> -->
+                                <span>{{data.name}}</span>
+
+                            </div>
+                        </div>
+                        <div *ngIf="!group.items || group.items.length == 0" class="empty-placeholder">
+                            <span>
+                                No Pipelines
+                            </span>
+                        </div>
+                    </div>
+                </mat-expansion-panel>
+            </mat-accordion>
+        </div>
+    </mat-tab>
+    <mat-tab label="Elastic Agents">
+        <div>
+            <div *ngFor="let agent of runningElasticAgents">
+
+            </div>
+        </div>
+        <div>
+            <div *ngFor="let elasticAgent of elasticAgentConfigurations">
+
+            </div>
+        </div>
+    </mat-tab>
+</mat-tab-group>
+

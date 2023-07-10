@@ -35,10 +35,6 @@
     --dialog-titlebar-background-color: #363636;
     --dialog-titlebar-text-color: #efefef;
 
-    // Progress spinner color
-    --mdc-circular-progress-active-indicator-color: #fff;
-    --mdc-dialog-container-color: #0000;
-
     // Context Menu coloring
     --ctx-menu-text-color: #333;
     --ctx-menu-disabled-text-color: #666;
@@ -48,11 +44,7 @@
     --ctx-menu-shortcut-text-color: #444;
     --ctx-menu-separator-color: #e2e2e2;
 
-    --json-base-text-color: #000;
-    --json-base-background-color: #fff;
-    --json-string-text-color: #a31515;
-    --json-boolean-text-color: #0000ff;
-    --json-null-text-color: #0000ff;
-    --json-number-text-color: #098658;
-    --json-key-text-color: #0451a5;
+    // Progress spinner color
+    --mdc-circular-progress-active-indicator-color: #fff;
+    --mdc-dialog-container-color: #0000;
 }

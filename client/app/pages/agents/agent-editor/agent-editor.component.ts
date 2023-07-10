@@ -19,9 +19,9 @@ import { Pipeline } from 'client/types/pipeline';
 import { DialogService } from 'client/app/services/dialog.service';
 
 @Component({
-    selector: 'app-pipeline-editor',
-    templateUrl: './pipeline-editor.component.html',
-    styleUrls: ['./pipeline-editor.component.scss'],
+    selector: 'app-agent-editor',
+    templateUrl: './agent-editor.component.html',
+    styleUrls: ['./agent-editor.component.scss'],
     imports: [
         NgIf,
         NgForOf,
@@ -41,7 +41,7 @@ import { DialogService } from 'client/app/services/dialog.service';
     ],
     standalone: true
 })
-export class PipelineEditorComponent implements OnInit {
+export class AgentEditorComponent implements OnInit {
 
     @ViewChild("nameInput") nameInputRef: ElementRef;
 
@@ -71,17 +71,17 @@ export class PipelineEditorComponent implements OnInit {
 
 
     createSource() {
-        this.dialog.open("", )
+        this.dialog.open("",);
     };
     createStage() {
-        this.dialog.open("", )
+        this.dialog.open("",);
     };
     createEnvironmentVariable() {
-        this.dialog.open("", )
+        this.dialog.open("",);
     };
 
     tryClose() {
-        this.dialogRef.close()
+        this.dialogRef.close();
         // Alert("are you sure you want to close")
     }
 }

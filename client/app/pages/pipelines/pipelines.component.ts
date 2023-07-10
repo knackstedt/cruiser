@@ -54,7 +54,7 @@ export class PipelinesComponent implements OnInit {
     }
 
     createPipeline(pipeline: Partial<Pipeline>) {
-        this.dialog.open("pipeline-editor", { group: "dynamic", inputs: { pipeline } })
+        this.dialog.open("pipeline-editor", { group: "dynamic", inputs: { pipeline }, autoFocus: false })
     }
 
     drop(event: CdkDragDrop<any, any, any>) {

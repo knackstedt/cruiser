@@ -17,7 +17,9 @@ $light-theme: mat.define-light-theme((
 ));
 
 // Dark palette
-$dark-primary: mat.define-palette(mat.$amber-palette, A100, A100, A100);
+// #5e40ff
+$dark-primary: mat.define-palette(mat.$cyan-palette, A200, 700, 900);
+// $dark-primary: mat.define-palette(mat.$purple-palette, A100, A100, A100);
 $dark-accent: mat.define-palette(mat.$teal-palette, 500, 600, 700);
 $dark-warn: mat.define-palette(mat.$red-palette);
 
@@ -31,7 +33,7 @@ $dark-theme: mat.define-dark-theme((
 
 @include mat.all-component-themes($dark-theme);
 
-.t-light {
+.light {
     @include mat.all-component-colors($light-theme);
 }
 
@@ -46,4 +48,9 @@ $dark-theme: mat.define-dark-theme((
     .mat-mdc-tab-body-wrapper {
         height: 100%;
     }
+}
+
+.mat-mdc-tooltip {
+    --mdc-plain-tooltip-container-color: #464646;
+    padding: 6px 12px;
 }

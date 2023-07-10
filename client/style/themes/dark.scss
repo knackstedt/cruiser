@@ -31,17 +31,15 @@
     --dialog-titlebar-background-color: #363636;
     --dialog-titlebar-text-color: #efefef;
 
-    --json-base-text-color: #fff;
-    --json-base-background-color: #1e1e1e;
-    --json-string-text-color: #ce9178;
-    --json-boolean-text-color: #569cd6;
-    --json-null-text-color: #569cd6;
-    --json-number-text-color: #b5cea8;
-    --json-key-text-color: #9cdcfe;
 
     --mdc-protected-button-disabled-label-text-color: #ccc;
-    --mdc-tab-indicator-active-indicator-color: #fbb86c;
+    // --mdc-tab-indicator-active-indicator-color: #fbb86c;
 
     --scrollbar-thumb-color: rgb(0 0 0 / 48%);
+
+    --inner-panel-background-color: #262626;
+    .mat-mdc-dialog-container {
+        --mdc-dialog-container-color: #181818;
+    }
 }
 
