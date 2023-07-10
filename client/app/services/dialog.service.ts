@@ -15,8 +15,6 @@ export type DialogOptions = Partial<Omit<MatDialogConfig<any>, 'data'> & {
 })
 export class DialogService {
 
-    private dialogRef: MatDialogRef<unknown, any>;
-
     constructor(
         private dialog: MatDialog,
         private lazyLoader: NgxLazyLoaderService
@@ -61,20 +59,13 @@ export class DialogService {
                 }
             };
 
-            this.dialogRef = this.dialog.open(NgxLazyLoaderComponent, opts);
+            const dialogRef = this.dialog.open(NgxLazyLoaderComponent, opts);
 
-            this.dialogRef.afterClosed().subscribe(result => {
+            const s = dialogRef.afterClosed().subscribe(result => {
                 log("Dialog closed " + name, result);
                 resolve(result);
+                s.unsubscribe();
             });
         });
-    }
-
-    /**
-     * Method to close the open dialog.
-     * Should be used sparingly.
-     */
-    clearDialog() {
-        this.dialogRef?.close();
     }
 }
