@@ -1,4 +1,4 @@
-import { EnvironmentVariable, Secret } from 'client/types/environment';
+import { EnvironmentVariable } from 'client/types/environment';
 
 export type PipelineArtifact = {
     label: string
@@ -63,7 +63,7 @@ export type PipelineSource = {
 
     branch: string
     username: string
-    password: Secret
+    password: string
     cloneDepth: number
     pollingBehavior: string
 

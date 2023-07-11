@@ -14,9 +14,9 @@ import { VscodeComponent } from '@dotglitch/ngx-web-components';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { PipelineSourceComponent } from 'client/app/components/pipeline-source/pipeline-source.component';
-import { EnvironmentVariableComponent } from 'client/app/components/environment-variable/environment-variable.component';
 import { Pipeline } from 'client/types/pipeline';
 import { DialogService } from 'client/app/services/dialog.service';
+import { EditEnvironmentVariablesComponent } from 'client/app/components/edit-environment-variable/edit-environment-variables.component';
 
 @Component({
     selector: 'app-pipeline-editor',
@@ -37,7 +37,7 @@ import { DialogService } from 'client/app/services/dialog.service';
         FormsModule,
         VscodeComponent,
         PipelineSourceComponent,
-        EnvironmentVariableComponent
+        EditEnvironmentVariablesComponent
     ],
     standalone: true
 })
@@ -74,9 +74,6 @@ export class PipelineEditorComponent implements OnInit {
         this.dialog.open("", )
     };
     createStage() {
-        this.dialog.open("", )
-    };
-    createEnvironmentVariable() {
         this.dialog.open("", )
     };
 

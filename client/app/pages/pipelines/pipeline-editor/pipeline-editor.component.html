@@ -78,15 +78,11 @@
         </button>
     </mat-tab>
     <mat-tab label="Environment Variables">
-        <button
-            #btn
-            mat-icon-button
-            matTooltip="Add an environment variable"
-            (click)="createEnvironmentVariable()"
-        >
-            <mat-icon>add</mat-icon>
-        </button>
+        <app-edit-environment-variable [pipeline]="pipeline"/>
     </mat-tab>
     <!-- <mat-tab label="Parameters"></mat-tab> -->
     <!-- <mat-tab label="Automation (WIP)"></mat-tab> -->
 </mat-tab-group>
+
+<button mat-icon-button (click)="save()"><mat-icon>done</mat-icon> Save</button>
+
