@@ -94,7 +94,8 @@ DEFINE TABLE pipelineSource SCHEMAFULL;
 
     DEFINE FIELD branch ON TABLE pipelineSource TYPE string;
     DEFINE FIELD username ON TABLE pipelineSource TYPE string;
-    DEFINE FIELD `password` ON TABLE pipelineSource TYPE record(secret);
+    -- TODO: Deal with storing this later.
+    -- DEFINE FIELD `password` ON TABLE pipelineSource TYPE record(secret);
     DEFINE FIELD cloneDepth ON TABLE pipelineSource TYPE int
         VALUE $value OR -1;
     DEFINE FIELD pollingBehavior ON TABLE pipelineSource TYPE string;
