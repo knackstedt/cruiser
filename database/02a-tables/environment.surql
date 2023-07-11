@@ -6,6 +6,7 @@ DEFINE TABLE environmentVariable SCHEMAFULL;
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE environmentVariable TYPE string;
     DEFINE FIELD isSecret ON TABLE environmentVariable TYPE bool
-        ASSERT $value != NONE;
+        ASSERT $value != NONE
+        && ($before = $value || $before = NONE);
 
 
