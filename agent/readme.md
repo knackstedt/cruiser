@@ -17,7 +17,7 @@ Pipeline
     - If task.freezeAfterRun flag set, halt here.
     - Agent advertises "task ${calculatedName} complete!"
     - Agent advertises "task ${calculatedName} failed!"
-5. Agent uploads resources and dies
+5. Agent uploads artifacts and dies
     - metadata:
         duration
         artifact size
