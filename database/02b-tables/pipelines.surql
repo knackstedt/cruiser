@@ -1,4 +1,4 @@
-DEFINE TABLE pipelineArtifact SCHEMAFULL;
+DEFINE TABLE pipelineArtifact SCHEMALESS;
     DEFINE FIELD label ON TABLE pipelineArtifact TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipelineArtifact TYPE string;
@@ -8,7 +8,7 @@ DEFINE TABLE pipelineArtifact SCHEMAFULL;
         ASSERT $value != NONE;
 
 
-DEFINE TABLE pipelineTask SCHEMAFULL;
+DEFINE TABLE pipelineTask SCHEMALESS;
     DEFINE FIELD command ON TABLE pipelineTask TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD label ON TABLE pipelineTask TYPE string;
@@ -30,9 +30,9 @@ DEFINE TABLE pipelineTask SCHEMAFULL;
 
     -- A task to run when this task fails or is cancelled
     DEFINE FIELD taskOnSelfFailure ON TABLE pipelineTask TYPE record(pipelineTask);
-    DEFINE FIELD environment.* ON TABLE pipelineTask TYPE record(environmentVariable);
+    -- DEFINE FIELD environment.* ON TABLE pipelineTask TYPE record(environmentVariable);
 
-DEFINE TABLE pipelineTaskGroup SCHEMAFULL;
+DEFINE TABLE pipelineTaskGroup SCHEMALESS;
     DEFINE FIELD label ON TABLE pipelineTaskGroup TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipelineTaskGroup TYPE string;
@@ -41,11 +41,11 @@ DEFINE TABLE pipelineTaskGroup SCHEMAFULL;
         VALUE $value OR 0;
 
     -- A task to run when this task fails or is cancelled
-    DEFINE FIELD environment.* ON TABLE pipelineTaskGroup TYPE record(environmentVariable);
-    DEFINE FIELD tasks.* ON TABLE pipelineTaskGroup TYPE record(pipelineTask);
+    -- DEFINE FIELD environment.* ON TABLE pipelineTaskGroup TYPE record(environmentVariable);
+    -- DEFINE FIELD tasks.* ON TABLE pipelineTaskGroup TYPE record(pipelineTask);
 
 
-DEFINE TABLE pipelineJob SCHEMAFULL;
+DEFINE TABLE pipelineJob SCHEMALESS;
     DEFINE FIELD label ON TABLE pipelineJob TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipelineJob TYPE string;
@@ -62,12 +62,12 @@ DEFINE TABLE pipelineJob SCHEMAFULL;
     DEFINE FIELD runType ON TABLE pipelineJob TYPE string
         ASSERT $value != NONE; // allAgents | agentsMarkedX | number
 
-    DEFINE FIELD taskGroups.* ON TABLE pipelineJob TYPE record(pipelineTaskGroup);
-    DEFINE FIELD artifacts.* ON TABLE pipelineJob TYPE record(pipelineArtifact);
-    DEFINE FIELD environment.* ON TABLE pipelineJob TYPE record(environmentVariable);
+    -- DEFINE FIELD taskGroups.* ON TABLE pipelineJob TYPE record(pipelineTaskGroup);
+    -- DEFINE FIELD artifacts.* ON TABLE pipelineJob TYPE record(pipelineArtifact);
+    -- DEFINE FIELD environment.* ON TABLE pipelineJob TYPE record(environmentVariable);
 
 
-DEFINE TABLE pipelineStage SCHEMAFULL;
+DEFINE TABLE pipelineStage SCHEMALESS;
     DEFINE FIELD label ON TABLE pipelineStage TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipelineStage TYPE string;
@@ -79,11 +79,11 @@ DEFINE TABLE pipelineStage SCHEMAFULL;
     DEFINE FIELD cleanupArtifacts ON TABLE pipelineStage TYPE bool;
     DEFINE FIELD cleanDirectory ON TABLE pipelineStage TYPE bool;
     DEFINE FIELD autoTriggerOnPreviousStageCompletion ON TABLE pipelineStage TYPE bool;
-    DEFINE FIELD environment.* ON TABLE pipelineStage TYPE record(environmentVariable);
-    DEFINE FIELD jobs.* ON TABLE pipelineStage TYPE record(pipelineJob);
+    -- DEFINE FIELD environment.* ON TABLE pipelineStage TYPE record(environmentVariable);
+    -- DEFINE FIELD jobs.* ON TABLE pipelineStage TYPE record(pipelineJob);
 
 
-DEFINE TABLE pipelineSource SCHEMAFULL;
+DEFINE TABLE pipelineSource SCHEMALESS;
     DEFINE FIELD label ON TABLE pipelineSource TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipelineSource TYPE string;
@@ -109,12 +109,12 @@ DEFINE TABLE pipelineSource SCHEMAFULL;
 
     DEFINE FIELD url ON TABLE pipelineSource TYPE string
         ASSERT $value != NONE;
-    DEFINE FIELD pipelines.* ON TABLE pipelineSource TYPE record(pipeline)
-        ASSERT $value != NONE;
+    -- DEFINE FIELD pipelines.* ON TABLE pipelineSource TYPE record(pipeline)
+        -- ASSERT $value != NONE;
 
 
 
-DEFINE TABLE pipeline SCHEMAFULL;
+DEFINE TABLE pipeline SCHEMALESS;
     DEFINE FIELD label ON TABLE pipeline TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipeline TYPE string;
@@ -145,6 +145,6 @@ DEFINE TABLE pipeline SCHEMAFULL;
     DEFINE FIELD `order` ON TABLE pipelineTask TYPE int
         ASSERT $value != NONE
         VALUE $value OR 0;
-    DEFINE FIELD stages.* ON TABLE pipeline TYPE record(pipelineStage);
-    DEFINE FIELD environment.* ON TABLE pipeline TYPE record(environmentVariable);
-    DEFINE FIELD sources.* ON TABLE pipeline TYPE record(pipelineSource);
+    -- DEFINE FIELD stages.* ON TABLE pipeline TYPE record(pipelineStage);
+    -- DEFINE FIELD environment.* ON TABLE pipeline TYPE record(environmentVariable);
+    -- DEFINE FIELD sources.* ON TABLE pipeline TYPE record(pipelineSource);
