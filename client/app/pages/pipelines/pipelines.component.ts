@@ -45,7 +45,7 @@ export class PipelinesComponent implements OnInit {
             lazyLoader.registerComponent({
                 id: "pipeline-editor",
                 group: "dynamic",
-                load: () => import('./pipeline-editor/pipeline-editor.component')
+                load: () => import('../@editors/pipeline-editor/pipeline-editor.component')
             })
         }
     }

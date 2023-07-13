@@ -7,9 +7,9 @@ import { EnvironmentVariable } from 'client/types/environment';
 import { Pipeline } from 'client/types/pipeline';
 
 @Component({
-    selector: 'app-edit-environment-variable',
-    templateUrl: './edit-environment-variable.component.html',
-    styleUrls: ['./edit-environment-variable.component.scss'],
+    selector: 'app-environment-variable',
+    templateUrl: './environment-variable.component.html',
+    styleUrls: ['./environment-variable.component.scss'],
     imports: [
         NgForOf,
         MatIconModule,

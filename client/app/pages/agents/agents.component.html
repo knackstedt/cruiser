@@ -16,10 +16,6 @@
 
                     <div
                         style="display: flex; flex-direction: column; gap: 6px"
-                        cdkDropList
-                        [cdkDropListData]="group.items"
-                        (cdkDropListDropped)="drop($event)"
-                        [cdkDropListSortingDisabled]="true"
                         (pointerenter)="btn['_hover'] = true"
                         (pointerleave)="btn['_hover'] = false"
                     >
@@ -44,7 +40,7 @@
                         </div>
                         <div *ngIf="!group.items || group.items.length == 0" class="empty-placeholder">
                             <span>
-                                No Pipelines
+                                No Agents
                             </span>
                         </div>
                     </div>
@@ -54,14 +50,35 @@
     </mat-tab>
     <mat-tab label="Elastic Agents">
         <div>
-            <div *ngFor="let agent of runningElasticAgents">
+            <mat-accordion displayMode="flat" [multi]="true">
+                <mat-expansion-panel expanded="false" *ngFor="let agent of runningElasticAgents">
+                    <mat-expansion-panel-header>
+                        <div class="label">
+                            {{agent.label}}
+                        </div>
+                    </mat-expansion-panel-header>
 
-            </div>
+                    <div>
+                        <!-- metadata... -->
+                    </div>
+                </mat-expansion-panel>
+            </mat-accordion>
+
         </div>
         <div>
-            <div *ngFor="let elasticAgent of elasticAgentConfigurations">
+            <mat-accordion displayMode="flat" [multi]="true">
+                <mat-expansion-panel expanded="false" *ngFor="let elasticAgent of elasticAgentConfigurations">
+                    <mat-expansion-panel-header>
+                        <div class="label">
+                            {{elasticAgent.label}}
+                        </div>
+                    </mat-expansion-panel-header>
 
-            </div>
+                    <div>
+                        <!-- metadata... -->
+                    </div>
+                </mat-expansion-panel>
+            </mat-accordion>
         </div>
     </mat-tab>
 </mat-tab-group>

@@ -16,7 +16,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { PipelineSourceComponent } from 'client/app/components/pipeline-source/pipeline-source.component';
 import { Pipeline } from 'client/types/pipeline';
 import { DialogService } from 'client/app/services/dialog.service';
-import { EditEnvironmentVariablesComponent } from 'client/app/components/edit-environment-variable/edit-environment-variables.component';
+import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
 
 @Component({
     selector: 'app-pipeline-editor',
@@ -45,7 +45,14 @@ export class PipelineEditorComponent implements OnInit {
 
     @ViewChild("nameInput") nameInputRef: ElementRef;
 
-    @Input() pipeline: Pipeline;
+    private _pipeline: Pipeline;
+    private _originalPipeline: Pipeline;
+    @Input() set pipeline(val: Pipeline) {
+        this._originalPipeline = val;
+        // Detach object references.
+        this._pipeline = structuredClone(val);
+    };
+    get pipeline() { return this._pipeline };
 
     constructor(
         @Optional() @Inject(MAT_DIALOG_DATA) public data: any = {},
