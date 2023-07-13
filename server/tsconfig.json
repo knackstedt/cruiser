@@ -19,7 +19,7 @@
         "importHelpers": true,
         "esModuleInterop": true,
         "target": "es2020",
-        "module": "commonjs",
+        "module": "System",
         "lib": [
             "es2020"
         ],

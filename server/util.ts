@@ -2,6 +2,9 @@ import { NextFunction, Request, Response } from "express";
 import pino from 'pino';
 import * as fs from "fs-extra";
 
+
+export const sleep = ms => new Promise(r => setTimeout(r, ms));
+
 // We use this route to 'throw' an error when an async route has an unhandled exception.
 export const route = (fn: (req: Request, res: Response, next: NextFunction) => any) => (req, res, next) => {
     try {
@@ -98,6 +101,22 @@ export const logger = pino(pino.transport({
             target: 'pino/file',
             options: {
                 destination: `log/verbose-${process.pid}.log`,
+                mkdir: true
+            },
+        },
+        {
+            target: 'pino/file', level: 'trace', options: { destination: 1 }
+        }
+    ]
+}));
+
+export const getLogger = (file: string) => pino(pino.transport({
+    targets: [
+        {
+            level: 'trace',
+            target: 'pino/file',
+            options: {
+                destination: `log/${file}.log`,
                 mkdir: true
             },
         },
