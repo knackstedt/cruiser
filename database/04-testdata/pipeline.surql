@@ -20,7 +20,7 @@ CREATE pipeline:ulid() CONTENT {
                             environment: [
                                 { key: "level4key", value: "level4value" },
                                 { key: "level4key2", value: "level4value2" }
-                            ]
+                            ],
                             tasks: [
                                 {
                                     label: "test cmd",
@@ -58,7 +58,7 @@ CREATE pipeline:ulid() CONTENT {
             ]
         },
         {
-            label: "deploy dev"
+            label: "deploy dev",
             environment: [
                 { key: "level2akey", value: "level2avalue" },
                 { key: "level2akey2", value: "level2avalue2" }
