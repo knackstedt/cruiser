@@ -12,6 +12,6 @@ DEFINE TABLE pipelineStage SCHEMALESS;
     DEFINE FIELD autoTriggerOnPreviousStageCompletion ON TABLE pipelineStage TYPE bool;
 
     DEFINE FIELD environment ON TABLE pipelineStage TYPE array;
-    DEFINE FIELD environment.* ON TABLE pipelineStage TYPE record(environmentVariable);
+    -- DEFINE FIELD environment.* ON TABLE pipelineStage TYPE record(environmentVariable);
     DEFINE FIELD jobs ON TABLE pipelineStage TYPE array;
-    DEFINE FIELD jobs.* ON TABLE pipelineStage TYPE record(pipelineJob);
+    -- DEFINE FIELD jobs.* ON TABLE pipelineStage TYPE record(pipelineJob);

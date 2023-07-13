@@ -17,8 +17,8 @@ DEFINE TABLE pipelineJob SCHEMALESS;
         ASSERT $value != NONE; // allAgents | agentsMarkedX | number
 
     DEFINE FIELD taskGroups ON TABLE pipelineJob TYPE array;
-    DEFINE FIELD taskGroups.* ON TABLE pipelineJob TYPE record(pipelineTaskGroup);
+    -- DEFINE FIELD taskGroups.* ON TABLE pipelineJob TYPE record(pipelineTaskGroup);
     DEFINE FIELD artifacts ON TABLE pipelineJob TYPE array;
-    DEFINE FIELD artifacts.* ON TABLE pipelineJob TYPE record(pipelineArtifact);
+    -- DEFINE FIELD artifacts.* ON TABLE pipelineJob TYPE record(pipelineArtifact);
     DEFINE FIELD environment ON TABLE pipelineJob TYPE array;
-    DEFINE FIELD environment.* ON TABLE pipelineJob TYPE record(environmentVariable);
+    -- DEFINE FIELD environment.* ON TABLE pipelineJob TYPE record(environmentVariable);

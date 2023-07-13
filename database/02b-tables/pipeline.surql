@@ -31,8 +31,8 @@ DEFINE TABLE pipeline SCHEMALESS;
         VALUE $value OR 0;
 
     DEFINE FIELD stages ON TABLE pipeline TYPE array;
-    DEFINE FIELD stages.* ON TABLE pipeline TYPE record(pipelineStage);
+    -- DEFINE FIELD stages.* ON TABLE pipeline TYPE record(pipelineStage);
     DEFINE FIELD environment ON TABLE pipeline TYPE array;
-    DEFINE FIELD environment.* ON TABLE pipeline TYPE record(environmentVariable);
+    -- DEFINE FIELD environment.* ON TABLE pipeline TYPE record(environmentVariable);
     DEFINE FIELD sources ON TABLE pipeline TYPE array;
-    DEFINE FIELD sources.* ON TABLE pipeline TYPE record(pipelineSource);
+    -- DEFINE FIELD sources.* ON TABLE pipeline TYPE record(pipelineSource);
