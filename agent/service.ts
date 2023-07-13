@@ -3,6 +3,21 @@ import helmet from 'helmet';
 import http from 'http';
 
 import { logger } from './util';
+import { TerminalSocketService } from './api/terminal';
+import { FilesystemApi } from './api/files';
+
+import Surreal from 'surrealdb.js';
+
+const dbc = new Surreal('http://127.0.0.1:8000/rpc');
+await dbc.signin({
+    user: 'root',
+    pass: 'root',
+});
+await dbc.use({ ns: '@dotglitch', db: 'dotops' });
+
+
+export const db = dbc;
+
 
 const onFinished = require('on-finished');
 
@@ -24,30 +39,6 @@ const getDuration = (req, res) => {
 (async () => {
     const app: Express = express();
 
-    app.use(helmet.contentSecurityPolicy({
-        useDefaults: true,
-        directives: {
-            "default-src": ["'self'",],
-            "frame-ancestors": ["'self'"],
-            "frame-src": ["'self'"],
-            "font-src": ["'self'", "data:"],
-            "form-action": ["'self'"],
-            "img-src": ["*", "data:"],
-            "media-src": ["'self'", "blob:" ],
-            "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-            "script-src-attr": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-            "style-src": ["'self'", "'unsafe-inline'"],
-            // "report-uri": ["/api/Security/Violation"],
-            "worker-src": ["'self'", "blob:"]
-        }
-    }));
-    app.use(helmet.dnsPrefetchControl({ allow: false }));
-    app.use(helmet.frameguard({ action: "sameorigin" }));
-    app.use(helmet.hidePoweredBy());
-    // app.use(helmet.hsts({ maxAge: 86400 * 7 }));
-    app.use(helmet.permittedCrossDomainPolicies());
-    app.use(helmet.referrerPolicy());
-    app.use(helmet.xssFilter());
     app.use((req, res, next) => {
         onFinished(req, () => {
             logger.info({
@@ -78,6 +69,6 @@ const getDuration = (req, res) => {
     );
     server.on("listening", () => console.log(`Server listening on port ${port}`));
 
-    new TerminalSocketService(httpserver);
+    new TerminalSocketService(server);
 
 })();
