@@ -3,8 +3,8 @@ import { Component, Input, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { EnvironmentVariableComponent } from './environment-variable/environment-variable.component';
-import { EnvironmentVariable } from 'client/types/environment';
-import { Pipeline } from 'client/types/pipeline';
+import { Pipeline } from 'types/pipeline';
+import { EnvironmentVariable } from 'types/environment';
 
 @Component({
     selector: 'app-environment-variable',

@@ -4,10 +4,11 @@ import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from 
 import { NgForOf, NgIf } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { Pipeline } from 'client/types/pipeline';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DialogService } from 'client/app/services/dialog.service';
 import { NgxLazyLoaderService } from '@dotglitch/ngx-lazy-loader';
+import { Pipeline } from 'types/pipeline';
+import { Fetch } from 'client/app/services/fetch.service';
 
 @Component({
     selector: 'app-pipelines',
@@ -32,14 +33,13 @@ export class PipelinesComponent implements OnInit {
 
     pipelineGroups = [
         { label: "default", items: [] },
-        { label: "node", items: [] },
-        { label: "c#", items: [] },
     ]
 
     constructor(
         private viewContainer: ViewContainerRef,
         private dialog: DialogService,
-        private lazyLoader: NgxLazyLoaderService
+        private lazyLoader: NgxLazyLoaderService,
+        private fetch: Fetch
     ) {
         if (!lazyLoader.isComponentRegistered("pipeline-editor", "dynamic")) {
             lazyLoader.registerComponent({
@@ -50,7 +50,24 @@ export class PipelinesComponent implements OnInit {
         }
     }
 
-    ngOnInit() {
+    async ngOnInit() {
+        this.pipelineGroups = [
+            { label: "default", items: [] },
+        ];
+
+        const pipelines: Pipeline[] = await this.fetch.get('/api/pipeline');
+
+        pipelines.forEach(pipeline => {
+            const group = pipeline.group;
+
+            let g = this.pipelineGroups.find(g => g.label == group);
+            if (!g) {
+                g = { label: group, items: [] };
+                this.pipelineGroups.push(g);
+            }
+
+            g.items.push(pipeline);
+        });
     }
 
     createPipeline(pipeline: Partial<Pipeline>) {
@@ -60,7 +77,8 @@ export class PipelinesComponent implements OnInit {
     drop(event: CdkDragDrop<any, any, any>) {
         if (event.previousContainer === event.container) {
             moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-        } else {
+        }
+        else {
             transferArrayItem(
                 event.previousContainer.data,
                 event.container.data,

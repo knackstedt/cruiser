@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { EnvironmentVariable } from 'client/types/environment';
+import { EnvironmentVariable } from 'types/environment';
 
 @Component({
     selector: 'app-environment-variable',

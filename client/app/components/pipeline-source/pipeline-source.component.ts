@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { PipelineSource } from 'client/types/pipeline';
+import { PipelineSource } from 'types/pipeline';
 
 @Component({
     selector: 'app-pipeline-source',

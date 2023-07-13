@@ -12,6 +12,9 @@ import { Fetch } from 'client/app/services/fetch.service';
 import { VscodeComponent } from '@dotglitch/ngx-web-components';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
+import { NgForOf, NgIf } from '@angular/common';
+import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
+import { PipelineSourceComponent } from 'client/app/components/pipeline-source/pipeline-source.component';
 
 @Component({
     selector: 'app-stage-editor',

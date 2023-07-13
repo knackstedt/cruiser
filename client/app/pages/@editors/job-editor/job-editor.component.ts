@@ -13,6 +13,8 @@ import { VscodeComponent } from '@dotglitch/ngx-web-components';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { NgForOf, NgIf } from '@angular/common';
+import { PipelineSourceComponent } from 'client/app/components/pipeline-source/pipeline-source.component';
+import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
 
 
 @Component({

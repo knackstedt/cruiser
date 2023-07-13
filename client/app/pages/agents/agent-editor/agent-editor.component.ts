@@ -14,8 +14,8 @@ import { VscodeComponent } from '@dotglitch/ngx-web-components';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { PipelineSourceComponent } from 'client/app/components/pipeline-source/pipeline-source.component';
-import { Pipeline } from 'client/types/pipeline';
 import { DialogService } from 'client/app/services/dialog.service';
+import { Pipeline } from 'types/pipeline';
 
 @Component({
     selector: 'app-agent-editor',
