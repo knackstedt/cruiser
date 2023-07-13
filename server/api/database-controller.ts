@@ -8,7 +8,7 @@ const db = new Surreal('http://127.0.0.1:8000/rpc');
         user: 'root',
         pass: 'root',
     });
-    await db.use({ ns: '@dotglitch', db: 'dotops' });
+    await db.use({ ns: 'dotglitch', db: 'dotops' });
 })();
 
 
@@ -50,4 +50,4 @@ export const DatabaseTableApi = (table: string) => {
     }));
 
     return router;
-}
+};
