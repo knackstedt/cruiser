@@ -14,18 +14,16 @@
       "type": "node",
       "request": "launch",
       "args": [
-        "server/main.ts",
+        "main.ts",
         "--project"
       ],
       "runtimeArgs": [
         "--nolazy",
         "-r",
-        "ts-node/register",
-        // "--loader=ts-node/esm",
-        // "--experimental-specifier-resolution=node",
+        "ts-node/register"
       ],
       "sourceMaps": true,
-      "cwd": "${workspaceRoot}",
+      "cwd": "${workspaceRoot}/server",
     },
     {
       "name": "Database",
