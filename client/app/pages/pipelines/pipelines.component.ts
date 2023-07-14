@@ -13,6 +13,7 @@ import { ContextMenuItem, NgxAppMenuDirective, NgxContextMenuDirective } from '@
 import { CompactType, DisplayGrid, GridType, GridsterComponent, GridsterConfig, GridsterItem, GridsterItemComponentInterface, GridsterModule } from 'angular-gridster2';
 import { ThemedIconDirective } from 'client/app/services/theme.service';
 import Sortable from 'sortablejs';
+import { HeaderbarComponent } from 'client/app/components/headerbar/headerbar.component';
 
 // import Sortable from 'sortablejs/modular/sortable.core.esm.js';
 // import Sortable from 'sortablejs/modular/sortable.complete.esm.js';
@@ -33,7 +34,8 @@ import Sortable from 'sortablejs';
         DragDropModule,
         NgxAppMenuDirective,
         NgxContextMenuDirective,
-        ThemedIconDirective
+        ThemedIconDirective,
+        HeaderbarComponent
     ],
     standalone: true
 })
@@ -186,18 +188,13 @@ export class PipelinesComponent implements OnInit {
     }
 
     onScroll(el: HTMLDivElement) {
-
-        this.viewportStart = el?.scrollTop || 0;
-        this.viewportEnd = this.viewportStart + this.containerBounds.height;
+        // this.viewportStart = el?.scrollTop || 0;
+        // this.viewportEnd = this.viewportStart + this.containerBounds.height;
     }
 
     @HostListener("window:resize")
     onResize() {
         const el = this.viewContainer?.element?.nativeElement as HTMLElement;
         this.containerBounds = el.getBoundingClientRect();
-        // this.cols = (this.containerBounds.width - 96) / 21
-        // 230px
-        // this.options.maxCols = Math.round(this.cols);
-        // this.options.minCols = Math.round(this.cols);
     }
 }

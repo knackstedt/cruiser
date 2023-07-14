@@ -1,11 +1,6 @@
-<div class="headerbar">
-    <div>
-        <mat-icon></mat-icon>
-        Pipelines
-    </div>
-</div>
+<app-headerbar label="Pipelines"></app-headerbar>
 
-<div #scroller (scroll)="onScroll(scroller)" cdkDropListGroup style="height: 100%; overflow: auto">
+<div #scroller class="scroller" (scroll)="onScroll(scroller)" cdkDropListGroup style="height: 100%; overflow: auto">
     <!-- NgFor swimlane -->
     <mat-accordion displayMode="flat" [multi]="true" *ngFor="let group of pipelineGroups">
         <mat-expansion-panel expanded="true">

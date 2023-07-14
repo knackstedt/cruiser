@@ -1,7 +1,12 @@
 :host {
-    display: block;
+    display: flex;
     height: 100%;
-    padding: 24px;
+    flex-direction: column;
+}
+
+.scroller {
+    padding: 0 24px 24px 24px;
+    flex: 1 1 calc(100% - 48px);
 }
 
 .placeholder {
