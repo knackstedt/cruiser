@@ -1,27 +1,22 @@
-<h1>
-    Pipeline Groups
-</h1>
+<div class="headerbar">
+    <div>
+        <mat-icon></mat-icon>
+        Pipelines
+    </div>
+</div>
 
 <div #scroller (scroll)="onScroll(scroller)" cdkDropListGroup style="height: 100%; overflow: auto">
     <!-- NgFor swimlane -->
     <mat-accordion displayMode="flat" [multi]="true" *ngFor="let group of pipelineGroups">
         <mat-expansion-panel expanded="true">
+        <!-- (pointerenter)="btn['_hover'] = true"
+            (pointerleave)="btn['_hover'] = false" -->
             <mat-expansion-panel-header>
                 <div class="label">
-                    {{group.label}}
+                    {{group.label || "unknown"}}
                 </div>
-            </mat-expansion-panel-header>
 
-            <div
-                style="display: flex; flex-direction: column; gap: 6px"
-                cdkDropList
-                [cdkDropListData]="group.items"
-                (cdkDropListDropped)="drop($event)"
-                [cdkDropListSortingDisabled]="true"
-                (pointerenter)="btn['_hover'] = true"
-                (pointerleave)="btn['_hover'] = false"
-            >
-                <button
+                <!-- <button
                     #btn
                     mat-icon-button
                     matTooltip="Add a pipeline"
@@ -30,21 +25,53 @@
                     (click)="createPipeline({group: group.label})"
                 >
                     <mat-icon>add</mat-icon>
-                </button>
+                </button> -->
+            </mat-expansion-panel-header>
 
-                <div cdkDrag *ngFor="let data of group.items">
-                    <div class="placeholder" *cdkDragPlaceholder></div>
-                    <div>
-                        <!-- <mat-icon [fontIcon]="data._icon || 'task'"></mat-icon> -->
-                        <span>{{data.name}}</span>
+            <div #grid class="grid">
 
+                <div class="grid-item" [ngx-ctx-menu]="ctxMenu" [ngx-ctx-menu-context]="pipeline" *ngFor="let pipeline of group.items">
+                    <!-- <mat-icon [fontIcon]="data._icon || 'task'"></mat-icon> -->
+                    <div class="content">
+                        <!-- <button><mat-icon>settings</mat-icon></button> -->
+                        <h4 class="label">{{pipeline.label}}</h4>
+
+                        <div class="schedule-controls">
+
+                            <button><mat-icon>play_arrow</mat-icon></button>
+                            <button><img icon="play-with-options"/></button>
+                            <button><mat-icon>stop</mat-icon></button>
+
+                            <a href="">History</a>
+                        </div>
+                        <hr/>
+                        <div>
+                            <div>Instance: 23</div>
+
+                            <div>
+                                <a href="">Compare</a>
+                                <a href="">Changes</a>
+                                <a href="">VSM</a>
+                            </div>
+
+                            <div>Triggered by changes on 08 jul, 2023 at 19:29:22 Local Time</div>
+                        </div>
+                        <div>
+                            <div *ngFor="let stage of pipeline.stages">
+                                <!-- check block cancel-->
+                                <!-- <mat-icon [fontIcon]="stage."></mat-icon> -->
+                            </div>
+                        </div>
+
+                        <button class="options" mat-icon-button [ngx-app-menu]="ctxMenu" [ngx-app-menu-context]="pipeline">
+                            <mat-icon>more_vert</mat-icon>
+                        </button>
                     </div>
                 </div>
-                <div *ngIf="!group.items || group.items.length == 0" class="empty-placeholder">
-                    <span>
-                        No Pipelines
-                    </span>
-                </div>
+            </div>
+
+            <div *ngIf="!group.items || group.items.length == 0" class="empty-placeholder">
+                <span>No Pipelines</span>
             </div>
         </mat-expansion-panel>
     </mat-accordion>
