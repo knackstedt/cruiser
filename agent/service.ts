@@ -1,25 +1,21 @@
 import express, { Express } from 'express';
-import helmet from 'helmet';
 import http from 'http';
+import Surreal from 'surrealdb.js';
 
 import { logger } from './util';
 import { TerminalSocketService } from './api/terminal';
 import { FilesystemApi } from './api/files';
 
-import Surreal from 'surrealdb.js';
+const onFinished = require('on-finished');
 
 const dbc = new Surreal('http://127.0.0.1:8000/rpc');
 await dbc.signin({
     user: 'root',
     pass: 'root',
 });
-await dbc.use({ ns: '@dotglitch', db: 'dotops' });
-
+await dbc.use({ ns: 'dotglitch', db: 'dotops' });
 
 export const db = dbc;
-
-
-const onFinished = require('on-finished');
 
 process.on("uncaughtException", err => {
     logger.error("uncaught:", err);

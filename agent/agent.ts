@@ -1,10 +1,8 @@
-import { Observable } from 'rxjs';
-import crypto from 'crypto';
-import { getLogger, sleep } from './util';
 import Surreal from 'surrealdb.js';
 import { execa } from 'execa';
 import { AgentJob } from '../types/agent-task';
 import { PipelineTaskGroup } from '../types/pipeline';
+import { getLogger, sleep } from './util';
 
 const logger = getLogger("agent");
 
@@ -13,7 +11,7 @@ await db.signin({
     user: 'root',
     pass: 'root',
 });
-await db.use({ ns: '@dotglitch', db: 'dotops' });
+await db.use({ ns: 'dotglitch', db: 'dotops' });
 
 
 async function freezeProcessing({taskGroup, agentTask, taskId} : {taskGroup: PipelineTaskGroup, agentTask: AgentJob, taskId: string}) {
@@ -56,11 +54,11 @@ async function freezeProcessing({taskGroup, agentTask, taskId} : {taskGroup: Pip
             const task = tasks[i];
 
 
-            task
+            // task
+            // ...task.environment
 
             const env = {
 
-                ...task.environment
             };
 
 
@@ -72,7 +70,7 @@ async function freezeProcessing({taskGroup, agentTask, taskId} : {taskGroup: Pip
 
 
             await execa(task.command, task.arguments, {
-                env,
+                env: env,
                 cwd: task.workingDirectory,
                 timeout: task.commandTimeout || 0
             });
