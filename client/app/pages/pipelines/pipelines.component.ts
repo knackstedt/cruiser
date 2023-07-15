@@ -10,14 +10,9 @@ import { NgxLazyLoaderService } from '@dotglitch/ngx-lazy-loader';
 import { Pipeline } from 'types/pipeline';
 import { Fetch } from 'client/app/services/fetch.service';
 import { ContextMenuItem, NgxAppMenuDirective, NgxContextMenuDirective } from '@dotglitch/ngx-ctx-menu';
-import { CompactType, DisplayGrid, GridType, GridsterComponent, GridsterConfig, GridsterItem, GridsterItemComponentInterface, GridsterModule } from 'angular-gridster2';
 import { ThemedIconDirective } from 'client/app/services/theme.service';
 import Sortable from 'sortablejs';
 import { HeaderbarComponent } from 'client/app/components/headerbar/headerbar.component';
-
-// import Sortable from 'sortablejs/modular/sortable.core.esm.js';
-// import Sortable from 'sortablejs/modular/sortable.complete.esm.js';
-
 
 
 @Component({
@@ -76,52 +71,17 @@ export class PipelinesComponent implements OnInit {
 
     cols = 4;
 
-    // options: GridsterConfig = {
-    //     gridType: GridType.Fixed,
-    //     displayGrid: DisplayGrid.None,
-    //     swap: true,
-    //     draggable: {
-    //         delayStart: 0,
-    //         enabled: true,
-    //         ignoreContentClass: 'gridster-item-content',
-    //         ignoreContent: false,
-    //         dragHandleClass: 'drag-handler',
-    //         stop: this.eventStop.bind(this),
-    //         // start: DragComponent.eventStart,
-    //         dropOverItems: false,
-    //         // dropOverItemsCallback: DragComponent.overlapEvent
-    //     },
-    //     compactType: CompactType.CompactUp,
-    //     disableScrollHorizontal: true,
-    //     disableScrollVertical: false,
-    //     // maxRows: 1,
-    //     margin: 16,
-    //     fixedColWidth: 268,
-    //     fixedRowHeight: 230,
-    //     minCols: 6,
-    //     maxCols: 6,
-    // };
-    // eventStop(
-    //     item: GridsterItem,
-    //     itemComponent: GridsterItemComponentInterface,
-    //     event: MouseEvent
-    // ): void {
-    //     this.grid.grid.sort((a, b) => !a ? -1 : !b ? 1 : 0)
-    // }
-
     constructor(
         private viewContainer: ViewContainerRef,
         private dialog: DialogService,
         private lazyLoader: NgxLazyLoaderService,
         private fetch: Fetch
     ) {
-        if (!lazyLoader.isComponentRegistered("pipeline-editor", "dynamic")) {
-            lazyLoader.registerComponent({
-                id: "pipeline-editor",
-                group: "dynamic",
-                load: () => import('../@editors/pipeline-editor/pipeline-editor.component')
-            })
-        }
+        lazyLoader.registerComponent({
+            id: "pipeline-editor",
+            group: "dynamic",
+            load: () => import('../@editors/pipeline-editor/pipeline-editor.component')
+        });
     }
 
     async ngOnInit() {
@@ -149,6 +109,7 @@ export class PipelinesComponent implements OnInit {
             animation: 300,
             easing: "cubic-bezier(1, 0, 0, 1)", // Easing for animation. Defaults to null. See https://easings.net/ for examples.
             ghostClass: "sortable-ghost",  // Class name for the drop placeholder
+            // ignore: "",
             forceFallback: true,
             fallbackOffset: {
                 x: -200,
@@ -166,7 +127,7 @@ export class PipelinesComponent implements OnInit {
                 evt.clone; // the clone element
                 evt.pullMode;  // when item is in another sortable: `"clone"` if cloning, `true` if moving
             }
-        })
+        });
     }
 
     createPipeline(pipeline: Partial<Pipeline>) {
@@ -185,6 +146,22 @@ export class PipelinesComponent implements OnInit {
                 event.currentIndex,
             );
         }
+    }
+
+    triggerPipeline(pipeline: Pipeline) {
+        this.fetch.get(`/api/pipeline/${pipeline.id}/start`);
+    }
+
+    triggerPipelineWithOptions(pipeline: Pipeline) {
+        this.fetch.get(`/api/pipeline/${pipeline.id}/start`);
+    }
+
+    pausePipeline(pipeline: Pipeline) {
+        this.fetch.get(`/api/pipeline/${pipeline.id}/pause`);
+    }
+
+    resumePipeline(pipeline: Pipeline) {
+        this.fetch.get(`/api/pipeline/${pipeline.id}/resume`);
     }
 
     onScroll(el: HTMLDivElement) {

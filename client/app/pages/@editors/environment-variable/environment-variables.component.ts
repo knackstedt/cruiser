@@ -37,9 +37,9 @@ export class EditEnvironmentVariablesComponent implements OnInit {
     }
 
     createVariable() {
-        this.variables.push({ key: "", value: "", isSecret: false  });
+        this.variables.push({ id: undefined, key: "", value: "", isSecret: false  });
     }
     createSecret() {
-        this.secrets.push({ key: "", value: "", isSecret: true  });
+        this.secrets.push({ id: undefined, key: "", value: "", isSecret: true  });
     }
 }

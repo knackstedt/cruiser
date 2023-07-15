@@ -33,28 +33,30 @@
 
                         <div class="schedule-controls">
 
-                            <button><mat-icon>play_arrow</mat-icon></button>
-                            <button><img icon="play-with-options"/></button>
-                            <button><mat-icon>stop</mat-icon></button>
+                            <button [disabled]="pipeline.state != 'active'" (click)="triggerPipeline(pipeline)"><mat-icon>play_arrow</mat-icon></button>
+                            <button [disabled]="pipeline.state != 'active'" (click)="triggerPipelineWithOptions(pipeline)"><img icon="play-with-options"/></button>
+                            <button [class.active]="pipeline.state == 'active'" (click)="pipeline.state == 'active' ? pausePipeline(pipeline) : resumePipeline(pipeline)">
+                                <mat-icon>pause</mat-icon>
+                            </button>
 
-                            <a href="">History</a>
+                            <a href="#/History">History</a>
                         </div>
                         <hr/>
                         <div>
-                            <div>Instance: 23</div>
+                            <div>Instance: {{((pipeline.stages||[])[0]?.jobs||[])[0]?.invocationCount}}</div>
 
                             <div>
-                                <a href="">Compare</a>
-                                <a href="">Changes</a>
-                                <a href="">VSM</a>
+                                <a href="#/Compare">Compare</a>
+                                <a href="#/Changes">Changes</a>
+                                <a href="#/VSM">VSM</a>
                             </div>
 
-                            <div>Triggered by changes on 08 jul, 2023 at 19:29:22 Local Time</div>
+                            <div>Triggered by {{((pipeline.stages||[])[0]?.jobs||[])[0]?.lastTriggerReason}} on {{((pipeline.stages||[])[0]?.jobs||[])[0]?.lastRun}} Local Time</div>
                         </div>
                         <div>
                             <div *ngFor="let stage of pipeline.stages">
                                 <!-- check block cancel-->
-                                <!-- <mat-icon [fontIcon]="stage."></mat-icon> -->
+                                <mat-icon [fontIcon]="stage.jobs[0].runState"></mat-icon>
                             </div>
                         </div>
 
