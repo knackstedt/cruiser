@@ -1,7 +1,8 @@
 import { PipelineJob } from './pipeline';
 
-export type AgentJob = {
-    label: string,
+export type JobInstance = {
+    id: string
+    label: string
     state:
         "pending"       | // Pending provisioning of job container
         "initializing"  | // Job is just starting up
@@ -13,4 +14,21 @@ export type AgentJob = {
         "complete"      | // Job is finished and acknowledged by scheduler
         "resume";         // A user has resumed a job from being frozen.
     job: PipelineJob
+    kubeNamespace: string
+    kubePod: string
+    queueTime: Date
+    startTime: Date
+    endTime: Date
+    errorCount: number
+    warnCount: number
+};
+
+
+export type ElasticAgentPool = {
+    id: string;
+    label: string;
+    kubeNamespace: string;
+    kubeContainerImage: string;
+    errorCount: number;
+    warnCount: number;
 };

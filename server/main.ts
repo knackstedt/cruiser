@@ -7,6 +7,7 @@ import { FilesystemApi } from "./api/files";
 import { RestApi } from './api/rest';
 import { logger } from './util';
 import { DatabaseTableApi } from './api/database-controller';
+import { PipelineApi } from './api/pipeline';
 
 const onFinished = require('on-finished');
 
@@ -84,7 +85,13 @@ const getDuration = (req, res) => {
     app.use("/api/pipeline/task", DatabaseTableApi("pipelineTask"));
     app.use("/api/pipeline/job", DatabaseTableApi("pipelineJob"));
     app.use("/api/pipeline/stage", DatabaseTableApi("pipelineStage"));
+
+    app.use("/api/jobs", DatabaseTableApi("jobInstance"));
+
+    app.use("/api/pipeline", PipelineApi);
     app.use("/api/pipeline", DatabaseTableApi("pipeline"));
+
+
 
     app.use("/api/secrets", DatabaseTableApi("secret"));
     app.use("/api/environment-variables", DatabaseTableApi("environmentVariable"));

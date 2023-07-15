@@ -1,6 +1,7 @@
 import { EnvironmentVariable } from './environment';
 
 export type PipelineArtifact = {
+    id: string
     label: string
     description?: string
     source: string
@@ -8,6 +9,7 @@ export type PipelineArtifact = {
 }
 
 export type PipelineTask = {
+    id: string
     command: string
     arguments: string[]
     commandTimeout: number
@@ -24,6 +26,7 @@ export type PipelineTask = {
 }
 
 export type PipelineTaskGroup = {
+    id: string
     label: string
     description?: string
     order: number
@@ -32,12 +35,18 @@ export type PipelineTaskGroup = {
 }
 
 export type PipelineJob = {
+    id: string
     label: string
     description?: string
     elasticAgentId?: string
     order: number
     timeout: string
     runType: string
+    invocationCount: number
+    failCount: number
+    lastRun?: string
+    lastTriggerReason?: "cron" | "changes" | "manual" | "webhook"
+    runState?: "success" | "fail" | "running"
 
     taskGroups: PipelineTaskGroup[]
     artifacts: PipelineArtifact[]
@@ -45,8 +54,10 @@ export type PipelineJob = {
 }
 
 export type PipelineStage = {
+    id: string
     label: string
     description?: string
+    lastRunState?: string
     order: number
     onlyOnPreviousSuccess?: boolean
     fetchSources?: boolean
@@ -58,6 +69,7 @@ export type PipelineStage = {
 }
 
 export type PipelineSource = {
+    id: string
     label: string
     description: string
     targetPath: string
@@ -78,6 +90,7 @@ export type PipelineSource = {
 
 
 export type Pipeline = {
+    id: string
     label: string
     description: string
     labelTemplate: string
