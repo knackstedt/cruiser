@@ -32,30 +32,7 @@ const getDuration = (req, res) => {
 (async () => {
     const app: Express = express();
 
-    app.use(helmet.contentSecurityPolicy({
-        useDefaults: true,
-        directives: {
-            "default-src": ["'self'",],
-            "frame-ancestors": ["'self'"],
-            "frame-src": ["'self'"],
-            "font-src": ["'self'", "data:"],
-            "form-action": ["'self'"],
-            "img-src": ["*", "data:"],
-            "media-src": ["'self'", "blob:" ],
-            "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-            "script-src-attr": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-            "style-src": ["'self'", "'unsafe-inline'"],
-            // "report-uri": ["/api/Security/Violation"],
-            "worker-src": ["'self'", "blob:"]
-        }
-    }));
-    app.use(helmet.dnsPrefetchControl({ allow: false }));
-    app.use(helmet.frameguard({ action: "sameorigin" }));
-    app.use(helmet.hidePoweredBy());
-    // app.use(helmet.hsts({ maxAge: 86400 * 7 }));
-    app.use(helmet.permittedCrossDomainPolicies());
-    app.use(helmet.referrerPolicy());
-    app.use(helmet.xssFilter());
+    app.use(express.json())
     app.use((req, res, next) => {
         onFinished(req, () => {
             logger.info({
@@ -80,21 +57,21 @@ const getDuration = (req, res) => {
     app.use("/api/filesystem", FilesystemApi);
     app.use("/api/rest", RestApi);
 
-    app.use("/api/agent", DatabaseTableApi("agent"));
-    app.use("/api/artifacts", DatabaseTableApi("pipelineArtifact"));
-    app.use("/api/pipeline/task", DatabaseTableApi("pipelineTask"));
-    app.use("/api/pipeline/job", DatabaseTableApi("pipelineJob"));
-    app.use("/api/pipeline/stage", DatabaseTableApi("pipelineStage"));
+    // app.use("/api/agent", DatabaseTableApi("agent"));
+    // app.use("/api/artifacts", DatabaseTableApi("pipelineArtifact"));
+    // app.use("/api/pipeline/task", DatabaseTableApi("pipelineTask"));
+    // app.use("/api/pipeline/job", DatabaseTableApi("pipelineJob"));
+    // app.use("/api/pipeline/stage", DatabaseTableApi("pipelineStage"));
 
-    app.use("/api/jobs", DatabaseTableApi("jobInstance"));
+    // app.use("/api/jobs", DatabaseTableApi("jobInstance"));
 
     app.use("/api/pipeline", PipelineApi);
-    app.use("/api/pipeline", DatabaseTableApi("pipeline"));
+    app.use("/api/db", DatabaseTableApi());
 
 
 
-    app.use("/api/secrets", DatabaseTableApi("secret"));
-    app.use("/api/environment-variables", DatabaseTableApi("environmentVariable"));
+    // app.use("/api/secrets", DatabaseTableApi("secret"));
+    // app.use("/api/environment-variables", DatabaseTableApi("environmentVariable"));
 
 
     // Listen on the specified port.

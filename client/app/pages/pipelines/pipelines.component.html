@@ -2,7 +2,11 @@
 
 <div #scroller class="scroller" (scroll)="onScroll(scroller)" cdkDropListGroup style="height: 100%; overflow: auto">
     <!-- NgFor swimlane -->
-    <mat-accordion displayMode="flat" [multi]="true" *ngFor="let group of pipelineGroups">
+    <mat-accordion
+        *ngFor="let group of pipelineGroups"
+        displayMode="flat"
+        [multi]="true"
+    >
         <mat-expansion-panel expanded="true">
         <!-- (pointerenter)="btn['_hover'] = true"
             (pointerleave)="btn['_hover'] = false" -->
@@ -23,9 +27,19 @@
                 </button> -->
             </mat-expansion-panel-header>
 
-            <div #grid class="grid">
+            <div
+                #grid
+                class="grid"
+                [attr.pipeline-group]="group.label"
+            >
 
-                <div class="grid-item" [ngx-ctx-menu]="ctxMenu" [ngx-ctx-menu-context]="pipeline" *ngFor="let pipeline of group.items">
+                <div
+                    class="grid-item"
+                    *ngFor="let pipeline of group.items"
+                    [ngx-ctx-menu]="ctxMenu"
+                    [ngx-ctx-menu-context]="pipeline"
+                    [attr.pipeline-id]="pipeline.id"
+                >
                     <!-- <mat-icon [fontIcon]="data._icon || 'task'"></mat-icon> -->
                     <div class="content">
                         <!-- <button><mat-icon>settings</mat-icon></button> -->

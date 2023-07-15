@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, QueryList, ViewChild, ViewChildren, ViewContainerRef, Inject } from '@angular/core';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { NgForOf, NgIf } from '@angular/common';
@@ -35,15 +35,18 @@ import { HeaderbarComponent } from 'client/app/components/headerbar/headerbar.co
     standalone: true
 })
 export class PipelinesComponent implements OnInit {
-    @ViewChild("grid") gridRef: ElementRef;
+    @ViewChildren("grid") gridRef: QueryList<any>;
 
     viewportStart = 0;
     viewportEnd = 500;
     containerBounds: DOMRect;
 
+    pipelines: Pipeline[];
     pipelineGroups: { label: string, items: Pipeline[]}[] = [
         { label: "default", items: [] },
     ]
+
+    sortableSectors: Sortable[] = [];
 
     readonly ctxMenu: ContextMenuItem<Pipeline>[] = [
         {
@@ -75,7 +78,8 @@ export class PipelinesComponent implements OnInit {
         private viewContainer: ViewContainerRef,
         private dialog: DialogService,
         private lazyLoader: NgxLazyLoaderService,
-        private fetch: Fetch
+        private fetch: Fetch,
+        private changeDetector: ChangeDetectorRef
     ) {
         lazyLoader.registerComponent({
             id: "pipeline-editor",
@@ -89,7 +93,7 @@ export class PipelinesComponent implements OnInit {
             { label: "default", items: [] },
         ];
 
-        const pipelines: Pipeline[] = await this.fetch.get('/api/pipeline');
+        const pipelines: Pipeline[] = this.pipelines = await this.fetch.get('/api/db/pipeline');
 
         pipelines.forEach(pipeline => {
             const group = pipeline.group;
@@ -102,32 +106,57 @@ export class PipelinesComponent implements OnInit {
 
             g.items.push(pipeline);
         });
+
+        setTimeout(() => {
+
+            this.ngAfterViewInit();
+        }, 100)
     }
 
     ngAfterViewInit() {
-        new Sortable(this.gridRef.nativeElement, {
-            animation: 300,
-            easing: "cubic-bezier(1, 0, 0, 1)", // Easing for animation. Defaults to null. See https://easings.net/ for examples.
-            ghostClass: "sortable-ghost",  // Class name for the drop placeholder
-            // ignore: "",
-            forceFallback: true,
-            fallbackOffset: {
-                x: -200,
-                y: 0
-            },
-            // Element dragging ended
-            onEnd: function (/**Event*/evt) {
-                var itemEl = evt.item;  // dragged HTMLElement
-                evt.to;    // target list
-                evt.from;  // previous list
-                evt.oldIndex;  // element's old index within old parent
-                evt.newIndex;  // element's new index within new parent
-                evt.oldDraggableIndex; // element's old index within old parent, only counting draggable elements
-                evt.newDraggableIndex; // element's new index within new parent, only counting draggable elements
-                evt.clone; // the clone element
-                evt.pullMode;  // when item is in another sortable: `"clone"` if cloning, `true` if moving
+        console.log(this.gridRef)
+        this.gridRef.toArray().forEach(({nativeElement}) => {
+            if ((nativeElement as HTMLElement).dataset['sortable']) {
+                return;
             }
-        });
+
+            const s = new Sortable(nativeElement, {
+                animation: 300,
+                easing: "cubic-bezier(0, 0.55, 0.45, 1)",
+                ghostClass: "sortable-ghost",
+                group: "pipelines",
+                filter(event, target, sortable) {
+                    // Make buttons and links not draggable targets on the tile
+                    return ['A', 'BUTTON', 'MAT-ICON', 'IMG'].includes((event.target as HTMLElement).nodeName) || event.target['classList']?.contains("mat-mdc-button-touch-target");
+                },
+                forceFallback: true,
+                fallbackOffset: {
+                    x: -200,
+                    y: 0
+                },
+                onEnd: (evt) => {
+
+                    const group = evt.to.getAttribute('pipeline-group');
+                    const id = evt.item.getAttribute('pipeline-id');
+                    const pipeline = this.pipelines.find(p => p.id == id);
+
+                    this.fetch.patch(`/api/db/${pipeline.id}`, { group });
+
+                    const oldGroup = this.pipelineGroups.find(pg => pg.label == pipeline.group);
+                    const newGroup = this.pipelineGroups.find(pg => pg.label == group);
+                    const oldIndex = oldGroup.items.findIndex(i => i.id == pipeline.id);
+
+                    oldGroup.items.splice(oldIndex, 1);
+                    newGroup.items.push(pipeline);
+
+                    // observe the array updates
+                    this.changeDetector.detectChanges();
+                }
+            });
+            const i = this.sortableSectors.push(s);
+
+            (nativeElement as HTMLElement).dataset['sortable'] = i.toString();
+        })
     }
 
     createPipeline(pipeline: Partial<Pipeline>) {

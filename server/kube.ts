@@ -1,4 +1,4 @@
-import k8s from '@kubernetes/client-node';
+import * as k8s from '@kubernetes/client-node';
 import { PipelineJob, PipelineStage } from '../types/pipeline';
 import { db } from './db';
 import { ElasticAgentPool, JobInstance } from '../types/agent-task';
