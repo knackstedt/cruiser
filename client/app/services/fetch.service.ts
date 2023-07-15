@@ -1,6 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { retry, catchError, delay, tap } from 'rxjs/operators';
+import { retry, catchError } from 'rxjs/operators';
 import { of, throwError } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 
@@ -21,6 +21,10 @@ export class Fetch {
     public post<T>(url: string, body: any, options: any = {}): Promise<T> {
         options.body = (options.body && Object.keys(options.body).length > 0 ? options.body : body) || {};
         return this.request<T>("post", url, options);
+    }
+    public patch<T>(url: string, body: any, options: any = {}): Promise<T> {
+        options.body = (options.body && Object.keys(options.body).length > 0 ? options.body : body) || {};
+        return this.request<T>("patch", url, options);
     }
     public delete<T>(url: string, options: any = {}): Promise<T> {
         return this.request<T>("delete", url, options);
