@@ -1,4 +1,7 @@
 DEFINE TABLE pipelineStage SCHEMALESS;
+    /**
+     * General
+     */
     DEFINE FIELD label ON TABLE pipelineStage TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipelineStage TYPE string;
@@ -11,6 +14,9 @@ DEFINE TABLE pipelineStage SCHEMALESS;
     DEFINE FIELD cleanDirectory ON TABLE pipelineStage TYPE bool;
     DEFINE FIELD autoTriggerOnPreviousStageCompletion ON TABLE pipelineStage TYPE bool;
 
+    /**
+     * Relations
+     */
     DEFINE FIELD environment ON TABLE pipelineStage TYPE array;
     -- DEFINE FIELD environment.* ON TABLE pipelineStage TYPE record(environmentVariable);
     DEFINE FIELD jobs ON TABLE pipelineStage TYPE array;

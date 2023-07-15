@@ -1,4 +1,7 @@
 DEFINE TABLE pipelineTask SCHEMALESS;
+    /**
+     * General
+     */
     DEFINE FIELD command ON TABLE pipelineTask TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD arguments ON TABLE pipelineTask TYPE array;
@@ -24,6 +27,14 @@ DEFINE TABLE pipelineTask SCHEMALESS;
     DEFINE FIELD freezeAfterRun ON TABLE pipelineTask TYPE bool
         VALUE $value OR false;
 
+
+    DEFINE FIELD approval ON TABLE pipelineTask TYPE bool
+        VALUE $value OR false;
+
+
+    /**
+     * Relations
+     */
     -- A task to run when this task fails or is cancelled
     DEFINE FIELD taskOnSelfFailure ON TABLE pipelineTask TYPE record(pipelineTask);
     DEFINE FIELD environment ON TABLE pipelineTask TYPE array;

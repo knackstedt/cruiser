@@ -10,52 +10,6 @@ CREATE pipeline:ulid() CONTENT {
                 { key: "level2key", value: "level2value" },
                 { key: "level2key2", value: "level2value2" }
             ],
-            jobs: [
-                {
-                    label: "npm build",
-                    runType: "1",
-                    taskGroups: [
-                        {
-                            label: "group1",
-                            environment: [
-                                { key: "level4key", value: "level4value" },
-                                { key: "level4key2", value: "level4value2" }
-                            ],
-                            tasks: [
-                                {
-                                    label: "test cmd",
-                                    command: "echo",
-                                    arguments: ["foo", "bar"],
-                                    environment: [
-                                        { key: "level5key", value: "level5value" },
-                                        { key: "level5key2", value: "level5value2" }
-                                    ]
-                                },
-                                {
-                                    label: "test cmd",
-                                    command: "ls",
-                                    arguments: ["-aol"],
-                                    environment: [
-                                        { key: "level5bkey", value: "level5bvalue" },
-                                        { key: "level5bkey2", value: "level5bvalue2" }
-                                    ]
-                                }
-                            ]
-                        }
-                    ],
-                    artifacts: [
-                        {
-                            label: "dist",
-                            source: "/source/dir",
-                            destination: "/remotefs/target"
-                        }
-                    ],
-                    environment: [
-                        { key: "level3key", value: "level3value" },
-                        { key: "level3key2", value: "level3value2" }
-                    ]
-                }
-            ]
         },
         {
             label: "deploy dev",

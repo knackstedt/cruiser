@@ -1,4 +1,7 @@
 DEFINE TABLE pipelineTaskGroup SCHEMALESS;
+    /**
+     * General
+     */
     DEFINE FIELD label ON TABLE pipelineTaskGroup TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipelineTaskGroup TYPE string;
@@ -6,6 +9,10 @@ DEFINE TABLE pipelineTaskGroup SCHEMALESS;
         ASSERT $value != NONE
         VALUE $value OR 0;
 
+
+    /**
+     * Relations
+     */
     -- A task to run when this task fails or is cancelled
     DEFINE FIELD environment ON TABLE pipelineTaskGroup TYPE array;
     -- DEFINE FIELD environment.* ON TABLE pipelineTaskGroup TYPE record(environmentVariable);

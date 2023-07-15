@@ -1,5 +1,7 @@
 DEFINE TABLE elasticCluster SCHEMALESS;
-
+    /**
+     * General
+     */
     DEFINE FIELD label ON TABLE elasticCluster TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD `type` ON TABLE elasticCluster TYPE string
@@ -18,6 +20,9 @@ DEFINE TABLE elasticCluster SCHEMALESS;
         VALUE $value OR 10;
 
 
+    /**
+     * Cluster configuration
+     */
     DEFINE FIELD kubeClusterUrl ON TABLE elasticCluster TYPE string;
     DEFINE FIELD kubeNamespace ON TABLE elasticCluster TYPE string;
 

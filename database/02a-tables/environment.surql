@@ -1,5 +1,8 @@
 
 DEFINE TABLE environmentVariable SCHEMAFULL;
+    /**
+     * General
+     */
     DEFINE FIELD key ON TABLE environmentVariable TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD `value` ON TABLE environmentVariable TYPE string

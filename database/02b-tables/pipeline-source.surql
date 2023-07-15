@@ -1,4 +1,7 @@
 DEFINE TABLE pipelineSource SCHEMALESS;
+    /**
+     * General
+     */
     DEFINE FIELD label ON TABLE pipelineSource TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipelineSource TYPE string;

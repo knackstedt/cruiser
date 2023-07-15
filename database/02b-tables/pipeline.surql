@@ -1,4 +1,7 @@
 DEFINE TABLE pipeline SCHEMALESS;
+    /**
+     * General
+     */
     DEFINE FIELD label ON TABLE pipeline TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipeline TYPE string;
@@ -30,6 +33,10 @@ DEFINE TABLE pipeline SCHEMALESS;
         ASSERT $value != NONE
         VALUE $value OR 0;
 
+
+    /**
+     * Relations
+     */
     DEFINE FIELD stages ON TABLE pipeline TYPE array;
     -- DEFINE FIELD stages.* ON TABLE pipeline TYPE record(pipelineStage);
     DEFINE FIELD environment ON TABLE pipeline TYPE array;
