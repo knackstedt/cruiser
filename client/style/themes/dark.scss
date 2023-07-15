@@ -32,14 +32,25 @@
     --dialog-titlebar-text-color: #efefef;
 
 
+    --ngx-ctx-menu-hover-background-color: #145588;
     --mdc-protected-button-disabled-label-text-color: #ccc;
     // --mdc-tab-indicator-active-indicator-color: #fbb86c;
 
     --scrollbar-thumb-color: rgb(0 0 0 / 48%);
 
-    --inner-panel-background-color: #262626;
+    --inner-panel-background-color: #1d1f20;
     .mat-mdc-dialog-container {
         --mdc-dialog-container-color: #181818;
+    }
+
+    a {
+        color: #3391ff
+    }
+    button {
+        color: #efefef;
+    }
+    button:disabled {
+        color: #7d7d7d;
     }
 }
 

@@ -71,7 +71,7 @@ export class PipelineEditorComponent implements OnInit {
     }
 
     async save() {
-        const res = await this.fetch.post(`/api/pipeline/${1}`, this.pipeline);
+        const [res] = await this.fetch.post(`/api/db/pipeline/${this.pipeline.id || ''}`, this.pipeline) as any;
 
         this.dialogRef?.close(res);
     }

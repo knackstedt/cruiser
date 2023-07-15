@@ -48,6 +48,22 @@
     }
 }
 
+.new-placeholder {
+    border: 2px solid #262626;
+    display: flex;
+    justify-content: center;
+    cursor: pointer;
+
+    svg {
+        width: 96px;
+        opacity: .2;
+        transition: opacity 200ms ease;
+    }
+    &:hover svg{
+        opacity: .6;
+    }
+}
+
 .add-button {
     transition: opacity 250ms ease;
 }
@@ -132,4 +148,8 @@ hr {
             visibility: hidden;
         }
     }
+}
+
+button:disabled img {
+    opacity: .35;
 }

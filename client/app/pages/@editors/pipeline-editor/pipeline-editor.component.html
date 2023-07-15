@@ -1,6 +1,6 @@
 <button class="exit-btn" mat-icon-button (click)="tryClose()"><mat-icon>close</mat-icon></button>
 
-<div style="">
+<div style="flex: 1 1 100%; overflow: hidden;">
     <mat-tab-group>
         <mat-tab label="General">
             <h4>Basic Settings</h4>
@@ -86,8 +86,8 @@
     </mat-tab-group>
 </div>
 
-<div>
-    <button mat-icon-button (click)="save()"><mat-icon>done</mat-icon> Save</button>
-    <button mat-icon-button (click)="save()"><mat-icon>done</mat-icon> Cancel</button>
+<div class="controls">
+    <button mat-flat-button (click)="save()"><mat-icon>done</mat-icon> Save</button>
+    <button mat-flat-button (click)="dialogRef.close()"><mat-icon>done</mat-icon> Cancel</button>
 </div>
 

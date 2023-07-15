@@ -93,9 +93,14 @@ export class PipelinesComponent implements OnInit {
             { label: "default", items: [] },
         ];
 
-        const pipelines: Pipeline[] = this.pipelines = await this.fetch.get('/api/db/pipeline');
+        this.pipelines = await this.fetch.get('/api/db/pipeline');
+        this.ngAfterViewInit();
+    }
 
-        pipelines.forEach(pipeline => {
+    ngAfterViewInit() {
+        this.pipelineGroups.forEach(g => g.items.splice(0));
+
+        this.pipelines?.forEach(pipeline => {
             const group = pipeline.group;
 
             let g = this.pipelineGroups.find(g => g.label == group);
@@ -107,60 +112,64 @@ export class PipelinesComponent implements OnInit {
             g.items.push(pipeline);
         });
 
-        setTimeout(() => {
+        this.changeDetector.detectChanges();
 
-            this.ngAfterViewInit();
+
+        setTimeout(() => {
+            this.gridRef.toArray().forEach(({nativeElement}) => {
+                if ((nativeElement as HTMLElement).dataset['sortable']) {
+                    return;
+                }
+
+                const s = new Sortable(nativeElement, {
+                    animation: 300,
+                    easing: "cubic-bezier(0, 0.55, 0.45, 1)",
+                    ghostClass: "sortable-ghost",
+                    group: "pipelines",
+                    filter(event, target, sortable) {
+                        // Make buttons and links not draggable targets on the tile
+                        return ['A', 'BUTTON', 'MAT-ICON', 'IMG'].includes((event.target as HTMLElement).nodeName) || event.target['classList']?.contains("mat-mdc-button-touch-target");
+                    },
+                    forceFallback: true,
+                    fallbackOffset: {
+                        x: -200,
+                        y: 0
+                    },
+                    onEnd: (evt) => {
+
+                        const group = evt.to.getAttribute('pipeline-group');
+                        const id = evt.item.getAttribute('pipeline-id');
+                        const pipeline = this.pipelines.find(p => p.id == id);
+
+                        this.fetch.patch(`/api/db/${pipeline.id}`, { group });
+
+                        const oldGroup = this.pipelineGroups.find(pg => pg.label == pipeline.group);
+                        const newGroup = this.pipelineGroups.find(pg => pg.label == group);
+                        const oldIndex = oldGroup.items.findIndex(i => i.id == pipeline.id);
+
+                        oldGroup.items.splice(oldIndex, 1);
+                        newGroup.items.push(pipeline);
+
+                        // observe the array updates
+                        this.changeDetector.detectChanges();
+                    }
+                });
+                const i = this.sortableSectors.push(s);
+
+                (nativeElement as HTMLElement).dataset['sortable'] = i.toString();
+            })
         }, 100)
     }
 
-    ngAfterViewInit() {
-        console.log(this.gridRef)
-        this.gridRef.toArray().forEach(({nativeElement}) => {
-            if ((nativeElement as HTMLElement).dataset['sortable']) {
-                return;
-            }
-
-            const s = new Sortable(nativeElement, {
-                animation: 300,
-                easing: "cubic-bezier(0, 0.55, 0.45, 1)",
-                ghostClass: "sortable-ghost",
-                group: "pipelines",
-                filter(event, target, sortable) {
-                    // Make buttons and links not draggable targets on the tile
-                    return ['A', 'BUTTON', 'MAT-ICON', 'IMG'].includes((event.target as HTMLElement).nodeName) || event.target['classList']?.contains("mat-mdc-button-touch-target");
-                },
-                forceFallback: true,
-                fallbackOffset: {
-                    x: -200,
-                    y: 0
-                },
-                onEnd: (evt) => {
-
-                    const group = evt.to.getAttribute('pipeline-group');
-                    const id = evt.item.getAttribute('pipeline-id');
-                    const pipeline = this.pipelines.find(p => p.id == id);
-
-                    this.fetch.patch(`/api/db/${pipeline.id}`, { group });
-
-                    const oldGroup = this.pipelineGroups.find(pg => pg.label == pipeline.group);
-                    const newGroup = this.pipelineGroups.find(pg => pg.label == group);
-                    const oldIndex = oldGroup.items.findIndex(i => i.id == pipeline.id);
-
-                    oldGroup.items.splice(oldIndex, 1);
-                    newGroup.items.push(pipeline);
-
-                    // observe the array updates
-                    this.changeDetector.detectChanges();
-                }
-            });
-            const i = this.sortableSectors.push(s);
-
-            (nativeElement as HTMLElement).dataset['sortable'] = i.toString();
-        })
-    }
-
-    createPipeline(pipeline: Partial<Pipeline>) {
+    createPipeline(pipeline: Partial<Pipeline> = {}) {
         this.dialog.open("pipeline-editor", { group: "dynamic", inputs: { pipeline }, autoFocus: false })
+            .then((pipeline: Pipeline) => {
+                console.log("res", pipeline)
+            if (pipeline) {
+                this.pipelines.push(pipeline)
+                this.ngAfterViewInit();
+            }
+        })
     }
 
     drop(event: CdkDragDrop<any, any, any>) {
