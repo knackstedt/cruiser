@@ -112,6 +112,12 @@ export class PipelinesComponent implements OnInit {
             g.items.push(pipeline);
         });
 
+        this.pipelineGroups.forEach(g => g.items.sort((a, b) => {
+            if (typeof a.order != 'number') return 1;
+            if (typeof b.order != 'number') return -1;
+            return a.order - b.order;
+        }));
+
         this.changeDetector.detectChanges();
 
 
@@ -135,23 +141,53 @@ export class PipelinesComponent implements OnInit {
                         x: -200,
                         y: 0
                     },
-                    onEnd: (evt) => {
+                    onEnd: async (evt) => {
+                        // TODO: handle updating entry after drag update
 
                         const group = evt.to.getAttribute('pipeline-group');
                         const id = evt.item.getAttribute('pipeline-id');
-                        const pipeline = this.pipelines.find(p => p.id == id);
+                        const order = evt.newIndex;
+                        const pipeline = this.pipelines?.find(p => p.id == id);
 
-                        this.fetch.patch(`/api/db/${pipeline.id}`, { group });
+                        console.log(evt, pipeline)
 
-                        const oldGroup = this.pipelineGroups.find(pg => pg.label == pipeline.group);
-                        const newGroup = this.pipelineGroups.find(pg => pg.label == group);
-                        const oldIndex = oldGroup.items.findIndex(i => i.id == pipeline.id);
+                        if (!pipeline)
+                            return;
 
-                        oldGroup.items.splice(oldIndex, 1);
-                        newGroup.items.push(pipeline);
+                        if (group != pipeline.group || order != pipeline.order) {
+                            const groupItems = this.pipelineGroups.find(g => g.label == group)?.items;
 
-                        // observe the array updates
-                        this.changeDetector.detectChanges();
+                            const beforeItems = groupItems.slice(0, order).filter(i => i.id != pipeline.id);
+                            const afterItems = groupItems.slice(order).filter(i => i.id != pipeline.id);
+
+                            const items = [];
+                            let pointer = 0;
+                            beforeItems.forEach(i => {
+                                i.order = pointer++;
+                                items.push(i);
+                            });
+
+                            if (group != pipeline.group)
+                                pipeline.group = group;
+
+                            pipeline.order = pointer++;
+                            items.push(pipeline);
+
+                            afterItems.forEach(i => {
+                                i.order = pointer++;
+                                items.push(i);
+                            });
+
+
+                            this.fetch.patch(`/api/db`, items.map(i => ({ id: i.id, data: { order: i.order }})));
+                        }
+                        else
+                            return;
+
+                        const oldIndex = this.pipelines.findIndex(i => i.id == pipeline.id);
+                        this.pipelines.splice(oldIndex, 1, pipeline);
+
+                        this.ngAfterViewInit();
                     }
                 });
                 const i = this.sortableSectors.push(s);
@@ -199,7 +235,9 @@ export class PipelinesComponent implements OnInit {
     }
 
     resumePipeline(pipeline: Pipeline) {
-        this.fetch.get(`/api/pipeline/${pipeline.id}/resume`);
+        this.fetch.get(`/api/pipeline/${pipeline.id}/resume`).then(p => {
+
+        });
     }
 
     onScroll(el: HTMLDivElement) {
