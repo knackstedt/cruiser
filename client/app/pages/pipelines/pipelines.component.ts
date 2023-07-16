@@ -134,13 +134,16 @@ export class PipelinesComponent implements OnInit {
                     group: "pipelines",
                     filter(event, target, sortable) {
                         // Make buttons and links not draggable targets on the tile
-                        return ['A', 'BUTTON', 'MAT-ICON', 'IMG'].includes((event.target as HTMLElement).nodeName) || event.target['classList']?.contains("mat-mdc-button-touch-target");
+                        return ['A', 'BUTTON', 'MAT-ICON', 'IMG', 'svg', 'path'].includes((event.target as HTMLElement).nodeName) ||
+                            event.target['classList']?.contains("mat-mdc-button-touch-target") ||
+                            event.target['classList']?.contains("new-placeholder");
                     },
                     forceFallback: true,
                     fallbackOffset: {
                         x: -200,
                         y: 0
                     },
+
                     onEnd: async (evt) => {
                         // TODO: handle updating entry after drag update
 
