@@ -45,6 +45,13 @@ export const DatabaseTableApi = () => {
     router.patch('/:id', route(async (req, res, next) => {
         res.send(await db.merge(req.params['id'], req.body));
     }));
+    // batch patch
+    // [{ id: "id123", data: {prop1: val}}]
+    router.patch('/', route(async (req, res, next) => {
+        if (!Array.isArray(req.body)) throw 400;
+
+        res.send(await Promise.all(req.body.map(({id, data}) => db.merge(id, data))));
+    }));
 
     router.delete('/:id', route(async (req, res, next) => {
         res.send(await db.delete(req.params['id']));
