@@ -10,10 +10,14 @@ const getFiles = async source =>
         .filter(dirent => dirent.isFile())
         .map(dirent => dirent.name)
 
+export const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 const db = new Surreal('http://127.0.0.1:8000/rpc');
 (async () => {
-    process.chdir("database");
+
+    // Select the right directory.
+    if (!process.cwd().endsWith('database'))
+        process.chdir("database");
 
     console.log("\x1b[1;36mConnecting to Surreal...");
 
@@ -21,6 +25,7 @@ const db = new Surreal('http://127.0.0.1:8000/rpc');
         user: 'root',
         pass: 'root',
     });
+
     await db.query(await fs.readFile("01-database/database.surql", "utf8"))
     await db.use({ ns: 'dotglitch', db: 'dotops' });
 
@@ -39,8 +44,8 @@ const db = new Surreal('http://127.0.0.1:8000/rpc');
             files
                 .filter(f => f.endsWith(".surql"))
                 .map(async f => {
-                    return db.query(
-                        await fs.readFile(dir + '/' + f, "utf-8"))
+                    const text = await fs.readFile(dir + '/' + f, "utf-8");
+                    return db.query(text.trim())
                             .then(e => console.log("\x1b[1;30m    Applied ", f))
                             .catch(e => { errors++; console.error("\x1b[1;31m    Failed to apply '" + f + "'\n        : " + e.message) })
                     }
