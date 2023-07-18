@@ -1,39 +1,46 @@
 import Surreal from 'surrealdb.js';
 import { execa } from 'execa';
-import { AgentJob } from '../types/agent-task';
+import { JobInstance } from '../types/agent-task';
 import { PipelineTaskGroup } from '../types/pipeline';
 import { getLogger, sleep } from './util';
 
 const logger = getLogger("agent");
 
-const db = new Surreal('http://127.0.0.1:8000/rpc');
-await db.signin({
-    user: 'root',
-    pass: 'root',
-});
-await db.use({ ns: 'dotglitch', db: 'dotops' });
 
+const freezePollInterval = 5000;
 
-async function freezeProcessing({taskGroup, agentTask, taskId} : {taskGroup: PipelineTaskGroup, agentTask: AgentJob, taskId: string}) {
-    logger.info("Encountered freeze marker in task group", taskGroup)
-    await db.merge(taskId, { state: "frozen" });
-    while (true) {
-        await sleep(5000);
-
-        agentTask = await db.select(taskId) as any;
-        if (agentTask.state == "resume") {
-            await db.merge(taskId, { state: "building" });
-            break;
-        }
-    }
-    return agentTask;
-}
 
 (async () => {
     const agentId = process.env['AGENT_ID'];
     const taskId = `jobInstance:` + agentId;
 
-    let agentTask: AgentJob = await db.select(taskId) as any;
+    const db = new Surreal('http://127.0.0.1:8000/rpc');
+    await db.signin({
+        user: 'root',
+        pass: 'root',
+    });
+    await db.use({ ns: 'dotglitch', db: 'dotops' });
+
+    const jobInstance: JobInstance = await db.select(taskId) as any;
+    const job = jobInstance.job;
+
+    async function freezeProcessing({ taskGroup, agentTask }: { taskGroup: PipelineTaskGroup, agentTask: JobInstance }) {
+
+        let [ freezePoint ] = await db.create(`taskFreezePoints:ulid()`, {
+            taskGroup: taskGroup.id,
+            jobInstance: agentTask.id
+        });
+
+        while (true) {
+            await sleep(freezePollInterval);
+
+            [ freezePoint ] = await db.select(freezePoint.id) as any;
+
+            // If the freeze point has been removed, resume the pipeline
+            if (!freezePoint) break;
+        }
+    }
+
 
     logger.info({ msg: "Agent initialized." });
     await db.merge(taskId, { state: "initializing" });
@@ -42,50 +49,57 @@ async function freezeProcessing({taskGroup, agentTask, taskId} : {taskGroup: Pip
     await db.merge(taskId, { state: "cloning" });
     await db.merge(taskId, { state: "building" });
 
-    const taskGroups = agentTask.job.taskGroups;
+    const taskGroups = jobInstance.job.taskGroups;
 
     await Promise.all(taskGroups.map(async taskGroup => {
-
-
 
         const tasks = taskGroup.tasks;
 
         for (let i = 0; i < tasks.length; i++) {
             const task = tasks[i];
 
+            const env = { };
+            const environment: {key: string, value: string}[] =
+                await db.query(`RETURN fn::task_get_environment(${task.id})`) as any;
 
-            // task
-            // ...task.environment
+            environment.forEach(({ key, value }) => env[key] = value);
 
-            const env = {
-
-            };
-
-
-
+            if (task.freezeBeforeRun) {
+                logger.info(`Encountered freeze marker in task group ${taskGroup.label} before task ${task.label}`, taskGroup);
+                await freezeProcessing({ taskGroup, agentTask: jobInstance });
+                logger.info(`Unfroze freeze marker in task group ${taskGroup.label} before task ${task.label}`, taskGroup);
+            }
 
 
-            if (task.freezeBeforeRun)
-                await freezeProcessing({taskGroup, agentTask, taskId});
-
+            logger.info(`Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`, taskGroup);
 
             await execa(task.command, task.arguments, {
                 env: env,
                 cwd: task.workingDirectory,
                 timeout: task.commandTimeout || 0
+            }).then(res => {
+                logger.info(`Task ${task.label} in group ${taskGroup.label} successfully completed`, res);
+            })
+            .catch(err => {
+                logger.error(`Task ${task.label} in group ${taskGroup.label} failed`, err);
             });
 
-
-            if (task.freezeAfterRun)
-                await freezeProcessing({taskGroup, agentTask, taskId});
-
+            if (task.freezeAfterRun) {
+                logger.info(`Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`, taskGroup);
+                await freezeProcessing({ taskGroup, agentTask: jobInstance });
+                logger.info(`Unfroze freeze marker in task group ${taskGroup.label} after task ${task.label}`, taskGroup);
+            }
         }
-
 
         return sleep(1);
     }))
 
     await db.merge(taskId, { state: "sealing" });
+
+    await Promise.all(job.artifacts.map(async a => {
+        a.source;
+        await execa('')
+    }));
 
     await db.merge(taskId, { state: "finished" });
 
