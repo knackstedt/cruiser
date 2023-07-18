@@ -1,90 +1,226 @@
 <button class="exit-btn" mat-icon-button (click)="tryClose()"><mat-icon>close</mat-icon></button>
 
-<div style="flex: 1 1 100%; overflow: hidden;">
+
+<div *ngIf="pipeline" style="flex: 1 1 100%; overflow: hidden;">
     <mat-tab-group>
-        <mat-tab label="General">
-            <h4>Basic Settings</h4>
+        <!-- Pipeline -->
+        <mat-tab>
+            <mat-tab-group>
+                <mat-tab label="General">
+                    <h4>Basic Settings</h4>
 
-            <mat-form-field appearance="outline">
-                <mat-label>Name</mat-label>
-                <input #nameInput matInput type="text" [(ngModel)]="pipeline.label">
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-                <mat-label>Group</mat-label>
-                <input matInput type="text" [(ngModel)]="pipeline.group">
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-                <mat-label>Description</mat-label>
-                <textarea matInput type="text" [(ngModel)]="pipeline.description"></textarea>
-            </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Name</mat-label>
+                        <input #nameInput matInput type="text" [(ngModel)]="pipeline.label">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Group</mat-label>
+                        <input matInput type="text" [(ngModel)]="pipeline.group">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Description</mat-label>
+                        <textarea matInput type="text" [(ngModel)]="pipeline.description"></textarea>
+                    </mat-form-field>
 
-            <h5>Label Template</h5>
-            <app-vscode [(code)]="pipeline.labelTemplate" [minimapEnabled]="false" style="height: 240px"></app-vscode>
+                    <h5>Label Template</h5>
+                    <app-vscode [(code)]="pipeline.labelTemplate" [minimapEnabled]="false" style="height: 240px"></app-vscode>
 
-            <!-- automatic pipeline scheduling -->
-            <mat-checkbox>
-                Automatically run
-            </mat-checkbox>
+                    <!-- automatic pipeline scheduling -->
+                    <mat-checkbox>
+                        Automatically run
+                    </mat-checkbox>
 
-            <mat-checkbox [value]="pipeline.cronRunOnlyOnNewSource ? 'true' : 'false'">
-                Run only on new source
-            </mat-checkbox>
+                    <mat-checkbox [value]="pipeline.cronRunOnlyOnNewSource ? 'true' : 'false'">
+                        Run only on new source
+                    </mat-checkbox>
 
 
-            <h4>Timer Settings</h4>
-            <h5>Cron timer specification</h5>
-            <mat-form-field appearance="outline">
-                <input matInput type="text" [(ngModel)]="pipeline.cronSchedule">
-            </mat-form-field>
+                    <h4>Timer Settings</h4>
+                    <h5>Cron timer specification</h5>
+                    <mat-form-field appearance="outline">
+                        <input matInput type="text" [(ngModel)]="pipeline.cronSchedule">
+                    </mat-form-field>
 
-            <h4>Pipeline locking behavior</h4>
-            <mat-radio-group [value]="pipeline.lockingBehavior" (change)="pipeline.lockingBehavior = $event.value" aria-label="Select an option">
-                <mat-radio-button value="singleton">Run single instance of pipeline at a time</mat-radio-button>
-                <mat-radio-button value="singletonNoFail">Run single instance of pipeline and lock on failure</mat-radio-button>
-                <mat-radio-button value="multiple">Run multiple instances(default)</mat-radio-button>
-            </mat-radio-group>
+                    <h4>Pipeline locking behavior</h4>
+                    <mat-radio-group [value]="pipeline.lockingBehavior" (change)="pipeline.lockingBehavior = $event.value" aria-label="Select an option">
+                        <mat-radio-button value="singleton">Run single instance of pipeline at a time</mat-radio-button>
+                        <mat-radio-button value="singletonNoFail">Run single instance of pipeline and lock on failure</mat-radio-button>
+                        <mat-radio-button value="multiple">Run multiple instances(default)</mat-radio-button>
+                    </mat-radio-group>
+
+                </mat-tab>
+                <mat-tab label="Project Management">
+                    <h4>Tracking Tool Integration</h4>
+                    <h5>Pattern</h5>
+                    <mat-form-field appearance="outline">
+                        <input matInput type="text" [(ngModel)]="pipeline.trackingToolPattern">
+                    </mat-form-field>
+
+                    <h5>URI</h5>
+                    <mat-form-field appearance="outline">
+                        <input matInput type="text" [(ngModel)]="pipeline.trackingToolUri">
+                    </mat-form-field>
+                </mat-tab>
+                <mat-tab label="Sources">
+                    <!-- <button
+                        #btn
+                        mat-icon-button
+                        matTooltip="Add a source"
+                        (click)="createSource()"
+                    >
+                        <mat-icon>add</mat-icon>
+                    </button> -->
+                    <app-pipeline-source *ngFor="let source of pipeline.sources"></app-pipeline-source>
+                </mat-tab>
+                <mat-tab label="Stages">
+                    <!-- <button
+                        #btn
+                        mat-icon-button
+                        matTooltip="Add a stage"
+                        (click)="createStage()"
+                    >
+                        <mat-icon>add</mat-icon>
+                    </button> -->
+
+                    <app-accordion-list
+                        [items]="pipeline.stages"
+                        typeName="Stage"
+                        (onCreate)="addStage()"
+                    >
+                        <ng-template #header let-stage>
+                            {{stage.label}}
+
+                            <mat-icon (click)="editStage(stage)">edit</mat-icon>
+                        </ng-template>
+                        <ng-template #content let-stage>
+
+
+                            <app-accordion-list
+                                [items]="stage.jobs"
+                                typeName="Job"
+                                (onCreate)="addJob(stage)"
+                            >
+                                <ng-template #header let-job>
+                                    {{job.label}}
+
+                                    <mat-icon (click)="editJob(stage, job)">edit</mat-icon>
+                                </ng-template>
+                                <ng-template #content let-job>
+
+
+                                    <app-accordion-list
+                                        [items]="job.taskGroups"
+                                        typeName="Task Group"
+                                        (onCreate)="addTaskGroup(job)"
+                                    >
+                                        <ng-template #header let-taskGroup>
+                                            {{taskGroup.label}}
+
+                                            <mat-icon (click)="editTaskGroup(job, taskGroup)">edit</mat-icon>
+                                        </ng-template>
+                                        <ng-template #content let-taskGroup>
+
+
+
+                                            <app-accordion-list
+                                                [items]="taskGroup.tasks"
+                                                typeName="Task"
+                                                (onCreate)="addTask(taskGroup)"
+                                            >
+                                                <ng-template #header let-task>
+                                                    {{task.label}}
+
+                                                    <mat-icon (click)="editTask(taskGroup, task)">edit</mat-icon>
+                                                </ng-template>
+                                                <ng-template #content let-task>
+                                                    {{1}}
+                                                </ng-template>
+                                            </app-accordion-list>
+                                        </ng-template>
+                                    </app-accordion-list>
+                                </ng-template>
+                            </app-accordion-list>
+                        </ng-template>
+                    </app-accordion-list>
+                </mat-tab>
+                <mat-tab label="Environment Variables">
+                    <app-environment-variable [pipeline]="pipeline"/>
+                </mat-tab>
+                <!-- <mat-tab label="Parameters"></mat-tab> -->
+                <!-- <mat-tab label="Automation (WIP)"></mat-tab> -->
+            </mat-tab-group>
+        </mat-tab>
+
+        <!-- Stage -->
+        <mat-tab>
+            <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
+
+            <ngx-lazy-loader
+                component="stage-editor"
+                group="dynamic"
+                [inputs]="{
+
+                }"
+                [outputs]="{
+
+                }"
+            />
+        </mat-tab>
+
+        <!-- Job -->
+        <mat-tab>
+            <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
+
+            <ngx-lazy-loader
+                component="job-editor"
+                group="dynamic"
+                [inputs]="{
+
+                }"
+                [outputs]="{
+
+                }"
+            />
+        </mat-tab>
+
+        <!-- Task Group -->
+        <mat-tab>
+
+            <ngx-lazy-loader
+                component="task-group-editor"
+                group="dynamic"
+                [inputs]="{
+
+                }"
+                [outputs]="{
+
+                }"
+            />
+        </mat-tab>
+        <!-- Task -->
+        <mat-tab>
+            <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
+            <ngx-lazy-loader
+                component="task-editor"
+                group="dynamic"
+                [inputs]="{
+
+                }"
+                [outputs]="{
+
+                }"
+            />
 
         </mat-tab>
-        <mat-tab label="Project Management">
-            <h4>Tracking Tool Integration</h4>
-            <h5>Pattern</h5>
-            <mat-form-field appearance="outline">
-                <input matInput type="text" [(ngModel)]="pipeline.trackingToolPattern">
-            </mat-form-field>
 
-            <h5>URI</h5>
-            <mat-form-field appearance="outline">
-                <input matInput type="text" [(ngModel)]="pipeline.trackingToolUri">
-            </mat-form-field>
+        <!-- Source -->
+        <mat-tab>
+            <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
         </mat-tab>
-        <mat-tab label="Sources">
-            <button
-                #btn
-                mat-icon-button
-                matTooltip="Add a source"
-                (click)="createSource()"
-            >
-                <mat-icon>add</mat-icon>
-            </button>
-            <app-pipeline-source *ngFor="let source of pipeline.sources"></app-pipeline-source>
-        </mat-tab>
-        <mat-tab label="Stages">
-            <button
-                #btn
-                mat-icon-button
-                matTooltip="Add a stage"
-                (click)="createStage()"
-            >
-                <mat-icon>add</mat-icon>
-            </button>
-        </mat-tab>
-        <mat-tab label="Environment Variables">
-            <app-environment-variable [pipeline]="pipeline"/>
-        </mat-tab>
-        <!-- <mat-tab label="Parameters"></mat-tab> -->
-        <!-- <mat-tab label="Automation (WIP)"></mat-tab> -->
+
     </mat-tab-group>
 </div>
+
 
 <div class="controls">
     <button mat-flat-button (click)="save()"><mat-icon>done</mat-icon> Save</button>

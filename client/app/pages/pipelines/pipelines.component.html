@@ -53,7 +53,7 @@
                         <div>
                             <div *ngFor="let stage of pipeline.stages">
                                 <!-- check block cancel-->
-                                <mat-icon [fontIcon]="stage.jobs[0].runState"></mat-icon>
+                                <mat-icon [fontIcon]="(stage.jobs || [])[0]?.runState"></mat-icon>
                             </div>
                         </div>
 

@@ -16,7 +16,10 @@ import { MatRadioModule } from '@angular/material/radio';
 import { PipelineSourceComponent } from 'client/app/components/pipeline-source/pipeline-source.component';
 import { DialogService } from 'client/app/services/dialog.service';
 import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
-import { Pipeline } from 'types/pipeline';
+import { Pipeline, PipelineJob, PipelineStage, PipelineTask, PipelineTaskGroup } from 'types/pipeline';
+import { BehaviorSubject } from 'rxjs';
+import { NgxLazyLoaderComponent, NgxLazyLoaderService } from '@dotglitch/ngx-lazy-loader';
+import { AccordionListComponent } from 'client/app/pages/@editors/pipeline-editor/accordion-list/accordion-list.component';
 
 @Component({
     selector: 'app-pipeline-editor',
@@ -37,7 +40,9 @@ import { Pipeline } from 'types/pipeline';
         FormsModule,
         VscodeComponent,
         PipelineSourceComponent,
-        EditEnvironmentVariablesComponent
+        EditEnvironmentVariablesComponent,
+        NgxLazyLoaderComponent,
+        AccordionListComponent
     ],
     standalone: true
 })
@@ -45,25 +50,39 @@ export class PipelineEditorComponent implements OnInit {
 
     @ViewChild("nameInput") nameInputRef: ElementRef;
 
-    private _pipeline: Pipeline;
-    private _originalPipeline: Pipeline;
-    @Input() set pipeline(val: Pipeline) {
-        this._originalPipeline = val;
-        // Detach object references.
-        this._pipeline = structuredClone(val);
-    };
-    get pipeline() { return this._pipeline };
+    public pipeline: Pipeline;
+    @Input('pipeline') _pipeline: Pipeline;
+
+    ngxShowDistractor$ = new BehaviorSubject(false);
 
     constructor(
         @Optional() @Inject(MAT_DIALOG_DATA) public data: any = {},
         @Optional() public dialogRef: MatDialogRef<any>,
         private fetch: Fetch,
-        private dialog: DialogService
+        private dialog: DialogService,
+        private lazyLoader: NgxLazyLoaderService
     ) {
+        // lazyLoader.registerComponent({
+        //     id: "stage-editor",
+        //     group: "dynamic",
+        //     load: () => import('./stage-editor/stage-editor.component')
+        // })
     }
 
-    ngOnInit() {
-
+    async ngOnInit() {
+        if (typeof this._pipeline.id == "string") {
+            // Get the full pipeline and subcontents
+            this.pipeline = await this.fetch.get(`/api/pipeline/${this._pipeline.id}`);
+        }
+        else {
+            this.pipeline = await this.fetch.post(`/api/db/pipeline/`, {
+                label: 'My new Pipeline',
+                state: 'new',
+                order: -1,
+                group: this._pipeline.group || 'default',
+                stages: []
+            });
+        }
     }
 
     ngAfterViewInit() {
@@ -77,12 +96,65 @@ export class PipelineEditorComponent implements OnInit {
     }
 
 
-    createSource() {
-        this.dialog.open("", )
-    };
-    createStage() {
-        this.dialog.open("", )
-    };
+    async addStage() {
+        const stage = await this.fetch.post(`/api/db/pipelineStage`, {
+            label: 'Stage - ' + (this.pipeline.stages.length + 1),
+            order: this.pipeline.stages.length,
+            jobs: []
+        }) as any;
+
+        this.pipeline.stages.push(stage);
+
+        this.fetch.patch(`/api/db/${this.pipeline.id}`, {
+            stages: this.pipeline.stages.map(s => s.id)
+        });
+    }
+    async editStage(stage) {}
+
+    async addJob(stage: PipelineStage) {
+        const job = await this.fetch.post(`api/db/pipelineJob`, {
+            label: 'Job - ' + (stage.jobs.length + 1),
+            order: stage.jobs.length + 1,
+            taskGroups: []
+        }) as PipelineJob;
+
+        stage.jobs.push(job);
+
+        this.fetch.patch(`/api/db/${stage.id}`, {
+            jobs: stage.jobs.map(s => s.id)
+        });
+    }
+    async editJob(stage: PipelineStage, job: PipelineJob) {}
+    async addTaskGroup(job: PipelineJob) {
+        const taskGroup = await this.fetch.post(`api/db/pipelineTaskGroup`, {
+            label: 'Task Group - ' + (job.taskGroups.length + 1),
+            order: job.taskGroups.length + 1,
+            tasks: []
+        }) as PipelineTaskGroup;
+
+        job.taskGroups.push(taskGroup);
+
+        this.fetch.patch(`/api/db/${job.id}`, {
+            taskGroups: job.taskGroups.map(s => s.id)
+        });
+    }
+    async editTaskGroup(job: PipelineJob, taskGroup: PipelineTaskGroup) {}
+    async addTask(taskGroup: PipelineTaskGroup) {
+        const task = await this.fetch.post(`api/db/pipelineTask`, {
+            label: 'Task - ' + (taskGroup.tasks.length + 1),
+            command: "echo",
+            arguments: ["foo"],
+            order: taskGroup.tasks.length + 1
+        }) as PipelineTask;
+
+        taskGroup.tasks.push(task);
+
+        this.fetch.patch(`/api/db/${taskGroup.id}`, {
+            tasks: taskGroup.tasks.map(s => s.id)
+        });
+
+    }
+    async editTask(taskGroup: PipelineTaskGroup, task: PipelineTask) {}
 
     tryClose() {
         this.dialogRef.close()

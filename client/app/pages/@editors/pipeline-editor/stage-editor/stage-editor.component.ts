@@ -1,20 +1,23 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
-import { Fetch } from 'client/app/services/fetch.service';
 import { VscodeComponent } from '@dotglitch/ngx-web-components';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { NgForOf, NgIf } from '@angular/common';
 import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
 import { PipelineSourceComponent } from 'client/app/components/pipeline-source/pipeline-source.component';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { NgxAppMenuDirective, NgxContextMenuDirective } from '@dotglitch/ngx-ctx-menu';
+import { Fetch } from 'client/app/services/fetch.service';
+import { PipelineStage } from 'types/pipeline';
 
 @Component({
     selector: 'app-stage-editor',
@@ -32,18 +35,29 @@ import { PipelineSourceComponent } from 'client/app/components/pipeline-source/p
         MatTabsModule,
         MatCheckboxModule,
         MatRadioModule,
+        MatExpansionModule,
+        DragDropModule,
         FormsModule,
         VscodeComponent,
         PipelineSourceComponent,
-        EditEnvironmentVariablesComponent
+        EditEnvironmentVariablesComponent,
+        NgxAppMenuDirective,
+        NgxContextMenuDirective
     ],
     standalone: true
 })
 export class StageEditorComponent implements OnInit {
 
-  constructor() { }
+    stages: PipelineStage[];
 
-  ngOnInit() {
-  }
+    constructor(
+        private fetch: Fetch
+    ) { }
 
+    ngOnInit() {
+    }
+
+    create() {
+        // this.parent.onEntryEdit({ parent: this.item.id, location: this.item.location, order: this.items.length + 1 });
+    }
 }
