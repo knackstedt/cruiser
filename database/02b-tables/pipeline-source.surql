@@ -1,3 +1,5 @@
+
+REMOVE TABLE pipelineSource;
 DEFINE TABLE pipelineSource SCHEMALESS;
     /**
      * General

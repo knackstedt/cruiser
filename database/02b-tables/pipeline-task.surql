@@ -1,3 +1,5 @@
+
+REMOVE TABLE pipelineTask;
 DEFINE TABLE pipelineTask SCHEMALESS;
     /**
      * General
@@ -8,6 +10,9 @@ DEFINE TABLE pipelineTask SCHEMALESS;
     DEFINE FIELD arguments.* ON TABLE pipelineTask TYPE string;
     DEFINE FIELD commandTimeout ON TABLE pipelineTask TYPE int;
 
+    DEFINE FIELD `order` ON TABLE pipelineTask TYPE int
+        ASSERT $value != NONE
+        VALUE $value OR 0;
 
     DEFINE FIELD label ON TABLE pipelineTask TYPE string;
     DEFINE FIELD description ON TABLE pipelineTask TYPE string;

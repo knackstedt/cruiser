@@ -1,3 +1,5 @@
+
+REMOVE TABLE pipelineStage;
 DEFINE TABLE pipelineStage SCHEMALESS;
     /**
      * General
@@ -5,7 +7,7 @@ DEFINE TABLE pipelineStage SCHEMALESS;
     DEFINE FIELD label ON TABLE pipelineStage TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipelineStage TYPE string;
-    DEFINE FIELD `order` ON TABLE pipelineTask TYPE int
+    DEFINE FIELD `order` ON TABLE pipelineStage TYPE int
         ASSERT $value != NONE
         VALUE $value OR 0;
     DEFINE FIELD onlyOnPreviousSuccess ON TABLE pipelineStage TYPE bool;

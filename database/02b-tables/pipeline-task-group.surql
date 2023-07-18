@@ -1,3 +1,5 @@
+
+REMOVE TABLE pipelineTaskGroup;
 DEFINE TABLE pipelineTaskGroup SCHEMALESS;
     /**
      * General
@@ -5,7 +7,7 @@ DEFINE TABLE pipelineTaskGroup SCHEMALESS;
     DEFINE FIELD label ON TABLE pipelineTaskGroup TYPE string
         ASSERT $value != NONE;
     DEFINE FIELD description ON TABLE pipelineTaskGroup TYPE string;
-    DEFINE FIELD `order` ON TABLE pipelineTask TYPE int
+    DEFINE FIELD `order` ON TABLE pipelineTaskGroup TYPE int
         ASSERT $value != NONE
         VALUE $value OR 0;
 

@@ -1,3 +1,5 @@
+
+REMOVE TABLE pipeline;
 DEFINE TABLE pipeline SCHEMALESS;
     /**
      * General
@@ -10,8 +12,8 @@ DEFINE TABLE pipeline SCHEMALESS;
     DEFINE FIELD labelTemplate ON TABLE pipeline TYPE string;
 
     DEFINE FIELD state ON TABLE pipeline TYPE string
-        ASSERT $value == 'locked' || $value == 'paused' || $value == 'active'
-        VALUE $value OR 'paused';
+        ASSERT $value == 'new' || $value == 'locked' || $value == 'paused' || $value == 'active'
+        VALUE $value OR 'new';
 
     DEFINE FIELD lockingBehavior ON TABLE pipeline TYPE string
         ASSERT $value == 'singleton' || $value == 'singletonNoFail' || $value == 'multiple'
@@ -29,7 +31,7 @@ DEFINE TABLE pipeline SCHEMALESS;
     DEFINE FIELD trackingToolPattern ON TABLE pipeline TYPE string;
     DEFINE FIELD trackingToolUri ON TABLE pipeline TYPE string;
 
-    DEFINE FIELD `order` ON TABLE pipelineTask TYPE int
+    DEFINE FIELD `order` ON TABLE pipeline TYPE int
         ASSERT $value != NONE
         VALUE $value OR 0;
 
