@@ -54,3 +54,9 @@ $dark-theme: mat.define-dark-theme((
     --mdc-plain-tooltip-container-color: #464646;
     padding: 6px 12px;
 }
+
+.mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline .mdc-notched-outline__leading,
+.mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline .mdc-notched-outline__notch,
+.mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline .mdc-notched-outline__trailing {
+    transition: border-color 200ms ease;
+}

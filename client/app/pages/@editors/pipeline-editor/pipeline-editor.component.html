@@ -2,10 +2,10 @@
 
 
 <div *ngIf="pipeline" style="flex: 1 1 100%; overflow: hidden;">
-    <mat-tab-group>
+    <mat-tab-group [selectedIndex]="tabIndex">
         <!-- Pipeline -->
-        <mat-tab>
-            <mat-tab-group>
+        <mat-tab #tab>
+            <mat-tab-group *ngIf="tabIndex == 0">
                 <mat-tab label="General">
                     <h4>Basic Settings</h4>
 
@@ -90,7 +90,7 @@
                         <ng-template #header let-stage>
                             {{stage.label}}
 
-                            <mat-icon (click)="editStage(stage)">edit</mat-icon>
+                            <mat-icon (click)="editStage(stage); $event.stopPropagation()">edit</mat-icon>
                         </ng-template>
                         <ng-template #content let-stage>
 
@@ -103,11 +103,9 @@
                                 <ng-template #header let-job>
                                     {{job.label}}
 
-                                    <mat-icon (click)="editJob(stage, job)">edit</mat-icon>
+                                    <mat-icon (click)="editJob(stage, job); $event.stopPropagation()">edit</mat-icon>
                                 </ng-template>
                                 <ng-template #content let-job>
-
-
                                     <app-accordion-list
                                         [items]="job.taskGroups"
                                         typeName="Task Group"
@@ -116,12 +114,9 @@
                                         <ng-template #header let-taskGroup>
                                             {{taskGroup.label}}
 
-                                            <mat-icon (click)="editTaskGroup(job, taskGroup)">edit</mat-icon>
+                                            <mat-icon (click)="editTaskGroup(job, taskGroup); $event.stopPropagation()">edit</mat-icon>
                                         </ng-template>
                                         <ng-template #content let-taskGroup>
-
-
-
                                             <app-accordion-list
                                                 [items]="taskGroup.tasks"
                                                 typeName="Task"
@@ -130,7 +125,7 @@
                                                 <ng-template #header let-task>
                                                     {{task.label}}
 
-                                                    <mat-icon (click)="editTask(taskGroup, task)">edit</mat-icon>
+                                                    <mat-icon (click)="editTask(taskGroup, task); $event.stopPropagation()">edit</mat-icon>
                                                 </ng-template>
                                                 <ng-template #content let-task>
                                                     {{1}}
@@ -152,70 +147,79 @@
         </mat-tab>
 
         <!-- Stage -->
-        <mat-tab>
-            <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
+        <mat-tab #tab>
+            <ng-container *ngIf="tabIndex == 1">
+                <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
 
-            <ngx-lazy-loader
-                component="stage-editor"
-                group="dynamic"
-                [inputs]="{
+                <ngx-lazy-loader
+                    component="stage-editor"
+                    group="dynamic"
+                    [inputs]="{
+                        stage: selectedEditItem
+                    }"
+                    [outputs]="{
 
-                }"
-                [outputs]="{
-
-                }"
-            />
+                    }"
+                />
+            </ng-container>
         </mat-tab>
 
         <!-- Job -->
-        <mat-tab>
-            <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
+        <mat-tab #tab>
+            <ng-container *ngIf="tabIndex == 2">
+                <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
 
-            <ngx-lazy-loader
-                component="job-editor"
-                group="dynamic"
-                [inputs]="{
+                <ngx-lazy-loader
+                    component="job-editor"
+                    group="dynamic"
+                    [inputs]="{
+                        job: selectedEditItem
+                    }"
+                    [outputs]="{
 
-                }"
-                [outputs]="{
-
-                }"
-            />
+                    }"
+                />
+            </ng-container>
         </mat-tab>
 
         <!-- Task Group -->
-        <mat-tab>
+        <mat-tab #tab>
+            <ng-container *ngIf="tabIndex == 3">
+                <ngx-lazy-loader
+                    component="task-group-editor"
+                    group="dynamic"
+                    [inputs]="{
+                        taskGroup: selectedEditItem
+                    }"
+                    [outputs]="{
 
-            <ngx-lazy-loader
-                component="task-group-editor"
-                group="dynamic"
-                [inputs]="{
-
-                }"
-                [outputs]="{
-
-                }"
-            />
+                    }"
+                />
+            </ng-container>
         </mat-tab>
         <!-- Task -->
-        <mat-tab>
-            <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
-            <ngx-lazy-loader
-                component="task-editor"
-                group="dynamic"
-                [inputs]="{
+        <mat-tab #tab>
+            <ng-container *ngIf="tabIndex == 4">
+                <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
+                <ngx-lazy-loader
+                    component="task-editor"
+                    group="dynamic"
+                    [inputs]="{
+                        task: selectedEditItem
+                    }"
+                    [outputs]="{
 
-                }"
-                [outputs]="{
-
-                }"
-            />
-
+                    }"
+                />
+            </ng-container>
         </mat-tab>
 
         <!-- Source -->
-        <mat-tab>
-            <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
+        <mat-tab #tab>
+            <ng-container *ngIf="tabIndex == 5">
+                <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
+
+            </ng-container>
         </mat-tab>
 
     </mat-tab-group>

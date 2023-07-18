@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -48,13 +48,14 @@ import { PipelineStage } from 'types/pipeline';
 })
 export class StageEditorComponent implements OnInit {
 
-    stages: PipelineStage[];
+    @Input() stage: PipelineStage;
 
     constructor(
         private fetch: Fetch
     ) { }
 
     ngOnInit() {
+        console.log(this.stage)
     }
 
     create() {

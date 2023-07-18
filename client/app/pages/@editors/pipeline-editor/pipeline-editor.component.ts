@@ -55,6 +55,9 @@ export class PipelineEditorComponent implements OnInit {
 
     ngxShowDistractor$ = new BehaviorSubject(false);
 
+    tabIndex = 0;
+    selectedEditItem;
+
     constructor(
         @Optional() @Inject(MAT_DIALOG_DATA) public data: any = {},
         @Optional() public dialogRef: MatDialogRef<any>,
@@ -62,11 +65,21 @@ export class PipelineEditorComponent implements OnInit {
         private dialog: DialogService,
         private lazyLoader: NgxLazyLoaderService
     ) {
-        // lazyLoader.registerComponent({
-        //     id: "stage-editor",
-        //     group: "dynamic",
-        //     load: () => import('./stage-editor/stage-editor.component')
-        // })
+        lazyLoader.registerComponent({
+            id: "stage-editor",
+            group: "dynamic",
+            load: () => import('./stage-editor/stage-editor.component')
+        })
+        lazyLoader.registerComponent({
+            id: "job-editor",
+            group: "dynamic",
+            load: () => import('./job-editor/job-editor.component')
+        })
+        lazyLoader.registerComponent({
+            id: "task-editor",
+            group: "dynamic",
+            load: () => import('./task-editor/task-editor.component')
+        })
     }
 
     async ngOnInit() {
@@ -109,7 +122,11 @@ export class PipelineEditorComponent implements OnInit {
             stages: this.pipeline.stages.map(s => s.id)
         });
     }
-    async editStage(stage) {}
+    editStage(stage) {
+        console.log("edit da fuckin stage yobbie")
+        this.selectedEditItem = stage;
+        this.tabIndex = 1;
+    }
 
     async addJob(stage: PipelineStage) {
         const job = await this.fetch.post(`api/db/pipelineJob`, {
@@ -124,7 +141,12 @@ export class PipelineEditorComponent implements OnInit {
             jobs: stage.jobs.map(s => s.id)
         });
     }
-    async editJob(stage: PipelineStage, job: PipelineJob) {}
+
+    editJob(stage: PipelineStage, job: PipelineJob) {
+        this.selectedEditItem = job;
+        this.tabIndex = 2;
+    }
+
     async addTaskGroup(job: PipelineJob) {
         const taskGroup = await this.fetch.post(`api/db/pipelineTaskGroup`, {
             label: 'Task Group - ' + (job.taskGroups.length + 1),
@@ -138,7 +160,12 @@ export class PipelineEditorComponent implements OnInit {
             taskGroups: job.taskGroups.map(s => s.id)
         });
     }
-    async editTaskGroup(job: PipelineJob, taskGroup: PipelineTaskGroup) {}
+
+    async editTaskGroup(job: PipelineJob, taskGroup: PipelineTaskGroup) {
+        this.selectedEditItem = taskGroup;
+        this.tabIndex = 3;
+    }
+
     async addTask(taskGroup: PipelineTaskGroup) {
         const task = await this.fetch.post(`api/db/pipelineTask`, {
             label: 'Task - ' + (taskGroup.tasks.length + 1),
@@ -154,7 +181,10 @@ export class PipelineEditorComponent implements OnInit {
         });
 
     }
-    async editTask(taskGroup: PipelineTaskGroup, task: PipelineTask) {}
+    async editTask(taskGroup: PipelineTaskGroup, task: PipelineTask) {
+        this.selectedEditItem = task;
+        this.tabIndex = 4;
+    }
 
     tryClose() {
         this.dialogRef.close()

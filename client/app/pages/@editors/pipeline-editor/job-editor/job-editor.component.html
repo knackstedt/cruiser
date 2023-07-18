@@ -1,15 +1,14 @@
-
-<mat-tab-group *ngIf="stage">
+<mat-tab-group *ngIf="job">
     <mat-tab label="General">
         <h4>Basic Settings</h4>
 
         <mat-form-field appearance="outline">
             <mat-label>Name</mat-label>
-            <input #nameInput matInput type="text" [(ngModel)]="stage.label">
+            <input #nameInput matInput type="text" [(ngModel)]="job.label">
         </mat-form-field>
         <mat-form-field appearance="outline">
             <mat-label>Description</mat-label>
-            <textarea matInput type="text" [(ngModel)]="stage.description"></textarea>
+            <textarea matInput type="text" [(ngModel)]="job.description"></textarea>
         </mat-form-field>
 
 
