@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.use('/:id', route(async (req, res, next) => {
     const [table, id] = req.params['id'].split(':');
-    const [pipeline] = await db.select(`pipeline:${id}`);
+    const [pipeline] = await db.query(`SELECT * FROM pipeline:${id} FETCH stages, stages.jobs, stages.jobs.taskGroups, stages.jobs.taskGroups.tasks`);
 
     if (!pipeline) throw { message: "Pipeline does not exist", status: 404 };
 
@@ -25,20 +25,20 @@ router.get('/:id/start', route(async (req, res, next) => {
 
     await StartAgent(stage);
 
-    res.send({ mesage: "ok" });
+    res.send({ message: "ok" });
 }));
 
 router.get('/:id/pause', route(async (req, res, next) => {
     const pipeline: Pipeline = req['pipeline'];
 
 
-    res.send({ mesage: "ok" });
+    res.send({ message: "ok" });
 }));
 
 router.get('/:id/resume', route(async (req, res, next) => {
     const pipeline: Pipeline = req['pipeline'];
 
-    res.send({ mesage: "ok" });
+    res.send({ message: "ok" });
 }));
 
 
@@ -46,7 +46,7 @@ router.get('/:id/freeze', route(async (req, res, next) => {
     const pipeline: Pipeline = req['pipeline'];
 
 
-    res.send({ mesage: "ok" });
+    res.send({ message: "ok" });
 }));
 
 

@@ -37,15 +37,12 @@ const getDuration = (req, res) => {
         onFinished(req, () => {
             logger.info({
                 kind: "http",
-                // tenant: req.tenant,
                 // user: req.session?.profile?.email || req.session?.userinfo?.mail || "anonymous",
-                // sid: req.sessionID,
                 // uid: req.session?.userinfo?.uid,
-                // uid2: req.session?.userinfo?.uid2,
-                // Ips prefixed with x- are not reliable sources of information
+                // Ip values prefixed with x- are not reliable sources of information
                 ip: req.get("x-envoy-external-address") || ("x-" + req.ip),
                 method: req.method,
-                status: res.status,
+                status: res.statusCode,
                 url: req.url,
                 size: (parseInt(res.get("content-length")) || 0),
                 duration: getDuration(req, res)
@@ -57,28 +54,8 @@ const getDuration = (req, res) => {
     app.use("/api/filesystem", FilesystemApi);
     app.use("/api/rest", RestApi);
 
-    // app.use("/api/agent", DatabaseTableApi("agent"));
-    // app.use("/api/artifacts", DatabaseTableApi("pipelineArtifact"));
-    // app.use("/api/pipeline/task", DatabaseTableApi("pipelineTask"));
-    // app.use("/api/pipeline/job", DatabaseTableApi("pipelineJob"));
-    // app.use("/api/pipeline/stage", DatabaseTableApi("pipelineStage"));
-
-    // app.use("/api/jobs", DatabaseTableApi("jobInstance"));
-
     app.use("/api/pipeline", PipelineApi);
     app.use("/api/db", DatabaseTableApi());
-
-
-
-    // app.use("/api/secrets", DatabaseTableApi("secret"));
-    // app.use("/api/environment-variables", DatabaseTableApi("environmentVariable"));
-
-
-    // Listen on the specified port.
-    // await server.start();
-    // const httpserver = server.getServer();
-    // new TerminalSocketService(httpserver);
-    // new MetricSocketService(httpserver);
 
     app.use((req, res, next) => next(404));
     app.use(ErrorHandler);
@@ -86,7 +63,8 @@ const getDuration = (req, res) => {
     const server = http.createServer(app);
     const port = 3000;
     server.listen(port);
-    server.on("error", (e: any) => console.error(e.code == "EACCES"
+    server.on("error", (e: any) =>
+        console.error(e.code == "EACCES"
             ? `Port ${port} requires elevated permissions`
             : e.code == "EADDRINUSE"
             ? `Port ${port} is already in use`

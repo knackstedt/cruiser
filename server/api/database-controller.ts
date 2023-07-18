@@ -12,6 +12,8 @@ const db = new Surreal('http://127.0.0.1:8000/rpc');
 
 })();
 
+// TODO:
+// validate table and id fields, should strictly be `<ascii>:7FFFFFFFFFFFFFFFFFFFFFFFFF`.
 
 export const DatabaseTableApi = () => {
     const router = express.Router();
@@ -25,7 +27,16 @@ export const DatabaseTableApi = () => {
     }));
 
     router.post('/:table', route(async (req, res, next) => {
-        res.send(await db.create(req.params['table'] + ":ulid()", req.body));
+
+        if (!Array.isArray(req.body)) {
+            res.send((await db.create(req.params['table'] + ":ulid()", req.body))[0]);
+        }
+        else {
+            res.send(await Promise.all(req.body.map(({ data }) => db.create(req.params['table'] + ":ulid()", data))));
+        }
+    }));
+    router.post('/:table', route(async (req, res, next) => {
+
     }));
 
     // router.use('/:id', (req, res, next) => {
@@ -35,26 +46,56 @@ export const DatabaseTableApi = () => {
     // });
 
     router.get('/:id', route(async (req, res, next) => {
-        res.send(await db.select(req.params['id']));
+        res.send((await db.select(req.params['id']))[0]);
     }));
+
+    // batch get
+    // [ "id:123", "id:456" ]
+    router.get('/', route(async (req, res, next) => {
+        if (!Array.isArray(req.body)) throw 400;
+
+        res.send(await Promise.all(req.body.map((id) => db.select(id).then(([entry]) => entry))));
+    }));
+
+
 
     router.put('/:id', route(async (req, res, next) => {
         res.send(await db.update(req.params['id'], req.body));
     }));
+    // batch PUT
+    // [{ id: "id123", data: {prop1: val}}]
+    router.put('/', route(async (req, res, next) => {
+        if (!Array.isArray(req.body)) throw 400;
+
+        res.send(await Promise.all(req.body.map(({ id, data }) => db.update(id, data))));
+    }));
+
+
 
     router.patch('/:id', route(async (req, res, next) => {
         res.send(await db.merge(req.params['id'], req.body));
     }));
+
     // batch patch
     // [{ id: "id123", data: {prop1: val}}]
     router.patch('/', route(async (req, res, next) => {
         if (!Array.isArray(req.body)) throw 400;
 
-        res.send(await Promise.all(req.body.map(({id, data}) => db.merge(id, data))));
+        res.send(await Promise.all(req.body.map(({id, data}) => db.merge(id, data).then(e => e[0]))));
     }));
+
+
 
     router.delete('/:id', route(async (req, res, next) => {
         res.send(await db.delete(req.params['id']));
+    }));
+
+    // batch delete
+    // [ "id:123", "id:456" ]
+    router.delete('/', route(async (req, res, next) => {
+        if (!Array.isArray(req.body)) throw 400;
+
+        res.send(await Promise.all(req.body.map((id) => db.delete(id))));
     }));
 
     return router;
