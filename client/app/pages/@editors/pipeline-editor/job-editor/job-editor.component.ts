@@ -15,7 +15,9 @@ import { MatRadioModule } from '@angular/material/radio';
 import { NgForOf, NgIf } from '@angular/common';
 import { PipelineSourceComponent } from 'client/app/components/pipeline-source/pipeline-source.component';
 import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
-import { PipelineJob } from 'types/pipeline';
+import { PipelineJob, PipelineStage } from 'types/pipeline';
+import { AccordionListComponent } from 'client/app/pages/@editors/pipeline-editor/accordion-list/accordion-list.component';
+import { PipelineEditorComponent } from 'client/app/pages/@editors/pipeline-editor/pipeline-editor.component';
 
 
 @Component({
@@ -37,17 +39,23 @@ import { PipelineJob } from 'types/pipeline';
         FormsModule,
         VscodeComponent,
         PipelineSourceComponent,
-        EditEnvironmentVariablesComponent
+        EditEnvironmentVariablesComponent,
+        AccordionListComponent
     ],
     standalone: true
 })
 export class JobEditorComponent implements OnInit {
 
     @Input() job: PipelineJob;
+    @Input() stage: PipelineStage;
 
-    constructor() { }
+    constructor(
+        private fetch: Fetch,
+        public pipelineEditor: PipelineEditorComponent
+    ) {
+
+    }
 
     ngOnInit() {
     }
-
 }

@@ -27,6 +27,7 @@ export class AccordionListComponent implements OnInit {
 
     @Input() items: any[] = [];
     @Input() typeName: string;
+    @Input() dropListGroup: string;
 
     @Output() onCreate = new EventEmitter();
 
@@ -50,5 +51,4 @@ export class AccordionListComponent implements OnInit {
         // Update the order of all of the items
         this.fetch.patch(`/api/db`, this.items.map(i => ({ id: i.id, data: { order: i.order } })));
     }
-
 }

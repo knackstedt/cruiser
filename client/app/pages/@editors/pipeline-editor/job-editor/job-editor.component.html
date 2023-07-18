@@ -33,8 +33,34 @@
     <mat-tab label="Automation" *ngIf="false">
 
     </mat-tab>
-    <mat-tab label="Jobs">
+    <mat-tab label="Task Groups">
+        <app-accordion-list
+            [items]="job.taskGroups"
+            typeName="Task Group"
+            (onCreate)="pipelineEditor.addTaskGroup(job)"
+        >
+            <ng-template #header let-taskGroup>
+                {{taskGroup.label}}
 
+                <mat-icon (click)="pipelineEditor.editTaskGroup(stage, job, taskGroup); $event.stopPropagation()">edit</mat-icon>
+            </ng-template>
+            <ng-template #content let-taskGroup>
+                <app-accordion-list
+                    [items]="taskGroup.tasks"
+                    typeName="Task"
+                    (onCreate)="pipelineEditor.addTask(taskGroup)"
+                >
+                    <ng-template #header let-task>
+                        {{task.label}}
+
+                        <mat-icon (click)="pipelineEditor.editTask(stage, job, taskGroup, task); $event.stopPropagation()">edit</mat-icon>
+                    </ng-template>
+                    <ng-template #content let-task>
+                        {{1}}
+                    </ng-template>
+                </app-accordion-list>
+            </ng-template>
+        </app-accordion-list>
     </mat-tab>
     <mat-tab label="Environment Variables">
         <!-- <app-environment-variable [pipeline]="pipeline"/> -->

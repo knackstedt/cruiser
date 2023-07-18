@@ -53,6 +53,23 @@ textarea {
     background: #0e0e0e;
 }
 
+.breadcrumb {
+    display: flex;
+    align-items: center;
+
+    div {
+        cursor: pointer;
+        user-select: none;
+        text-decoration: underline;
+        text-decoration-color: #0000;
+        transition: text-decoration-color 200ms ease;
+
+        &:hover {
+            text-decoration-color: var(--theme-primary);
+        }
+    }
+}
+
 :host ::ng-deep {
     .mat-mdc-form-field {
         height: unset;

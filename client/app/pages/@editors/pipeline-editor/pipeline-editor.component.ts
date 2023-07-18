@@ -56,7 +56,10 @@ export class PipelineEditorComponent implements OnInit {
     ngxShowDistractor$ = new BehaviorSubject(false);
 
     tabIndex = 0;
-    selectedEditItem;
+    selectedStage;
+    selectedJob;
+    selectedTaskGroup;
+    selectedTask;
 
     constructor(
         @Optional() @Inject(MAT_DIALOG_DATA) public data: any = {},
@@ -124,7 +127,7 @@ export class PipelineEditorComponent implements OnInit {
     }
     editStage(stage) {
         console.log("edit da fuckin stage yobbie")
-        this.selectedEditItem = stage;
+        this.selectedStage = stage;
         this.tabIndex = 1;
     }
 
@@ -143,7 +146,8 @@ export class PipelineEditorComponent implements OnInit {
     }
 
     editJob(stage: PipelineStage, job: PipelineJob) {
-        this.selectedEditItem = job;
+        this.selectedStage = stage;
+        this.selectedJob = job;
         this.tabIndex = 2;
     }
 
@@ -161,8 +165,10 @@ export class PipelineEditorComponent implements OnInit {
         });
     }
 
-    async editTaskGroup(job: PipelineJob, taskGroup: PipelineTaskGroup) {
-        this.selectedEditItem = taskGroup;
+    async editTaskGroup(stage: PipelineStage, job: PipelineJob, taskGroup: PipelineTaskGroup) {
+        this.selectedStage = stage;
+        this.selectedJob = job;
+        this.selectedTaskGroup = taskGroup;
         this.tabIndex = 3;
     }
 
@@ -181,8 +187,11 @@ export class PipelineEditorComponent implements OnInit {
         });
 
     }
-    async editTask(taskGroup: PipelineTaskGroup, task: PipelineTask) {
-        this.selectedEditItem = task;
+    async editTask(stage: PipelineStage, job: PipelineJob, taskGroup: PipelineTaskGroup, task: PipelineTask) {
+        this.selectedStage = stage;
+        this.selectedJob = job;
+        this.selectedTaskGroup = taskGroup;
+        this.selectedTask = task;
         this.tabIndex = 4;
     }
 

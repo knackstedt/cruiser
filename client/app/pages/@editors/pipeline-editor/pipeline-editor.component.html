@@ -73,15 +73,6 @@
                     <app-pipeline-source *ngFor="let source of pipeline.sources"></app-pipeline-source>
                 </mat-tab>
                 <mat-tab label="Stages">
-                    <!-- <button
-                        #btn
-                        mat-icon-button
-                        matTooltip="Add a stage"
-                        (click)="createStage()"
-                    >
-                        <mat-icon>add</mat-icon>
-                    </button> -->
-
                     <app-accordion-list
                         [items]="pipeline.stages"
                         typeName="Stage"
@@ -93,8 +84,6 @@
                             <mat-icon (click)="editStage(stage); $event.stopPropagation()">edit</mat-icon>
                         </ng-template>
                         <ng-template #content let-stage>
-
-
                             <app-accordion-list
                                 [items]="stage.jobs"
                                 typeName="Job"
@@ -114,7 +103,7 @@
                                         <ng-template #header let-taskGroup>
                                             {{taskGroup.label}}
 
-                                            <mat-icon (click)="editTaskGroup(job, taskGroup); $event.stopPropagation()">edit</mat-icon>
+                                            <mat-icon (click)="editTaskGroup(stage, job, taskGroup); $event.stopPropagation()">edit</mat-icon>
                                         </ng-template>
                                         <ng-template #content let-taskGroup>
                                             <app-accordion-list
@@ -125,7 +114,7 @@
                                                 <ng-template #header let-task>
                                                     {{task.label}}
 
-                                                    <mat-icon (click)="editTask(taskGroup, task); $event.stopPropagation()">edit</mat-icon>
+                                                    <mat-icon (click)="editTask(stage, job, taskGroup, task); $event.stopPropagation()">edit</mat-icon>
                                                 </ng-template>
                                                 <ng-template #content let-task>
                                                     {{1}}
@@ -141,21 +130,21 @@
                 <mat-tab label="Environment Variables">
                     <app-environment-variable [pipeline]="pipeline"/>
                 </mat-tab>
-                <!-- <mat-tab label="Parameters"></mat-tab> -->
-                <!-- <mat-tab label="Automation (WIP)"></mat-tab> -->
             </mat-tab-group>
         </mat-tab>
 
         <!-- Stage -->
         <mat-tab #tab>
             <ng-container *ngIf="tabIndex == 1">
-                <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
+                <div class="breadcrumb">
+                    <div (click)="tabIndex = 0">{{pipeline.label}}</div>
+                </div>
 
                 <ngx-lazy-loader
                     component="stage-editor"
                     group="dynamic"
                     [inputs]="{
-                        stage: selectedEditItem
+                        stage: selectedStage
                     }"
                     [outputs]="{
 
@@ -167,13 +156,18 @@
         <!-- Job -->
         <mat-tab #tab>
             <ng-container *ngIf="tabIndex == 2">
-                <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
+                <div class="breadcrumb">
+                    <div (click)="tabIndex = 0">{{pipeline.label}}</div>
+                    <mat-icon>chevron_right</mat-icon>
+                    <div>{{selectedStage.label}}</div>
+                </div>
 
                 <ngx-lazy-loader
                     component="job-editor"
                     group="dynamic"
                     [inputs]="{
-                        job: selectedEditItem
+                        stage: selectedStage,
+                        job: selectedJob
                     }"
                     [outputs]="{
 
@@ -185,11 +179,21 @@
         <!-- Task Group -->
         <mat-tab #tab>
             <ng-container *ngIf="tabIndex == 3">
+                <div class="breadcrumb">
+                    <div (click)="tabIndex = 0">{{pipeline.label}}</div>
+                    <mat-icon>chevron_right</mat-icon>
+                    <div (click)="tabIndex = 1">{{selectedStage.label}}</div>
+                    <mat-icon>chevron_right</mat-icon>
+                    <div (click)="tabIndex = 2">{{selectedJob.label}}</div>
+                </div>
+
                 <ngx-lazy-loader
                     component="task-group-editor"
                     group="dynamic"
                     [inputs]="{
-                        taskGroup: selectedEditItem
+                        stage: selectedStage,
+                        job: selectedJob,
+                        taskGroup: selectedTaskGroup
                     }"
                     [outputs]="{
 
@@ -200,12 +204,24 @@
         <!-- Task -->
         <mat-tab #tab>
             <ng-container *ngIf="tabIndex == 4">
-                <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
+                <div class="breadcrumb">
+                    <div (click)="tabIndex = 0">{{pipeline.label}}</div>
+                    <mat-icon>chevron_right</mat-icon>
+                    <div (click)="tabIndex = 1">{{selectedStage.label}}</div>
+                    <mat-icon>chevron_right</mat-icon>
+                    <div (click)="tabIndex = 2">{{selectedJob.label}}</div>
+                    <mat-icon>chevron_right</mat-icon>
+                    <div (click)="tabIndex = 3">{{selectedTaskGroup.label}}</div>
+                </div>
+
                 <ngx-lazy-loader
                     component="task-editor"
                     group="dynamic"
                     [inputs]="{
-                        task: selectedEditItem
+                        stage: selectedStage,
+                        job: selectedJob,
+                        taskGroup: selectedTaskGroup,
+                        task: selectedTask
                     }"
                     [outputs]="{
 
@@ -217,7 +233,9 @@
         <!-- Source -->
         <mat-tab #tab>
             <ng-container *ngIf="tabIndex == 5">
-                <button mat-flat-button class="back"><mat-icon>navigate_before</mat-icon>Back</button>
+                <div class="breadcrumb">
+                    <div (click)="tabIndex = 0">{{pipeline.label}}</div>
+                </div>
 
             </ng-container>
         </mat-tab>

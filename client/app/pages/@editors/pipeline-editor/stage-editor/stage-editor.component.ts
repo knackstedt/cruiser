@@ -18,6 +18,8 @@ import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-
 import { NgxAppMenuDirective, NgxContextMenuDirective } from '@dotglitch/ngx-ctx-menu';
 import { Fetch } from 'client/app/services/fetch.service';
 import { PipelineStage } from 'types/pipeline';
+import { AccordionListComponent } from 'client/app/pages/@editors/pipeline-editor/accordion-list/accordion-list.component';
+import { PipelineEditorComponent } from 'client/app/pages/@editors/pipeline-editor/pipeline-editor.component';
 
 @Component({
     selector: 'app-stage-editor',
@@ -42,7 +44,8 @@ import { PipelineStage } from 'types/pipeline';
         PipelineSourceComponent,
         EditEnvironmentVariablesComponent,
         NgxAppMenuDirective,
-        NgxContextMenuDirective
+        NgxContextMenuDirective,
+        AccordionListComponent
     ],
     standalone: true
 })
@@ -51,7 +54,8 @@ export class StageEditorComponent implements OnInit {
     @Input() stage: PipelineStage;
 
     constructor(
-        private fetch: Fetch
+        private fetch: Fetch,
+        public pipelineEditor: PipelineEditorComponent
     ) { }
 
     ngOnInit() {
