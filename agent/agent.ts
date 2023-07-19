@@ -2,7 +2,7 @@ import Surreal from 'surrealdb.js';
 import { execa } from 'execa';
 import { JobInstance } from '../types/agent-task';
 import { PipelineTaskGroup } from '../types/pipeline';
-import { getLogger, sleep } from './util';
+import { getLogger, orderSort, sleep } from './util';
 
 const logger = getLogger("agent");
 
@@ -49,11 +49,11 @@ const freezePollInterval = 5000;
     await db.merge(taskId, { state: "cloning" });
     await db.merge(taskId, { state: "building" });
 
-    const taskGroups = jobInstance.job.taskGroups;
+    const taskGroups = jobInstance.job.taskGroups.sort(orderSort);
 
     await Promise.all(taskGroups.map(async taskGroup => {
 
-        const tasks = taskGroup.tasks;
+        const tasks = taskGroup.tasks.sort(orderSort);
 
         for (let i = 0; i < tasks.length; i++) {
             const task = tasks[i];
