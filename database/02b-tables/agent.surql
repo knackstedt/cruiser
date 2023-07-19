@@ -1,3 +1,5 @@
+
+REMOVE TABLE staticagent;
 DEFINE TABLE staticagent SCHEMALESS;
     /**
      * General
@@ -5,16 +7,16 @@ DEFINE TABLE staticagent SCHEMALESS;
     DEFINE FIELD label ON TABLE staticagent TYPE string
         ASSERT $value != NONE;
 
-    DEFINE FIELD enabled ON TABLE agentPool TYPE bool
+    DEFINE FIELD enabled ON TABLE staticagent TYPE bool
         VALUE $value OR true;
 
-    DEFINE FIELD `version` ON TABLE agentPool TYPE string
+    DEFINE FIELD `version` ON TABLE staticagent TYPE string
         ASSERT $value = /\d+\.\d+\.\d+/;
 
 
-    DEFINE FIELD connected ON TABLE agentPool TYPE bool
-        ASSERT ($this.type == 'elastic' && $value = NONE)
-               ($this.type == 'static'  && $value != NONE);
+    DEFINE FIELD connected ON TABLE staticagent TYPE bool;
+        -- ASSERT ($this.type == 'elastic' && $value = NONE)
+            --    ($this.type == 'static'  && $value != NONE);
 
     DEFINE FIELD configType ON TABLE staticagent TYPE string
         ASSERT
@@ -43,7 +45,7 @@ DEFINE TABLE staticagent SCHEMALESS;
     DEFINE FIELD runTime ON TABLE staticagent TYPE int
         ASSERT ($before = NONE || $before < $value);
 
-    DEFINE FIELD lastRun ON TABLE agentPool TYPE dateTime
+    DEFINE FIELD lastRun ON TABLE staticagent/*  */ TYPE dateTime
         ASSERT ($before = NONE || $before < $value);
 
     /**
