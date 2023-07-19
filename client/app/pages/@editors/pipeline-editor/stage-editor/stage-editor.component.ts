@@ -12,9 +12,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { NgForOf, NgIf } from '@angular/common';
 import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
-import { PipelineSourceComponent } from 'client/app/components/pipeline-source/pipeline-source.component';
 import { MatExpansionModule } from '@angular/material/expansion';
-import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { NgxAppMenuDirective, NgxContextMenuDirective } from '@dotglitch/ngx-ctx-menu';
 import { Fetch } from 'client/app/services/fetch.service';
 import { PipelineStage } from 'types/pipeline';
@@ -37,11 +35,8 @@ import { PipelineEditorComponent } from 'client/app/pages/@editors/pipeline-edit
         MatTabsModule,
         MatCheckboxModule,
         MatRadioModule,
-        MatExpansionModule,
-        DragDropModule,
         FormsModule,
         VscodeComponent,
-        PipelineSourceComponent,
         EditEnvironmentVariablesComponent,
         NgxAppMenuDirective,
         NgxContextMenuDirective,

@@ -13,10 +13,9 @@ import { Fetch } from 'client/app/services/fetch.service';
 import { VscodeComponent } from '@dotglitch/ngx-web-components';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
-import { PipelineSourceComponent } from 'client/app/components/pipeline-source/pipeline-source.component';
 import { DialogService } from 'client/app/services/dialog.service';
 import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
-import { Pipeline, PipelineJob, PipelineStage, PipelineTask, PipelineTaskGroup } from 'types/pipeline';
+import { Pipeline, PipelineJob, PipelineSource, PipelineStage, PipelineTask, PipelineTaskGroup } from 'types/pipeline';
 import { BehaviorSubject } from 'rxjs';
 import { NgxLazyLoaderComponent, NgxLazyLoaderService } from '@dotglitch/ngx-lazy-loader';
 import { AccordionListComponent } from 'client/app/pages/@editors/pipeline-editor/accordion-list/accordion-list.component';
@@ -39,7 +38,6 @@ import { AccordionListComponent } from 'client/app/pages/@editors/pipeline-edito
         MatRadioModule,
         FormsModule,
         VscodeComponent,
-        PipelineSourceComponent,
         EditEnvironmentVariablesComponent,
         NgxLazyLoaderComponent,
         AccordionListComponent
@@ -56,10 +54,11 @@ export class PipelineEditorComponent implements OnInit {
     ngxShowDistractor$ = new BehaviorSubject(false);
 
     tabIndex = 0;
-    selectedStage;
-    selectedJob;
-    selectedTaskGroup;
-    selectedTask;
+    selectedStage: PipelineStage;
+    selectedJob: PipelineJob;
+    selectedTaskGroup: PipelineTaskGroup;
+    selectedTask: PipelineTask;
+    selectedSource: PipelineSource;
 
     constructor(
         @Optional() @Inject(MAT_DIALOG_DATA) public data: any = {},
@@ -82,6 +81,11 @@ export class PipelineEditorComponent implements OnInit {
             id: "task-editor",
             group: "dynamic",
             load: () => import('./task-editor/task-editor.component')
+        })
+        lazyLoader.registerComponent({
+            id: "source-editor",
+            group: "dynamic",
+            load: () => import('./source-editor/source-editor.component')
         })
     }
 
@@ -194,6 +198,28 @@ export class PipelineEditorComponent implements OnInit {
         this.selectedTask = task;
         this.tabIndex = 4;
     }
+
+    async addSource() {
+        const source = await this.fetch.post(`api/db/pipelineSource`, {
+            label: 'Source - ' + (this.pipeline.sources.length + 1),
+            order: this.pipeline.sources.length + 1
+        }) as PipelineSource;
+
+        this.pipeline.sources.push(source);
+
+        this.fetch.patch(`/api/db/${this.pipeline.id}`, {
+            sources: this.pipeline.sources.map(s => s.id)
+        });
+    }
+    async editSource(source: PipelineSource) {
+        this.tabIndex = 5;
+        this.selectedSource = source;
+    }
+
+    getStagePeers() { return this.pipeline.stages.map(s => s.id)}
+    getJobPeers() { return this.pipeline.stages.map(s => s.jobs?.map(j => j.id)).flat()}
+    getTaskGroupPeers() { return this.pipeline.stages.map(s => s.jobs?.map(j => j.taskGroups?.map(g => g.id))).flat()}
+    getTaskPeers() { return this.pipeline.stages.map(s => s.jobs?.map(j => j.taskGroups?.map(g => g.tasks?.map(t => t.id)))).flat()}
 
     tryClose() {
         this.dialogRef.close()

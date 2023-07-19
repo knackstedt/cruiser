@@ -1,12 +1,16 @@
 <div
     class="list"
     cdkDropList
+    [id]="id"
+    [cdkDropListConnectedTo]="peers"
     (cdkDropListDropped)="drop($event)"
+    [cdkDropListData]="id"
 >
     <div
         class="box app-entry-list"
         *ngFor="let item of items; let i = index"
         cdkDrag
+        [cdkDragData]="item"
     >
         <div class="placeholder" *cdkDragPlaceholder></div>
 
@@ -21,15 +25,7 @@
                     </div>
                 </mat-expansion-panel-header>
 
-                <!-- <app-entry-list
-                    *ngIf="item['_children'] && depth < 5"
-                    [item]="item"
-                    [items]="item['_children']"
-                    [ctxMenu]="ctxMenu"
-                    [depth]="depth + 1"
-                /> -->
                 <ng-template [ngTemplateOutlet]="content" [ngTemplateOutletContext]="{ '$implicit': item}" />
-
             </mat-expansion-panel>
         </mat-accordion>
     </div>

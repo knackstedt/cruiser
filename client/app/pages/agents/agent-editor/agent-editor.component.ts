@@ -13,7 +13,6 @@ import { Fetch } from 'client/app/services/fetch.service';
 import { VscodeComponent } from '@dotglitch/ngx-web-components';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
-import { PipelineSourceComponent } from 'client/app/components/pipeline-source/pipeline-source.component';
 import { DialogService } from 'client/app/services/dialog.service';
 import { Pipeline } from 'types/pipeline';
 
@@ -34,8 +33,7 @@ import { Pipeline } from 'types/pipeline';
         MatCheckboxModule,
         MatRadioModule,
         FormsModule,
-        VscodeComponent,
-        PipelineSourceComponent
+        VscodeComponent
     ],
     standalone: true
 })

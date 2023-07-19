@@ -13,7 +13,6 @@ import { VscodeComponent } from '@dotglitch/ngx-web-components';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { NgForOf, NgIf } from '@angular/common';
-import { PipelineSourceComponent } from 'client/app/components/pipeline-source/pipeline-source.component';
 import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
 import { PipelineJob, PipelineStage } from 'types/pipeline';
 import { AccordionListComponent } from 'client/app/pages/@editors/pipeline-editor/accordion-list/accordion-list.component';
@@ -38,7 +37,6 @@ import { PipelineEditorComponent } from 'client/app/pages/@editors/pipeline-edit
         MatRadioModule,
         FormsModule,
         VscodeComponent,
-        PipelineSourceComponent,
         EditEnvironmentVariablesComponent,
         AccordionListComponent
     ],

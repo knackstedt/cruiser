@@ -10,9 +10,6 @@
     .mat-mdc-tab-labels {
         padding: 0 48px 0 0;
     }
-    .mat-mdc-tab-body-content {
-        padding: 0 24px 24px 24px;
-    }
 }
 
 hr {
@@ -51,11 +48,31 @@ textarea {
     gap: 10px;
     padding: 10px;
     background: #0e0e0e;
+    height: 64px;
+}
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+
+    ngx-lazy-loader {
+        height: 100%;
+        display: block;
+        overflow: auto;
+    }
 }
 
 .breadcrumb {
     display: flex;
     align-items: center;
+    height: 48px;
+    border-radius: 6px;
+    line-height: 16px;
+    font-size: 16px;
+    color: var(--theme-primary);
+    margin: 0 24px;
 
     div {
         cursor: pointer;
@@ -63,6 +80,8 @@ textarea {
         text-decoration: underline;
         text-decoration-color: #0000;
         transition: text-decoration-color 200ms ease;
+        display: flex;
+        line-height: 24px;
 
         &:hover {
             text-decoration-color: var(--theme-primary);
@@ -71,6 +90,15 @@ textarea {
 }
 
 :host ::ng-deep {
+
+    mat-tab-group.maintabs>mat-tab-header>.mat-mdc-tab-label-container {
+        display: none;
+    }
+
+    .maintabs mat-tab-group .mat-mdc-tab-body-content {
+        padding: 0 24px 24px 24px;
+    }
+
     .mat-mdc-form-field {
         height: unset;
         font-weight: 400;
@@ -114,7 +142,50 @@ textarea {
     }
 
 
+
+
     .mdc-text-field--filled .mdc-floating-label--float-above {
         transform: translateY(-106%) scale(.85);
+    }
+}
+
+
+app-accordion-list {
+    position: relative;
+    z-index: 1;
+    &::before {
+        content: " ";
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 48px;
+        width: 3px;
+        background-color: #0000;
+        border-radius: 6px;
+        transition: background-color 200ms ease;
+        z-index: 999;
+    }
+    &::after {
+        z-index: -1;
+        content: " ";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 48px;
+        opacity: 0;
+        pointer-events: none;
+        background-color: var(--panel-background-color);
+        transition: opacity 200ms ease;
+
+        border-bottom-right-radius: 6px;
+        border-top-right-radius: 6px;
+    }
+
+    &.hover::before {
+        background-color: var(--theme-primary);
+    }
+    &.hover::after {
+        opacity: 1;
     }
 }

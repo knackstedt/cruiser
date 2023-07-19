@@ -1,19 +1,16 @@
 <div (click)="editing = true" style="display: flex">
-
     <mat-form-field appearance="outline" style="margin-right: 24px">
         <mat-label>Key</mat-label>
-        <input [disabled]="editing" #_ matInput type="text" [(ngModel)]="variable.key" (change)="validateLabel(_.value)">
+        <input [disabled]="!editing" #_ matInput type="text" [(ngModel)]="variable.key" (change)="validateLabel(_.value)">
     </mat-form-field>
-
     <mat-form-field *ngIf="!secret" appearance="outline">
         <mat-label>Value</mat-label>
-        <input [disabled]="editing" matInput type="text" [(ngModel)]="variable.value">
+        <input [disabled]="!editing" matInput type="text" [(ngModel)]="variable.value">
     </mat-form-field>
-
     <mat-form-field *ngIf="secret" appearance="outline">
         <mat-label>Value</mat-label>
-        <input [disabled]="editing" matInput type="password" [(ngModel)]="variable.value">
+        <input [disabled]="!editing" matInput type="password" [(ngModel)]="variable.value">
     </mat-form-field>
 
+    <button *ngIf="editing" mat-icon-button (click)="save(); $event.stopPropagation()"><mat-icon>done</mat-icon></button>
 </div>
-<button mat-icon-button (click)="editing = false"><mat-icon>done</mat-icon></button>

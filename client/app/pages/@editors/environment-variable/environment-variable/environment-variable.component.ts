@@ -39,4 +39,13 @@ export class EnvironmentVariableComponent implements OnInit {
     validateLabel(text: string) {
         this.validLabel = /^[A-Za-z0-9\-_]+$/.test(text);
     }
+
+    save() {
+        if (this.secret) {
+
+        }
+        else {
+
+        }
+    }
 }

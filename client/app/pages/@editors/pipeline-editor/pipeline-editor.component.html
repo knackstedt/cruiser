@@ -2,7 +2,7 @@
 
 
 <div *ngIf="pipeline" style="flex: 1 1 100%; overflow: hidden;">
-    <mat-tab-group [selectedIndex]="tabIndex">
+    <mat-tab-group [selectedIndex]="tabIndex" class="maintabs">
         <!-- Pipeline -->
         <mat-tab #tab>
             <mat-tab-group *ngIf="tabIndex == 0">
@@ -62,21 +62,31 @@
                     </mat-form-field>
                 </mat-tab>
                 <mat-tab label="Sources">
-                    <!-- <button
-                        #btn
-                        mat-icon-button
-                        matTooltip="Add a source"
-                        (click)="createSource()"
+                    <app-accordion-list
+                        [items]="pipeline.sources"
+                        (onCreate)="addSource()"
                     >
-                        <mat-icon>add</mat-icon>
-                    </button> -->
-                    <app-pipeline-source *ngFor="let source of pipeline.sources"></app-pipeline-source>
+                        <ng-template #header let-source>
+                            {{source.label}}
+
+                            <mat-icon (click)="editSource(source); $event.stopPropagation()">edit</mat-icon>
+                        </ng-template>
+                        <ng-template #content let-source>
+                            <!-- <div>{{source.type}}</div> -->
+                            <div>{{source.url}}</div>
+                            <div>{{source.targetPath}}</div>
+                        </ng-template>
+                    </app-accordion-list>
                 </mat-tab>
                 <mat-tab label="Stages">
                     <app-accordion-list
+                        #stageList
                         [items]="pipeline.stages"
                         typeName="Stage"
+                        [class.hover]="stageList['_hover']"
                         (onCreate)="addStage()"
+                        (pointerenter)="stageList['_hover'] = true"
+                        (pointerleave)="stageList['_hover'] = false"
                     >
                         <ng-template #header let-stage>
                             {{stage.label}}
@@ -85,9 +95,17 @@
                         </ng-template>
                         <ng-template #content let-stage>
                             <app-accordion-list
+                                #jobList
                                 [items]="stage.jobs"
                                 typeName="Job"
+                                [id]="stage.id"
+                                [peers]="getStagePeers()"
+                                [pipeline]="pipeline"
+
+                                [class.hover]="jobList['_hover']"
                                 (onCreate)="addJob(stage)"
+                                (pointerenter)="jobList['_hover'] = true; stageList['_hover'] = false"
+                                (pointerleave)="jobList['_hover'] = false; stageList['_hover'] = true"
                             >
                                 <ng-template #header let-job>
                                     {{job.label}}
@@ -96,9 +114,16 @@
                                 </ng-template>
                                 <ng-template #content let-job>
                                     <app-accordion-list
-                                        [items]="job.taskGroups"
+                                        #taskGroupList
                                         typeName="Task Group"
+                                        [id]="job.id"
+                                        [peers]="getJobPeers()"
+                                        [pipeline]="pipeline"
+                                        [items]="job.taskGroups"
+                                        [class.hover]="taskGroupList['_hover']"
                                         (onCreate)="addTaskGroup(job)"
+                                        (pointerenter)="taskGroupList['_hover'] = true; stageList['_hover'] = jobList['_hover'] = false"
+                                        (pointerleave)="taskGroupList['_hover'] = false; jobList['_hover'] = true"
                                     >
                                         <ng-template #header let-taskGroup>
                                             {{taskGroup.label}}
@@ -107,9 +132,16 @@
                                         </ng-template>
                                         <ng-template #content let-taskGroup>
                                             <app-accordion-list
-                                                [items]="taskGroup.tasks"
+                                                #taskList
                                                 typeName="Task"
+                                                [id]="taskGroup.id"
+                                                [peers]="getTaskGroupPeers()"
+                                                [pipeline]="pipeline"
+                                                [items]="taskGroup.tasks"
+                                                [class.hover]="taskList['_hover']"
                                                 (onCreate)="addTask(taskGroup)"
+                                                (pointerenter)="taskList['_hover'] = true; stageList['_hover'] = jobList['_hover'] = taskGroupList['_hover'] = false"
+                                                (pointerleave)="taskList['_hover'] = false; taskGroupList['_hover'] = true"
                                             >
                                                 <ng-template #header let-task>
                                                     {{task.label}}
@@ -117,7 +149,7 @@
                                                     <mat-icon (click)="editTask(stage, job, taskGroup, task); $event.stopPropagation()">edit</mat-icon>
                                                 </ng-template>
                                                 <ng-template #content let-task>
-                                                    {{1}}
+                                                    <i>{{task.command}} {{task.arguments?.join(' ')}}</i>
                                                 </ng-template>
                                             </app-accordion-list>
                                         </ng-template>
@@ -128,16 +160,19 @@
                     </app-accordion-list>
                 </mat-tab>
                 <mat-tab label="Environment Variables">
-                    <app-environment-variable [pipeline]="pipeline"/>
+                    <app-environment [resource]="pipeline"/>
                 </mat-tab>
             </mat-tab-group>
         </mat-tab>
 
         <!-- Stage -->
         <mat-tab #tab>
-            <ng-container *ngIf="tabIndex == 1">
+            <div class="panel" *ngIf="tabIndex == 1">
                 <div class="breadcrumb">
-                    <div (click)="tabIndex = 0">{{pipeline.label}}</div>
+                    <div (click)="tabIndex = 0">
+                        <mat-icon>arrow_back</mat-icon>
+                        {{pipeline.label}}
+                    </div>
                 </div>
 
                 <ngx-lazy-loader
@@ -150,16 +185,19 @@
 
                     }"
                 />
-            </ng-container>
+            </div>
         </mat-tab>
 
         <!-- Job -->
         <mat-tab #tab>
-            <ng-container *ngIf="tabIndex == 2">
+            <div class="panel" *ngIf="tabIndex == 2">
                 <div class="breadcrumb">
-                    <div (click)="tabIndex = 0">{{pipeline.label}}</div>
+                    <div (click)="tabIndex = 0">
+                        <mat-icon>arrow_back</mat-icon>
+                        {{pipeline.label}}
+                    </div>
                     <mat-icon>chevron_right</mat-icon>
-                    <div>{{selectedStage.label}}</div>
+                    <div (click)="tabIndex = 1">{{selectedStage.label}}</div>
                 </div>
 
                 <ngx-lazy-loader
@@ -173,14 +211,17 @@
 
                     }"
                 />
-            </ng-container>
+            </div>
         </mat-tab>
 
         <!-- Task Group -->
         <mat-tab #tab>
-            <ng-container *ngIf="tabIndex == 3">
+            <div class="panel" *ngIf="tabIndex == 3">
                 <div class="breadcrumb">
-                    <div (click)="tabIndex = 0">{{pipeline.label}}</div>
+                    <div (click)="tabIndex = 0">
+                        <mat-icon>arrow_back</mat-icon>
+                        {{pipeline.label}}
+                    </div>
                     <mat-icon>chevron_right</mat-icon>
                     <div (click)="tabIndex = 1">{{selectedStage.label}}</div>
                     <mat-icon>chevron_right</mat-icon>
@@ -199,13 +240,16 @@
 
                     }"
                 />
-            </ng-container>
+            </div>
         </mat-tab>
         <!-- Task -->
         <mat-tab #tab>
-            <ng-container *ngIf="tabIndex == 4">
+            <div class="panel" *ngIf="tabIndex == 4">
                 <div class="breadcrumb">
-                    <div (click)="tabIndex = 0">{{pipeline.label}}</div>
+                    <div (click)="tabIndex = 0">
+                        <mat-icon>arrow_back</mat-icon>
+                        {{pipeline.label}}
+                    </div>
                     <mat-icon>chevron_right</mat-icon>
                     <div (click)="tabIndex = 1">{{selectedStage.label}}</div>
                     <mat-icon>chevron_right</mat-icon>
@@ -227,25 +271,37 @@
 
                     }"
                 />
-            </ng-container>
+            </div>
         </mat-tab>
 
         <!-- Source -->
         <mat-tab #tab>
-            <ng-container *ngIf="tabIndex == 5">
+            <div class="panel" *ngIf="tabIndex == 5">
                 <div class="breadcrumb">
-                    <div (click)="tabIndex = 0">{{pipeline.label}}</div>
+                    <div (click)="tabIndex = 0">
+                        <mat-icon>arrow_back</mat-icon>
+                        {{pipeline.label}}
+                    </div>
                 </div>
+                <ngx-lazy-loader
+                    style="padding: 24px"
+                    component="source-editor"
+                    group="dynamic"
+                    [inputs]="{
+                        source: selectedSource
+                    }"
+                    [outputs]="{
 
-            </ng-container>
+                    }"
+                />
+            </div>
         </mat-tab>
-
     </mat-tab-group>
 </div>
 
 
 <div class="controls">
-    <button mat-flat-button (click)="save()"><mat-icon>done</mat-icon> Save</button>
-    <button mat-flat-button (click)="dialogRef.close()"><mat-icon>done</mat-icon> Cancel</button>
+    <!-- <button mat-flat-button (click)="save()"><mat-icon>done</mat-icon> Save</button> -->
+    <!-- <button mat-flat-button (click)="dialogRef.close()"><mat-icon>done</mat-icon> Cancel</button> -->
 </div>
 

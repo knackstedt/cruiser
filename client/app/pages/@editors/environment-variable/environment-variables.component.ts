@@ -3,11 +3,10 @@ import { Component, Input, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { EnvironmentVariableComponent } from './environment-variable/environment-variable.component';
-import { Pipeline } from 'types/pipeline';
 import { EnvironmentVariable } from 'types/environment';
 
 @Component({
-    selector: 'app-environment-variable',
+    selector: 'app-environment',
     templateUrl: './environment-variable.component.html',
     styleUrls: ['./environment-variable.component.scss'],
     imports: [
@@ -20,7 +19,7 @@ import { EnvironmentVariable } from 'types/environment';
 })
 export class EditEnvironmentVariablesComponent implements OnInit {
 
-    @Input() pipeline: Pipeline;
+    @Input() resource: any; // any pipeline, stage, job, task
 
     variables: EnvironmentVariable[] = [];
     secrets: EnvironmentVariable[] = [];
@@ -29,11 +28,11 @@ export class EditEnvironmentVariablesComponent implements OnInit {
     constructor() { }
 
     ngOnInit() {
-        if (!this.pipeline.environment)
-            this.pipeline.environment = [];
+        if (!this.resource.environment)
+            this.resource.environment = [];
 
-        this.variables = this.pipeline.environment.filter(e => !e.isSecret);
-        this.secrets = this.pipeline.environment.filter(e => e.isSecret);
+        this.variables = this.resource.environment.filter(e => !e.isSecret);
+        this.secrets = this.resource.environment.filter(e => e.isSecret);
     }
 
     createVariable() {

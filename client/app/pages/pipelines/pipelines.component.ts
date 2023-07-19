@@ -13,6 +13,7 @@ import { ContextMenuItem, NgxAppMenuDirective, NgxContextMenuDirective } from '@
 import { ThemedIconDirective } from 'client/app/services/theme.service';
 import Sortable from 'sortablejs';
 import { HeaderbarComponent } from 'client/app/components/headerbar/headerbar.component';
+import { orderSort } from 'client/app/services/utils';
 
 
 @Component({
@@ -50,25 +51,37 @@ export class PipelinesComponent implements OnInit {
 
     readonly ctxMenu: ContextMenuItem<Pipeline>[] = [
         {
-            label: "Edit"
+            label: "Edit",
+            action: pipeline => this.editPipeline(pipeline)
         },
         {
             label: "Copy"
         },
         {
-            label: "Delete"
+            label: "Delete",
+            action: async pipeline => {
+                let res = await this.dialog.confirmAction(`Are you sure you want to delete pipeline '${pipeline.label}'`);
+
+                if (!res) return;
+
+                await this.fetch.delete(`/api/db/${pipeline.id}`);
+            }
         },
         {
-            label: "View History"
+            label: "View History",
+            linkTemplate: pipeline => `#/History?pipeline=${pipeline.id}`
         },
         {
-            label: "Compare"
+            label: "Compare",
+            linkTemplate: pipeline => `#/Compare?pipeline=${pipeline.id}`
         },
         {
-            label: "Changes"
+            label: "Changes",
+            linkTemplate: pipeline => `#/Changes?pipeline=${pipeline.id}`
         },
         {
-            label: "Deployment Map"
+            label: "Deployment Map",
+            linkTemplate: pipeline => `#/VSM?pipeline=${pipeline.id}`
         }
     ];
 
@@ -112,11 +125,7 @@ export class PipelinesComponent implements OnInit {
             g.items.push(pipeline);
         });
 
-        this.pipelineGroups.forEach(g => g.items.sort((a, b) => {
-            if (typeof a.order != 'number') return 1;
-            if (typeof b.order != 'number') return -1;
-            return a.order - b.order;
-        }));
+        this.pipelineGroups.forEach(g => g.items.sort(orderSort));
 
         this.changeDetector.detectChanges();
 
@@ -200,7 +209,7 @@ export class PipelinesComponent implements OnInit {
         }, 100)
     }
 
-    createPipeline(pipeline: Partial<Pipeline> = {}) {
+    editPipeline(pipeline: Partial<Pipeline> = {}) {
         this.dialog.open("pipeline-editor", { group: "dynamic", inputs: { pipeline }, autoFocus: false })
             .then((pipeline: Pipeline) => {
                 console.log("res", pipeline)
