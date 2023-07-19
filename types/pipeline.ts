@@ -1,7 +1,7 @@
 import { EnvironmentVariable } from './environment';
 
 export type PipelineArtifact = {
-    id: string
+    id: `pipelineArtifact:${string}`
     label: string
     description?: string
     source: string
@@ -9,7 +9,7 @@ export type PipelineArtifact = {
 }
 
 export type PipelineTask = {
-    id: string
+    id: `pipelineTask:${string}`;
     command: string
     arguments: string[]
     commandTimeout: number
@@ -26,7 +26,7 @@ export type PipelineTask = {
 }
 
 export type PipelineTaskGroup = {
-    id: string
+    id: `pipelineTaskGroup:${string}`
     label: string
     description?: string
     order: number
@@ -35,7 +35,7 @@ export type PipelineTaskGroup = {
 }
 
 export type PipelineJob = {
-    id: string
+    id: `pipelineJob:${string}`;
     label: string
     description?: string
     elasticAgentId?: string
@@ -54,7 +54,7 @@ export type PipelineJob = {
 }
 
 export type PipelineStage = {
-    id: string
+    id: `pipelineStage:${string}`
     label: string
     description?: string
     lastRunState?: string
@@ -69,7 +69,7 @@ export type PipelineStage = {
 }
 
 export type PipelineSource = {
-    id: string
+    id: `pipelineSource:${string}`
     label: string
     description: string
     targetPath: string
@@ -90,7 +90,7 @@ export type PipelineSource = {
 
 
 export type Pipeline = {
-    id: string
+    id: `pipeline:${string}`
     label: string
     description: string
     labelTemplate: string

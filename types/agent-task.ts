@@ -12,7 +12,7 @@ export type JobInstance = {
         "sealing"       | // Job is compressing
         "finished"      | // Job has self-completed.
         "complete"      | // Job is finished and acknowledged by scheduler
-        "resume";         // A user has resumed a job from being frozen.
+        "resume";         // A user has resumed a job from the frozen state.
     job: PipelineJob
     kubeNamespace: string
     kubePod: string
