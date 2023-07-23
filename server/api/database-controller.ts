@@ -1,6 +1,7 @@
 import * as express from "express";
 import { route } from '../util';
 import Surreal from 'surrealdb.js';
+import { format as AzureOdata } from "azure-odata-sql";
 
 const db = new Surreal('http://127.0.0.1:8000/rpc');
 (async () => {
@@ -17,6 +18,73 @@ const db = new Surreal('http://127.0.0.1:8000/rpc');
 const tableBlackList = [
     "secrets"
 ]
+
+const parseOdataParams = (req) => {
+
+    const top = (req.query['$top'] || req.query['$take']) as string;
+    const count = req.query['$count'] as string;
+    const orderby = req.query['$orderby'] as string;
+    const skip = req.query['$skip'] as string;
+
+    // groupby((esa_dt_issue_shortname))
+    const apply = req.query['$apply'] as string;
+
+    // ??? so far unused
+    const expand = req.query['$expand'] as string;
+
+    // contains(tolower(esa_dt_issue_shortname),'foobar')
+    let filter = req.query['$filter'] as string;
+
+    // Enable picking fields
+    const fields = req.query['$fields'] as string;
+
+    // ! Sanitize inputs.
+    if (typeof top != 'undefined' && /[^0-9]/i.test(top))
+        throw { status: 400, message: "malformed $top" };
+    if (typeof count != 'undefined' && !/^(true|false)$/i.test(count))
+        throw { status: 400, message: "malformed $count" };
+    if (typeof orderby != 'undefined' && /['\[\]@;]/i.test(orderby))
+        throw { status: 400, message: "malformed $orderby" };
+    if (typeof skip != 'undefined' && /[^0-9]/i.test(skip))
+        throw { status: 400, message: "malformed $skip" };
+
+
+    let isDesc = orderby?.endsWith(" desc");
+    const order = orderby?.replace(" desc", '').split(',').map(o => `\`${o}\``).join(',');
+
+    let [{ sql, parameters }] = AzureOdata({
+        filters: filter,
+        ordering: orderby,
+        includeDeleted: true,
+        table: '',
+    }, {
+        name: "REPLACE_TABLE",
+        schema: "dbo",
+        flavor: "mssql",
+        softDelete: false
+    });
+
+    let skipNum = skip ? parseInt(skip): null;
+    let topNum = top ? parseInt(top) : null;
+
+    let ordering = order;
+    if (!ordering || ordering.length <= 1)
+        ordering = null;
+    if (isDesc && ordering)
+        ordering += " DESC";
+
+    const where = (sql.split(" WHERE ") || [])[1]?.replace(/\@(p\d+)/g, (match, capture, index, source) => `$` + capture);
+
+    return {
+        where: where,
+        params: parameters,
+        top: topNum,
+        skip: skipNum,
+        order: ordering,
+        group: null,
+        fields: null
+    };
+}
 
 export const checkSurrealResource = (resource: string) => {
     const [table, id] = resource.split(':');
@@ -38,7 +106,57 @@ export const DatabaseTableApi = () => {
      * Scan the library and build the metadata database.
      */
     router.get('/:table', route(async (req, res, next) => {
-        res.send(await db.select(req.params['table']));
+        const { params, skip, top, where, order } = parseOdataParams(req);
+
+        const table = req.params['table'];
+
+        const props = params
+            .map(a => ({ [a.name]: a.value }))
+            .reduce((a, b) => {
+                return {
+                    ...a,
+                    ...b
+                };
+            }, {});
+
+        const p_count = db.query([
+            `SELECT count() from ${table}`,
+            `WHERE ${where}`,
+            'GROUP ALL'
+        ].join(' '), props);
+
+        const [ output ] = await db.query([
+            `SELECT * FROM ${table}`,
+            `WHERE ${where}`,
+            // `ORDER BY ${order} `,
+            typeof top == "number" ? `LIMIT ${top}` : '',
+            typeof skip == "number" ? `START ${skip}` : ''
+        ].join(' '), props);
+
+        const [{ result: countResult }] = await p_count;
+        const [{ count }] = countResult as any;
+        // const count = -1;
+
+        const { time, status, result } = output;
+
+        const pars = new URLSearchParams(req.url);
+        pars.set('$skip', skip + (result as any[])?.length as any);
+
+        res.send({
+            '@odata.context': `/api/db/$metadata#${table}`,
+            '@odata.count': count,
+            '@odata.nextlink': (top + skip) > (count as number)
+                                ? undefined
+                                : `/api/db/${table}${decodeURIComponent(pars.toString())}`,
+            value: result
+        });
+    }));
+
+
+    router.get('/$metadata#:table', route(async (req, res, next) => {
+        const table = req.params['table'];
+        const schemaFields = Object.keys(((await db.query(`INFO FOR TABLE ` + table))[0].result as any)?.fd);
+        res.send(schemaFields);
     }));
 
     router.post('/:table', route(async (req, res, next) => {
