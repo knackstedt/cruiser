@@ -73,8 +73,16 @@
                         </ng-template>
                         <ng-template #content let-source>
                             <!-- <div>{{source.type}}</div> -->
-                            <div>{{source.url}}</div>
-                            <div>{{source.targetPath}}</div>
+                            <div style="display: flex; gap: 12px; pointer-events: none;">
+                                <mat-form-field appearance="outline">
+                                    <mat-label>URL</mat-label>
+                                    <input #nameInput matInput type="text" [(ngModel)]="source.url">
+                                </mat-form-field>
+                                <mat-form-field appearance="outline">
+                                    <mat-label>Target Path</mat-label>
+                                    <input #nameInput matInput type="text" [(ngModel)]="source.targetPath">
+                                </mat-form-field>
+                            </div>
                         </ng-template>
                     </app-accordion-list>
                 </mat-tab>
@@ -149,7 +157,21 @@
                                                     <mat-icon (click)="editTask(stage, job, taskGroup, task); $event.stopPropagation()">edit</mat-icon>
                                                 </ng-template>
                                                 <ng-template #content let-task>
-                                                    <i>{{task.command}} {{task.arguments?.join(' ')}}</i>
+                                                    <div style="display: flex; gap: 12px; pointer-events: none; padding-right: 24px;">
+                                                        <mat-form-field class="form-view" appearance="fill">
+                                                            <mat-label>Command</mat-label>
+                                                            <input #nameInput matInput disabled type="text" [value]="task.command">
+                                                        </mat-form-field>
+                                                        <mat-form-field class="form-view" appearance="fill">
+                                                            <mat-label>Arguments</mat-label>
+                                                            <input #nameInput matInput disabled type="text" [value]="task.arguments?.join(' ')">
+                                                        </mat-form-field>
+                                                        <mat-form-field class="form-view" appearance="fill">
+                                                            <mat-label>Working Directory</mat-label>
+                                                            <input #nameInput matInput disabled type="text" [(ngModel)]="task.workingDirectory">
+                                                        </mat-form-field>
+                                                    </div>
+                                                    <!-- <div class="command">{{task.command}} {{task.arguments?.join(' ')}}</div> -->
                                                 </ng-template>
                                             </app-accordion-list>
                                         </ng-template>

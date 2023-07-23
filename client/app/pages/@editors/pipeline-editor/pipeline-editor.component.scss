@@ -89,6 +89,16 @@ textarea {
     }
 }
 
+// .form-view {
+//     .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__leading,
+//     .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__notch,
+//     .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
+//         border-color: ;
+//     }
+// }
+
+
+
 :host ::ng-deep {
 
     mat-tab-group.maintabs>mat-tab-header>.mat-mdc-tab-label-container {
@@ -104,36 +114,6 @@ textarea {
         font-weight: 400;
         font-size: 16px;
         width: 100%;
-        // .mat-mdc-form-field-infix {
-        //     // padding: ;
-        // }
-
-        // .mat-mdc-select-arrow-wrapper {
-        //     top: 12px;
-        //     position: relative;
-        // }
-
-        // textarea.mat-mdc-input-element {
-        //     padding: 12px 0;
-        // }
-
-        // .mat-mdc-input-element {
-        //     height: 42px !important;
-        // }
-        // .mat-mdc-text-field-wrapper {
-        //     height: 42px;
-
-        //     .mat-mdc-form-field-flex .mat-mdc-floating-label {
-        //         top: 21px;
-        //         &.mdc-floating-label--float-above {
-        //             top: 18px
-        //         }
-        //     }
-        // }
-        // &.textbox .mat-mdc-text-field-wrapper,
-        // &.textbox .mat-mdc-input-element {
-        //     height: unset !important;
-        // }
 
         .mat-mdc-text-field-wrapper .mat-mdc-form-field-input-control.mdc-text-field__input[type=color] {
             height: 36px;
@@ -141,11 +121,19 @@ textarea {
         }
     }
 
-
-
-
     .mdc-text-field--filled .mdc-floating-label--float-above {
         transform: translateY(-106%) scale(.85);
+    }
+
+    .mdc-text-field--disabled.mdc-text-field--filled {
+        background-color: #242424;
+
+    }
+    .mdc-text-field--disabled .mdc-floating-label {
+        color: rgb(255 255 255 / 80%);
+    }
+    .mdc-text-field--disabled .mdc-text-field__input {
+        color: rgb(255 255 255 / 70%);
     }
 }
 
@@ -153,6 +141,7 @@ textarea {
 app-accordion-list {
     position: relative;
     z-index: 1;
+
     &::before {
         content: " ";
         position: absolute;

@@ -71,33 +71,35 @@ export class PipelineEditorComponent implements OnInit {
             id: "stage-editor",
             group: "dynamic",
             load: () => import('./stage-editor/stage-editor.component')
-        })
+        });
         lazyLoader.registerComponent({
             id: "job-editor",
             group: "dynamic",
             load: () => import('./job-editor/job-editor.component')
-        })
+        });
         lazyLoader.registerComponent({
             id: "task-editor",
             group: "dynamic",
             load: () => import('./task-editor/task-editor.component')
-        })
+        });
         lazyLoader.registerComponent({
             id: "source-editor",
             group: "dynamic",
             load: () => import('./source-editor/source-editor.component')
-        })
+        });
     }
 
     async ngOnInit() {
         if (typeof this._pipeline.id == "string") {
             // Get the full pipeline and subcontents
-            this.pipeline = await this.fetch.get(`/api/pipeline/${this._pipeline.id}`);
+            // await this.fetch.patch(`/api/pipeline/${this._pipeline.id}`, {});
+            this.pipeline = await this.fetch.get(`/api/pipeline/${this._pipeline.id}/editclone`);
+            // this.pipeline = await this.fetch.post(`/api/pipeline/${this._pipeline.id}`);
         }
         else {
             this.pipeline = await this.fetch.post(`/api/db/pipeline/`, {
                 label: 'My new Pipeline',
-                state: 'new',
+                state: 'edit_clone',
                 order: -1,
                 group: this._pipeline.group || 'default',
                 stages: []
