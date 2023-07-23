@@ -1,3 +1,5 @@
+
+REMOVE TABLE elasticAgentPool;
 DEFINE TABLE elasticAgentPool SCHEMALESS;
     /**
      * General
@@ -70,10 +72,10 @@ DEFINE TABLE elasticAgentPool SCHEMALESS;
         VALUE $value OR 0;
 
     -- Total run time duration
-    DEFINE FIELD runTime ON TABLE elasticAgentPool TYPE int
-        ASSERT ($before = NONE || $before < $value);
-    DEFINE FIELD lastRun ON TABLE elasticAgentPool TYPE dateTime
-        ASSERT ($before = NONE || $before < $value);
+    DEFINE FIELD runTime ON TABLE elasticAgentPool TYPE int;
+        -- ASSERT ($before = NONE || $before < $value);
+    DEFINE FIELD lastRun ON TABLE elasticAgentPool TYPE dateTime;
+        -- ASSERT ($before = NONE || $before < $value);
 
 
 

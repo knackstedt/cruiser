@@ -1,3 +1,5 @@
+
+REMOVE TABLE elasticCluster;
 DEFINE TABLE elasticCluster SCHEMALESS;
     /**
      * General

@@ -1,3 +1,5 @@
+
+REMOVE TABLE pipelineJob;
 DEFINE TABLE pipelineJob SCHEMALESS;
     /**
      * General

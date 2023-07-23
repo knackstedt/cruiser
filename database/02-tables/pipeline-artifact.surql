@@ -1,3 +1,5 @@
+
+REMOVE TABLE pipelineArtifact;
 DEFINE TABLE pipelineArtifact SCHEMALESS;
     /**
      * General

@@ -1,4 +1,6 @@
 
+
+REMOVE TABLE jobInstance;
 DEFINE TABLE jobInstance SCHEMALESS;
     DEFINE FIELD kubeNamespace ON TABLE jobInstance TYPE string;
     DEFINE FIELD kubePod ON TABLE jobInstance TYPE string;

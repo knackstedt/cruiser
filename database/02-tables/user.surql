@@ -1,3 +1,5 @@
+
+REMOVE TABLE user;
 DEFINE TABLE user SCHEMALESS;
     DEFINE FIELD label ON TABLE users TYPE string
         ASSERT $value != NONE;
