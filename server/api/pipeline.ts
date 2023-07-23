@@ -14,28 +14,65 @@ const getPipeline = async id => {
     return pipeline;
 }
 
-const createPipeline = async (pipeline: Pipeline) => {
+const createPipeline = async (pipeline: Pipeline, stashId = false, replace = false) => {
+
+    if (replace) {
+        // If we're replacing an old pipeline, destroy all of the inherited properties
+        // TODO: Don't do this -- properly deal with the changes >.>
+        const stages: PipelineStage[] = pipeline.stages;
+        const jobs: PipelineJob[] = stages.map(s => s.jobs).flat();
+        const taskGroups: PipelineTaskGroup[] = jobs.map(j => j.taskGroups).flat();
+        const tasks: PipelineTask[] = taskGroups.map(t => t.tasks).flat();
+
+        const ids = [
+            ...stages.map(s => s.id),
+            ...jobs.map(s => s.id),
+            ...taskGroups.map(s => s.id),
+            ...tasks.map(s => s.id)
+        ];
+
+        await Promise.all(ids.map(id => db.delete(id)));
+    }
+
     // This is possibly the worst thing I could have done.
-    pipeline.stages = await Promise.all(pipeline.stages.map(async s => {
+    pipeline.stages = await Promise.all(pipeline.stages?.map(async s => {
+
         s.jobs = await Promise.all(s.jobs.map(async j => {
-            j.taskGroups = await Promise.all(j.taskGroups.map(async tg => {
-                tg.tasks = await Promise.all(tg.tasks.map(t => {
+
+            j.taskGroups = await Promise.all(j.taskGroups?.map(async tg => {
+
+                tg.tasks = await Promise.all(tg.tasks?.map(t => {
+
+                    if (stashId) t['_id'] = t.id;
                     delete t.id;
                     return db.create('pipelineTask:ulid()', t).then(([r]) => r.id as any) as any;
-                }));
+                }) || []);
+
+                if (stashId) tg['_id'] = tg.id;
                 delete tg.id;
                 return db.create('pipelineTaskGroup:ulid()', tg).then(([r]) => r.id as any) as any;
-            }));
+            }) || []);
+
+            if (stashId) j['_id'] = j.id;
             delete j.id;
             return db.create('pipelineJob:ulid()', j).then(([r]) => r.id) as any;
-        }));
+        }) || []);
+
+        if (stashId) s['_id'] = s.id;
         delete s.id;
         return db.create('pipelineStage:ulid()', s).then(([r]) => r.id) as any;
-    }));
+    }) || []);
 
-    delete pipeline.id;
-    const part = (await db.create(`pipeline:ulid()`, pipeline))[0];
-    return await getPipeline(part.id.split(':')[1]);
+    if (stashId) pipeline['_id'] = pipeline.id;
+    if (replace) {
+        await db.update(pipeline.id, pipeline);
+        return await getPipeline(pipeline.id);
+    }
+    else {
+        delete pipeline.id;
+        const part = (await db.create(`pipeline:ulid()`, pipeline))[0];
+        return await getPipeline(part.id.split(':')[1]);
+    }
 }
 
 router.use('/:id', route(async (req, res, next) => {
@@ -89,14 +126,24 @@ router.get('/:id', route(async (req, res, next) => {
     res.send(pipeline);
 }));
 
+// TODO: need to janitor old edit clones
 router.get('/:id/editclone', route(async (req, res, next) => {
     const pipeline: Pipeline = req['pipeline'];
 
     pipeline.isUserEditInstance = true;
 
-    res.send(await createPipeline(pipeline));
+    res.send(await createPipeline(pipeline, true));
 }));
 
+/**
+ * Apply a clone onto an existing pipeline
+ */
+router.get('/:id/applyclone', route(async (req, res, next) => {
+    const pipeline: Pipeline = req['pipeline'];
+    const clone: Pipeline = req.body;
+
+    res.send(await getPipeline(pipeline.id));
+}));
 
 // Perform a deep create of a pipeline
 router.post('/', route(async (req, res, next) => {

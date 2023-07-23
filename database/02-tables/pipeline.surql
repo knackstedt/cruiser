@@ -18,8 +18,7 @@ DEFINE TABLE pipeline SCHEMALESS;
 
     -- Historical versions of this pipeline (can only add new records)
     DEFINE FIELD history ON TABLE pipeline TYPE array
-    -- DEFINE FIELD history.* ON TABLE pipeline TYPE any
-        ASSERT ($before = NONE AND $value != NONE) OR $value != NONE
+        -- ASSERT ($before = NONE AND $value != NONE)
         VALUE array::union($before OR [], $value);
     DEFINE FIELD history.* ON TABLE pipeline TYPE any; // record(objectHistory)
 
