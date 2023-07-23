@@ -1,3 +1,4 @@
+import { HistoryObject } from 'types/history-object';
 import { EnvironmentVariable } from './environment';
 
 export type PipelineArtifact = {
@@ -97,7 +98,12 @@ export type Pipeline = {
     state: "locked" | "paused" | "active"
     lockingBehavior: "singleton" | "singletonNoFail" | "multiple"
     group: string
-
+    isTemplate: boolean
+    // record id for the pipeline's template
+    pipelineTemplate: string,
+    // If the pipeline is a clone so a user can edit and save
+    // it all at once
+    isUserEditInstance: boolean,
     automaticScheduling: boolean
 
     cronSchedule: string
@@ -107,7 +113,8 @@ export type Pipeline = {
     trackingToolUri: string
 
     order: number
-    stages: PipelineStage[]
+    stages?: PipelineStage[]
     environment?: EnvironmentVariable[]
-    sources: PipelineSource[]
+    sources?: PipelineSource[],
+    history?: HistoryObject[]
 }
