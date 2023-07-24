@@ -20,6 +20,8 @@ DEFINE TABLE pipelineStage SCHEMALESS;
      * Relations
      */
     DEFINE FIELD environment ON TABLE pipelineStage TYPE array;
-    -- DEFINE FIELD environment.* ON TABLE pipelineStage TYPE record(environmentVariable);
+    DEFINE FIELD environment.* ON TABLE pipelineStage TYPE any
+        ASSERT $value != NONE AND $value != null;
     DEFINE FIELD jobs ON TABLE pipelineStage TYPE array;
-    -- DEFINE FIELD jobs.* ON TABLE pipelineStage TYPE record(pipelineJob);
+    DEFINE FIELD jobs.* ON TABLE pipelineStage TYPE any
+        ASSERT $value != NONE AND $value != null;

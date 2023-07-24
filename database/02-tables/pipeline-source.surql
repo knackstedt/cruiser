@@ -28,6 +28,4 @@ DEFINE TABLE pipelineSource SCHEMALESS;
 
 
     DEFINE FIELD url ON TABLE pipelineSource TYPE string
-        ASSERT $value != NONE;
-    -- DEFINE FIELD pipelines.* ON TABLE pipelineSource TYPE record(pipeline)
-        -- ASSERT $value != NONE;
+        ASSERT $value != NONE AND $value != null;

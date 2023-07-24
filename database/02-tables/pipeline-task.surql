@@ -43,4 +43,6 @@ DEFINE TABLE pipelineTask SCHEMALESS;
     -- A task to run when this task fails or is cancelled
     DEFINE FIELD taskOnSelfFailure ON TABLE pipelineTask TYPE record(pipelineTask);
     DEFINE FIELD environment ON TABLE pipelineTask TYPE array;
-    -- DEFINE FIELD environment.* ON TABLE pipelineTask TYPE record(environmentVariable);
+    DEFINE FIELD environment.* ON TABLE pipelineTask TYPE any
+        ASSERT $value != NONE AND $value != null;
+

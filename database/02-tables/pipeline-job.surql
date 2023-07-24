@@ -39,8 +39,14 @@ DEFINE TABLE pipelineJob SCHEMALESS;
      * Relations
      */
     DEFINE FIELD taskGroups ON TABLE pipelineJob TYPE array;
-    -- DEFINE FIELD taskGroups.* ON TABLE pipelineJob TYPE record(pipelineTaskGroup);
+    DEFINE FIELD taskGroups.* ON TABLE pipelineJob TYPE any
+        ASSERT $value != NONE AND $value != null;
+
     DEFINE FIELD artifacts ON TABLE pipelineJob TYPE array;
-    -- DEFINE FIELD artifacts.* ON TABLE pipelineJob TYPE record(pipelineArtifact);
+    DEFINE FIELD artifacts.* ON TABLE pipelineJob TYPE any
+        ASSERT $value != NONE AND $value != null;
+
     DEFINE FIELD environment ON TABLE pipelineJob TYPE array;
-    -- DEFINE FIELD environment.* ON TABLE pipelineJob TYPE record(environmentVariable);
+    DEFINE FIELD environment.* ON TABLE pipelineJob TYPE any
+        ASSERT $value != NONE AND $value != null;
+

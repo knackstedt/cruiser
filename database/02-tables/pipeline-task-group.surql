@@ -17,6 +17,8 @@ DEFINE TABLE pipelineTaskGroup SCHEMALESS;
      */
     -- A task to run when this task fails or is cancelled
     DEFINE FIELD environment ON TABLE pipelineTaskGroup TYPE array;
-    -- DEFINE FIELD environment.* ON TABLE pipelineTaskGroup TYPE record(environmentVariable);
+    DEFINE FIELD environment.* ON TABLE pipelineTaskGroup TYPE any
+        ASSERT $value != NONE AND $value != null;
     DEFINE FIELD tasks ON TABLE pipelineTaskGroup TYPE array;
-    -- DEFINE FIELD tasks.* ON TABLE pipelineTaskGroup TYPE record(pipelineTask);
+    DEFINE FIELD tasks.* ON TABLE pipelineTaskGroup TYPE any
+        ASSERT $value != NONE AND $value != null;
