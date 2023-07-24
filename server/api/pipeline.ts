@@ -9,6 +9,9 @@ import { checkSurrealResource } from './database-controller';
 const router = express.Router();
 
 const getPipeline = async id => {
+    if (id.includes(':'))
+        id = id.split(':').pop();
+
     const [{ result }] = await db.query(`SELECT * FROM pipeline:${id} FETCH stages, stages.jobs, stages.jobs.taskGroups, stages.jobs.taskGroups.tasks`);
     const [pipeline] = result as Pipeline[];
     return pipeline;
@@ -64,6 +67,7 @@ const createPipeline = async (pipeline: Pipeline, stashId = false, replace = fal
     }) || []);
 
     if (stashId) pipeline['_id'] = pipeline.id;
+
     if (replace) {
         await db.update(pipeline.id, pipeline);
         return await getPipeline(pipeline.id);
@@ -71,7 +75,7 @@ const createPipeline = async (pipeline: Pipeline, stashId = false, replace = fal
     else {
         delete pipeline.id;
         const part = (await db.create(`pipeline:ulid()`, pipeline))[0];
-        return await getPipeline(part.id.split(':')[1]);
+        return await getPipeline(part.id);
     }
 }
 
@@ -138,11 +142,45 @@ router.get('/:id/editclone', route(async (req, res, next) => {
 /**
  * Apply a clone onto an existing pipeline
  */
-router.get('/:id/applyclone', route(async (req, res, next) => {
+router.post('/:id/applyclone', route(async (req, res, next) => {
     const pipeline: Pipeline = req['pipeline'];
     const clone: Pipeline = req.body;
 
-    res.send(await getPipeline(pipeline.id));
+    const data = JSON.stringify(pipeline);
+    const payload = {
+        objectRef: pipeline.id,
+        data,
+        // changedBy,
+        changeType: "update",
+        comment: "none"
+    };
+
+    const [ historyItem ] = await db.create(`objectHistory:ulid()`, payload);
+    pipeline.history = pipeline.history || [];
+    pipeline.history.push(historyItem.id as any);
+
+    // Delete the old pipeline properties
+    {
+        const stages: PipelineStage[] = pipeline.stages;
+        const jobs: PipelineJob[] = stages?.map(s => s.jobs).flat();
+        const taskGroups: PipelineTaskGroup[] = jobs?.map(j => j.taskGroups).flat();
+        const tasks: PipelineTask[] = taskGroups?.map(t => t.tasks).flat();
+
+        const ids = [
+            ...(stages?.map(s => s.id) || []),
+            ...(jobs?.map(s => s.id) || []),
+            ...(taskGroups?.map(s => s.id) || []),
+            ...(tasks?.map(s => s.id) || [])
+        ];
+
+        await Promise.all(ids.map(id => db.delete(id)));
+    }
+
+    clone.id = pipeline.id;
+    clone.isUserEditInstance = false;
+    clone['_id'] = null;
+
+    res.send(await createPipeline(clone, false, true));
 }));
 
 // Perform a deep create of a pipeline
