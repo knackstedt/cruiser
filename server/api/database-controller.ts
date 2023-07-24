@@ -76,7 +76,7 @@ const parseOdataParams = (req) => {
     const where = (sql.split(" WHERE ") || [])[1]?.replace(/\@(p\d+)/g, (match, capture, index, source) => `$` + capture);
 
     return {
-        where: where,
+        where: where.replace(/[\[\]]/g, ''),
         params: parameters,
         top: topNum,
         skip: skipNum,
@@ -89,7 +89,7 @@ const parseOdataParams = (req) => {
 export const checkSurrealResource = (resource: string) => {
     const [table, id] = resource.split(':');
 
-    if (id && !/^[0-7][0-9A-F]{25}$/.test(id))
+    if (id && !/^[0-7][0-9A-Z]{25}$/.test(id))
         throw { status: 400, message: "Invalid resource" };
 
     if (tableBlackList.includes(table.toLowerCase()))
@@ -134,7 +134,7 @@ export const DatabaseTableApi = () => {
         ].join(' '), props);
 
         const [{ result: countResult }] = await p_count;
-        const [{ count }] = countResult as any;
+        const [{ count }] = (countResult as any || [{ count: 0 }]);
         // const count = -1;
 
         const { time, status, result } = output;
