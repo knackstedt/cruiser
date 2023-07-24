@@ -59,12 +59,21 @@ export class PipelinesComponent implements OnInit {
         },
         {
             label: "Delete",
-            action: async pipeline => {
-                let res = await this.dialog.confirmAction(`Are you sure you want to delete pipeline '${pipeline.label}'`);
-
+            action: async (pipeline) => {
+                let res = await this.dialog.confirmAction(`Are you sure you want to delete pipeline '${pipeline.label}'?`);
                 if (!res) return;
 
-                await this.fetch.delete(`/api/db/${pipeline.id}`);
+                this.fetch.delete(`/api/db/${pipeline.id}`);
+
+                const el = (this.viewContainer.element.nativeElement as HTMLElement).querySelector(`[pipeline-id="${pipeline.id}"]`);
+                el.classList.add("destroy-animation");
+
+                setTimeout(() => {
+                    const group = this.pipelineGroups.find(g => g.label == pipeline.group);
+                    group.items.splice(group.items.findIndex(i => i.id == pipeline.id), 1);
+
+                    this.changeDetector.detectChanges();
+                }, 200);
             }
         },
         {
@@ -106,7 +115,7 @@ export class PipelinesComponent implements OnInit {
             { label: "default", items: [] },
         ];
 
-        this.pipelines = await this.fetch.get('/api/db/pipeline');
+        this.pipelines = (await this.fetch.get('/api/db/pipeline?$filter=isUserEditInstance ne true'))['value'];
         this.ngAfterViewInit();
     }
 

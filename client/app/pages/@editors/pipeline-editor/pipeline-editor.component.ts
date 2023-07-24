@@ -99,7 +99,8 @@ export class PipelineEditorComponent implements OnInit {
         else {
             this.pipeline = await this.fetch.post(`/api/db/pipeline/`, {
                 label: 'My new Pipeline',
-                state: 'edit_clone',
+                state: 'new',
+                isUserEditInstance: true,
                 order: -1,
                 group: this._pipeline.group || 'default',
                 stages: []
@@ -112,11 +113,15 @@ export class PipelineEditorComponent implements OnInit {
     }
 
     async save() {
-        const [res] = await this.fetch.post(`/api/db/pipeline/${this.pipeline.id || ''}`, this.pipeline) as any;
+        const [res] = await this.fetch.post(`/api/pipeline/${this._pipeline.id}/applyclone`, this.pipeline) as any;
 
         this.dialogRef?.close(res);
     }
 
+    async cancel() {
+        await this.fetch.delete(`api/db/${this.pipeline.id}`);
+        this.dialogRef.close();
+    }
 
     async addStage() {
         const stage = await this.fetch.post(`/api/db/pipelineStage`, {

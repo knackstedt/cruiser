@@ -73,6 +73,10 @@
     .mat-expansion-panel {
         background-color: var(--inner-panel-background-color);
     }
+    .grid-item.destroy-animation {
+        width: 0px;
+        overflow: hidden;
+    }
 }
 
 
@@ -87,13 +91,14 @@
     height: 230px;
     background-color: #121212;
     border-radius: 6px;
-}
+    transition: width 200ms ease;
 
-.content {
-    width: 100%;
-    height: 100%;
-    padding: 12px;
-    position: relative;
+    .content {
+        width: 268px;
+        height: 230px;
+        padding: 12px;
+        position: relative;
+    }
 }
 
 .schedule-controls {
