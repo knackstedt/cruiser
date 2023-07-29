@@ -3,7 +3,7 @@ git config user.name "GoCD Automation"
 git config user.email "no-reply@dotglitch.dev"
 
 npm version patch
-version=$(npm version --json | jq '.dot-ops' | tr -d '"')
+version=$(npm version --json | jq '.["dot-ops"]' | tr -d '"')
 
 # Run the build
 npm i
