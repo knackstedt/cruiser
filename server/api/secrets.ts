@@ -1,6 +1,6 @@
 import * as express from "express";
-import { route } from '../util';
-import { db } from '../db';
+import { route } from '../util/util';
+import { db } from '../util/db';
 
 
 const router = express.Router();

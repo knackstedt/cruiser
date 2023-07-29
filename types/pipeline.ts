@@ -1,4 +1,4 @@
-import { HistoryObject } from 'types/history-object';
+import { HistoryObject } from './history-object';
 import { EnvironmentVariable } from './environment';
 
 export type PipelineArtifact = {

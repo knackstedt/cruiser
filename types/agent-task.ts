@@ -24,7 +24,7 @@ export type JobInstance = {
 };
 
 
-export type ElasticAgentPool = {
+export type ElasticAgentConfig = {
     id: string;
     label: string;
     kubeNamespace: string;
@@ -32,3 +32,15 @@ export type ElasticAgentPool = {
     errorCount: number;
     warnCount: number;
 };
+
+export type ElasticAgent = {
+
+}
+
+export type StaticAgentConfig = {
+
+}
+
+export type StaticAgent = {
+
+}

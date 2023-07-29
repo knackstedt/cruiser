@@ -1,13 +1,13 @@
 import express, { Express } from 'express';
-import helmet from 'helmet';
 import http from 'http';
 
-import { ErrorHandler } from './errors';
+import { ErrorHandler } from './util/errors';
 import { FilesystemApi } from "./api/files";
-import { RestApi } from './api/rest';
-import { logger } from './util';
+import { logger } from './util/util';
 import { DatabaseTableApi } from './api/database-controller';
 import { PipelineApi } from './api/pipeline';
+import { Scheduler } from './util/scheduler';
+import { AgentsApi } from './api/agent/jobs';
 
 const onFinished = require('on-finished');
 
@@ -52,9 +52,8 @@ const getDuration = (req, res) => {
     })
 
     app.use("/api/filesystem", FilesystemApi);
-    app.use("/api/rest", RestApi);
-
-    app.use("/api/pipeline", PipelineApi);
+    app.use("/api/pipeline",   PipelineApi);
+    app.use("/api/agent",      AgentsApi);
     app.use("/api/db", DatabaseTableApi());
 
     app.use((req, res, next) => next(404));
@@ -71,5 +70,7 @@ const getDuration = (req, res) => {
             : e
         )
     );
-    server.on("listening", () => console.log(`Server listening on port ${port}`))
+    server.on("listening", () => console.log(`Server listening on port ${port}`));
+
+    Scheduler();
 })();

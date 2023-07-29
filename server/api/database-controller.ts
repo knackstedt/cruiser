@@ -1,5 +1,5 @@
 import * as express from "express";
-import { route } from '../util';
+import { route } from '../util/util';
 import Surreal from 'surrealdb.js';
 import { format as AzureOdata } from "azure-odata-sql";
 
@@ -184,26 +184,42 @@ export const DatabaseTableApi = () => {
     router.get('/', route(async (req, res, next) => {
         if (!Array.isArray(req.body)) throw 400;
 
-        res.send(await Promise.all(req.body.map((id) => db.select(checkSurrealResource(id)).then(([entry]) => entry))));
+        res.send(await Promise.all(
+            req.body.map((id) =>
+                db.select(checkSurrealResource(id))
+                .then(([d]) => d)
+            )
+        ));
     }));
 
 
 
     router.put('/:id', route(async (req, res, next) => {
-        res.send(await db.update(checkSurrealResource(req.params['id']), req.body));
+        res.send((await db.update(checkSurrealResource(req.params['id']), req.body))[0]);
     }));
     // batch PUT
     // [{ id: "id123", data: {prop1: val}}]
     router.put('/', route(async (req, res, next) => {
         if (!Array.isArray(req.body)) throw 400;
 
-        res.send(await Promise.all(req.body.map(({ id, data }) => db.update(checkSurrealResource(id), data))));
+        res.send(await Promise.all(
+            req.body.map(({id, data}) =>
+                db.update(
+                    checkSurrealResource(id),
+                    data
+                )
+                .then(([d]) => d)
+            )
+        ));
     }));
 
-
-
     router.patch('/:id', route(async (req, res, next) => {
-        res.send(await db.merge(checkSurrealResource(req.params['id']), req.body));
+        res.send(
+            (await db.merge(
+                checkSurrealResource(req.params['id']),
+                req.body
+            ))[0]
+        );
     }));
 
     // batch patch
@@ -211,13 +227,21 @@ export const DatabaseTableApi = () => {
     router.patch('/', route(async (req, res, next) => {
         if (!Array.isArray(req.body)) throw 400;
 
-        res.send(await Promise.all(req.body.map(({id, data}) => db.merge(checkSurrealResource(id), data).then(e => e[0]))));
+        res.send(await Promise.all(
+            req.body.map(({id, data}) =>
+                db.merge(
+                    checkSurrealResource(id),
+                    data
+                )
+                .then(([d]) => d)
+            )
+        ));
     }));
 
 
 
     router.delete('/:id', route(async (req, res, next) => {
-        res.send(await db.delete(checkSurrealResource(req.params['id'])));
+        res.send((await db.delete(checkSurrealResource(req.params['id']))[0]));
     }));
 
     // batch delete
@@ -225,7 +249,14 @@ export const DatabaseTableApi = () => {
     router.delete('/', route(async (req, res, next) => {
         if (!Array.isArray(req.body)) throw 400;
 
-        res.send(await Promise.all(req.body.map((id) => db.delete(checkSurrealResource(id)))));
+        res.send(await Promise.all(
+            req.body.map((id) =>
+                db.delete(
+                    checkSurrealResource(id)
+                )
+                .then(([d]) => d)
+            )
+        ));
     }));
 
     return router;

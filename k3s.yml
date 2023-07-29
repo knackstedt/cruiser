@@ -9,7 +9,7 @@ spec:
     - match: Host(`dev.ci.dotglitch.dev`)
       kind: Rule
       services:
-      - name: dot-ops-server
+      - name: dot-ops
         port: 80
 
 ---
@@ -25,7 +25,7 @@ spec:
     - kind: Rule
       match: Host(`dev.ci.dotglitch.dev`)
       services:
-        - name: dot-ops-server
+        - name: dot-ops
           port: 80
   tls:
     secretName: dev.ci.dotglitch.dev-tls
@@ -35,10 +35,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: dot-ops-server
+  name: dot-ops
 spec:
   selector:
-    app: dot-ops-server
+    app: dot-ops
   ports:
   - protocol: "TCP"
     port: 80
@@ -50,16 +50,16 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dot-ops-server
+  name: dot-ops
 spec:
   selector:
     matchLabels:
-      app: dot-ops-server
+      app: dot-ops
   replicas: 1
   template:
     metadata:
       labels:
-        app: dot-ops-server
+        app: dot-ops
     spec:
       containers:
       - name: dot-ops

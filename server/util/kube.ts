@@ -1,7 +1,7 @@
 import * as k8s from '@kubernetes/client-node';
-import { PipelineJob, PipelineStage } from '../types/pipeline';
+import { PipelineJob, PipelineStage } from '../../types/pipeline';
 import { db } from './db';
-import { ElasticAgentPool, JobInstance } from '../types/agent-task';
+import { ElasticAgentPool, JobInstance } from '../../types/agent-task';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
@@ -11,7 +11,7 @@ const namespace = process.env['AGENT_NAMESPACE'] || "dotglitch-dotops";
 
 
 export async function StartAgent(stage: PipelineStage) {
-    return Promise.all(stage.jobs.map(j => StartAgentJob(j)));
+    return Promise.all(stage.jobs?.map(j => StartAgentJob(j)));
 }
 
 export async function StartAgentJob(job: PipelineJob) {
@@ -41,7 +41,7 @@ export async function StartAgentJob(job: PipelineJob) {
             containers: [
                 {
                     name: `dotops-ea-${instance.id}`,
-                    image: elasticAgentPool.kubeContainerImage,
+                    image: elasticAgentPool?.kubeContainerImage,
                     imagePullPolicy: 'ifNotPresent'
                 }
             ]

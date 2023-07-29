@@ -1,9 +1,9 @@
 import * as cron from 'node-cron';
-import k8s from '@kubernetes/client-node';
+import * as k8s from '@kubernetes/client-node';
 import { ulid } from "ulidx";
 import { getLogger } from './util';
 import { db } from './db';
-import { ElasticAgentPool, JobInstance } from '../types/agent-task';
+import { ElasticAgentPool, JobInstance } from '../../types/agent-task';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();

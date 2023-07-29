@@ -1,5 +1,5 @@
 import * as express from "express";
-import { route, getFilesInFolder } from '../../util';
+import { route, getFilesInFolder } from '../../util/util';
 import { readFile, stat, access } from "fs-extra";
 import { isText } from 'istextorbinary';
 import mime from "mime-types";

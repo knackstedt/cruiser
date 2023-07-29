@@ -1,8 +1,8 @@
 import * as express from "express";
-import { route } from '../util';
-import { db } from '../db';
+import { route } from '../util/util';
+import { db } from '../util/db';
 import { Pipeline, PipelineJob, PipelineStage, PipelineTask, PipelineTaskGroup } from '../../types/pipeline';
-import { StartAgent } from '../kube';
+import { StartAgent } from '../util/kube';
 import { checkSurrealResource } from './database-controller';
 
 
@@ -95,25 +95,15 @@ router.get('/:id/start', route(async (req, res, next) => {
     const pipeline: Pipeline = req['pipeline'];
 
     const stage = pipeline.stages[0];
+    if (!stage) {
+        res.send({ message: "Cannot start -- pipeline doesn't have any stages to run." });
+        return;
+    }
 
     await StartAgent(stage);
 
     res.send({ message: "ok" });
 }));
-
-router.get('/:id/pause', route(async (req, res, next) => {
-    const pipeline: Pipeline = req['pipeline'];
-
-
-    res.send({ message: "ok" });
-}));
-
-router.get('/:id/resume', route(async (req, res, next) => {
-    const pipeline: Pipeline = req['pipeline'];
-
-    res.send({ message: "ok" });
-}));
-
 
 router.get('/:id/freeze', route(async (req, res, next) => {
     const pipeline: Pipeline = req['pipeline'];

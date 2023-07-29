@@ -1,6 +1,6 @@
 import * as express from "express";
-import { route } from '../../util';
-import { db } from '../../db';
+import { route } from '../../util/util';
+import { db } from '../../util/db';
 
 
 const router = express.Router();
@@ -28,4 +28,4 @@ router.use('/:jobid', route(async (req, res, next) => {
 /**
  * Export a number of API routes that are needed for the main portal UI.
  */
-export const FilesystemApi = router;
+export const AgentsApi = router;
