@@ -16,7 +16,7 @@ COPY ./nginx.conf /etc/nginx/nginx.conf
 COPY dist /app/dist
 COPY server /app/server
 COPY package.json /app/package.json
-COPY postinstall.sh /app/postinstall.sh
+# COPY postinstall.sh /app/postinstall.sh
 COPY ecosystem.config.js /app/ecosystem.config.js
 
 # Install server deps
