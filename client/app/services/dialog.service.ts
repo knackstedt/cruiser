@@ -68,4 +68,8 @@ export class DialogService {
             });
         });
     }
+
+    confirmAction(title: string) {
+        return true;
+    }
 }
