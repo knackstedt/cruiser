@@ -23,7 +23,10 @@
                     </mat-form-field>
 
                     <h5>Label Template</h5>
-                    <app-vscode [(code)]="pipeline.labelTemplate" [minimapEnabled]="false" style="height: 240px"></app-vscode>
+                    <app-labeltemplate-editor
+                        [labelTemplate]="pipeline.labelTemplate"
+                    />
+                    <!-- <app-vscode [(code)]="pipeline.labelTemplate" [minimapEnabled]="false" style="height: 240px"></app-vscode> -->
 
                     <!-- automatic pipeline scheduling -->
                     <mat-checkbox>

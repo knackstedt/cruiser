@@ -19,6 +19,7 @@ import { Pipeline, PipelineJob, PipelineSource, PipelineStage, PipelineTask, Pip
 import { BehaviorSubject } from 'rxjs';
 import { NgxLazyLoaderComponent, NgxLazyLoaderService } from '@dotglitch/ngx-lazy-loader';
 import { AccordionListComponent } from 'client/app/pages/@editors/pipeline-editor/accordion-list/accordion-list.component';
+import { LabeltemplateEditorComponent } from 'client/app/pages/@editors/pipeline-editor/labeltemplate-editor/labeltemplate-editor.component';
 
 @Component({
     selector: 'app-pipeline-editor',
@@ -40,7 +41,8 @@ import { AccordionListComponent } from 'client/app/pages/@editors/pipeline-edito
         VscodeComponent,
         EditEnvironmentVariablesComponent,
         NgxLazyLoaderComponent,
-        AccordionListComponent
+        AccordionListComponent,
+        LabeltemplateEditorComponent
     ],
     standalone: true
 })
@@ -113,7 +115,7 @@ export class PipelineEditorComponent implements OnInit {
     }
 
     async save() {
-        const [res] = await this.fetch.post(`/api/pipeline/${this._pipeline.id}/applyclone`, this.pipeline) as any;
+        const res = await this.fetch.post(`/api/pipeline/${this._pipeline.id}/applyclone`, this.pipeline) as any;
 
         this.dialogRef?.close(res);
     }
