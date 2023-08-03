@@ -6,20 +6,20 @@
 
         <mat-form-field appearance="outline">
             <mat-label>Name</mat-label>
-            <input #nameInput matInput type="text" [(ngModel)]="pipeline.label">
+            <input #nameInput matInput type="text" [(ngModel)]="agent.label">
         </mat-form-field>
         <mat-form-field appearance="outline">
             <mat-label>Group</mat-label>
-            <input matInput type="text" [(ngModel)]="pipeline.group">
+            <input matInput type="text" [(ngModel)]="agent.group">
         </mat-form-field>
         <mat-form-field appearance="outline">
             <mat-label>Description</mat-label>
-            <textarea matInput type="text" [(ngModel)]="pipeline.description"></textarea>
+            <textarea matInput type="text" [(ngModel)]="agent.description"></textarea>
         </mat-form-field>
 
 
-        <h4>Pipeline locking behavior</h4>
-        <mat-radio-group [value]="pipeline.lockingBehavior" (change)="pipeline.lockingBehavior = $event.value" aria-label="Select an option">
+        <h4>agent locking behavior</h4>
+        <mat-radio-group [value]="agent.lockingBehavior" (change)="agent.lockingBehavior = $event.value" aria-label="Select an option">
             <mat-radio-button value="singleton">Run single instance of pipeline at a time</mat-radio-button>
             <mat-radio-button value="singletonNoFail">Run single instance of pipeline and lock on failure</mat-radio-button>
             <mat-radio-button value="multiple">Run multiple instances(default)</mat-radio-button>

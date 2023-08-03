@@ -41,7 +41,8 @@ export class AgentEditorComponent implements OnInit {
 
     @ViewChild("nameInput") nameInputRef: ElementRef;
 
-    @Input() pipeline: Pipeline;
+    @Input() isElastic = false;
+    @Input() agent: any;
 
     constructor(
         @Optional() @Inject(MAT_DIALOG_DATA) public data: any = {},
@@ -60,7 +61,7 @@ export class AgentEditorComponent implements OnInit {
     }
 
     async save() {
-        const res = await this.fetch.post(`/api/pipeline/${1}`, this.pipeline);
+        const res = await this.fetch.post(`/api/pipeline/${1}`, this.agent);
 
         this.dialogRef?.close(res);
     }

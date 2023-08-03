@@ -11,29 +11,51 @@
             <textarea matInput type="text" [(ngModel)]="task.description"></textarea>
         </mat-form-field>
 
+        <mat-form-field appearance="outline">
+            <mat-label>Command</mat-label>
+            <input #nameInput matInput type="text" [(ngModel)]="task.command">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>arguments</mat-label>
+            <input #nameInput matInput type="text" [(ngModel)]="task.arguments">
+        </mat-form-field>
+
+        <div>
+            <mat-form-field appearance="outline">
+                <mat-label>Working Directory</mat-label>
+                <input #nameInput matInput type="text" [(ngModel)]="task.workingDirectory">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Timeout</mat-label>
+                <input #nameInput matInput type="number" [(ngModel)]="task.commandTimeout">
+            </mat-form-field>
+        </div>
+
 
         <!-- automatic pipeline scheduling -->
-        <mat-checkbox>
-            Clean Directory
+        <mat-checkbox [(ngModel)]="task.runIfPreviousTaskPassed">
+            Run if previous task passed
         </mat-checkbox>
 
-        <mat-checkbox>
-            Clean Artifacts
+        <mat-checkbox [(ngModel)]="task.runIfPreviousTaskFailed">
+            Run if previous task failed
         </mat-checkbox>
 
-        <mat-checkbox>
-            Fetch Sources
+        <mat-checkbox [(ngModel)]="task.freezeBeforeRun">
+            Freeze before run
+        </mat-checkbox>
+        <mat-checkbox [(ngModel)]="task.freezeAfterRun">
+            Freeze after run
         </mat-checkbox>
 
-        <mat-checkbox>
-            Only run on previous Stage success
-        </mat-checkbox>
-
+        <!-- <mat-form-field appearance="outline">
+            <mat-label>Timeout</mat-label>
+            <input #nameInput matInput type="number" [(ngModel)]="task.commandTimeout">
+        </mat-form-field> -->
     </mat-tab>
     <mat-tab label="Automation" *ngIf="false">
-
-    </mat-tab>
-    <mat-tab label="Jobs">
 
     </mat-tab>
     <mat-tab label="Environment Variables">
