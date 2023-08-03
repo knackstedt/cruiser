@@ -16,6 +16,7 @@ import { HeaderbarComponent } from 'client/app/components/headerbar/headerbar.co
 import { orderSort } from 'client/app/services/utils';
 
 
+
 @Component({
     selector: 'app-pipelines',
     templateUrl: './pipelines.component.html',
@@ -55,7 +56,14 @@ export class PipelinesComponent implements OnInit {
             action: pipeline => this.editPipeline(pipeline)
         },
         {
-            label: "Copy"
+            label: "Download JSON",
+            action: async pipeline => {
+                const link = document.createElement("a");
+                link.download = pipeline.label.replace(/[^a-z0-9A-Z_\-$ ]/g, '') + '.json';
+                link.href = `/api/pipeline/${pipeline.id}`;
+                link.click();
+                link.remove();
+            }
         },
         {
             label: "Delete",
@@ -78,7 +86,7 @@ export class PipelinesComponent implements OnInit {
         },
         {
             label: "View History",
-            linkTemplate: pipeline => `#/History?pipeline=${pipeline.id}`
+            linkTemplate: pipeline => `#/CommitGraph?pipeline=${pipeline.id}`
         },
         {
             label: "Compare",
@@ -229,6 +237,14 @@ export class PipelinesComponent implements OnInit {
         })
     }
 
+    async simplePatchPipeline(pipeline: Pipeline, data: Partial<Pipeline>) {
+        const updated = await this.fetch.patch(`/api/db/${pipeline.id}`, data);
+        Object.keys(updated).forEach(key => {
+            pipeline[key] = updated[key];
+        });
+        this.changeDetector.detectChanges();
+    }
+
     drop(event: CdkDragDrop<any, any, any>) {
         if (event.previousContainer === event.container) {
             moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
@@ -252,13 +268,11 @@ export class PipelinesComponent implements OnInit {
     }
 
     pausePipeline(pipeline: Pipeline) {
-        this.fetch.get(`/api/pipeline/${pipeline.id}/pause`);
+        this.simplePatchPipeline(pipeline, { state: "paused" });
     }
 
     resumePipeline(pipeline: Pipeline) {
-        this.fetch.get(`/api/pipeline/${pipeline.id}/resume`).then(p => {
-
-        });
+        this.simplePatchPipeline(pipeline, { state: "active" });
     }
 
     onScroll(el: HTMLDivElement) {

@@ -31,9 +31,22 @@
 
                         <div class="schedule-controls">
 
-                            <button [disabled]="pipeline.state != 'active'" (click)="triggerPipeline(pipeline)"><mat-icon>play_arrow</mat-icon></button>
-                            <button [disabled]="pipeline.state != 'active'" (click)="triggerPipelineWithOptions(pipeline)"><img icon="play-with-options"/></button>
-                            <button [class.active]="pipeline.state == 'active'" (click)="pipeline.state == 'active' ? pausePipeline(pipeline) : resumePipeline(pipeline)">
+                            <button
+                                [disabled]="pipeline.state != 'active'"
+                                (click)="triggerPipeline(pipeline)"
+                            >
+                                <mat-icon>play_arrow</mat-icon>
+                            </button>
+                            <button
+                                [disabled]="pipeline.state != 'active'"
+                                (click)="triggerPipelineWithOptions(pipeline)"
+                            >
+                                <img icon="play-with-options"/>
+                            </button>
+                            <button
+                                [class.active]="pipeline.state == 'active'"
+                                (click)="pipeline.state == 'active' ? pausePipeline(pipeline) : resumePipeline(pipeline)"
+                            >
                                 <mat-icon>pause</mat-icon>
                             </button>
 

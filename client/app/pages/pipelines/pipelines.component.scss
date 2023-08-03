@@ -122,6 +122,9 @@
         &:hover {
             background-color: #444;
         }
+        &.active {
+            opacity: .9;
+        }
     }
     a {
         position: absolute;
