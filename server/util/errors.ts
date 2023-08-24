@@ -60,6 +60,16 @@ export const ErrorHandler = (err, req, res, next) => {
             }
             break;
         }
+        case (typeof err == 'object' && typeof err.body == 'object'): {
+            if (typeof err.body.status == "number") {
+                jsonResult = err.body;
+            }
+            else {
+                jsonResult = err.body;
+                jsonResult.status = err.body.code || 500;
+            }
+            break;
+        }
         case (typeof err == 'object'): {
             // General error handling
             jsonResult = {

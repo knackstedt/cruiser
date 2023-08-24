@@ -27,6 +27,11 @@
       "es2020",
       "dom"
     ],
+    "paths": {
+        "path": [
+            "./node_modules/path-browserify"
+        ]
+    },
     "useDefineForClassFields": false
   },
   "angularCompilerOptions": {

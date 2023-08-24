@@ -8,15 +8,6 @@ import { FilesystemApi } from './api/files';
 
 const onFinished = require('on-finished');
 
-const dbc = new Surreal('http://127.0.0.1:8000/rpc');
-await dbc.signin({
-    user: 'root',
-    pass: 'root',
-});
-await dbc.use({ ns: 'dotglitch', db: 'dotops' });
-
-export const db = dbc;
-
 process.on("uncaughtException", err => {
     logger.error("uncaught:", err);
 });
@@ -33,6 +24,16 @@ const getDuration = (req, res) => {
 }
 
 (async () => {
+
+    const dbc = new Surreal('http://127.0.0.1:8000/rpc');
+    await dbc.signin({
+        user: 'root',
+        pass: 'root',
+    });
+    await dbc.use({ ns: 'dotglitch', db: 'dotops' });
+
+    const db = dbc;
+
     const app: Express = express();
 
     app.use((req, res, next) => {
@@ -66,5 +67,4 @@ const getDuration = (req, res) => {
     server.on("listening", () => console.log(`Server listening on port ${port}`));
 
     new TerminalSocketService(server);
-
 })();

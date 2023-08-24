@@ -3,7 +3,7 @@ import * as k8s from '@kubernetes/client-node';
 import { ulid } from "ulidx";
 import { getLogger } from './util';
 import { db } from './db';
-import { ElasticAgentPool, JobInstance } from '../../types/agent-task';
+import { JobInstance } from '../../types/agent-task';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
@@ -34,12 +34,13 @@ export const Scheduler = async () => {
         for (let i = 0; i < jobs.length; i++) {
             const jobInstance = jobs[i];
             const job = jobInstance.job;
-            const [elasticAgent] = await db.select(`elasticAgentPool:${job.elasticAgentId}`) as ElasticAgentPool[];
+            const [elasticAgent] = await db.select(`elasticAgentPool:${job.elasticAgentId}`) as any[];
 
             const environment: { key: string, value: string; }[] =
                 await db.query(`RETURN fn::job_get_environment(${job.id})`) as any;
 
-            k8sApi.createNamespacedPod(jobInstance.kubeNamespace || elasticAgent.kubeContainerImage || namespace, {
+            const namespace = jobInstance.kubeNamespace || elasticAgent.kubeContainerImage || "dotops";
+            k8sApi.createNamespacedPod(namespace, {
                 apiVersion: "v1",
                 kind: "pod",
                 metadata: {

@@ -116,20 +116,30 @@ export const logger = pino(pino.transport({
     ]
 }));
 
-export const getLogger = (file: string) => pino(pino.transport({
-    targets: [
-        {
-            level: 'trace',
-            target: 'pino/file',
-            options: {
-                destination: `log/${file}.log`,
-                mkdir: true
+export const getLogger = (file: string) => pino({
+    mixin: (_context, level) => {
+        return {
+            logLevel: { 10: "TRACE", 20: "DEBUG", 30: "INFO", 40: "WARN", 50: "ERROR", 60: "FATAL" }[level],
+        };
+    },
+    transport: {
+        targets: [
+            {
+                level: 'trace',
+                target: 'pino/file',
+                options: {
+                    destination: `log/${file}.log`,
+                    mkdir: true
+                },
             },
-        },
-        {
-            target: 'pino/file', level: 'trace', options: { destination: 1 }
-        }
-    ]
-}));
+            {
+                target: 'pino/file', level: 'trace', options: { destination: 1 }
+            },
+            {
+                target: 'pino/file', level: 'error', options: { destination: 2 }
+            }
+        ]
+    }
+});
 
 logger.info({ message: "Application Bootup" });
