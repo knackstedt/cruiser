@@ -1,4 +1,4 @@
-FROM node:alpine-22.04
+FROM node:18-alpine
 
 WORKDIR /agent
 
