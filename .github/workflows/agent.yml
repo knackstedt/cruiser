@@ -1,8 +1,8 @@
-name: Kubernetes
+name: build-agent
 on:
   push:
     paths:
-    - 'kubernetes/*'
+    - 'agent/*'
 jobs:
   publish:
     runs-on: ubuntu-latest
