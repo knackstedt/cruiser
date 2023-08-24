@@ -2,9 +2,9 @@
 {
     "compileOnSave": false,
     "compilerOptions": {
-        "baseUrl": "./server",
-        "sourceRoot": "./server",
-        "outDir": "../dist/server",
+        "baseUrl": "./src",
+        "sourceRoot": "./src",
+        "outDir": "./dist",
         "forceConsistentCasingInFileNames": true,
         "strict": false,
         "noImplicitOverride": true,
