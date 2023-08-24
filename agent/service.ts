@@ -2,7 +2,7 @@ import express, { Express } from 'express';
 import http from 'http';
 import Surreal from 'surrealdb.js';
 
-import { logger } from './util';
+import { logger } from './util/util';
 import { TerminalSocketService } from './api/terminal';
 import { FilesystemApi } from './api/files';
 

@@ -2,7 +2,7 @@ import Surreal from 'surrealdb.js';
 import { execa } from 'execa';
 import { JobInstance } from '../types/agent-task';
 import { PipelineTaskGroup } from '../types/pipeline';
-import { getLogger, orderSort, sleep } from './util';
+import { getLogger, orderSort, sleep } from './util/util';
 
 const logger = getLogger("agent");
 
