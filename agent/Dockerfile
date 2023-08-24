@@ -5,7 +5,7 @@ WORKDIR /agent
 COPY . .
 
 # Install server deps
-RUN apk add --no-cache python make g++
+RUN apk add --no-cache python3 make g++
 RUN npm i
 RUN npm run build
 
