@@ -19,6 +19,7 @@
     "@bytemd/plugin-highlight": "^1.21.0",
     "@bytemd/plugin-medium-zoom": "^1.21.0",
     "@bytemd/plugin-mermaid": "^1.21.0",
+    "@dotglitch/ngx-common": "^1.0.5",
     "@dotglitch/ngx-web-components": "^0.0.9",
     "@fontsource/material-icons-outlined": "^5.0.4",
     "@gitgraph/js": "^1.4.0",
