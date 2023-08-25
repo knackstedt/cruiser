@@ -3,6 +3,8 @@ FROM node:18-alpine
 WORKDIR /agent
 
 COPY . .
+COPY ../server/api ./src/api
+COPY ../server/util ./src/util
 
 # Install server deps
 RUN apk add --no-cache python3 make g++
