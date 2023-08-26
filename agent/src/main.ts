@@ -5,7 +5,6 @@ import Surreal from 'surrealdb.js';
 import { logger } from './util/util';
 import { FilesystemApi } from './api/files';
 import { Agent } from './agent';
-import "node-fetch-native";
 
 const onFinished = require('on-finished');
 
