@@ -3,6 +3,7 @@ on:
   push:
     paths:
     - 'agent/**/*'
+    - 'agent.dockerfile'
 jobs:
   publish:
     runs-on: ubuntu-latest
