@@ -10,7 +10,7 @@ const logger = getLogger("agent");
 const freezePollInterval = 5000;
 
 
-(async () => {
+export const Agent = async () => {
     const agentId = process.env['AGENT_ID'];
     const taskId = `jobInstance:` + agentId;
 
@@ -103,4 +103,4 @@ const freezePollInterval = 5000;
 
     await db.merge(taskId, { state: "finished" });
 
-})();
+}

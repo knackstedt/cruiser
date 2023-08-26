@@ -3,8 +3,9 @@ import http from 'http';
 import Surreal from 'surrealdb.js';
 
 import { logger } from './util/util';
-import { TerminalSocketService } from './api/terminal';
 import { FilesystemApi } from './api/files';
+import { Agent } from './agent';
+import "node-fetch-native";
 
 const onFinished = require('on-finished');
 
@@ -31,6 +32,8 @@ const getDuration = (req, res) => {
         pass: 'root',
     });
     await dbc.use({ ns: 'dotglitch', db: 'dotops' });
+
+    Agent();
 
     const db = dbc;
 
@@ -65,6 +68,4 @@ const getDuration = (req, res) => {
         )
     );
     server.on("listening", () => console.log(`Server listening on port ${port}`));
-
-    new TerminalSocketService(server);
 })();

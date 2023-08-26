@@ -12,7 +12,7 @@
 
 # Node
 /node_modules
-agent/node_modules
+/agent/node_modules
 npm-debug.log
 yarn-error.log
 

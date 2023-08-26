@@ -3,13 +3,16 @@
     "version": "0.0.0",
     "scripts": {
         "dev": "nodemon main.ts",
-        "build": "tsc"
+        "build1": "tsc",
+        "build": "tsc src/main.ts -t es2020 -m CommonJS --lib es2020,dom --esModuleInterop true --moduleResolution node --importHelpers true --types node"
     },
     "private": true,
     "dependencies": {
+        "@kubernetes/client-node": "^0.18.1",
         "adm-zip": "^0.5.9",
         "axios": "^1.4.0",
-        "execa": "^6.1.0",
+        "azure-odata-sql": "github:Dynatrace-ESA/azure-odata-sql-js",
+        "execa": "6.1.0",
         "express": "^4.18.1",
         "express-http-proxy": "^1.6.3",
         "express-session": "^1.17.3",
@@ -22,6 +25,7 @@
         "rxjs": "~7.5.0",
         "socket.io": "^4.5.2",
         "surrealdb.js": "^0.8.2",
+        "systeminformation": "^5.20.0",
         "tslib": "^2.3.0",
         "typescript": "~4.9.5"
     },
@@ -31,7 +35,7 @@
         "@types/express-session": "^1.17.5",
         "@types/fs-extra": "^9.0.13",
         "@types/mime-types": "^2.1.1",
-        "@types/node": "^12.11.1",
+        "@types/node": "^16.0.0",
         "@types/tar": "^6.1.2",
         "nodemon": "^2.0.22",
         "socket.io-client": "^4.5.2",

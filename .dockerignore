@@ -1,0 +1,8 @@
+node_modules/
+dist/
+log/
+.angular/
+agent/node_modules/
+agent/log/
+server/node_modules/
+server/log/
