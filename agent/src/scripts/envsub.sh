@@ -5,6 +5,7 @@
 # will print to stderr the variable that wasn't replaced, and exit with a
 # failure code.
 
+# TODO: handle glob recursively, and with customizable options
 for file in ./*.yaml
 do
     tmp="You shouldnt see this text"
