@@ -2,7 +2,7 @@ name: build-agent
 on:
   push:
     paths:
-    - 'agent/*'
+    - 'agent/**/*'
 jobs:
   publish:
     runs-on: ubuntu-latest
