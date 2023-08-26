@@ -1,7 +1,7 @@
 import * as express from "express";
 import { route } from '../util/util';
 import { db } from '../util/db';
-import { Pipeline, PipelineJob, PipelineStage, PipelineTask, PipelineTaskGroup } from '../../types/pipeline';
+import { Pipeline, PipelineJob, PipelineStage, PipelineTask, PipelineTaskGroup } from '../../../types/pipeline';
 import { StartAgent } from '../util/kube';
 import { checkSurrealResource } from './database-controller';
 

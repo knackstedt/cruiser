@@ -24,10 +24,10 @@ const wssServer = new WebSocket.Server({
 
 exports.setupSocket = (server) => {
     server.on("upgrade", (request, socket, head) => {
-        let { pod } = url.parse(request.url, true).query;
-        const podSocket = connect(pod);
+        // let { pod } = url.parse(request.url, true).query;
+        // const podSocket = connect(pod);
         wssServer.handleUpgrade(request, socket, head, (ws) => {
-            wssServer.emit("connection", ws, podSocket);
+            // wssServer.emit("connection", ws, podSocket);
         });
     });
 
