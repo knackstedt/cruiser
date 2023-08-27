@@ -17,4 +17,4 @@ RUN apk add --no-cache python3 make g++
 RUN npm i
 RUN npm run build
 
-CMD ["node", "dist/main.js"]
+CMD ["node", "src/main.js"]

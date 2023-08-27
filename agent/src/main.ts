@@ -28,6 +28,8 @@ const getDuration = (req, res) => {
     const surrealDatabase  = process.env['SURREAL_DATABASE'] || 'dotops';
     const taskId = `jobInstance:` + agentId;
 
+    // TODO: Throw proper errors when missing env variables
+
     const db = new Surreal('http://127.0.0.1:8000/rpc');
     await db.signin({
         user: surrealUser,
