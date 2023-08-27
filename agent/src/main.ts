@@ -8,9 +8,6 @@ import { Agent } from './agent';
 
 const onFinished = require('on-finished');
 
-process.on("uncaughtException", err => {
-    logger.error("uncaught:", err);
-});
 
 const getDuration = (req, res) => {
     if (!req._startAt || !res._startAt) {
@@ -24,17 +21,23 @@ const getDuration = (req, res) => {
 }
 
 (async () => {
+    const agentId = process.env['AGENT_ID'];
+    const surrealUser      = process.env['SURREAL_USER'] || 'root';
+    const surrealPassword  = process.env['SURREAL_PASSWORD'] || 'root';
+    const surrealNamespace = process.env['SURREAL_NAMESPACE'] || 'dotglitch';
+    const surrealDatabase  = process.env['SURREAL_DATABASE'] || 'dotops';
+    const taskId = `jobInstance:` + agentId;
 
-    const dbc = new Surreal('http://127.0.0.1:8000/rpc');
-    await dbc.signin({
-        user: 'root',
-        pass: 'root',
+    const db = new Surreal('http://127.0.0.1:8000/rpc');
+    await db.signin({
+        user: surrealUser,
+        pass: surrealPassword,
     });
-    await dbc.use({ ns: 'dotglitch', db: 'dotops' });
+    await db.use({ ns: surrealNamespace, db: surrealDatabase });
 
-    Agent();
-
-    const db = dbc;
+    process.on("uncaughtException", err => {
+        logger.error("uncaught:", err);
+    });
 
     const app: Express = express();
 
@@ -48,9 +51,9 @@ const getDuration = (req, res) => {
                 size: (parseInt(res.get("content-length")) || 0),
                 duration: getDuration(req, res)
             });
-        })
+        });
         next();
-    })
+    });
 
     app.use("/api/filesystem", FilesystemApi);
 
@@ -66,5 +69,17 @@ const getDuration = (req, res) => {
             : e
         )
     );
-    server.on("listening", () => console.log(`Server listening on port ${port}`));
+
+    await new Promise(r => {
+        server.on("listening", () => {
+            console.log(`Server listening on port ${port}`);
+            r(0);
+        });
+    })
+
+    await Agent(taskId, db);
+
+    // TODO:
+    // should we call process.exit here?
+
 })();

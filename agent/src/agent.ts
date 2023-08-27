@@ -10,16 +10,7 @@ const logger = getLogger("agent");
 const freezePollInterval = 5000;
 
 
-export const Agent = async () => {
-    const agentId = process.env['AGENT_ID'];
-    const taskId = `jobInstance:` + agentId;
-
-    const db = new Surreal('http://127.0.0.1:8000/rpc');
-    await db.signin({
-        user: 'root',
-        pass: 'root',
-    });
-    await db.use({ ns: 'dotglitch', db: 'dotops' });
+export const Agent = async (taskId: string, db: Surreal) => {
 
     const jobInstance: JobInstance = await db.select(taskId) as any;
     const job = jobInstance.job;
@@ -96,10 +87,11 @@ export const Agent = async () => {
 
     await db.merge(taskId, { state: "sealing" });
 
-    await Promise.all(job.artifacts.map(async a => {
-        a.source;
-        await execa('')
-    }));
+    // TODO: compress and upload artifacts
+    // await Promise.all(job.artifacts.map(async a => {
+    //     a.source;
+    //     await execa('')
+    // }));
 
     await db.merge(taskId, { state: "finished" });
 
