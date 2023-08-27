@@ -12,7 +12,7 @@
         "adm-zip": "^0.5.9",
         "axios": "^1.4.0",
         "azure-odata-sql": "github:Dynatrace-ESA/azure-odata-sql-js",
-        "execa": "6.1.0",
+        "execa": "5.1.1",
         "express": "^4.18.1",
         "express-http-proxy": "^1.6.3",
         "express-session": "^1.17.3",
