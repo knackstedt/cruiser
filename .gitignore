@@ -8,7 +8,7 @@
 /data
 
 /log
-/server/log
+/server/src/log
 
 # Node
 /node_modules
