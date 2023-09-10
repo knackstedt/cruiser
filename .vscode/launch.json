@@ -1,35 +1,51 @@
 {
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Client",
-      "type": "chrome",
-      "request": "launch",
-      "preLaunchTask": "npm: start",
-      "url": "https://localhost:4500/"
-    },
-    {
-      "name": "Server",
-      "type": "node",
-      "request": "launch",
-      "args": [
-        "main.ts",
-        "--project"
-      ],
-      "runtimeArgs": [
-        "--nolazy",
-        "-r",
-        "ts-node/register"
-      ],
-      "sourceMaps": true,
-      "cwd": "${workspaceRoot}/server",
-    },
-    {
-      "name": "Database",
-      "preLaunchTask": "surrealdb",
-      "type": "chrome",
-      "request": "attach"
-    }
-  ]
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Client",
+            "type": "chrome",
+            "request": "launch",
+            "preLaunchTask": "npm: start",
+            "url": "https://localhost:4500/"
+        },
+        {
+            "name": "Server",
+            "type": "node",
+            "request": "launch",
+            "args": [
+                "main.ts",
+                "--project"
+            ],
+            "runtimeArgs": [
+                "--nolazy",
+                "-r",
+                "ts-node/register"
+            ],
+            "sourceMaps": true,
+            "cwd": "${workspaceRoot}/server/src",
+        },
+        {
+            "name": "Agent",
+            "type": "node",
+            "request": "launch",
+            "args": [
+                "agent.ts",
+                "--project"
+            ],
+            "runtimeArgs": [
+                "--nolazy",
+                "-r",
+                "ts-node/register"
+            ],
+            "sourceMaps": true,
+            "cwd": "${workspaceRoot}/agent",
+        },
+        {
+            "name": "Database",
+            "preLaunchTask": "surrealdb",
+            "type": "chrome",
+            "request": "attach"
+        }
+    ]
 }

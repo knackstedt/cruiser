@@ -22,6 +22,7 @@ solidifying the base of the framework and stabilizing the architecture.
 ## Roadmap
  - [ ] Create "freeze" points and allow remote terminal connections through web UI
  - [ ] Create base worker image and sample k8s setup
+ - [ ] Enable disabling pipelines, jobs, stages, task groups etc.
  - [ ] Pipeline job execution labels can be defined from simple JS scripts
  - [ ] Executed jobs have links to git history up to that job
  - [ ] Known build tools (docker, gulp, msbuild) should have a tailored experience

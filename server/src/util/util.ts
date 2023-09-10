@@ -100,21 +100,6 @@ export const getFilesInFolderFlat = async (folder: string, showHidden?: boolean,
     }[];
 }
 
-export const logger = pino(pino.transport({
-    targets: [
-        {
-            level: 'trace',
-            target: 'pino/file',
-            options: {
-                destination: `log/verbose-${process.pid}.log`,
-                mkdir: true
-            },
-        },
-        {
-            target: 'pino/file', level: 'trace', options: { destination: 1 }
-        }
-    ]
-}));
 
 export const getLogger = (file: string) => pino({
     mixin: (_context, level) => {
@@ -141,5 +126,7 @@ export const getLogger = (file: string) => pino({
         ]
     }
 });
+
+export const logger = getLogger(`verbose-${process.pid}`);
 
 logger.info({ message: "Application Bootup" });

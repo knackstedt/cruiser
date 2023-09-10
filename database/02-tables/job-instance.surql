@@ -1,9 +1,12 @@
 
-
+/**
+ * A job instance is a record of a job that needs to be executed or is
+ * actively running on an agent.
+ */
 REMOVE TABLE jobInstance;
 DEFINE TABLE jobInstance SCHEMALESS;
-    DEFINE FIELD kubeNamespace ON TABLE jobInstance TYPE string;
-    DEFINE FIELD kubePod ON TABLE jobInstance TYPE string;
+    DEFINE FIELD kubeNamespace ON TABLE jobInstance TYPE any;
+    DEFINE FIELD kubePod ON TABLE jobInstance TYPE any;
 
     /**
      * General
@@ -41,6 +44,6 @@ DEFINE TABLE jobInstance SCHEMALESS;
      * Relations
      */
     DEFINE FIELD job ON TABLE jobInstance TYPE record(pipelineJob);
-    DEFINE FIELD agent ON TABLE jobInstance TYPE record(agent);
+    DEFINE FIELD agent ON TABLE jobInstance TYPE any;
 
     -- DEFINE FIELD environment.* ON TABLE jobInstance TYPE record(environmentVariable);

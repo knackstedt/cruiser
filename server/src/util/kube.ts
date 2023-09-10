@@ -32,7 +32,8 @@ export async function StartAgentJob(job: PipelineJob) {
 
     const environment: { name: string, value: string; }[] =
         (await db.query(`RETURN fn::job_get_environment(${job.id})`) as any[])
-        .map(({key, value}) => ({name: key, value}));
+        .map(({key, value}) => ({name: key, value}))
+        .filter(e => e.name != undefined);
 
     await k8sApi.createNamespace({
         metadata: {
@@ -59,7 +60,7 @@ export async function StartAgentJob(job: PipelineJob) {
             containers: [
                 {
                     name: `dotops-ea-${ulid}`,
-                    image: elasticAgentTemplate?.kubeContainerImage || "dotops-agent:latest",
+                    image: elasticAgentTemplate?.kubeContainerImage || "ghcr.io/knackstedt/dot-ops/dotops-agent:84657a25297a5709cea4d29dea78d5df13376e5d",
                     imagePullPolicy: 'IfNotPresent',
                     securityContext: {
                         privileged: true

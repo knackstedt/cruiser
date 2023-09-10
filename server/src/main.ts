@@ -1,13 +1,12 @@
 import express, { Express } from 'express';
 import http from 'http';
 
-import { ErrorHandler } from '../util/errors';
+import { ErrorHandler } from './util/errors';
 import { FilesystemApi } from "./api/files";
-import { logger } from '../util/util';
+import { logger } from './util/util';
 import { DatabaseTableApi } from './api/database-controller';
 import { PipelineApi } from './api/pipeline';
-import { Scheduler } from '../util/scheduler';
-import { AgentsApi } from './api/agent/jobs';
+import { Scheduler } from './util/scheduler';
 
 const onFinished = require('on-finished');
 
@@ -53,7 +52,6 @@ const getDuration = (req, res) => {
 
     app.use("/api/filesystem", FilesystemApi);
     app.use("/api/pipeline",   PipelineApi);
-    app.use("/api/agent",      AgentsApi);
     app.use("/api/db", DatabaseTableApi());
 
     app.use((req, res, next) => next(404));
