@@ -13,7 +13,7 @@ COPY ./types /agent/types
 WORKDIR /agent
 
 # Install server deps
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache python3 make g++ git
 RUN npm i
 RUN npm run build
 
