@@ -17,59 +17,42 @@ const validateJobCanRun = async (job: PipelineJob) => {
 
 }
 
-export const Agent = async (taskId: string, db: Surreal) => {
+async function freezeTaskProcessing(db: Surreal, { taskGroup, agentTask }: { taskGroup: PipelineTaskGroup, agentTask: JobInstance; }) {
 
-    const jobInstance: JobInstance = await db.select(taskId) as any;
-    const pipeline = jobInstance.pipeline;
-    const job = jobInstance.job;
+    let [freezePoint] = await db.create(`taskFreezePoints:ulid()`, {
+        taskGroup: taskGroup.id,
+        jobInstance: agentTask.id
+    });
 
-    async function freezeProcessing({ taskGroup, agentTask }: { taskGroup: PipelineTaskGroup, agentTask: JobInstance }) {
+    while (true) {
+        await sleep(freezePollInterval);
 
-        let [ freezePoint ] = await db.create(`taskFreezePoints:ulid()`, {
-            taskGroup: taskGroup.id,
-            jobInstance: agentTask.id
-        });
+        [freezePoint] = await db.select(freezePoint.id) as any;
 
-        while (true) {
-            await sleep(freezePollInterval);
-
-            [ freezePoint ] = await db.select(freezePoint.id) as any;
-
-            // If the freeze point has been removed, resume the pipeline
-            if (!freezePoint) break;
-        }
+        // If the freeze point has been removed, resume the pipeline
+        if (!freezePoint) break;
     }
+}
 
+const RunTaskGroupsInParallel = (db: Surreal, taskGroups: PipelineTaskGroup[], jobInstance) => {
+    taskGroups?.sort(orderSort);
 
-    logger.info({ msg: "Agent initialized." });
-    await db.merge(taskId, { state: "initializing" });
-
-    await validateJobCanRun(job);
-
-    await db.merge(taskId, { state: "cloning" });
-
-    await ResolveSources(pipeline, job);
-
-    await db.merge(taskId, { state: "building" });
-
-    const taskGroups = job.taskGroups?.sort(orderSort);
-
-    await Promise.all(taskGroups.map(async taskGroup => {
+    return Promise.all(taskGroups.map(async taskGroup => {
 
         const tasks = taskGroup.tasks.sort(orderSort);
 
         for (let i = 0; i < tasks.length; i++) {
             const task = tasks[i];
 
-            const env = { };
-            const environment: {key: string, value: string}[] =
+            const env = {};
+            const environment: { key: string, value: string; }[] =
                 await db.query(`RETURN fn::task_get_environment(${task.id})`) as any;
 
             environment.forEach(({ key, value }) => env[key] = value);
 
             if (task.freezeBeforeRun) {
                 logger.info(`Encountered freeze marker in task group ${taskGroup.label} before task ${task.label}`, taskGroup);
-                await freezeProcessing({ taskGroup, agentTask: jobInstance });
+                await freezeTaskProcessing(db, { taskGroup, agentTask: jobInstance });
                 logger.info(`Unfroze freeze marker in task group ${taskGroup.label} before task ${task.label}`, taskGroup);
             }
 
@@ -82,20 +65,48 @@ export const Agent = async (taskId: string, db: Surreal) => {
             }).then(res => {
                 logger.info(`Task ${task.label} in group ${taskGroup.label} successfully completed`, res);
             })
-            .catch(err => {
-                logger.error(`Task ${task.label} in group ${taskGroup.label} failed`, err);
-            });
+                .catch(err => {
+                    logger.error(`Task ${task.label} in group ${taskGroup.label} failed`, err);
+                });
 
             if (task.freezeAfterRun) {
                 logger.info(`Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`, taskGroup);
-                await freezeProcessing({ taskGroup, agentTask: jobInstance });
+                await freezeTaskProcessing(db, { taskGroup, agentTask: jobInstance });
                 logger.info(`Unfroze freeze marker in task group ${taskGroup.label} after task ${task.label}`, taskGroup);
             }
         }
 
         return sleep(1);
-    }))
+    }));
+}
 
+export const Agent = async (taskId: string, db: Surreal) => {
+
+    const jobInstance: JobInstance = await db.select(taskId) as any;
+    const pipeline = jobInstance.pipeline;
+    const job = jobInstance.job;
+
+    if (!pipeline || !job) {
+        await db.merge(taskId, { state: "failed", failReason: "Failed to resolve job" });
+        // process.exit(1)
+        return;
+    }
+
+    logger.info({ msg: "Agent initialized." });
+
+    // Perform preflight checks
+    await db.merge(taskId, { state: "initializing" });
+    await validateJobCanRun(job);
+
+    // Download sources
+    await db.merge(taskId, { state: "cloning" });
+    await ResolveSources(pipeline, job);
+
+    // Follow job steps to build code
+    await db.merge(taskId, { state: "building" });
+    await RunTaskGroupsInParallel(db, job.taskGroups, jobInstance);
+
+    // Seal (compress) artifacts
     await db.merge(taskId, { state: "sealing" });
 
     // TODO: compress and upload artifacts
@@ -105,5 +116,4 @@ export const Agent = async (taskId: string, db: Surreal) => {
     // }));
 
     await db.merge(taskId, { state: "finished" });
-
 }
