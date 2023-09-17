@@ -33,15 +33,19 @@ const getDuration = (req, res) => {
         process.exit(1);
     }
 
-
-    // TODO: Throw proper errors when missing env variables
-
     const db = new Surreal(process.env['SURREAL_URL'] || 'http://127.0.0.1:8000/rpc');
     await db.signin({
         user: surrealUser,
         pass: surrealPassword,
+    }).catch(err => {
+        logger.fatal({ message: "Failed to connect to database server!" });
+        process.exit(1);
     });
-    await db.use({ ns: surrealNamespace, db: surrealDatabase });
+
+    await db.use({ ns: surrealNamespace, db: surrealDatabase }).catch(err => {
+        logger.fatal({ message: "Failed to connect to database!",  });
+        process.exit(1);
+    });
 
     process.on("uncaughtException", err => {
         logger.error(err);

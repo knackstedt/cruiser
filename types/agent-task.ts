@@ -1,4 +1,4 @@
-import { PipelineJob } from './pipeline';
+import { Pipeline, PipelineJob } from './pipeline';
 
 export type JobInstance = {
     id: string
@@ -13,7 +13,8 @@ export type JobInstance = {
         "finished"      | // Job has self-completed.
         "complete"      | // Job is finished and acknowledged by scheduler
         "resume";         // A user has resumed a job from the frozen state.
-    job: PipelineJob
+    job: PipelineJob,
+    pipeline: Pipeline,
     kubeNamespace: string
     kubePod: string
     queueTime: Date

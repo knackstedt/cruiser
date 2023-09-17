@@ -1,18 +1,26 @@
 import Surreal from 'surrealdb.js';
-import execa from 'execa';
+import { execa } from 'execa';
 import { JobInstance } from '../types/agent-task';
-import { PipelineTaskGroup } from '../types/pipeline';
+import { Pipeline, PipelineJob, PipelineTaskGroup } from '../types/pipeline';
 import { getLogger, orderSort, sleep } from './util/util';
+import { ResolveSources } from 'source-resolver';
 
 const logger = getLogger("agent");
 
 
 const freezePollInterval = 5000;
 
+const validateJobCanRun = async (job: PipelineJob) => {
+    const tasks = job.taskGroups?.map(t => t.tasks).flat();
+    if (!tasks || tasks.length == 0)
+        throw new Error("No work to do");
+
+}
 
 export const Agent = async (taskId: string, db: Surreal) => {
 
     const jobInstance: JobInstance = await db.select(taskId) as any;
+    const pipeline = jobInstance.pipeline;
     const job = jobInstance.job;
 
     async function freezeProcessing({ taskGroup, agentTask }: { taskGroup: PipelineTaskGroup, agentTask: JobInstance }) {
@@ -36,11 +44,15 @@ export const Agent = async (taskId: string, db: Surreal) => {
     logger.info({ msg: "Agent initialized." });
     await db.merge(taskId, { state: "initializing" });
 
+    await validateJobCanRun(job);
 
     await db.merge(taskId, { state: "cloning" });
+
+    await ResolveSources(pipeline, job);
+
     await db.merge(taskId, { state: "building" });
 
-    const taskGroups = jobInstance.job.taskGroups.sort(orderSort);
+    const taskGroups = job.taskGroups?.sort(orderSort);
 
     await Promise.all(taskGroups.map(async taskGroup => {
 
@@ -60,7 +72,6 @@ export const Agent = async (taskId: string, db: Surreal) => {
                 await freezeProcessing({ taskGroup, agentTask: jobInstance });
                 logger.info(`Unfroze freeze marker in task group ${taskGroup.label} before task ${task.label}`, taskGroup);
             }
-
 
             logger.info(`Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`, taskGroup);
 
