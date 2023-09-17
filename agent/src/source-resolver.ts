@@ -1,5 +1,5 @@
 import { Pipeline, PipelineJob } from '../types/pipeline';
-import { execa } from 'execa';
+import execa from 'execa';
 import path from 'path'
 
 export const ResolveSources = async (pipeline: Pipeline, job: PipelineJob) => {
