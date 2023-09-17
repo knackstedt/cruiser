@@ -3,7 +3,7 @@ import { execa } from 'execa';
 import { JobInstance } from '../types/agent-task';
 import { Pipeline, PipelineJob, PipelineTaskGroup } from '../types/pipeline';
 import { getLogger, orderSort, sleep } from './util/util';
-import { ResolveSources } from 'source-resolver';
+import { ResolveSources } from './source-resolver';
 
 const logger = getLogger("agent");
 
