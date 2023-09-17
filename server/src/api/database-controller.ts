@@ -3,14 +3,13 @@ import { route } from '../util/util';
 import Surreal from 'surrealdb.js';
 import { format as AzureOdata } from "azure-odata-sql";
 
-const db = new Surreal('http://127.0.0.1:8000/rpc');
+const db = new Surreal(process.env['SURREAL_URL'] || 'http://127.0.0.1:8000');
 (async () => {
     await db.signin({
-        user: 'root',
-        pass: 'root',
+        user: process.env['SURREAL_USER'] || 'root',
+        pass: process.env['SURREAL_PASSWORD'] || 'root',
     });
     await db.use({ ns: 'dotglitch', db: 'dotops' });
-
 })();
 
 
