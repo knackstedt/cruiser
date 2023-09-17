@@ -5,9 +5,9 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { DialogService } from 'client/app/services/dialog.service';
-import { NgxLazyLoaderService } from '@dotglitch/ngx-lazy-loader';
+import { LazyLoaderService } from '@dotglitch/ngx-common';
 import { MatTabsModule } from '@angular/material/tabs';
+import { DialogService } from '@dotglitch/ngx-common';
 
 @Component({
     selector: 'app-agents',
@@ -43,7 +43,7 @@ export class AgentsComponent implements OnInit {
     constructor(
         private viewContainer: ViewContainerRef,
         private dialog: DialogService,
-        private lazyLoader: NgxLazyLoaderService
+        private lazyLoader: LazyLoaderService
     ) {
         if (!lazyLoader.isComponentRegistered("agent-editor", "dynamic")) {
             lazyLoader.registerComponent({
@@ -58,7 +58,7 @@ export class AgentsComponent implements OnInit {
     }
 
     createPipeline(pipeline: Partial<any>) {
-        this.dialog.open("agent-editor", { group: "dynamic", inputs: { pipeline }, autoFocus: false });
+        this.dialog.open("agent-editor", 'dynamic', { inputs: { pipeline }, autoFocus: false });
     }
 
     drop(event: CdkDragDrop<any, any, any>) {

@@ -1,13 +1,10 @@
 import { Component, HostListener, ViewChild } from '@angular/core';
-import { KeyboardService } from './services/keyboard.service';
 import { MatDrawer } from '@angular/material/sidenav';
 import { MatDialog } from '@angular/material/dialog';
 import { ContextMenuItem } from '@dotglitch/ngx-ctx-menu';
-import { NavigationService } from 'client/app/services/navigation.service';
-import { Fetch } from 'client/app/services/fetch.service';
-import { NgxLazyLoaderComponent } from '@dotglitch/ngx-lazy-loader';
 import { NgIf } from '@angular/common';
 import { NavMenuComponent } from './components/navmenu/menu.component';
+import { Fetch, LazyLoaderComponent, KeyboardService, NavigationService } from '@dotglitch/ngx-common';
 
 const desktopWidth = 1126;
 
@@ -15,8 +12,12 @@ const desktopWidth = 1126;
     selector: 'app-root',
     templateUrl: './root.component.html',
     styleUrls: ['./root.component.scss'],
-    standalone: true,
-    imports: [NavMenuComponent, NgIf, NgxLazyLoaderComponent]
+    imports: [
+        NgIf,
+        NavMenuComponent,
+        LazyLoaderComponent
+    ],
+    standalone: true
 })
 export class RootComponent {
     @ViewChild("drawer") drawer: MatDrawer;

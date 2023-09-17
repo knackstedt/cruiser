@@ -6,7 +6,7 @@ import { BaseCtx, ContextMenuItem, NgxAppMenuDirective } from '@dotglitch/ngx-ct
 import { DomSanitizer } from '@angular/platform-browser';
 import { LogoComponent } from 'client/app/components/logo/logo.component';
 import { Pages } from 'client/app/component.registry';
-import { ThemeService } from 'client/app/services/theme.service';
+import { ThemeService } from '@dotglitch/ngx-common';
 
 
 @Component({

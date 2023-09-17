@@ -1,6 +1,4 @@
 @use '@angular/material' as mat;
-@include mat.legacy-typography-hierarchy(mat.define-legacy-typography-config());
-@include mat.all-legacy-component-typographies();
 @include mat.core();
 
 // Light palette

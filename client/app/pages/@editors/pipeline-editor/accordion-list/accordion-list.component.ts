@@ -4,7 +4,7 @@ import { Component, ContentChild, EventEmitter, Input, OnInit, Output, TemplateR
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
-import { Fetch } from 'client/app/services/fetch.service';
+import { Fetch } from '@dotglitch/ngx-common';
 import { Pipeline } from 'types/pipeline';
 
 @Component({

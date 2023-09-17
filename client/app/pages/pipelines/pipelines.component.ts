@@ -5,15 +5,14 @@ import { NgForOf, NgIf } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { DialogService } from 'client/app/services/dialog.service';
-import { NgxLazyLoaderService } from '@dotglitch/ngx-lazy-loader';
+import { LazyLoaderService } from '@dotglitch/ngx-common';
 import { Pipeline } from 'types/pipeline';
-import { Fetch } from 'client/app/services/fetch.service';
 import { ContextMenuItem, NgxAppMenuDirective, NgxContextMenuDirective } from '@dotglitch/ngx-ctx-menu';
 import { ThemedIconDirective } from 'client/app/services/theme.service';
 import Sortable from 'sortablejs';
 import { HeaderbarComponent } from 'client/app/components/headerbar/headerbar.component';
 import { orderSort } from 'client/app/services/utils';
+import { DialogService, Fetch } from '@dotglitch/ngx-common';
 
 
 
@@ -68,7 +67,7 @@ export class PipelinesComponent implements OnInit {
         {
             label: "Delete",
             action: async (pipeline) => {
-                let res = await this.dialog.confirmAction(`Are you sure you want to delete pipeline '${pipeline.label}'?`);
+                let res = await true;//this.dialog.confirmAction(`Are you sure you want to delete pipeline '${pipeline.label}'?`);
                 if (!res) return;
 
                 this.fetch.delete(`/api/db/${pipeline.id}`);
@@ -107,7 +106,7 @@ export class PipelinesComponent implements OnInit {
     constructor(
         private viewContainer: ViewContainerRef,
         private dialog: DialogService,
-        private lazyLoader: NgxLazyLoaderService,
+        private lazyLoader: LazyLoaderService,
         private fetch: Fetch,
         private changeDetector: ChangeDetectorRef
     ) {
@@ -227,14 +226,23 @@ export class PipelinesComponent implements OnInit {
     }
 
     editPipeline(pipeline: Partial<Pipeline> = {}) {
-        this.dialog.open("pipeline-editor", { group: "dynamic", inputs: { pipeline }, autoFocus: false })
+        this.dialog.open("pipeline-editor", 'dynamic', { inputs: { pipeline }, autoFocus: false })
             .then((pipeline: Pipeline) => {
                 console.log("res", pipeline)
-            if (pipeline) {
-                this.pipelines.push(pipeline)
-                this.ngAfterViewInit();
-            }
-        })
+                if (pipeline) {
+                    const old = this.pipelines.find(p => p.id == pipeline.id);
+                    if (old) {
+                        // Clear the old props
+                        Object.keys(old).forEach(k => old[k] = undefined);
+                        // Update the new props
+                        Object.keys(pipeline).forEach(k => old[k] = pipeline[k]);
+                    }
+                    else {
+                        this.pipelines.push(pipeline);
+                    }
+                    this.ngAfterViewInit();
+                }
+            })
     }
 
     async simplePatchPipeline(pipeline: Pipeline, data: Partial<Pipeline>) {

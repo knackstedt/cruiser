@@ -3,7 +3,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import * as ts from 'typescript';
 import * as monacoEditor from 'monaco-editor';
 import { sleep } from 'client/app/services/utils';
-import { Fetch } from 'client/app/services/fetch.service';
+import { Fetch } from '@dotglitch/ngx-common';
 import { VscodeComponent } from '@dotglitch/ngx-web-components';
 import { MatButtonModule } from '@angular/material/button';
 

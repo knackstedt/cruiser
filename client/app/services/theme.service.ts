@@ -1,33 +1,5 @@
-import { Directive, ElementRef, Injectable, Input, ViewContainerRef } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
-import { BehaviorSubject } from 'rxjs';
-
-type AppTheme = "light" | "dark";
-
-@Injectable({
-    providedIn: 'root'
-})
-export class ThemeService extends BehaviorSubject<AppTheme> {
-
-    constructor(
-        private sanitizer: DomSanitizer
-    ) {
-        super("dark");
-
-        this.subscribe(t => {
-            document.body.classList.remove("dark");
-            document.body.classList.remove("light");
-            document.body.classList.add(t);
-        })
-    }
-
-    public setTheme(t: AppTheme) {
-        this.next(t);
-    }
-
-
-}
-
+import { Directive, ElementRef, Input } from '@angular/core';
+import { ThemeService } from '@dotglitch/ngx-common';
 
 @Directive({
   selector: 'img[icon]',

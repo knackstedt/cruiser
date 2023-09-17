@@ -14,10 +14,11 @@ import { NgForOf, NgIf } from '@angular/common';
 import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { NgxAppMenuDirective, NgxContextMenuDirective } from '@dotglitch/ngx-ctx-menu';
-import { Fetch } from 'client/app/services/fetch.service';
+import { Fetch } from '@dotglitch/ngx-common';
 import { PipelineStage } from 'types/pipeline';
 import { AccordionListComponent } from 'client/app/pages/@editors/pipeline-editor/accordion-list/accordion-list.component';
 import { PipelineEditorComponent } from 'client/app/pages/@editors/pipeline-editor/pipeline-editor.component';
+import { StackEditorComponent } from 'ngx-stackedit';
 
 @Component({
     selector: 'app-stage-editor',
@@ -40,7 +41,8 @@ import { PipelineEditorComponent } from 'client/app/pages/@editors/pipeline-edit
         EditEnvironmentVariablesComponent,
         NgxAppMenuDirective,
         NgxContextMenuDirective,
-        AccordionListComponent
+        AccordionListComponent,
+        StackEditorComponent
     ],
     standalone: true
 })

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Fetch } from 'client/app/services/fetch.service';
+import { Fetch } from '@dotglitch/ngx-common';
 
 type Location = {
     label: string,

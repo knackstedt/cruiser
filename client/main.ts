@@ -12,13 +12,13 @@ import { WindowErrorComponent } from 'client/app/components/@framework/error/err
 import { LazyProgressDistractorComponent } from 'client/app/components/@framework/lazy-progress-distractor/lazy-progress-distractor.component';
 import { NotFoundComponent } from 'client/app/components/@framework/not-found/not-found.component';
 import { Pages } from 'client/app/component.registry';
-import { NgxLazyLoaderModule, ComponentResolveStrategy } from '@dotglitch/ngx-lazy-loader';
+import { LazyLoaderModule, ComponentResolveStrategy } from '@dotglitch/ngx-common';
 import { MatDialogModule } from '@angular/material/dialog';
 import { NgIf } from '@angular/common';
 
 bootstrapApplication(RootComponent, {
     providers: [
-        importProvidersFrom(NgIf, MatDialogModule, NgxLazyLoaderModule.forRoot({
+        importProvidersFrom(NgIf, MatDialogModule, LazyLoaderModule.forRoot({
             // TODO: add additional registries
             entries: [
                 ...Pages

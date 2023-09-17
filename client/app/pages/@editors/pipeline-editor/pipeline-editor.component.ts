@@ -9,17 +9,17 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
-import { Fetch } from 'client/app/services/fetch.service';
+import { DialogService, Fetch } from '@dotglitch/ngx-common';
 import { VscodeComponent } from '@dotglitch/ngx-web-components';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
-import { DialogService } from 'client/app/services/dialog.service';
 import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
 import { Pipeline, PipelineJob, PipelineSource, PipelineStage, PipelineTask, PipelineTaskGroup } from 'types/pipeline';
 import { BehaviorSubject } from 'rxjs';
-import { NgxLazyLoaderComponent, NgxLazyLoaderService } from '@dotglitch/ngx-lazy-loader';
+import { LazyLoaderComponent, LazyLoaderService } from '@dotglitch/ngx-common';
 import { AccordionListComponent } from 'client/app/pages/@editors/pipeline-editor/accordion-list/accordion-list.component';
 import { LabeltemplateEditorComponent } from 'client/app/pages/@editors/pipeline-editor/labeltemplate-editor/labeltemplate-editor.component';
+import { StackEditorComponent } from 'ngx-stackedit';
 
 @Component({
     selector: 'app-pipeline-editor',
@@ -40,9 +40,10 @@ import { LabeltemplateEditorComponent } from 'client/app/pages/@editors/pipeline
         FormsModule,
         VscodeComponent,
         EditEnvironmentVariablesComponent,
-        NgxLazyLoaderComponent,
+        LazyLoaderComponent,
         AccordionListComponent,
-        LabeltemplateEditorComponent
+        LabeltemplateEditorComponent,
+        StackEditorComponent
     ],
     standalone: true
 })
@@ -67,7 +68,7 @@ export class PipelineEditorComponent implements OnInit {
         @Optional() public dialogRef: MatDialogRef<any>,
         private fetch: Fetch,
         private dialog: DialogService,
-        private lazyLoader: NgxLazyLoaderService
+        private lazyLoader: LazyLoaderService
     ) {
         lazyLoader.registerComponent({
             id: "stage-editor",

@@ -27,7 +27,11 @@
                     (dblclick)="editPipeline(pipeline)"
                 >
                     <div class="content">
-                        <h4 class="label">{{pipeline.label}}</h4>
+                        <h4 class="label"
+                            [style.opacity]="pipeline.state != 'active' ? .5 : 1"
+                        >
+                            {{pipeline.label + (pipeline.state != 'active' ? ' (' + pipeline.state + ')' : '')}}
+                        </h4>
 
                         <div class="schedule-controls">
 

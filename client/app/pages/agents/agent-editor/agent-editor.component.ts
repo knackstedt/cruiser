@@ -9,12 +9,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
-import { Fetch } from 'client/app/services/fetch.service';
+import { Fetch, DialogService } from '@dotglitch/ngx-common';
 import { VscodeComponent } from '@dotglitch/ngx-web-components';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
-import { DialogService } from 'client/app/services/dialog.service';
 import { Pipeline } from 'types/pipeline';
+import { StackEditorComponent } from 'ngx-stackedit';
 
 @Component({
     selector: 'app-agent-editor',
@@ -33,7 +33,8 @@ import { Pipeline } from 'types/pipeline';
         MatCheckboxModule,
         MatRadioModule,
         FormsModule,
-        VscodeComponent
+        VscodeComponent,
+        StackEditorComponent
     ],
     standalone: true
 })
