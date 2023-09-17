@@ -37,7 +37,7 @@ async function freezeTaskProcessing(db: Surreal, { taskGroup, agentTask }: { tas
 const RunTaskGroupsInParallel = (db: Surreal, taskGroups: PipelineTaskGroup[], jobInstance) => {
     taskGroups?.sort(orderSort);
 
-    return Promise.all(taskGroups.map(async taskGroup => {
+    return Promise.all(taskGroups.map(taskGroup => new Promise(async (r) => {
 
         const tasks = taskGroup.tasks.sort(orderSort);
 
@@ -65,9 +65,9 @@ const RunTaskGroupsInParallel = (db: Surreal, taskGroups: PipelineTaskGroup[], j
             }).then(res => {
                 logger.info(`Task ${task.label} in group ${taskGroup.label} successfully completed`, res);
             })
-                .catch(err => {
-                    logger.error(`Task ${task.label} in group ${taskGroup.label} failed`, err);
-                });
+            .catch(err => {
+                logger.error(`Task ${task.label} in group ${taskGroup.label} failed`, err);
+            });
 
             if (task.freezeAfterRun) {
                 logger.info(`Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`, taskGroup);
@@ -76,8 +76,9 @@ const RunTaskGroupsInParallel = (db: Surreal, taskGroups: PipelineTaskGroup[], j
             }
         }
 
-        return sleep(1);
-    }));
+        await sleep(1);
+        r(0)
+    })));
 }
 
 export const Agent = async (taskId: string, db: Surreal) => {
