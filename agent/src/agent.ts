@@ -82,7 +82,7 @@ const RunTaskGroupsInParallel = (db: Surreal, taskGroups: PipelineTaskGroup[], j
 
 export const Agent = async (taskId: string, db: Surreal) => {
 
-    const jobInstance: JobInstance = await db.query(`SELECT ${taskId} FETCH pipeline, job`)[0] as any;
+    const jobInstance: JobInstance = await db.query(`SELECT * FROM ${taskId} FETCH pipeline, job, job.taskGroups, job.taskGroups.tasks`)[0] as any;
     const pipeline = jobInstance?.pipeline;
     const job = jobInstance?.job;
 
@@ -101,22 +101,29 @@ export const Agent = async (taskId: string, db: Surreal) => {
         return;
     }
 
-    logger.info({ msg: "Agent initialized." });
 
     // Perform preflight checks
+    logger.info({ state: "Initializing", msg: "Begin initializing" });
     await db.merge(taskId, { state: "initializing" });
     await validateJobCanRun(job);
+    logger.info({ state: "Initializing", msg: "Agent initialize completed" });
 
     // Download sources
+    logger.info({ state: "Cloning", msg: "Agent source cloning" });
     await db.merge(taskId, { state: "cloning" });
     await ResolveSources(pipeline, job);
+    logger.info({ state: "Cloning", msg: "Agent source cloning completed" });
 
     // Follow job steps to build code
+    logger.info({ state: "Building", msg: "Agent building" });
     await db.merge(taskId, { state: "building" });
     await RunTaskGroupsInParallel(db, job.taskGroups, jobInstance);
+    logger.info({ state: "Building", msg: "Agent build completed" });
 
     // Seal (compress) artifacts
+    logger.info({ state: "Sealing", msg: "Agent sealing" });
     await db.merge(taskId, { state: "sealing" });
+    logger.info({ state: "Sealing", msg: "Agent sealing completed" });
 
     // TODO: compress and upload artifacts
     // await Promise.all(job.artifacts.map(async a => {
@@ -124,5 +131,6 @@ export const Agent = async (taskId: string, db: Surreal) => {
     //     await execa('')
     // }));
 
+    logger.info({ state: "finished", msg: "Agent has completed it's work." });
     await db.merge(taskId, { state: "finished" });
 }
