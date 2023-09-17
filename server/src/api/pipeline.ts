@@ -94,9 +94,15 @@ router.use('/:id', route(async (req, res, next) => {
 router.get('/:id/start', route(async (req, res, next) => {
     const pipeline: Pipeline = req['pipeline'];
 
-    const stage = pipeline.stages[0];
+    const stage = pipeline.stages?.[0];
     if (!stage) {
-        res.send({ message: "Cannot start -- pipeline doesn't have any stages to run." });
+        res.status(409);
+        res.send({ message: "Cannot start: pipeline doesn't have any stages to run." });
+        return;
+    }
+    if (stage.jobs?.length < 1) {
+        res.status(409);
+        res.send({ message: "Cannot start: pipeline stage doesn't have any jobs to run." });
         return;
     }
 

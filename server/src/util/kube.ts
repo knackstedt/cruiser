@@ -13,6 +13,9 @@ export async function StartAgent(stage: PipelineStage) {
 }
 
 export async function StartAgentJob(job: PipelineJob) {
+    if (job.taskGroups?.length < 1) {
+        return -1;
+    }
 
     let elasticAgentTemplate: any;
     if (job.elasticAgentId) {
@@ -91,4 +94,5 @@ export async function StartAgentJob(job: PipelineJob) {
     await db.merge(instance.id, {
         kubepod: pod.metadata.uid
     });
+    return 1;
 }
