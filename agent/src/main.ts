@@ -21,12 +21,18 @@ const getDuration = (req, res) => {
 }
 
 (async () => {
-    const agentId = process.env['AGENT_ID'];
-    const surrealUser      = process.env['SURREAL_USER'] || 'root';
-    const surrealPassword  = process.env['SURREAL_PASSWORD'] || 'root';
-    const surrealNamespace = process.env['SURREAL_NAMESPACE'] || 'dotglitch';
-    const surrealDatabase  = process.env['SURREAL_DATABASE'] || 'dotops';
+    const agentId          = process.env['DOTGLITCH_AGENT_ID']?.trim();
+    const surrealUser      = process.env['SURREAL_USER']?.trim() || 'root';
+    const surrealPassword  = process.env['SURREAL_PASSWORD']?.trim() || 'root';
+    const surrealNamespace = process.env['SURREAL_NAMESPACE']?.trim() || 'dotglitch';
+    const surrealDatabase  = process.env['SURREAL_DATABASE']?.trim() || 'dotops';
     const taskId = `jobInstance:` + agentId;
+
+    if (!agentId || !/^[0-7][0-9A-Z]{25}$/.test(agentId)) {
+        logger.fatal({ message: "Invalid agent identifier!"})
+        process.exit(1);
+    }
+
 
     // TODO: Throw proper errors when missing env variables
 
@@ -38,7 +44,7 @@ const getDuration = (req, res) => {
     await db.use({ ns: surrealNamespace, db: surrealDatabase });
 
     process.on("uncaughtException", err => {
-        logger.error("uncaught:", err);
+        logger.error(err);
     });
 
     const app: Express = express();
