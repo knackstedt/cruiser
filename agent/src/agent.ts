@@ -82,12 +82,21 @@ const RunTaskGroupsInParallel = (db: Surreal, taskGroups: PipelineTaskGroup[], j
 
 export const Agent = async (taskId: string, db: Surreal) => {
 
-    const jobInstance: JobInstance = await db.select(taskId) as any;
-    const pipeline = jobInstance.pipeline;
-    const job = jobInstance.job;
+    const jobInstance: JobInstance = await db.query(`SELECT ${taskId} FETCH pipeline, job`)[0] as any;
+    const pipeline = jobInstance?.pipeline;
+    const job = jobInstance?.job;
+
+    if (!jobInstance) {
+        logger.fatal({ msg: "Failed to resolve job instance" });
+        // process.exit(1);
+        return;
+    }
 
     if (!pipeline || !job) {
-        await db.merge(taskId, { state: "failed", failReason: "Failed to resolve job" });
+        await db.merge(taskId, {
+            state: "failed",
+            failReason: `Failed to resolve [${!!pipeline ? 'pipeline' : ''}${!!job ? !!pipeline ? ', job' : 'job' : ''}]`
+        });
         // process.exit(1)
         return;
     }
