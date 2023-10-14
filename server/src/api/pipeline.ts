@@ -18,6 +18,8 @@ const getPipeline = async id => {
 }
 
 const createPipeline = async (pipeline: Pipeline, stashId = false, replace = false) => {
+    // Wipe out any fields that are somehow null
+    pipeline.stages = pipeline.stages.filter(s => s !== null);
 
     if (replace) {
         // If we're replacing an old pipeline, destroy all of the inherited properties
@@ -157,10 +159,10 @@ router.post('/:id/applyclone', route(async (req, res, next) => {
 
     // Delete the old pipeline properties
     {
-        const stages: PipelineStage[] = pipeline.stages;
-        const jobs: PipelineJob[] = stages?.map(s => s.jobs).flat();
-        const taskGroups: PipelineTaskGroup[] = jobs?.map(j => j.taskGroups).flat();
-        const tasks: PipelineTask[] = taskGroups?.map(t => t.tasks).flat();
+        const stages: PipelineStage[] = pipeline.stages.filter(s => s !== null);
+        const jobs: PipelineJob[] = stages?.map(s => s.jobs).flat().filter(s => s !== null);
+        const taskGroups: PipelineTaskGroup[] = jobs?.map(j => j.taskGroups).flat().filter(s => s !== null);
+        const tasks: PipelineTask[] = taskGroups?.map(t => t.tasks).flat().filter(s => s !== null);
 
         const ids = [
             ...(stages?.map(s => s.id) || []),

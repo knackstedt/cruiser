@@ -1,5 +1,5 @@
 import * as k8s from '@kubernetes/client-node';
-import { PipelineJob, PipelineStage } from '../../types/pipeline';
+import { Pipeline, PipelineJob, PipelineStage } from '../../types/pipeline';
 import { db } from './db';
 import { JobInstance } from '../../types/agent-task';
 
@@ -7,12 +7,12 @@ const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
 const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
 
-
-export async function StartAgent(stage: PipelineStage) {
-    return Promise.all(stage.jobs?.map(j => StartAgentJob(j)));
+export async function StartAgent(pipeline: Pipeline, stage: PipelineStage) {
+    return Promise.all(stage.jobs?.map(j => StartAgentJob(pipeline, j)));
 }
 
-export async function StartAgentJob(job: PipelineJob) {
+export async function StartAgentJob(pipeline: Pipeline, job: PipelineJob) {
+
     if (job.taskGroups?.length < 1) {
         return -1;
     }
@@ -29,6 +29,7 @@ export async function StartAgentJob(job: PipelineJob) {
         errorCount: 0,
         warnCount: 0,
         job: job.id,
+        pipeline: pipeline.id
     })) as any as JobInstance[];
 
     const namespace = elasticAgentTemplate?.kubeNamespace || process.env['AGENT_NAMESPACE'] || "dotops";
@@ -63,7 +64,7 @@ export async function StartAgentJob(job: PipelineJob) {
             containers: [
                 {
                     name: `dotops-ea-${ulid}`,
-                    image: elasticAgentTemplate?.kubeContainerImage || "ghcr.io/knackstedt/dot-ops/dotops-agent:84657a25297a5709cea4d29dea78d5df13376e5d",
+                    image: elasticAgentTemplate?.kubeContainerImage || "ghcr.io/knackstedt/dot-ops/dotops-agent:6da73dfc68c9a38277ca780e83098e321c2844ca",
                     imagePullPolicy: 'IfNotPresent',
                     securityContext: {
                         privileged: true
@@ -82,7 +83,8 @@ export async function StartAgentJob(job: PipelineJob) {
                         // TODO: pass surreal connection string
                         // consider using HTTP POST instead.
                         { name: "CI_ENVIRONMENT", value: "dotops" },
-                        { name: "DOTGLITCH_JOB_ID", value: instance.id },
+                        { name: "DOTGLITCH_AGENT_ID", value: instance.id.split(':')[1] },
+                        { name: "SURREAL_URL", value: 'http://192.168.1.159:8000' },
                         ...environment
                     ]
                 }
