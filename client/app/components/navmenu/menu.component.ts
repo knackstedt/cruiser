@@ -4,8 +4,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { BaseCtx, ContextMenuItem, NgxAppMenuDirective } from '@dotglitch/ngx-ctx-menu';
 import { DomSanitizer } from '@angular/platform-browser';
-import { LogoComponent } from 'client/app/components/logo/logo.component';
-import { Pages } from 'client/app/component.registry';
+import { LogoComponent } from '../logo/logo.component';
+import { Pages } from '../../component.registry';
 import { ThemeService } from '@dotglitch/ngx-common';
 
 

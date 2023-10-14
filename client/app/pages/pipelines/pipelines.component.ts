@@ -8,10 +8,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { LazyLoaderService } from '@dotglitch/ngx-common';
 import { Pipeline } from 'types/pipeline';
 import { ContextMenuItem, NgxAppMenuDirective, NgxContextMenuDirective } from '@dotglitch/ngx-ctx-menu';
-import { ThemedIconDirective } from 'client/app/services/theme.service';
+import { ThemedIconDirective } from '../../services/theme.service';
 import Sortable from 'sortablejs';
-import { HeaderbarComponent } from 'client/app/components/headerbar/headerbar.component';
-import { orderSort } from 'client/app/services/utils';
+import { HeaderbarComponent } from '../../components/headerbar/headerbar.component';
+import { orderSort } from '../../services/utils';
 import { DialogService, Fetch } from '@dotglitch/ngx-common';
 
 
