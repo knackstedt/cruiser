@@ -1,4 +1,4 @@
-<mat-tab-group  *ngIf="task">
+<mat-tab-group *ngIf="task">
     <mat-tab label="General">
         <h4>Basic Settings</h4>
 
@@ -6,20 +6,26 @@
             <mat-label>Name</mat-label>
             <input #nameInput matInput type="text" [(ngModel)]="task.label">
         </mat-form-field>
-        <mat-form-field appearance="outline">
-            <mat-label>Description</mat-label>
-            <textarea matInput type="text" [(ngModel)]="task.description"></textarea>
-        </mat-form-field>
+
+        <ngx-stackedit [(value)]="task.description"/>
+
+        <!-- Switch: bash command vs builtin / plugin -->
 
         <mat-form-field appearance="outline">
             <mat-label>Command</mat-label>
             <input #nameInput matInput type="text" [(ngModel)]="task.command">
         </mat-form-field>
 
-        <mat-form-field appearance="outline">
-            <mat-label>arguments</mat-label>
-            <input #nameInput matInput type="text" [(ngModel)]="task.arguments">
-        </mat-form-field>
+        <div style="border: 1px solid #999; border-radius: 4px;">
+            <h5>arguments</h5>
+            <div >
+                <mat-form-field *ngFor="let argument of task.arguments; let i = index" appearance="outline" class="flex-field">
+                    <input #nameInput matInput type="text" [(ngModel)]="task.arguments[i]">
+                    <mat-icon (click)="task.arguments.splice(i, 1)">remove_circle_outline</mat-icon>
+                </mat-form-field>
+            </div>
+            <mat-icon (click)="task.arguments = (task.arguments == null || !task.arguments.push) ? [] : task.arguments; task.arguments.push('')">add</mat-icon>
+        </div>
 
         <div>
             <mat-form-field appearance="outline">

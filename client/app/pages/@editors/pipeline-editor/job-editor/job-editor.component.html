@@ -6,10 +6,7 @@
             <mat-label>Name</mat-label>
             <input #nameInput matInput type="text" [(ngModel)]="job.label">
         </mat-form-field>
-        <mat-form-field appearance="outline">
-            <mat-label>Description</mat-label>
-            <textarea matInput type="text" [(ngModel)]="job.description"></textarea>
-        </mat-form-field>
+        <ngx-stackedit [(value)]="job.description"></ngx-stackedit>
 
 
         <!-- automatic pipeline scheduling -->

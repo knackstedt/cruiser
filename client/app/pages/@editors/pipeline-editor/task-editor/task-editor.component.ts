@@ -13,6 +13,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { NgForOf, NgIf } from '@angular/common';
 import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
 import { PipelineTask } from 'types/pipeline';
+import { StackEditorComponent } from 'ngx-stackedit';
 
 @Component({
     selector: 'app-task-editor',
@@ -32,7 +33,8 @@ import { PipelineTask } from 'types/pipeline';
         MatRadioModule,
         FormsModule,
         VscodeComponent,
-        EditEnvironmentVariablesComponent
+        EditEnvironmentVariablesComponent,
+        StackEditorComponent
     ],
     standalone: true
 })

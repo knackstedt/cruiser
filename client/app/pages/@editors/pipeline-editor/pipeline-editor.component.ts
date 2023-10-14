@@ -139,10 +139,19 @@ export class PipelineEditorComponent implements OnInit {
             stages: this.pipeline.stages.map(s => s.id)
         });
     }
+
     editStage(stage) {
         console.log("edit da fuckin stage yobbie")
         this.selectedStage = stage;
         this.tabIndex = 1;
+    }
+
+    async deleteStage(stage) {
+        this.fetch.patch(`/api/db/${this.pipeline.id}`, {
+            stages: this.pipeline.stages.map(s => s.id)
+        });
+
+        await this.fetch.delete(`api/db/${this.pipeline.id}`);
     }
 
     async addJob(stage: PipelineStage) {
@@ -163,6 +172,14 @@ export class PipelineEditorComponent implements OnInit {
         this.selectedStage = stage;
         this.selectedJob = job;
         this.tabIndex = 2;
+    }
+
+    async deleteJob(stage: PipelineStage, job: PipelineJob) {
+        this.fetch.patch(`/api/db/${this.pipeline.id}`, {
+            stages: this.pipeline.stages.map(s => s.id)
+        });
+
+        await this.fetch.delete(`api/db/${this.pipeline.id}`);
     }
 
     async addTaskGroup(job: PipelineJob) {
@@ -186,6 +203,14 @@ export class PipelineEditorComponent implements OnInit {
         this.tabIndex = 3;
     }
 
+    async deleteTaskGroup(stage: PipelineStage, job: PipelineJob, taskGroup: PipelineTaskGroup) {
+        this.fetch.patch(`/api/db/${this.pipeline.id}`, {
+            stages: this.pipeline.stages.map(s => s.id)
+        });
+
+        await this.fetch.delete(`api/db/${this.pipeline.id}`);
+    }
+
     async addTask(taskGroup: PipelineTaskGroup) {
         const task = await this.fetch.post(`api/db/pipelineTask`, {
             label: 'Task - ' + (taskGroup.tasks.length + 1),
@@ -201,12 +226,21 @@ export class PipelineEditorComponent implements OnInit {
         });
 
     }
+
     async editTask(stage: PipelineStage, job: PipelineJob, taskGroup: PipelineTaskGroup, task: PipelineTask) {
         this.selectedStage = stage;
         this.selectedJob = job;
         this.selectedTaskGroup = taskGroup;
         this.selectedTask = task;
         this.tabIndex = 4;
+    }
+
+    async deleteTask(stage: PipelineStage, job: PipelineJob, taskGroup: PipelineTaskGroup, task: PipelineTask) {
+        this.fetch.patch(`/api/db/${this.pipeline.id}`, {
+            stages: this.pipeline.stages.map(s => s.id)
+        });
+
+        await this.fetch.delete(`api/db/${this.pipeline.id}`);
     }
 
     async addSource() {
@@ -221,9 +255,17 @@ export class PipelineEditorComponent implements OnInit {
             sources: this.pipeline.sources.map(s => s.id)
         });
     }
+
     async editSource(source: PipelineSource) {
         this.tabIndex = 5;
         this.selectedSource = source;
+    }
+    async deleteSource(source: PipelineSource) {
+        this.pipeline.sources.splice(this.pipeline.sources.findIndex(s => s == source), 1);
+        this.fetch.patch(`/api/db/${this.pipeline.id}`, {
+            sources: this.pipeline.sources.map(s => s.id)
+        });
+        this.fetch.delete(`/api/db/pipelineSource/${source.id}`);
     }
 
     getStagePeers() { return this.pipeline.stages.map(s => s.id)}

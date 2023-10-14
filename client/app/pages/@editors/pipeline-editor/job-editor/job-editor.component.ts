@@ -16,6 +16,7 @@ import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/env
 import { PipelineJob, PipelineStage } from 'types/pipeline';
 import { AccordionListComponent } from 'client/app/pages/@editors/pipeline-editor/accordion-list/accordion-list.component';
 import { PipelineEditorComponent } from 'client/app/pages/@editors/pipeline-editor/pipeline-editor.component';
+import { StackEditorComponent } from 'ngx-stackedit';
 
 
 @Component({
@@ -37,7 +38,8 @@ import { PipelineEditorComponent } from 'client/app/pages/@editors/pipeline-edit
         FormsModule,
         VscodeComponent,
         EditEnvironmentVariablesComponent,
-        AccordionListComponent
+        AccordionListComponent,
+        StackEditorComponent
     ],
     standalone: true
 })

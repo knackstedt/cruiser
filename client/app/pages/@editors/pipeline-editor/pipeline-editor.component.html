@@ -73,6 +73,7 @@
                             {{source.label}}
 
                             <mat-icon (click)="editSource(source); $event.stopPropagation()">edit</mat-icon>
+                            <mat-icon (click)="deleteSource(source); $event.stopPropagation()">remove_circle_outline</mat-icon>
                         </ng-template>
                         <ng-template #content let-source>
                             <!-- <div>{{source.type}}</div> -->
@@ -103,6 +104,7 @@
                             {{stage.label}}
 
                             <mat-icon (click)="editStage(stage); $event.stopPropagation()">edit</mat-icon>
+                            <mat-icon (click)="deleteStage(stage); $event.stopPropagation()">remove_circle_outline</mat-icon>
                         </ng-template>
                         <ng-template #content let-stage>
                             <app-accordion-list
@@ -122,6 +124,7 @@
                                     {{job.label}}
 
                                     <mat-icon (click)="editJob(stage, job); $event.stopPropagation()">edit</mat-icon>
+                                    <mat-icon (click)="deleteJob(stage, job); $event.stopPropagation()">remove_circle_outline</mat-icon>
                                 </ng-template>
                                 <ng-template #content let-job>
                                     <app-accordion-list
@@ -140,6 +143,7 @@
                                             {{taskGroup.label}}
 
                                             <mat-icon (click)="editTaskGroup(stage, job, taskGroup); $event.stopPropagation()">edit</mat-icon>
+                                            <mat-icon (click)="deleteTaskGroup(stage, job, taskGroup); $event.stopPropagation()">remove_circle_outline</mat-icon>
                                         </ng-template>
                                         <ng-template #content let-taskGroup>
                                             <app-accordion-list
@@ -158,6 +162,7 @@
                                                     {{task.label}}
 
                                                     <mat-icon (click)="editTask(stage, job, taskGroup, task); $event.stopPropagation()">edit</mat-icon>
+                                                    <mat-icon (click)="deleteTask(stage, job, taskGroup, task); $event.stopPropagation()">remove_circle_outline</mat-icon>
                                                 </ng-template>
                                                 <ng-template #content let-task>
                                                     <div style="display: flex; gap: 12px; pointer-events: none; padding-right: 24px;">
@@ -165,10 +170,10 @@
                                                             <mat-label>Command</mat-label>
                                                             <input #nameInput matInput disabled type="text" [value]="task.command">
                                                         </mat-form-field>
-                                                        <mat-form-field class="form-view" appearance="fill">
+                                                        <!-- <mat-form-field class="form-view" appearance="fill">
                                                             <mat-label>Arguments</mat-label>
                                                             <input #nameInput matInput disabled type="text" [value]="task.arguments?.join(' ')">
-                                                        </mat-form-field>
+                                                        </mat-form-field> -->
                                                         <mat-form-field class="form-view" appearance="fill">
                                                             <mat-label>Working Directory</mat-label>
                                                             <input #nameInput matInput disabled type="text" [(ngModel)]="task.workingDirectory">
