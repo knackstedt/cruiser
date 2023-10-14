@@ -200,11 +200,27 @@ CREATE pipelineStage:ulid() CONTENT {
 --     ]
 -- };
 
+CREATE pipelineSource:ulid() CONTENT {
+    label: "github",
+    description: "",
+    order: 0,
+    url: "https://github.com/knackstedt/dotops",
+    targetPath: "/build",
+    type: "git"
+};
+
 CREATE pipeline:ulid() CONTENT {
 	label: 'test-pipeline',
     description: 'This is a test pipeline.',
     labelTemplate: '(arg) => \'foob\'',
-
+    automaticScheduling: true,
+    cronRunOnlyOnNewSource: true,
+    history: [],
+    lockingBehavior: 'multiple',
+    order: 0,
+    state: "new",
+    trackingToolPattern: "",
+    trackingToolUri: "",
     stages: (SELECT id FROM pipelineStage WHERE string::startsWith(label, 'build')).id,
     -- (
     --     SELECT id FROM array::concat(
@@ -219,19 +235,6 @@ CREATE pipeline:ulid() CONTENT {
         { key: "pipelineVar1", value: "mango" },
         { key: "pipelineVar2", value: "waffle" }
     ],
-    sources: [
-        {
-            label: "git repo",
-            targetPath: "/root/folder",
-            username: "knackstedt",
-            url: "https://github.com/knackstedt/dot-ops"
-        },
-        {
-            label: "lib repo",
-            targetPath: "/root/lib",
-            username: "knackstedt",
-            url: "https://github.com/knackstedt/ngx-ctx-menu"
-        }
-    ]
+    sources: (SELECT id FROM pipelineSource WHERE string::startsWith(label, 'build')).id,
 };
 

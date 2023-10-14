@@ -19,7 +19,10 @@ DEFINE TABLE jobInstance SCHEMALESS;
                $value = 'frozen'       || // paused on a freeze task
                $value = 'sealing'      || // sealing artifacts
                $value = 'finished'     || // Agent has self-completed, pending ack from scheduler
+               $value = 'failed'       || // Agent has failed to start for one or more reasons
                $value = 'complete';
+
+    DEFINE FIELD failReason ON TABLE jobInstance TYPE option<string>;
 
     /**
      * Stats
@@ -43,6 +46,7 @@ DEFINE TABLE jobInstance SCHEMALESS;
     /**
      * Relations
      */
+    DEFINE FIELD pipeline ON TABLE jobInstance TYPE record(pipeline);
     DEFINE FIELD job ON TABLE jobInstance TYPE record(pipelineJob);
     DEFINE FIELD agent ON TABLE jobInstance TYPE any;
 

@@ -6,8 +6,7 @@ DEFINE TABLE pipelineTask SCHEMALESS;
      */
     DEFINE FIELD command ON TABLE pipelineTask TYPE string
         ASSERT $value != NONE;
-    DEFINE FIELD arguments ON TABLE pipelineTask TYPE array;
-    DEFINE FIELD arguments.* ON TABLE pipelineTask TYPE string;
+    DEFINE FIELD arguments ON TABLE pipelineTask TYPE array<string>;
     DEFINE FIELD commandTimeout ON TABLE pipelineTask TYPE any;
 
     DEFINE FIELD `order` ON TABLE pipelineTask TYPE int
@@ -18,9 +17,6 @@ DEFINE TABLE pipelineTask SCHEMALESS;
     DEFINE FIELD description ON TABLE pipelineTask TYPE any;
     DEFINE FIELD workingDirectory ON TABLE pipelineTask TYPE any;
 
-    DEFINE FIELD `order` ON TABLE pipelineTask TYPE int
-        ASSERT $value != NONE
-        VALUE $value OR 0;
     -- True by default
     DEFINE FIELD runIfPreviousTaskPassed ON TABLE pipelineTask TYPE any
         VALUE $value OR true;
