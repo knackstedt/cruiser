@@ -1,5 +1,3 @@
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-
 import { RootComponent } from './app/root.component';
 import { isDevMode, importProvidersFrom } from '@angular/core';
 import { ServiceWorkerModule } from '@angular/service-worker';
@@ -8,10 +6,10 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { BrowserModule, bootstrapApplication } from '@angular/platform-browser';
 import { MatIconModule } from '@angular/material/icon';
 import { ToastrModule } from 'ngx-toastr';
-import { WindowErrorComponent } from 'client/app/components/@framework/error/error.component';
-import { LazyProgressDistractorComponent } from 'client/app/components/@framework/lazy-progress-distractor/lazy-progress-distractor.component';
-import { NotFoundComponent } from 'client/app/components/@framework/not-found/not-found.component';
-import { Pages } from 'client/app/component.registry';
+import { WindowErrorComponent } from './app/components/@framework/error/error.component';
+import { LazyProgressDistractorComponent } from './app/components/@framework/lazy-progress-distractor/lazy-progress-distractor.component';
+import { NotFoundComponent } from './app/components/@framework/not-found/not-found.component';
+import { Pages } from './app/component.registry';
 import { LazyLoaderModule, ComponentResolveStrategy } from '@dotglitch/ngx-common';
 import { MatDialogModule } from '@angular/material/dialog';
 import { NgIf } from '@angular/common';
