@@ -3,13 +3,14 @@ import { route } from '../util/util';
 import Surreal from 'surrealdb.js';
 import { format as AzureOdata } from "azure-odata-sql";
 
-const db = new Surreal(process.env['SURREAL_URL'] || 'http://127.0.0.1:8000');
+const db = new Surreal();
 (async () => {
+    await db.connect(process.env['SURREAL_URL'] || 'http://127.0.0.1:8000');
     await db.signin({
-        user: process.env['SURREAL_USER'] || 'root',
-        pass: process.env['SURREAL_PASSWORD'] || 'root',
+        username: process.env['SURREAL_USER'] || 'root',
+        password: process.env['SURREAL_PASSWORD'] || 'root',
     });
-    await db.use({ ns: 'dotglitch', db: 'dotops' });
+    await db.use({ namespace: 'dotglitch', database: 'dotops' });
 })();
 
 
@@ -132,14 +133,15 @@ export const DatabaseTableApi = () => {
             typeof skip == "number" ? `START ${skip}` : ''
         ].join(' '), props);
 
-        const [{ result: countResult }] = await p_count;
-        const [{ count }] = (countResult as any || [{ count: 0 }]);
+        const [foo] = await p_count;
+        const countResult = foo[0].count;
+        const count = (countResult as any || 0);
         // const count = -1;
 
-        const { time, status, result } = output;
+        // const { time, status, result } = output[0];
 
         const pars = new URLSearchParams(req.url);
-        pars.set('$skip', skip + (result as any[])?.length as any);
+        pars.set('$skip', skip + (output as any[])?.length as any);
 
         res.send({
             '@odata.context': `/api/db/$metadata#${table}`,
@@ -147,14 +149,14 @@ export const DatabaseTableApi = () => {
             '@odata.nextlink': (top + skip) > (count as number)
                                 ? undefined
                                 : `/api/db/${table}${decodeURIComponent(pars.toString())}`,
-            value: result
+            value: output
         });
     }));
 
 
     router.get('/$metadata#:table', route(async (req, res, next) => {
         const table = req.params['table'];
-        const schemaFields = Object.keys(((await db.query(`INFO FOR TABLE ` + table))[0].result as any)?.fd);
+        const schemaFields = Object.keys(((await db.query(`INFO FOR TABLE ` + table))[0][0].result as any)?.fd);
         res.send(schemaFields);
     }));
 

@@ -12,7 +12,8 @@ const getFiles = async source =>
 
 export const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-const db = new Surreal(process.env['SURREAL_URL'] || 'http://127.0.0.1:8000/rpc');
+const db = new Surreal();
+
 (async () => {
 
     // Select the right directory.
@@ -20,14 +21,15 @@ const db = new Surreal(process.env['SURREAL_URL'] || 'http://127.0.0.1:8000/rpc'
         process.chdir("database");
 
     console.log("\x1b[1;36mConnecting to Surreal...");
+    await db.connect(process.env['SURREAL_URL'] || 'http://127.0.0.1:8000/rpc');
 
     await db.signin({
-        user: process.env['SURREAL_USER'] || 'root',
-        pass: process.env['SURREAL_PASSWORD'] || 'root',
+        username: process.env['SURREAL_USER'] || 'root',
+        password: process.env['SURREAL_PASSWORD'] || 'root',
     });
 
     await db.query(await fs.readFile("01-database/database.surql", "utf8"))
-    await db.use({ ns: 'dotglitch', db: 'dotops' });
+    await db.use({ namespace: 'dotglitch', database: 'dotops' });
 
 
     console.log("\x1b[1;36mConnected to Surreal");

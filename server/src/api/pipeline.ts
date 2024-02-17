@@ -12,9 +12,8 @@ const getPipeline = async id => {
     if (id.includes(':'))
         id = id.split(':').pop();
 
-    const [{ result }] = await db.query(`SELECT * FROM pipeline:${id} FETCH stages, stages.jobs, stages.jobs.taskGroups, stages.jobs.taskGroups.tasks`);
-    const [pipeline] = result as Pipeline[];
-    return pipeline;
+    const [result] = await db.query<Pipeline[]>(`SELECT * FROM pipeline:${id} FETCH stages, stages.jobs, stages.jobs.taskGroups, stages.jobs.taskGroups.tasks`);
+    return result[0];
 }
 
 const createPipeline = async (pipeline: Pipeline, stashId = false, replace = false) => {

@@ -13,7 +13,8 @@ router.get('/:id', route(async (req, res, next) => {
         throw 400;
 
 
-    const [{result}] = await db.query(`SELECT * FROM secret:${id}`);
+    const res_ = await db.query(`SELECT * FROM secret:${id}`);
+    const [{result}] = res_[0][0];
     const [secret] = result as any;
 
     if (!secret) throw { message: "Secret does not exist", status: 404 };
