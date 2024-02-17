@@ -6,8 +6,8 @@
             "name": "Client",
             "type": "chrome",
             "request": "launch",
-            "preLaunchTask": "npm: start",
-            "url": "https://localhost:4500/"
+            "preLaunchTask": "npm: dev:web",
+            "url": "https://localhost:4600/"
         },
         {
             "name": "Server",

@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
-        "Dexie"
+        "Dexie",
+        "tolerations"
     ],
     "errorLens.exclude": ["Unknown word"]
 }
