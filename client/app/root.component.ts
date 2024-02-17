@@ -1,7 +1,7 @@
 import { Component, HostListener, ViewChild } from '@angular/core';
 import { MatDrawer } from '@angular/material/sidenav';
 import { MatDialog } from '@angular/material/dialog';
-import { ContextMenuItem } from '@dotglitch/ngx-ctx-menu';
+import { MenuItem } from '@dotglitch/ngx-common';
 import { NgIf } from '@angular/common';
 import { NavMenuComponent } from './components/navmenu/menu.component';
 import { Fetch, LazyLoaderComponent, KeyboardService, NavigationService } from '@dotglitch/ngx-common';
@@ -25,7 +25,7 @@ export class RootComponent {
     theme = 'dark';
     isMobile = false;
 
-    readonly mainCtxItems: ContextMenuItem<any>[] = [
+    readonly mainCtxItems: MenuItem<any>[] = [
         {
             label: "Appearance",
             children: [

@@ -12,9 +12,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { NgForOf, NgIf } from '@angular/common';
 import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { NgxAppMenuDirective, NgxContextMenuDirective } from '@dotglitch/ngx-ctx-menu';
-import { Fetch } from '@dotglitch/ngx-common';
+import { Fetch, MenuDirective } from '@dotglitch/ngx-common';
 import { PipelineStage } from 'types/pipeline';
 import { AccordionListComponent } from 'client/app/pages/@editors/pipeline-editor/accordion-list/accordion-list.component';
 import { PipelineEditorComponent } from 'client/app/pages/@editors/pipeline-editor/pipeline-editor.component';
@@ -39,8 +37,7 @@ import { StackEditorComponent } from 'ngx-stackedit';
         FormsModule,
         VscodeComponent,
         EditEnvironmentVariablesComponent,
-        NgxAppMenuDirective,
-        NgxContextMenuDirective,
+        MenuDirective,
         AccordionListComponent,
         StackEditorComponent
     ],

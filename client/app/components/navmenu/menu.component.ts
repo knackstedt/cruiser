@@ -2,11 +2,10 @@ import { NgForOf, NgIf } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
-import { BaseCtx, ContextMenuItem, NgxAppMenuDirective } from '@dotglitch/ngx-ctx-menu';
 import { DomSanitizer } from '@angular/platform-browser';
 import { LogoComponent } from '../logo/logo.component';
 import { Pages } from '../../component.registry';
-import { ThemeService } from '@dotglitch/ngx-common';
+import { MenuDirective, MenuItem, ThemeService } from '@dotglitch/ngx-common';
 
 
 @Component({
@@ -16,7 +15,7 @@ import { ThemeService } from '@dotglitch/ngx-common';
     imports: [
         NgForOf,
         NgIf,
-        NgxAppMenuDirective,
+        MenuDirective,
         MatTooltipModule,
         MatIconModule,
         LogoComponent
@@ -25,8 +24,8 @@ import { ThemeService } from '@dotglitch/ngx-common';
 })
 export class NavMenuComponent {
 
-    readonly pages: BaseCtx[] = [
-        ...Pages
+    readonly pages: any[] =
+        Pages
         .filter(c => !c['hidden'])
         .sort((a, b) => (a['order'] || 0) - (b['order'] || 0))
         .map(i => {
@@ -38,7 +37,6 @@ export class NavMenuComponent {
                 ...i
             }
         })
-    ]
 
     public readonly matIconRx = /[\/\.]/i;
 
@@ -47,7 +45,7 @@ export class NavMenuComponent {
     collapsed = false;
     showAdvancedMenu = true;
 
-    readonly profileLinks: ContextMenuItem[] = [
+    readonly profileLinks: MenuItem[] = [
         {
             label: "Appearance",
             children: [

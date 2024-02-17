@@ -7,18 +7,18 @@ import { Fetch } from '@dotglitch/ngx-common';
 import { VscodeComponent } from '@dotglitch/ngx-web-components';
 import { MatButtonModule } from '@angular/material/button';
 
-const monacoContext = `
-type LabelTemplateContext = {
-    pipeline: Pipeline
-}
+// const monacoContext = `
+// type LabelTemplateContext = {
+//     pipeline: Pipeline
+// }
 
-${require('!raw-loader!types/agent-task.ts').default}
-${require('!raw-loader!types/environment.ts').default}
-${require('!raw-loader!types/history-object.ts').default}
-${require('!raw-loader!types/pipeline.ts').default}
-`.replace(/^(export |import[^\n]+)/gm, '');
+// ${require('!raw-loader!types/agent-task.ts').default}
+// ${require('!raw-loader!types/environment.ts').default}
+// ${require('!raw-loader!types/history-object.ts').default}
+// ${require('!raw-loader!types/pipeline.ts').default}
+// `.replace(/^(export |import[^\n]+)/gm, '');
 
-console.log(monacoContext);
+// console.log(monacoContext);
 
 @Component({
     selector: 'app-labeltemplate-editor',
@@ -72,7 +72,7 @@ export default async (ctx: LabelTemplateContext) => {
 
         });
 
-        defaults.addExtraLib(monacoContext);
+        // defaults.addExtraLib(monacoContext);
     }
 
     async testApi() {

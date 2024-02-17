@@ -19,10 +19,11 @@
                 [attr.pipeline-group]="group.label"
             >
                 <div
+
                     class="grid-item"
                     *ngFor="let pipeline of group.items"
-                    [ngx-ctx-menu]="ctxMenu"
-                    [ngx-ctx-menu-context]="pipeline"
+                    [ngx-contextmenu]="ctxMenu"
+                    [ngx-menu-context]="pipeline"
                     [attr.pipeline-id]="pipeline.id"
                     (dblclick)="editPipeline(pipeline)"
                 >
@@ -78,9 +79,9 @@
                         <button
                             class="options"
                             mat-icon-button
-                            [ngx-app-menu]="ctxMenu"
-                            [ngx-app-menu-context]="pipeline"
-                            [ngx-app-menu-config]="{ alignment: 'start' }"
+                            [ngx-menu]="ctxMenu"
+                            [ngx-menu-context]="pipeline"
+                            [ngx-menu-config]="{ alignment: 'start' }"
                         >
                             <mat-icon>more_vert</mat-icon>
                         </button>

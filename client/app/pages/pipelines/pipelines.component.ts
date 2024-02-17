@@ -5,14 +5,13 @@ import { NgForOf, NgIf } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { LazyLoaderService } from '@dotglitch/ngx-common';
+import { LazyLoaderService, MenuDirective } from '@dotglitch/ngx-common';
 import { Pipeline } from 'types/pipeline';
-import { ContextMenuItem, NgxAppMenuDirective, NgxContextMenuDirective } from '@dotglitch/ngx-ctx-menu';
 import { ThemedIconDirective } from '../../services/theme.service';
 import Sortable from 'sortablejs';
 import { HeaderbarComponent } from '../../components/headerbar/headerbar.component';
 import { orderSort } from '../../services/utils';
-import { DialogService, Fetch } from '@dotglitch/ngx-common';
+import { DialogService, Fetch, MenuItem } from '@dotglitch/ngx-common';
 
 
 
@@ -28,8 +27,7 @@ import { DialogService, Fetch } from '@dotglitch/ngx-common';
         MatTooltipModule,
         MatIconModule,
         DragDropModule,
-        NgxAppMenuDirective,
-        NgxContextMenuDirective,
+        MenuDirective,
         ThemedIconDirective,
         HeaderbarComponent
     ],
@@ -49,7 +47,7 @@ export class PipelinesComponent implements OnInit {
 
     sortableSectors: Sortable[] = [];
 
-    readonly ctxMenu: ContextMenuItem<Pipeline>[] = [
+    readonly ctxMenu: MenuItem<Pipeline>[] = [
         {
             label: "Edit",
             action: pipeline => this.editPipeline(pipeline)
