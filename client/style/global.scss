@@ -1,0 +1,63 @@
+body {
+    margin: 0;
+    font-family: 'Fira Sans', "Arial", sans-serif;
+}
+
+html,
+body {
+    background: var(--background-color);
+    color: var(--text-color);
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    text-rendering: geometricPrecision;
+    -webkit-font-smoothing: subpixel-antialiased;
+}
+
+.light {
+    @include light-theme;
+}
+
+.dark {
+    @include dark-theme;
+}
+
+
+* {
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+    background-color: #0000;
+    transition: transform 250ms ease;
+}
+
+::-webkit-scrollbar-thumb {
+    padding-right: 3px;
+    border-radius: 5px;
+    background-color: #505050;
+    transition: all 250ms ease;
+}
+
+::-webkit-scrollbar-track {
+    border-radius: 5px;
+    background-color: #0000;
+    transition: all 250ms ease;
+}
+
+::-webkit-scrollbar-corner {
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+table {
+    border-collapse: collapse;
+}
+
+
+// There may be a better way to inject styles for this.
+.as-split-gutter {
+    background-color: var(--splitter-background-color) !important;
+}
