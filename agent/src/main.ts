@@ -24,7 +24,7 @@ const getDuration = (req, res) => {
     const agentId = environment.agentId;
     const taskId  = `jobs:` + agentId.toUpperCase();
 
-    if (!agentId || !/^[0-7][0-9A-Z]{25}$/.test(agentId)) {
+    if (!agentId || !/^[0-7][0-9A-Z]{25}$/i.test(agentId)) {
         logger.fatal({ message: "Invalid agent identifier!"})
         process.exit(1);
     }
