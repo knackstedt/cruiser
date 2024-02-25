@@ -119,9 +119,6 @@ export const getLogger = (file: string) => pino({
             },
             {
                 target: 'pino/file', level: 'trace', options: { destination: 1 }
-            },
-            {
-                target: 'pino/file', level: 'error', options: { destination: 2 }
             }
         ]
     }
