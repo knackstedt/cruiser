@@ -1,4 +1,3 @@
-import execa from 'execa';
 import { JobInstance } from '../types/agent-task';
 import { PipelineJob, PipelineTaskGroup } from '../types/pipeline';
 import { getLogger, orderSort, sleep } from './util/util';
@@ -46,7 +45,7 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
         const tasks = taskGroup.tasks.sort(orderSort);
 
         const environment: { key: string, value: string; }[] =
-            await api.get(`/api/job/${jobInstance.id}/environment`);
+            await api.get(`/api/jobs/${jobInstance.id}/environment`);
 
         for (let i = 0; i < tasks.length; i++) {
             const task = tasks[i];
