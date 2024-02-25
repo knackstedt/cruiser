@@ -20,20 +20,20 @@ const validateJobCanRun = async (job: PipelineJob) => {
 
 async function freezeTaskProcessing({ taskGroup, agentTask }: { taskGroup: PipelineTaskGroup, agentTask: JobInstance; }) {
 
-    let { data: freezePoint } = await api.post(`/api/job/job:${environment.agentId}/freeze`, {
-        taskGroup: taskGroup.id,
-        jobInstance: agentTask.id
-    })
+    await api.patch(`/api/odata/job:${environment.agentId}`, {
+        status: "frozen"
+    });
 
+    // Keep running until we break out or throw an exception
+    // Should this occur indefinitely, the containing job will
+    // expire.
     while (true) {
         await sleep(freezePollInterval);
 
-        const {data} = await api.get(`/api/job/job:${environment.agentId}/freeze/${freezePoint.id}`);
-
-        freezePoint = data;
+        const {data} = await api.get(`/api/odata/job:${environment.agentId}`);
 
         // If the freeze point has been removed, resume the pipeline
-        if (!freezePoint || freezePoint.state != "frozen") break;
+        if (!data || data.state != "frozen") break;
     }
 }
 
