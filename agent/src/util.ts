@@ -1,9 +1,7 @@
-import { Axios } from 'axios';
+import axios from 'axios';
 import environment from './environment';
 
-export const api = new Axios({
-    baseURL: environment.dotopsUrl,
-    headers: {
-        "Authorization": environment.dotopsToken
-    }
-});
+axios.defaults.baseURL = environment.dotopsUrl;
+axios.defaults.headers.common['Authorization'] = environment.dotopsToken;
+
+export const api = axios;
