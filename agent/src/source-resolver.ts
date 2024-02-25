@@ -1,7 +1,7 @@
 import { Pipeline, PipelineJob } from '../types/pipeline';
 import fs from 'fs-extra';
 import { simpleGit, SimpleGitProgressEvent, SimpleGitOptions, SimpleGit } from 'simple-git';
-import { logger } from 'util/util';
+import { logger } from './util/util';
 
 export const ResolveSources = async (pipeline: Pipeline, job: PipelineJob) => {
     if (!pipeline.sources || pipeline.sources.length == 0)
