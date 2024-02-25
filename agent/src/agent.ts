@@ -86,7 +86,13 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
 
 export const RunAgentProcess = async (taskId: string) => {
 
-    const { data: kubeTask } = await api.get(`/api/odata/${taskId}`);
+    let res = await api.get(`/api/odata/${taskId}`);
+    let kubeTask = res.data;
+
+    if (typeof kubeTask == "string") {
+        logger.fatal({msg: "Axios failed to parse json", res})
+        kubeTask = JSON.parse(kubeTask);
+    }
     const pipeline = kubeTask?.pipeline;
     const job      = kubeTask?.job;
 
