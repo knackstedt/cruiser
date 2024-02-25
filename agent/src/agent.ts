@@ -41,6 +41,10 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
     taskGroups?.sort(orderSort);
 
     return Promise.all(taskGroups.map(taskGroup => new Promise(async (r) => {
+        logger.info({
+            msg: `Initiating TaskGroup ${taskGroup.label}`,
+            taskGroup
+        });
 
         const tasks = taskGroup.tasks.sort(orderSort);
 
@@ -50,22 +54,31 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
         for (let i = 0; i < tasks.length; i++) {
             const task = tasks[i];
 
+            logger.info({
+                msg: `Initiating task ${task.label}`,
+                task
+            });
+
+
+            // await db.query(`RETURN fn::task_get_environment(${task.id})`) as any;
+
             const env = {};
-
-                // await db.query(`RETURN fn::task_get_environment(${task.id})`) as any;
-
             environment.forEach(({ key, value }) => env[key] = value);
 
             if (task.freezeBeforeRun) {
-                logger.info(`Encountered freeze marker in task group ${taskGroup.label} before task ${task.label}`, taskGroup);
+                logger.info({
+                    msg: `Encountered freeze marker in task group ${taskGroup.label} before task ${task.label}`,
+                });
                 await freezeTaskProcessing({ taskGroup, agentTask: jobInstance });
-                logger.info(`Unfroze freeze marker in task group ${taskGroup.label} before task ${task.label}`, taskGroup);
+                logger.info({
+                    msg: `Unfroze freeze marker in task group ${taskGroup.label} before task ${task.label}`,
+                });
             }
 
             const command = envSubstitute(task.command);
             const args = task.arguments.map(a => envSubstitute(a));
 
-            await new Promise((res, rej) => {
+            const process = await new Promise((res, rej) => {
                 const process = spawn(command, args, {
                     env: env,
                     cwd: task.workingDirectory,
@@ -101,15 +114,23 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
                 process.on('exit', (code) => {
                     if (code == 0) {
                         logger.info(`Task ${task.label} in group ${taskGroup.label} successfully completed`, res);
+                        res(process);
                     }
                     else {
                         logger.error({
                             msg: `Task ${task.label} in group ${taskGroup.label} exited with non-zero exit code`,
                             code
                         });
+                        res(process)
                     }
                 });
+
             })
+
+            logger.info({
+                msg: `Completed task ${task.label}`,
+                process
+            });
 
             // await execa(task.command, task.arguments, {
             //     env: env,
@@ -123,9 +144,14 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
             // });
 
             if (task.freezeAfterRun) {
-                logger.info(`Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`, taskGroup);
+                logger.info({
+                    msg: `Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`
+
+                });
                 await freezeTaskProcessing({ taskGroup, agentTask: jobInstance });
-                logger.info(`Unfroze freeze marker in task group ${taskGroup.label} after task ${task.label}`, taskGroup);
+                logger.info({
+                    msg: `Unfroze freeze marker in task group ${taskGroup.label} after task ${task.label}`
+                });
             }
         }
 
