@@ -1,9 +1,10 @@
-import Surreal from 'surrealdb.js';
 import execa from 'execa';
 import { JobInstance } from '../types/agent-task';
-import { Pipeline, PipelineJob, PipelineTaskGroup } from '../types/pipeline';
+import { PipelineJob, PipelineTaskGroup } from '../types/pipeline';
 import { getLogger, orderSort, sleep } from './util/util';
 import { ResolveSources } from './source-resolver';
+import { api } from './util';
+import environment from './environment';
 
 const logger = getLogger("agent");
 
@@ -17,24 +18,26 @@ const validateJobCanRun = async (job: PipelineJob) => {
 
 }
 
-async function freezeTaskProcessing(db: Surreal, { taskGroup, agentTask }: { taskGroup: PipelineTaskGroup, agentTask: JobInstance; }) {
+async function freezeTaskProcessing({ taskGroup, agentTask }: { taskGroup: PipelineTaskGroup, agentTask: JobInstance; }) {
 
-    let [freezePoint] = await db.create(`taskFreezePoints:ulid()`, {
+    let { data: freezePoint } = await api.post(`/api/job/job:${environment.agentId}/freeze`, {
         taskGroup: taskGroup.id,
         jobInstance: agentTask.id
-    });
+    })
 
     while (true) {
         await sleep(freezePollInterval);
 
-        [freezePoint] = await db.select(freezePoint.id) as any;
+        const {data} = await api.get(`/api/job/job:${environment.agentId}/freeze/${freezePoint.id}`);
+
+        freezePoint = data;
 
         // If the freeze point has been removed, resume the pipeline
-        if (!freezePoint) break;
+        if (!freezePoint || freezePoint.state != "frozen") break;
     }
 }
 
-const RunTaskGroupsInParallel = (db: Surreal, taskGroups: PipelineTaskGroup[], jobInstance) => {
+const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) => {
     taskGroups?.sort(orderSort);
 
     return Promise.all(taskGroups.map(taskGroup => new Promise(async (r) => {
@@ -45,18 +48,18 @@ const RunTaskGroupsInParallel = (db: Surreal, taskGroups: PipelineTaskGroup[], j
             const task = tasks[i];
 
             const env = {};
+
             const environment: { key: string, value: string; }[] =
-                await db.query(`RETURN fn::task_get_environment(${task.id})`) as any;
+                await api.get(`/api/job/${task.id}/environment`);
+                // await db.query(`RETURN fn::task_get_environment(${task.id})`) as any;
 
             environment.forEach(({ key, value }) => env[key] = value);
 
             if (task.freezeBeforeRun) {
                 logger.info(`Encountered freeze marker in task group ${taskGroup.label} before task ${task.label}`, taskGroup);
-                await freezeTaskProcessing(db, { taskGroup, agentTask: jobInstance });
+                await freezeTaskProcessing({ taskGroup, agentTask: jobInstance });
                 logger.info(`Unfroze freeze marker in task group ${taskGroup.label} before task ${task.label}`, taskGroup);
             }
-
-            logger.info(`Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`, taskGroup);
 
             await execa(task.command, task.arguments, {
                 env: env,
@@ -71,7 +74,7 @@ const RunTaskGroupsInParallel = (db: Surreal, taskGroups: PipelineTaskGroup[], j
 
             if (task.freezeAfterRun) {
                 logger.info(`Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`, taskGroup);
-                await freezeTaskProcessing(db, { taskGroup, agentTask: jobInstance });
+                await freezeTaskProcessing({ taskGroup, agentTask: jobInstance });
                 logger.info(`Unfroze freeze marker in task group ${taskGroup.label} after task ${task.label}`, taskGroup);
             }
         }
@@ -81,11 +84,11 @@ const RunTaskGroupsInParallel = (db: Surreal, taskGroups: PipelineTaskGroup[], j
     })));
 }
 
-export const Agent = async (taskId: string, db: Surreal) => {
+export const RunAgentProcess = async (taskId: string) => {
 
-    const jobInstance: JobInstance = (await db.query(`SELECT * FROM ${taskId} FETCH pipeline, job, job.taskGroups, job.taskGroups.tasks`))?.[0]?.result?.[0] as any;
+    const jobInstance: JobInstance = await api.get(`/api/odata/${taskId}`);
     const pipeline = jobInstance?.pipeline;
-    const job = jobInstance?.job;
+    const job      = jobInstance?.job;
 
     if (!jobInstance) {
         logger.fatal({ msg: `Failed to resolve ${taskId}` });
@@ -97,7 +100,7 @@ export const Agent = async (taskId: string, db: Surreal) => {
         const message = `Job does not have reference to [${!!pipeline ? 'pipeline' : ''}${!!job ? !!pipeline ? ', job' : 'job' : ''}]`;
 
         logger.fatal({ msg: message });
-        await db.merge(taskId, { state: "failed", failReason: message });
+        await api.patch(`/api/odata/${taskId}`, { state: "failed", failReason: message })
         // process.exit(1)
         return;
     }
@@ -105,25 +108,25 @@ export const Agent = async (taskId: string, db: Surreal) => {
 
     // Perform preflight checks
     logger.info({ state: "Initializing", msg: "Begin initializing" });
-    await db.merge(taskId, { state: "initializing" });
+    await api.patch(`/api/odata/${taskId}`, { state: "initializing" })
     await validateJobCanRun(job);
     logger.info({ state: "Initializing", msg: "Agent initialize completed" });
 
     // Download sources
     logger.info({ state: "Cloning", msg: "Agent source cloning" });
-    await db.merge(taskId, { state: "cloning" });
+    await api.patch(`/api/odata/${taskId}`, { state: "cloning" })
     await ResolveSources(pipeline, job);
     logger.info({ state: "Cloning", msg: "Agent source cloning completed" });
 
     // Follow job steps to build code
     logger.info({ state: "Building", msg: "Agent building" });
-    await db.merge(taskId, { state: "building" });
-    await RunTaskGroupsInParallel(db, job.taskGroups, jobInstance);
+    await api.patch(`/api/odata/${taskId}`, { state: "building" })
+    await RunTaskGroupsInParallel(job.taskGroups, jobInstance);
     logger.info({ state: "Building", msg: "Agent build completed" });
 
     // Seal (compress) artifacts
     logger.info({ state: "Sealing", msg: "Agent sealing" });
-    await db.merge(taskId, { state: "sealing" });
+    await api.patch(`/api/odata/${taskId}`, { state: "sealing" })
     logger.info({ state: "Sealing", msg: "Agent sealing completed" });
 
     // TODO: compress and upload artifacts
@@ -133,5 +136,5 @@ export const Agent = async (taskId: string, db: Surreal) => {
     // }));
 
     logger.info({ state: "finished", msg: "Agent has completed it's work." });
-    await db.merge(taskId, { state: "finished" });
+    await api.patch(`/api/odata/${taskId}`, { state: "finished" })
 }

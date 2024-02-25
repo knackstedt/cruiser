@@ -10,7 +10,7 @@
     "dependencies": {
         "@kubernetes/client-node": "^0.18.1",
         "adm-zip": "^0.5.9",
-        "axios": "^1.4.0",
+        "axios": "^1.6.7",
         "azure-odata-sql": "github:Dynatrace-ESA/azure-odata-sql-js",
         "execa": "5.1.1",
         "express": "^4.18.1",

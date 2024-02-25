@@ -1,10 +1,10 @@
 import express, { Express } from 'express';
 import http from 'http';
-import Surreal from 'surrealdb.js';
 
 import { logger } from './util/util';
 import { FilesystemApi } from './api/files';
-import { Agent } from './agent';
+import { RunAgentProcess } from './agent';
+import environment from './environment';
 
 const onFinished = require('on-finished');
 
@@ -21,31 +21,13 @@ const getDuration = (req, res) => {
 }
 
 (async () => {
-    const agentId          = process.env['DOTGLITCH_AGENT_ID']?.trim();
-    const surrealUser      = process.env['SURREAL_USER']?.trim() || 'root';
-    const surrealPassword  = process.env['SURREAL_PASSWORD']?.trim() || 'root';
-    const surrealNamespace = process.env['SURREAL_NAMESPACE']?.trim() || 'dotglitch';
-    const surrealDatabase  = process.env['SURREAL_DATABASE']?.trim() || 'dotops';
-    const taskId = `jobInstance:` + agentId;
+    const agentId = environment.agentId;
+    const taskId  = `job:` + agentId;
 
     if (!agentId || !/^[0-7][0-9A-Z]{25}$/.test(agentId)) {
         logger.fatal({ message: "Invalid agent identifier!"})
         process.exit(1);
     }
-
-    const db = new Surreal(process.env['SURREAL_URL'] || 'http://127.0.0.1:8000/rpc');
-    await db.signin({
-        user: surrealUser,
-        pass: surrealPassword,
-    }).catch(err => {
-        logger.fatal({ message: "Failed to connect to database server!" });
-        process.exit(1);
-    });
-
-    await db.use({ ns: surrealNamespace, db: surrealDatabase }).catch(err => {
-        logger.fatal({ message: "Failed to connect to database!",  });
-        process.exit(1);
-    });
 
     process.on("uncaughtException", err => {
         logger.error(err);
@@ -89,7 +71,7 @@ const getDuration = (req, res) => {
         });
     })
 
-    await Agent(taskId, db);
+    await RunAgentProcess(taskId);
 
     // TODO:
     // should we call process.exit here?
