@@ -18,6 +18,15 @@ export const ResolveSources = async (pipeline: Pipeline, job: PipelineJob) => {
 
     return await Promise.all(pipeline.sources.map(async source => {
         switch (source.type) {
+            case "svn": {
+                throw new Error("Not Implemented");
+                return;
+            }
+            case "tfs": {
+                throw new Error("Not Implemented");
+                return;
+            }
+            default:
             case "git": {
 
                 const [host] = source.url.split('/');
@@ -26,10 +35,10 @@ export const ResolveSources = async (pipeline: Pipeline, job: PipelineJob) => {
                 // or other secure manner for git?
                 // seems
                 fs.writeFile(`~/.gitconfig`,
-                `[credential "${host}"]\n` +
-                `	 username = ${source.username || 'DotOps'}\n` +
-	            `    helper = "!f() { test \\"$1\\" = get && echo \\"password=${source.password}\\"; }; f"\n`
-	            // `    helper = "!f() { test \"$1\" = get && echo \"password=$(cat $HOME/.secret)\"; }; f"\n`
+                    `[credential "${host}"]\n` +
+                    `	 username = ${source.username || 'DotOps'}\n` +
+                    `    helper = "!f() { test \\"$1\\" = get && echo \\"password=${source.password}\\"; }; f"\n`
+                    // `    helper = "!f() { test \"$1\" = get && echo \"password=$(cat $HOME/.secret)\"; }; f"\n`
                 );
 
                 const git = simpleGit(options);
@@ -52,14 +61,6 @@ export const ResolveSources = async (pipeline: Pipeline, job: PipelineJob) => {
                 // ].filter(a => !!a);
 
                 // return execa('git', args, { cwd: source.targetPath });
-            }
-            case "svn": {
-                throw new Error("Not Implemented");
-                return;
-            }
-            case "tfs": {
-                throw new Error("Not Implemented");
-                return;
             }
         }
     }));
