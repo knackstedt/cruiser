@@ -86,21 +86,23 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
 
 export const RunAgentProcess = async (taskId: string) => {
 
-    const jobInstance: JobInstance = await api.get(`/api/odata/${taskId}`);
-    const pipeline = jobInstance?.pipeline;
-    const job      = jobInstance?.job;
+    const kubeTask: JobInstance = await api.get(`/api/odata/${taskId}`);
+    const pipeline = kubeTask?.pipeline;
+    const job      = kubeTask?.job;
 
-    if (!jobInstance) {
+    if (!kubeTask) {
         logger.fatal({ msg: `Failed to resolve ${taskId}` });
         // process.exit(1);
         return;
     }
 
     if (!pipeline || !job) {
-        const message = `Job does not have reference to [${!!pipeline ? 'pipeline' : ''}${!!job ? !!pipeline ? ', job' : 'job' : ''}]`;
+        if (!pipeline)
+            logger.fatal({ msg: `Job does not have reference to Pipeline`, jobInstance: kubeTask });
+        if (!job)
+            logger.fatal({ msg: `Job does not have reference to Job`, jobInstance: kubeTask });
 
-        logger.fatal({ msg: message });
-        await api.patch(`/api/odata/${taskId}`, { state: "failed", failReason: message })
+        await api.patch(`/api/odata/${taskId}`, { state: "failed" })
         // process.exit(1)
         return;
     }
@@ -121,7 +123,7 @@ export const RunAgentProcess = async (taskId: string) => {
     // Follow job steps to build code
     logger.info({ state: "Building", msg: "Agent building" });
     await api.patch(`/api/odata/${taskId}`, { state: "building" })
-    await RunTaskGroupsInParallel(job.taskGroups, jobInstance);
+    await RunTaskGroupsInParallel(job.taskGroups, kubeTask);
     logger.info({ state: "Building", msg: "Agent build completed" });
 
     // Seal (compress) artifacts
