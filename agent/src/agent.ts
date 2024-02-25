@@ -44,13 +44,14 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
 
         const tasks = taskGroup.tasks.sort(orderSort);
 
+        const environment: { key: string, value: string; }[] =
+            await api.get(`/api/job/${jobInstance.id}/environment`);
+
         for (let i = 0; i < tasks.length; i++) {
             const task = tasks[i];
 
             const env = {};
 
-            const environment: { key: string, value: string; }[] =
-                await api.get(`/api/job/${task.id}/environment`);
                 // await db.query(`RETURN fn::task_get_environment(${task.id})`) as any;
 
             environment.forEach(({ key, value }) => env[key] = value);
