@@ -165,7 +165,9 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
         catch(ex) {
             logger.error({
                 msg: "Unhandled error",
-                ex
+                stack: ex.stack,
+                error: ex.message,
+                name: ex.name
             })
         }
 
