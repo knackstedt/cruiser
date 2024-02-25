@@ -8,6 +8,13 @@ export const ResolveSources = async (pipeline: Pipeline, job: PipelineJob) => {
         return null;
 
     return await Promise.all(pipeline.sources.map(async source => {
+
+        const sourceForLog = {
+            ...source,
+            // prevent password from being logged
+            password: undefined
+        };
+
         switch (source.type) {
             case "svn": {
                 throw new Error("Not Implemented");
@@ -39,15 +46,26 @@ export const ResolveSources = async (pipeline: Pipeline, job: PipelineJob) => {
                     trimmed: false,
                     progress: ({ method, stage, progress }: SimpleGitProgressEvent) => {
                         // console.log(`git.${method} ${stage} stage ${progress}% complete`);
-                        logger.info({ msg: `Cloning progress`, method, stage, progress })
+                        logger.info({
+                            msg: `Cloning progress`,
+                            source: sourceForLog,
+                            method,
+                            stage,
+                            progress
+                        })
                     }
                 };
 
                 const git = simpleGit(options);
 
+                logger.info({ msg: `Cloning GIT source`, source: sourceForLog });
+
                 await git.clone(source.url, null, {
                     "--depth": '1'
                 })
+
+                logger.info({ msg: `Done cloning GIT source`, source: sourceForLog });
+
                 return;
 
                 // const args = [
