@@ -86,7 +86,7 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
 
 export const RunAgentProcess = async (taskId: string) => {
 
-    const kubeTask: JobInstance = await api.get(`/api/odata/${taskId}`);
+    const { data: kubeTask } = await api.get(`/api/odata/${taskId}`);
     const pipeline = kubeTask?.pipeline;
     const job      = kubeTask?.job;
 
