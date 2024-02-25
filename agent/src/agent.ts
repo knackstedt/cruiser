@@ -3,8 +3,9 @@ import { JobInstance } from '../types/agent-task';
 import { PipelineJob, PipelineTaskGroup } from '../types/pipeline';
 import { getLogger, orderSort, sleep } from './util/util';
 import { ResolveSources } from './source-resolver';
-import { api } from './util';
+import { api, envSubstitute } from './util';
 import environment from './environment';
+import { spawn } from 'child_process';
 
 const logger = getLogger("agent");
 
@@ -62,16 +63,65 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
                 logger.info(`Unfroze freeze marker in task group ${taskGroup.label} before task ${task.label}`, taskGroup);
             }
 
-            await execa(task.command, task.arguments, {
-                env: env,
-                cwd: task.workingDirectory,
-                timeout: task.commandTimeout || 0
-            }).then(res => {
-                logger.info(`Task ${task.label} in group ${taskGroup.label} successfully completed`, res);
+            const command = envSubstitute(task.command);
+            const args = task.arguments.map(a => envSubstitute(a));
+
+            await new Promise((res, rej) => {
+                const process = spawn(command, args, {
+                    env: env,
+                    cwd: task.workingDirectory,
+                    timeout: task.commandTimeout || 0,
+                    windowsHide: true
+                });
+
+                process.stdout.on('data', (data) => {
+                    logger.info({
+                        task,
+                        stdout: data.toString()
+                    });
+                });
+
+                process.stderr.on('data', (data) => {
+                    logger.warn({
+                        task,
+                        stdout: data.toString()
+                    });
+                });
+
+                process.on('error', (err) => {
+                    logger.error(err);
+                });
+
+                process.on('disconnect', (...args) => {
+                    logger.error({
+                        msg: `Child process for Task ${task.label} in group ${taskGroup.label} disconnected!`,
+                        args
+                    });
+                });
+
+                process.on('exit', (code) => {
+                    if (code == 0) {
+                        logger.info(`Task ${task.label} in group ${taskGroup.label} successfully completed`, res);
+                    }
+                    else {
+                        logger.error({
+                            msg: `Task ${task.label} in group ${taskGroup.label} exited with non-zero exit code`,
+                            code
+                        });
+                    }
+                });
             })
-            .catch(err => {
-                logger.error(`Task ${task.label} in group ${taskGroup.label} failed`, err);
-            });
+
+            // await execa(task.command, task.arguments, {
+            //     env: env,
+            //     cwd: task.workingDirectory,
+            //     timeout: task.commandTimeout || 0
+            // }).then(res => {
+            //     logger.info(`Task ${task.label} in group ${taskGroup.label} successfully completed`, res);
+            // })
+            // .catch(err => {
+            //     logger.error(`Task ${task.label} in group ${taskGroup.label} failed`, err);
+            // });
 
             if (task.freezeAfterRun) {
                 logger.info(`Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`, taskGroup);
@@ -136,13 +186,14 @@ export const RunAgentProcess = async (taskId: string) => {
     // Seal (compress) artifacts
     logger.info({ state: "Sealing", msg: "Agent sealing" });
     await api.patch(`/api/odata/${taskId}`, { state: "sealing" })
-    logger.info({ state: "Sealing", msg: "Agent sealing completed" });
-
     // TODO: compress and upload artifacts
+    // (format? progress?)
     // await Promise.all(job.artifacts.map(async a => {
     //     a.source;
     //     await execa('')
     // }));
+    logger.info({ state: "Sealing", msg: "Agent sealing completed" });
+
 
     logger.info({ state: "finished", msg: "Agent has completed it's work." });
     await api.patch(`/api/odata/${taskId}`, { state: "finished" })
