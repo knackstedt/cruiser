@@ -22,7 +22,7 @@ const getDuration = (req, res) => {
 
 (async () => {
     const agentId = environment.agentId;
-    const taskId  = `job:` + agentId;
+    const taskId  = `jobs:` + agentId;
 
     if (!agentId || !/^[0-7][0-9A-Z]{25}$/.test(agentId)) {
         logger.fatal({ message: "Invalid agent identifier!"})
