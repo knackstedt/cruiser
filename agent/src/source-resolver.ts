@@ -1,16 +1,7 @@
 import { Pipeline, PipelineJob } from '../types/pipeline';
-import execa from 'execa';
-import path from 'path';
 import fs from 'fs-extra';
-import { simpleGit, CleanOptions, SimpleGitOptions, SimpleGit } from 'simple-git';
-
-const options: Partial<SimpleGitOptions> = {
-    baseDir: process.cwd(),
-    binary: 'git',
-    maxConcurrentProcesses: 6,
-    trimmed: false,
-
-};
+import { simpleGit, SimpleGitProgressEvent, SimpleGitOptions, SimpleGit } from 'simple-git';
+import { logger } from 'util/util';
 
 export const ResolveSources = async (pipeline: Pipeline, job: PipelineJob) => {
     if (!pipeline.sources || pipeline.sources.length == 0)
@@ -40,6 +31,17 @@ export const ResolveSources = async (pipeline: Pipeline, job: PipelineJob) => {
                     `    helper = "!f() { test \\"$1\\" = get && echo \\"password=${source.password}\\"; }; f"\n`
                     // `    helper = "!f() { test \"$1\" = get && echo \"password=$(cat $HOME/.secret)\"; }; f"\n`
                 );
+
+                const options: Partial<SimpleGitOptions> = {
+                    baseDir: process.cwd(),
+                    binary: 'git',
+                    maxConcurrentProcesses: 6,
+                    trimmed: false,
+                    progress: ({ method, stage, progress }: SimpleGitProgressEvent) => {
+                        // console.log(`git.${method} ${stage} stage ${progress}% complete`);
+                        logger.info({ msg: `Cloning progress`, method, stage, progress })
+                    }
+                };
 
                 const git = simpleGit(options);
 
