@@ -15,7 +15,6 @@ const validateJobCanRun = async (job: PipelineJob) => {
     const tasks = job.taskGroups?.map(t => t.tasks).flat();
     if (!tasks || tasks.length == 0)
         throw new Error("No work to do");
-
 }
 
 async function freezeTaskProcessing({ taskGroup, agentTask }: { taskGroup: PipelineTaskGroup, agentTask: JobInstance; }) {
@@ -41,118 +40,133 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
     taskGroups?.sort(orderSort);
 
     return Promise.all(taskGroups.map(taskGroup => new Promise(async (r) => {
-        logger.info({
-            msg: `Initiating TaskGroup ${taskGroup.label}`,
-            taskGroup
-        });
-
-        const tasks = taskGroup.tasks.sort(orderSort);
-
-        const environment: { key: string, value: string; }[] =
-            await api.get(`/api/jobs/${jobInstance.id}/environment`);
-
-        for (let i = 0; i < tasks.length; i++) {
-            const task = tasks[i];
-
+        try {
             logger.info({
-                msg: `Initiating task ${task.label}`,
-                task
+                msg: `Initiating TaskGroup ${taskGroup.label}`,
+                taskGroup
             });
 
+            const tasks = taskGroup.tasks.sort(orderSort);
 
-            // await db.query(`RETURN fn::task_get_environment(${task.id})`) as any;
+            const environment: { key: string, value: string; }[] =
+                await api.get(`/api/jobs/${jobInstance.id}/environment`);
 
-            const env = {};
-            environment.forEach(({ key, value }) => env[key] = value);
+            for (let i = 0; i < tasks.length; i++) {
+                const task = tasks[i];
 
-            if (task.freezeBeforeRun) {
                 logger.info({
-                    msg: `Encountered freeze marker in task group ${taskGroup.label} before task ${task.label}`,
-                });
-                await freezeTaskProcessing({ taskGroup, agentTask: jobInstance });
-                logger.info({
-                    msg: `Unfroze freeze marker in task group ${taskGroup.label} before task ${task.label}`,
-                });
-            }
-
-            const command = envSubstitute(task.command);
-            const args = task.arguments.map(a => envSubstitute(a));
-
-            const process = await new Promise((res, rej) => {
-                const process = spawn(command, args, {
-                    env: env,
-                    cwd: task.workingDirectory,
-                    timeout: task.commandTimeout || 0,
-                    windowsHide: true
+                    msg: `Initiating task ${task.label}`,
+                    task
                 });
 
-                process.stdout.on('data', (data) => {
+
+                // await db.query(`RETURN fn::task_get_environment(${task.id})`) as any;
+
+                const env = {};
+                environment.forEach(({ key, value }) => env[key] = value);
+
+                if (task.freezeBeforeRun) {
                     logger.info({
-                        task,
-                        stdout: data.toString()
+                        msg: `Encountered freeze marker in task group ${taskGroup.label} before task ${task.label}`,
                     });
-                });
-
-                process.stderr.on('data', (data) => {
-                    logger.warn({
-                        task,
-                        stdout: data.toString()
+                    await freezeTaskProcessing({ taskGroup, agentTask: jobInstance });
+                    logger.info({
+                        msg: `Unfroze freeze marker in task group ${taskGroup.label} before task ${task.label}`,
                     });
-                });
+                }
 
-                process.on('error', (err) => {
-                    logger.error(err);
-                });
+                const command = envSubstitute(task.command);
+                const args = task.arguments.map(a => envSubstitute(a));
 
-                process.on('disconnect', (...args) => {
-                    logger.error({
-                        msg: `Child process for Task ${task.label} in group ${taskGroup.label} disconnected!`,
-                        args
+                const process = await new Promise((res, rej) => {
+                    logger.info({
+                        msg: `spawning process ${task.label}`,
+                        command,
+                        args,
+                        task
                     });
-                });
 
-                process.on('exit', (code) => {
-                    if (code == 0) {
-                        logger.info(`Task ${task.label} in group ${taskGroup.label} successfully completed`, res);
-                        res(process);
-                    }
-                    else {
-                        logger.error({
-                            msg: `Task ${task.label} in group ${taskGroup.label} exited with non-zero exit code`,
-                            code
+                    const process = spawn(command, args, {
+                        env: env,
+                        cwd: task.workingDirectory,
+                        timeout: task.commandTimeout || 0,
+                        windowsHide: true
+                    });
+
+                    process.stdout.on('data', (data) => {
+                        logger.info({
+                            task,
+                            stdout: data.toString()
                         });
-                        res(process)
-                    }
-                });
+                    });
 
-            })
+                    process.stderr.on('data', (data) => {
+                        logger.warn({
+                            task,
+                            stdout: data.toString()
+                        });
+                    });
 
-            logger.info({
-                msg: `Completed task ${task.label}`,
-                process
-            });
+                    process.on('error', (err) => {
+                        logger.error(err);
+                    });
 
-            // await execa(task.command, task.arguments, {
-            //     env: env,
-            //     cwd: task.workingDirectory,
-            //     timeout: task.commandTimeout || 0
-            // }).then(res => {
-            //     logger.info(`Task ${task.label} in group ${taskGroup.label} successfully completed`, res);
-            // })
-            // .catch(err => {
-            //     logger.error(`Task ${task.label} in group ${taskGroup.label} failed`, err);
-            // });
+                    process.on('disconnect', (...args) => {
+                        logger.error({
+                            msg: `Child process for Task ${task.label} in group ${taskGroup.label} disconnected!`,
+                            args
+                        });
+                    });
 
-            if (task.freezeAfterRun) {
+                    process.on('exit', (code) => {
+                        if (code == 0) {
+                            logger.info(`Task ${task.label} in group ${taskGroup.label} successfully completed`, res);
+                            res(process);
+                        }
+                        else {
+                            logger.error({
+                                msg: `Task ${task.label} in group ${taskGroup.label} exited with non-zero exit code`,
+                                code
+                            });
+                            res(process)
+                        }
+                    });
+
+                })
+
                 logger.info({
-                    msg: `Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`
+                    msg: `Completed task ${task.label}`,
+                    process
+                });
 
-                });
-                await freezeTaskProcessing({ taskGroup, agentTask: jobInstance });
-                logger.info({
-                    msg: `Unfroze freeze marker in task group ${taskGroup.label} after task ${task.label}`
-                });
+                // await execa(task.command, task.arguments, {
+                //     env: env,
+                //     cwd: task.workingDirectory,
+                //     timeout: task.commandTimeout || 0
+                // }).then(res => {
+                //     logger.info(`Task ${task.label} in group ${taskGroup.label} successfully completed`, res);
+                // })
+                // .catch(err => {
+                //     logger.error(`Task ${task.label} in group ${taskGroup.label} failed`, err);
+                // });
+
+                if (task.freezeAfterRun) {
+                    logger.info({
+                        msg: `Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`
+
+                    });
+                    await freezeTaskProcessing({ taskGroup, agentTask: jobInstance });
+                    logger.info({
+                        msg: `Unfroze freeze marker in task group ${taskGroup.label} after task ${task.label}`
+                    });
+                }
             }
+        }
+        catch(ex) {
+            logger.error({
+                msg: "Unhandled error",
+                ex
+            })
         }
 
         await sleep(1);
