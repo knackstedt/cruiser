@@ -59,11 +59,8 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
                     task
                 });
 
-
-                // await db.query(`RETURN fn::task_get_environment(${task.id})`) as any;
-
                 const env = {};
-                environment.forEach(({ key, value }) => env[key] = value);
+                Object.assign(environment, env);
 
                 if (task.freezeBeforeRun) {
                     logger.info({
