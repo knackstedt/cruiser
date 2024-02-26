@@ -8,7 +8,6 @@ import environment from './environment';
 
 const onFinished = require('on-finished');
 
-
 const getDuration = (req, res) => {
     if (!req._startAt || !res._startAt) {
         return '0';

@@ -1,23 +1,23 @@
+import { spawn } from 'child_process';
 import { JobInstance } from '../types/agent-task';
-import { PipelineJob, PipelineTaskGroup } from '../types/pipeline';
 import { getLogger, orderSort, sleep } from './util/util';
 import { ResolveSources } from './source-resolver';
 import { api, envSubstitute } from './util';
 import environment from './environment';
-import { spawn } from 'child_process';
+import { JobDefinition, TaskGroupDefinition } from '../types/pipeline';
 
 const logger = getLogger("agent");
 
 
 const freezePollInterval = 5000;
 
-const validateJobCanRun = async (job: PipelineJob) => {
+const validateJobCanRun = async (job: JobDefinition) => {
     const tasks = job.taskGroups?.map(t => t.tasks).flat();
     if (!tasks || tasks.length == 0)
         throw new Error("No work to do");
 }
 
-async function freezeTaskProcessing({ taskGroup, agentTask }: { taskGroup: PipelineTaskGroup, agentTask: JobInstance; }) {
+async function freezeTaskProcessing({ taskGroup, agentTask }: { taskGroup: TaskGroupDefinition, agentTask: JobInstance; }) {
 
     await api.patch(`/api/odata/job:${environment.agentId}`, {
         status: "frozen"
@@ -36,7 +36,7 @@ async function freezeTaskProcessing({ taskGroup, agentTask }: { taskGroup: Pipel
     }
 }
 
-const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) => {
+const RunTaskGroupsInParallel = (taskGroups: TaskGroupDefinition[], jobInstance) => {
     taskGroups?.sort(orderSort);
 
     return Promise.all(taskGroups.map(taskGroup => new Promise(async (r) => {
@@ -90,29 +90,26 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
                         windowsHide: true
                     });
 
-                    process.stdout.on('data', (data) => {
-                        logger.info({
-                            task,
-                            stdout: data.toString()
-                        });
-                    });
+                    process.stdout.on('data', (data) => logger.info({
+                        task,
+                        data: data.toString(),
+                        stream: "stdout"
+                    }));
 
-                    process.stderr.on('data', (data) => {
-                        logger.warn({
-                            task,
-                            stdout: data.toString()
-                        });
-                    });
+                    process.stderr.on('data', (data) => logger.info({
+                        task,
+                        data: data.toString(),
+                        stream: "stderr"
+                    }));
 
-                    process.on('error', (err) => {
-                        logger.error(err);
-                    });
+                    process.on('error', (err) => logger.error(err));
 
                     process.on('disconnect', (...args) => {
                         logger.error({
                             msg: `Child process for Task ${task.label} in group ${taskGroup.label} disconnected!`,
                             args
                         });
+                        res(process);
                     });
 
                     process.on('exit', (code) => {
@@ -125,27 +122,15 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
                                 msg: `Task ${task.label} in group ${taskGroup.label} exited with non-zero exit code`,
                                 code
                             });
-                            res(process)
+                            res(process);
                         }
                     });
-
                 })
 
                 logger.info({
                     msg: `Completed task ${task.label}`,
                     process
                 });
-
-                // await execa(task.command, task.arguments, {
-                //     env: env,
-                //     cwd: task.workingDirectory,
-                //     timeout: task.commandTimeout || 0
-                // }).then(res => {
-                //     logger.info(`Task ${task.label} in group ${taskGroup.label} successfully completed`, res);
-                // })
-                // .catch(err => {
-                //     logger.error(`Task ${task.label} in group ${taskGroup.label} failed`, err);
-                // });
 
                 if (task.freezeAfterRun) {
                     logger.info({
@@ -169,7 +154,7 @@ const RunTaskGroupsInParallel = (taskGroups: PipelineTaskGroup[], jobInstance) =
         }
 
         await sleep(1);
-        r(0)
+        r(0);
     })));
 }
 
