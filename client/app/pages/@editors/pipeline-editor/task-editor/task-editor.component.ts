@@ -7,12 +7,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
-import { VscodeComponent } from '@dotglitch/ngx-web-components';
+import { VscodeComponent } from '@dotglitch/ngx-common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { NgForOf, NgIf } from '@angular/common';
 import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
-import { PipelineTask } from 'types/pipeline';
+import { TaskDefinition } from 'types/pipeline';
 import { StackEditorComponent } from 'ngx-stackedit';
 
 @Component({
@@ -40,7 +40,7 @@ import { StackEditorComponent } from 'ngx-stackedit';
 })
 export class TaskEditorComponent implements OnInit {
 
-    @Input() task: PipelineTask;
+    @Input() task: TaskDefinition;
 
     constructor() { }
 

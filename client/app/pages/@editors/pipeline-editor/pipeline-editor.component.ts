@@ -10,16 +10,17 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
 import { DialogService, Fetch } from '@dotglitch/ngx-common';
-import { VscodeComponent } from '@dotglitch/ngx-web-components';
+import { VscodeComponent } from '@dotglitch/ngx-common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
-import { Pipeline, PipelineJob, PipelineSource, PipelineStage, PipelineTask, PipelineTaskGroup } from 'types/pipeline';
+import { PipelineDefinition, JobDefinition, SourceConfiguration, StageDefinition, TaskDefinition, TaskGroupDefinition } from 'types/pipeline';
 import { BehaviorSubject } from 'rxjs';
 import { LazyLoaderComponent, LazyLoaderService } from '@dotglitch/ngx-common';
 import { AccordionListComponent } from 'client/app/pages/@editors/pipeline-editor/accordion-list/accordion-list.component';
 import { LabeltemplateEditorComponent } from 'client/app/pages/@editors/pipeline-editor/labeltemplate-editor/labeltemplate-editor.component';
 import { StackEditorComponent } from 'ngx-stackedit';
+import { ulid } from 'ulidx';
 
 @Component({
     selector: 'app-pipeline-editor',
@@ -51,17 +52,17 @@ export class PipelineEditorComponent implements OnInit {
 
     @ViewChild("nameInput") nameInputRef: ElementRef;
 
-    public pipeline: Pipeline;
-    @Input('pipeline') _pipeline: Pipeline;
+    public pipeline: PipelineDefinition;
+    @Input('pipeline') _pipeline: PipelineDefinition;
 
     ngxShowDistractor$ = new BehaviorSubject(false);
 
     tabIndex = 0;
-    selectedStage: PipelineStage;
-    selectedJob: PipelineJob;
-    selectedTaskGroup: PipelineTaskGroup;
-    selectedTask: PipelineTask;
-    selectedSource: PipelineSource;
+    selectedStage: StageDefinition;
+    selectedJob: JobDefinition;
+    selectedTaskGroup: TaskGroupDefinition;
+    selectedTask: TaskDefinition;
+    selectedSource: SourceConfiguration;
 
     constructor(
         @Optional() @Inject(MAT_DIALOG_DATA) public data: any = {},
@@ -94,20 +95,23 @@ export class PipelineEditorComponent implements OnInit {
 
     async ngOnInit() {
         if (typeof this._pipeline.id == "string") {
-            // Get the full pipeline and subcontents
-            // await this.fetch.patch(`/api/pipeline/${this._pipeline.id}`, {});
-            this.pipeline = await this.fetch.get(`/api/pipeline/${this._pipeline.id}/editclone`);
-            // this.pipeline = await this.fetch.post(`/api/pipeline/${this._pipeline.id}`);
+            this.pipeline = await this.fetch.put(`/api/odata/pipelines:${ulid()}`, {
+                ...this._pipeline,
+                id: undefined,
+                isUserEditInstance: true
+            });
         }
         else {
-            this.pipeline = await this.fetch.post(`/api/db/pipeline/`, {
+            this.pipeline = await this.fetch.post(`/api/odata/pipelines/`, {
                 label: 'My new Pipeline',
                 state: 'new',
                 isUserEditInstance: true,
                 order: -1,
                 group: this._pipeline.group || 'default',
-                stages: []
+                stages: [],
+                sources: []
             });
+            this._pipeline.id = this.pipeline.id;
         }
     }
 
@@ -115,28 +119,35 @@ export class PipelineEditorComponent implements OnInit {
         this.nameInputRef?.nativeElement?.focus();
     }
 
+    // Apply the changes of the cloned pipeline
     async save() {
-        const res = await this.fetch.post(`/api/pipeline/${this._pipeline.id}/applyclone`, this.pipeline) as any;
+        let data = {
+            ...this.pipeline,
+            isUserEditInstance: false,
+            id: this._pipeline.id
+        }
+        const res = await this.fetch.patch(`/api/odata/${this._pipeline.id}`, data) as any;
 
         this.dialogRef?.close(res);
     }
 
+    // Delete the cloned pipeline
     async cancel() {
-        await this.fetch.delete(`api/db/${this.pipeline.id}`);
+        await this.fetch.delete(`api/odata/${this.pipeline.id}`);
         this.dialogRef.close();
     }
 
     async addStage() {
-        const stage = await this.fetch.post(`/api/db/pipelineStage`, {
+        const stage = {
             label: 'Stage - ' + (this.pipeline.stages.length + 1),
             order: this.pipeline.stages.length,
             jobs: []
-        }) as any;
+        } as any;
 
         this.pipeline.stages.push(stage);
 
-        this.fetch.patch(`/api/db/${this.pipeline.id}`, {
-            stages: this.pipeline.stages.map(s => s.id)
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
         });
     }
 
@@ -147,87 +158,84 @@ export class PipelineEditorComponent implements OnInit {
     }
 
     async deleteStage(stage) {
-        this.fetch.patch(`/api/db/${this.pipeline.id}`, {
-            stages: this.pipeline.stages.map(s => s.id)
+        this.pipeline.stages = this.pipeline.stages.filter(s => s != stage);
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
         });
-
-        await this.fetch.delete(`api/db/${this.pipeline.id}`);
     }
 
-    async addJob(stage: PipelineStage) {
-        const job = await this.fetch.post(`api/db/pipelineJob`, {
+    async addJob(stage: StageDefinition) {
+        const job = {
             label: 'Job - ' + (stage.jobs.length + 1),
             order: stage.jobs.length + 1,
             taskGroups: []
-        }) as PipelineJob;
+        } as JobDefinition;
 
         stage.jobs.push(job);
 
-        this.fetch.patch(`/api/db/${stage.id}`, {
-            jobs: stage.jobs.map(s => s.id)
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
         });
     }
 
-    editJob(stage: PipelineStage, job: PipelineJob) {
+    editJob(stage: StageDefinition, job: JobDefinition) {
         this.selectedStage = stage;
         this.selectedJob = job;
         this.tabIndex = 2;
     }
 
-    async deleteJob(stage: PipelineStage, job: PipelineJob) {
-        this.fetch.patch(`/api/db/${this.pipeline.id}`, {
-            stages: this.pipeline.stages.map(s => s.id)
+    async deleteJob(stage: StageDefinition, job: JobDefinition) {
+        stage.jobs = stage.jobs.filter(j => j != job);
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
         });
-
-        await this.fetch.delete(`api/db/${this.pipeline.id}`);
     }
 
-    async addTaskGroup(job: PipelineJob) {
-        const taskGroup = await this.fetch.post(`api/db/pipelineTaskGroup`, {
+    async addTaskGroup(job: JobDefinition) {
+        const taskGroup = {
             label: 'Task Group - ' + (job.taskGroups.length + 1),
             order: job.taskGroups.length + 1,
             tasks: []
-        }) as PipelineTaskGroup;
+        } as TaskGroupDefinition;
 
         job.taskGroups.push(taskGroup);
 
-        this.fetch.patch(`/api/db/${job.id}`, {
-            taskGroups: job.taskGroups.map(s => s.id)
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
         });
     }
 
-    async editTaskGroup(stage: PipelineStage, job: PipelineJob, taskGroup: PipelineTaskGroup) {
+    async editTaskGroup(stage: StageDefinition, job: JobDefinition, taskGroup: TaskGroupDefinition) {
         this.selectedStage = stage;
         this.selectedJob = job;
         this.selectedTaskGroup = taskGroup;
         this.tabIndex = 3;
     }
 
-    async deleteTaskGroup(stage: PipelineStage, job: PipelineJob, taskGroup: PipelineTaskGroup) {
-        this.fetch.patch(`/api/db/${this.pipeline.id}`, {
-            stages: this.pipeline.stages.map(s => s.id)
-        });
+    async deleteTaskGroup(stage: StageDefinition, job: JobDefinition, taskGroup: TaskGroupDefinition) {
+        job.taskGroups = job.taskGroups.filter(tg => tg != taskGroup);
 
-        await this.fetch.delete(`api/db/${this.pipeline.id}`);
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
+        });
     }
 
-    async addTask(taskGroup: PipelineTaskGroup) {
-        const task = await this.fetch.post(`api/db/pipelineTask`, {
+    async addTask(taskGroup: TaskGroupDefinition) {
+        const task = {
             label: 'Task - ' + (taskGroup.tasks.length + 1),
-            command: "echo",
-            arguments: ["foo"],
+            command: "",
+            arguments: [],
             order: taskGroup.tasks.length + 1
-        }) as PipelineTask;
+        } as TaskDefinition;
 
         taskGroup.tasks.push(task);
 
-        this.fetch.patch(`/api/db/${taskGroup.id}`, {
-            tasks: taskGroup.tasks.map(s => s.id)
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
         });
-
     }
 
-    async editTask(stage: PipelineStage, job: PipelineJob, taskGroup: PipelineTaskGroup, task: PipelineTask) {
+    async editTask(stage: StageDefinition, job: JobDefinition, taskGroup: TaskGroupDefinition, task: TaskDefinition) {
         this.selectedStage = stage;
         this.selectedJob = job;
         this.selectedTaskGroup = taskGroup;
@@ -235,40 +243,41 @@ export class PipelineEditorComponent implements OnInit {
         this.tabIndex = 4;
     }
 
-    async deleteTask(stage: PipelineStage, job: PipelineJob, taskGroup: PipelineTaskGroup, task: PipelineTask) {
-        this.fetch.patch(`/api/db/${this.pipeline.id}`, {
-            stages: this.pipeline.stages.map(s => s.id)
-        });
+    async deleteTask(stage: StageDefinition, job: JobDefinition, taskGroup: TaskGroupDefinition, task: TaskDefinition) {
+        taskGroup.tasks = taskGroup.tasks.filter(t => t != task);
 
-        await this.fetch.delete(`api/db/${this.pipeline.id}`);
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
+        });
     }
 
     async addSource() {
-        const source = await this.fetch.post(`api/db/pipelineSource`, {
+        const source = {
             label: 'Source - ' + (this.pipeline.sources.length + 1),
             order: this.pipeline.sources.length + 1
-        }) as PipelineSource;
+        } as SourceConfiguration;
 
         this.pipeline.sources.push(source);
 
-        this.fetch.patch(`/api/db/${this.pipeline.id}`, {
-            sources: this.pipeline.sources.map(s => s.id)
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            sources: this.pipeline.sources
         });
     }
 
-    async editSource(source: PipelineSource) {
+    async editSource(source: SourceConfiguration) {
         this.tabIndex = 5;
         this.selectedSource = source;
     }
-    async deleteSource(source: PipelineSource) {
+
+    async deleteSource(source: SourceConfiguration) {
         this.pipeline.sources.splice(this.pipeline.sources.findIndex(s => s == source), 1);
-        this.fetch.patch(`/api/db/${this.pipeline.id}`, {
-            sources: this.pipeline.sources.map(s => s.id)
+
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            sources: this.pipeline.sources
         });
-        this.fetch.delete(`/api/db/pipelineSource/${source.id}`);
     }
 
-    getStagePeers() { return this.pipeline.stages.map(s => s.id)}
+    getStagePeers() { return this.pipeline.stages}
     getJobPeers() { return this.pipeline.stages.map(s => s.jobs?.map(j => j.id)).flat()}
     getTaskGroupPeers() { return this.pipeline.stages.map(s => s.jobs?.map(j => j.taskGroups?.map(g => g.id))).flat()}
     getTaskPeers() { return this.pipeline.stages.map(s => s.jobs?.map(j => j.taskGroups?.map(g => g.tasks?.map(t => t.id)))).flat()}

@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { Fetch } from '@dotglitch/ngx-common';
-import { Pipeline } from 'types/pipeline';
+import { PipelineDefinition } from 'types/pipeline';
 
 @Component({
     selector: 'app-accordion-list',
@@ -26,7 +26,7 @@ export class AccordionListComponent implements OnInit {
     @ContentChild("header", { read: TemplateRef }) header: TemplateRef<any>;
     @ContentChild("content", { read: TemplateRef }) content: TemplateRef<any>;
 
-    @Input() pipeline: Pipeline;
+    @Input() pipeline: PipelineDefinition;
     @Input() id: string = '';
     @Input() peers: any[] = [];
     @Input() items: any[] = [];
@@ -55,7 +55,7 @@ export class AccordionListComponent implements OnInit {
             });
 
             // Update the order of all of the items
-            this.fetch.patch(`/api/db`, this.items.map(i => ({ id: i.id, data: { order: i.order } })));
+            this.fetch.patch(`/api/odata`, this.items.map(i => ({ id: i.id, data: { order: i.order } })));
         }
         // Item moved to a new parent
         else {
@@ -99,7 +99,7 @@ export class AccordionListComponent implements OnInit {
 
             // this.items.map(i => ({ id: i.id, data: { order: i.order } }))
             // Update the order of all of the items
-            this.fetch.patch(`/api/db`, [
+            this.fetch.patch(`/api/odata`, [
                 { id: event.previousContainer.data, data: { [subKey]: oArr.map(t => t.id) } },
                 { id: event.container.data,         data: { [subKey]: tArr.map(t => t.id) } }
             ]);

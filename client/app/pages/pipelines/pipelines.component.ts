@@ -6,7 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { LazyLoaderService, MenuDirective } from '@dotglitch/ngx-common';
-import { Pipeline } from 'types/pipeline';
+import { PipelineDefinition } from 'types/pipeline';
 import { ThemedIconDirective } from '../../services/theme.service';
 import Sortable from 'sortablejs';
 import { HeaderbarComponent } from '../../components/headerbar/headerbar.component';
@@ -40,14 +40,14 @@ export class PipelinesComponent implements OnInit {
     viewportEnd = 500;
     containerBounds: DOMRect;
 
-    pipelines: Pipeline[];
-    pipelineGroups: { label: string, items: Pipeline[]}[] = [
+    pipelines: PipelineDefinition[];
+    pipelineGroups: { label: string, items: PipelineDefinition[]}[] = [
         { label: "default", items: [] },
     ]
 
     sortableSectors: Sortable[] = [];
 
-    readonly ctxMenu: MenuItem<Pipeline>[] = [
+    readonly ctxMenu: MenuItem<PipelineDefinition>[] = [
         {
             label: "Edit",
             action: pipeline => this.editPipeline(pipeline)
@@ -68,7 +68,7 @@ export class PipelinesComponent implements OnInit {
                 let res = await true;//this.dialog.confirmAction(`Are you sure you want to delete pipeline '${pipeline.label}'?`);
                 if (!res) return;
 
-                this.fetch.delete(`/api/db/${pipeline.id}`);
+                this.fetch.delete(`/api/odata/${pipeline.id}`);
 
                 const el = (this.viewContainer.element.nativeElement as HTMLElement).querySelector(`[pipeline-id="${pipeline.id}"]`);
                 el.classList.add("destroy-animation");
@@ -120,8 +120,10 @@ export class PipelinesComponent implements OnInit {
             { label: "default", items: [] },
         ];
 
-        this.pipelines = (await this.fetch.get('/api/db/pipeline?$filter=isUserEditInstance ne true'))['value'];
+        this.pipelines = (await this.fetch.get('/api/odata/pipelines?$filter=isUserEditInstance ne true or isUserEditInstance eq null'))['value'];
         this.ngAfterViewInit();
+
+        const jobs = (await this.fetch.get(`/api/odata/jobs?$filter=pipeline.id in ['pipelines:01HQG301BY6V1T1YEZWE4NM1VZ']`))['value'];
     }
 
     ngAfterViewInit() {
@@ -205,7 +207,7 @@ export class PipelinesComponent implements OnInit {
                             });
 
 
-                            this.fetch.patch(`/api/db`, items.map(i => ({ id: i.id, data: { order: i.order }})));
+                            this.fetch.patch(`/api/odata`, items.map(i => ({ id: i.id, data: { order: i.order }})));
                         }
                         else
                             return;
@@ -223,9 +225,9 @@ export class PipelinesComponent implements OnInit {
         }, 100)
     }
 
-    editPipeline(pipeline: Partial<Pipeline> = {}) {
+    editPipeline(pipeline: Partial<PipelineDefinition> = {}) {
         this.dialog.open("pipeline-editor", 'dynamic', { inputs: { pipeline }, autoFocus: false })
-            .then((pipeline: Pipeline) => {
+            .then((pipeline: PipelineDefinition) => {
                 console.log("res", pipeline)
                 if (pipeline) {
                     const old = this.pipelines.find(p => p.id == pipeline.id);
@@ -243,8 +245,8 @@ export class PipelinesComponent implements OnInit {
             })
     }
 
-    async simplePatchPipeline(pipeline: Pipeline, data: Partial<Pipeline>) {
-        const updated = await this.fetch.patch(`/api/db/${pipeline.id}`, data);
+    async simplePatchPipeline(pipeline: PipelineDefinition, data: Partial<PipelineDefinition>) {
+        const updated = await this.fetch.patch(`/api/odata/${pipeline.id}`, data);
         Object.keys(updated).forEach(key => {
             pipeline[key] = updated[key];
         });
@@ -265,19 +267,23 @@ export class PipelinesComponent implements OnInit {
         }
     }
 
-    triggerPipeline(pipeline: Pipeline) {
-        this.fetch.get(`/api/pipeline/${pipeline.id}/start`);
+    async triggerPipeline(pipeline: PipelineDefinition) {
+        await this.fetch.get(`/api/pipeline/${pipeline.id}/start`);
+        pipeline.stats = pipeline.stats ?? { runCount: 0, successCount: 0, failCount: 0, totalRuntime: 0 };
+        pipeline.stats.runCount += 1;
     }
 
-    triggerPipelineWithOptions(pipeline: Pipeline) {
-        this.fetch.get(`/api/pipeline/${pipeline.id}/start`);
+    async triggerPipelineWithOptions(pipeline: PipelineDefinition) {
+        await this.fetch.get(`/api/pipeline/${pipeline.id}/start`);
+        pipeline.stats = pipeline.stats ?? { runCount: 0, successCount: 0, failCount: 0, totalRuntime: 0 };
+        pipeline.stats.runCount += 1;
     }
 
-    pausePipeline(pipeline: Pipeline) {
+    pausePipeline(pipeline: PipelineDefinition) {
         this.simplePatchPipeline(pipeline, { state: "paused" });
     }
 
-    resumePipeline(pipeline: Pipeline) {
+    resumePipeline(pipeline: PipelineDefinition) {
         this.simplePatchPipeline(pipeline, { state: "active" });
     }
 

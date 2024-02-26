@@ -4,7 +4,7 @@ import * as ts from 'typescript';
 import * as monacoEditor from 'monaco-editor';
 import { sleep } from 'client/app/services/utils';
 import { Fetch } from '@dotglitch/ngx-common';
-import { VscodeComponent } from '@dotglitch/ngx-web-components';
+import { VscodeComponent } from '@dotglitch/ngx-common';
 import { MatButtonModule } from '@angular/material/button';
 
 // const monacoContext = `

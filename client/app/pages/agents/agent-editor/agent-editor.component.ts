@@ -10,10 +10,10 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
 import { Fetch, DialogService } from '@dotglitch/ngx-common';
-import { VscodeComponent } from '@dotglitch/ngx-web-components';
+import { VscodeComponent } from '@dotglitch/ngx-common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
-import { Pipeline } from 'types/pipeline';
+import { PipelineDefinition } from 'types/pipeline';
 import { StackEditorComponent } from 'ngx-stackedit';
 
 @Component({

@@ -7,13 +7,13 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
-import { VscodeComponent } from '@dotglitch/ngx-web-components';
+import { VscodeComponent } from '@dotglitch/ngx-common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { NgForOf, NgIf } from '@angular/common';
 import { EditEnvironmentVariablesComponent } from 'client/app/pages/@editors/environment-variable/environment-variables.component';
 import { Fetch, MenuDirective } from '@dotglitch/ngx-common';
-import { PipelineStage } from 'types/pipeline';
+import { StageDefinition } from 'types/pipeline';
 import { AccordionListComponent } from 'client/app/pages/@editors/pipeline-editor/accordion-list/accordion-list.component';
 import { PipelineEditorComponent } from 'client/app/pages/@editors/pipeline-editor/pipeline-editor.component';
 import { StackEditorComponent } from 'ngx-stackedit';
@@ -45,7 +45,7 @@ import { StackEditorComponent } from 'ngx-stackedit';
 })
 export class StageEditorComponent implements OnInit {
 
-    @Input() stage: PipelineStage;
+    @Input() stage: StageDefinition;
 
     constructor(
         private fetch: Fetch,
