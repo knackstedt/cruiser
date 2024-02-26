@@ -1,7 +1,7 @@
 import { HistoryObject } from './history-object';
 import { EnvironmentVariable } from './environment';
 
-export type PipelineArtifact = {
+export type BuildArtifact = {
     id: `pipelineArtifact:${string}`
     label: string
     description?: string
@@ -9,7 +9,7 @@ export type PipelineArtifact = {
     destination: string
 }
 
-export type PipelineTask = {
+export type TaskDefinition = {
     id: `pipelineTask:${string}`;
     command: string
     arguments: string[]
@@ -22,20 +22,20 @@ export type PipelineTask = {
     runIfPreviousTaskFailed: boolean
     freezeBeforeRun: boolean
     freezeAfterRun: boolean
-    taskOnSelfFailure: PipelineTask
+    taskOnSelfFailure: TaskDefinition
     environment?: EnvironmentVariable[]
 }
 
-export type PipelineTaskGroup = {
+export type TaskGroupDefinition = {
     id: `pipelineTaskGroup:${string}`
     label: string
     description?: string
     order: number
     environment?: EnvironmentVariable[]
-    tasks?: PipelineTask[]
+    tasks?: TaskDefinition[]
 }
 
-export type PipelineJob = {
+export type JobDefinition = {
     id: `pipelineJob:${string}`;
     label: string
     description?: string
@@ -49,12 +49,15 @@ export type PipelineJob = {
     lastTriggerReason?: "cron" | "changes" | "manual" | "webhook"
     runState?: "success" | "fail" | "running"
 
-    taskGroups: PipelineTaskGroup[]
-    artifacts: PipelineArtifact[]
+    taskGroups: TaskGroupDefinition[]
+    artifacts: BuildArtifact[]
     environment?: EnvironmentVariable[]
+
+    startTime: number,
+    endTime: number,
 }
 
-export type PipelineStage = {
+export type StageDefinition = {
     id: `pipelineStage:${string}`
     label: string
     description?: string
@@ -66,10 +69,10 @@ export type PipelineStage = {
     cleanDirectory?: boolean
     autoTriggerOnPreviousStageCompletion?: boolean
     environment?: EnvironmentVariable[]
-    jobs?: PipelineJob[]
+    jobs?: JobDefinition[]
 }
 
-export type PipelineSource = {
+export type SourceConfiguration = Partial<{
     id: `pipelineSource:${string}`
     label: string
     description: string
@@ -86,11 +89,11 @@ export type PipelineSource = {
     invertFilter: boolean
 
     url: string
-    pipelines: Pipeline[]
-}
+    pipelines: PipelineDefinition[]
+}>
 
 
-export type Pipeline = {
+export type PipelineDefinition = {
     id: `pipeline:${string}`
     label: string
     description: string
@@ -113,8 +116,18 @@ export type Pipeline = {
     trackingToolUri: string
 
     order: number
-    stages?: PipelineStage[]
+    stages?: StageDefinition[]
     environment?: EnvironmentVariable[]
-    sources?: PipelineSource[],
+    sources?: SourceConfiguration[],
     history?: HistoryObject[]
+
+
+    stats?: {
+        runCount: number,
+        successCount: number,
+        failCount: number,
+
+        // ms
+        totalRuntime: number
+    }
 }

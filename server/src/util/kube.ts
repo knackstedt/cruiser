@@ -1,17 +1,47 @@
+import { ulid } from 'ulidx';
+import { PassThrough } from 'stream';
 import * as k8s from '@kubernetes/client-node';
-import { Pipeline, PipelineJob, PipelineStage } from '../../types/pipeline';
 import { db } from './db';
 import { JobInstance } from '../../types/agent-task';
+import { logger } from './util';
+import { JobDefinition, PipelineDefinition, StageDefinition } from '../../types/pipeline';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
 const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
+const k8sBatchApi = kc.makeApiClient(k8s.BatchV1Api);
+const k8sLog = new k8s.Log(kc);
 
-export async function StartAgent(pipeline: Pipeline, stage: PipelineStage) {
+const pollInterval = parseInt(process.env['KUBE_JOB_POLL_INTERVAL'] || "2000");
+const maxPollTime = parseInt(process.env['KUBE_JOB_MAX_POLL_TIME']  || "60000");
+
+const jobStreams: {
+    [key: string]: {
+        stream: PassThrough,
+        req: any
+    }
+} = {};
+
+const OnJobComplete = async (pipeline: PipelineDefinition, job: JobInstance, success = true) => {
+    pipeline.stats = pipeline.stats ?? { runCount: 0, successCount: 0, failCount: 0, totalRuntime: 0 };
+
+    if (success) {
+        pipeline.stats.successCount += 1;
+    }
+    else {
+        pipeline.stats.failCount += 1;
+    }
+
+    pipeline.stats.totalRuntime += job.endTime - job.startTime;
+
+    db.merge(pipeline.id, pipeline.stats)
+}
+
+export async function StartAgent(pipeline: PipelineDefinition, stage: StageDefinition) {
     return Promise.all(stage.jobs?.map(j => StartAgentJob(pipeline, j)));
 }
 
-export async function StartAgentJob(pipeline: Pipeline, job: PipelineJob) {
+export async function StartAgentJob(pipeline: PipelineDefinition, job: JobDefinition) {
 
     if (job.taskGroups?.length < 1) {
         return -1;
@@ -22,17 +52,25 @@ export async function StartAgentJob(pipeline: Pipeline, job: PipelineJob) {
         const [ap] = (await db.query(job.elasticAgentId)) as any as any[];
         elasticAgentTemplate = ap;
     }
+    const namespace = elasticAgentTemplate?.kubeNamespace || process.env['AGENT_NAMESPACE'] || "dotops";
+    const id = ulid();
+    const podId = id.toLowerCase();
 
-    const [ instance ] = (await db.create('jobInstance:ulid()', {
-        state: "pending",
+    const [ instance ] = (await db.create(`jobs:${id}`, {
+        state: "queued",
         queueTime: new Date().toISOString(),
         errorCount: 0,
         warnCount: 0,
-        job: job.id,
-        pipeline: pipeline.id
+        job: job,
+        pipeline: pipeline,
+        kube: {
+            namespace,
+            name: `dotops-ea-${podId}`
+        }
     })) as any as JobInstance[];
 
-    const namespace = elasticAgentTemplate?.kubeNamespace || process.env['AGENT_NAMESPACE'] || "dotops";
+    instance.startTime = Date.now();
+    db.merge(instance.id, instance);
 
     const environment: { name: string, value: string; }[] =
         (await db.query(`RETURN fn::job_get_environment(${job.id})`) as any[])
@@ -43,58 +81,149 @@ export async function StartAgentJob(pipeline: Pipeline, job: PipelineJob) {
         metadata: {
             name: namespace
         }
-    }).catch(e => {
-        if (e.body.reason != 'AlreadyExists')
-            throw e;
-    });
+    })
+    .catch(e => { if (e.body.reason != 'AlreadyExists') throw e; });
 
-    const [table, id] = instance.id.split(':');
-    const ulid = id.toLowerCase();
+    const podName = `dotops-ea-${podId}`;
 
-    const result = await k8sApi.createNamespacedPod(namespace, {
-        apiVersion: "v1",
-        kind: "Pod",
+    const result = await k8sBatchApi.createNamespacedJob(namespace, {
+        apiVersion: "batch/v1",
+        kind: "Job",
         metadata: {
-            annotations: elasticAgentTemplate?.kubeContainerAnnotations,
+            annotations: {
+                ...elasticAgentTemplate?.kubeContainerAnnotations
+            },
             labels: elasticAgentTemplate?.kubeContainerLabels,
-            name: `dotops-ea-${ulid}`,
+            name: `dotops-ea-${podId}`,
         },
         spec: {
-            tolerations: elasticAgentTemplate?.kubeContainerTolerations,
-            containers: [
-                {
-                    name: `dotops-ea-${ulid}`,
-                    image: elasticAgentTemplate?.kubeContainerImage || "ghcr.io/knackstedt/dot-ops/dotops-agent:6da73dfc68c9a38277ca780e83098e321c2844ca",
-                    imagePullPolicy: 'IfNotPresent',
-                    securityContext: {
-                        privileged: true
-                    },
-                    resources: {
-                        limits: {
-                            cpu: elasticAgentTemplate?.kubeCpuLimit,
-                            memory: elasticAgentTemplate?.kubeMemLimit
-                        },
-                        requests: {
-                            cpu: elasticAgentTemplate?.kubeCpuRequest,
-                            memory: elasticAgentTemplate?.kubeMemRequest
+            activeDeadlineSeconds: elasticAgentTemplate?.kubeCpuLimit ?? 1000,
+            template: {
+                metadata: {
+                    annotations: {
+                        "job_id": podId
+                    }
+                },
+                spec: {
+                    tolerations: elasticAgentTemplate?.kubeContainerTolerations,
+                    restartPolicy: "Never",
+                    containers: [
+                        {
+                            name: podName,
+                            image: elasticAgentTemplate?.kubeContainerImage || "ghcr.io/knackstedt/dot-ops/dotops-agent:25ed866cd3e715ae8eea6d6686e41a640fd6d0ae",
+                            imagePullPolicy: 'IfNotPresent',
+                            securityContext: {
+                                privileged: true
+                            },
+                            resources: {
+                                limits: {
+                                    cpu: elasticAgentTemplate?.kubeCpuLimit,
+                                    memory: elasticAgentTemplate?.kubeMemLimit
+                                },
+                                requests: {
+                                    cpu: elasticAgentTemplate?.kubeCpuRequest,
+                                    memory: elasticAgentTemplate?.kubeMemRequest
+                                }
+                            },
+                            env: [
+                                // TODO: pass surreal connection string
+                                // consider using HTTP POST instead.
+                                { name: "CI_ENVIRONMENT", value: "dotops" },
+                                { name: "DOTGLITCH_DOTOPS_CLUSTER_URL", value: 'http://dotglitch.dev:8000' },
+                                { name: "DOTGLITCH_AGENT_ID", value: id },
+                                ...environment
+                            ]
                         }
-                    },
-                    env: [
-                        // TODO: pass surreal connection string
-                        // consider using HTTP POST instead.
-                        { name: "CI_ENVIRONMENT", value: "dotops" },
-                        { name: "DOTGLITCH_AGENT_ID", value: instance.id.split(':')[1] },
-                        { name: "SURREAL_URL", value: 'http://192.168.1.159:8000' },
-                        ...environment
                     ]
                 }
-            ]
+            }
         }
     });
-    const pod = result.body;
+    let kubeJob = result.body;
+    let kubeJobMetadata = kubeJob.metadata;
 
     await db.merge(instance.id, {
-        kubepod: pod.metadata.uid
+        kube_pod: kubeJobMetadata.uid
     });
-    return 1;
+
+    /**
+     * It exists so that we can create a log stream and automatically detach from the container
+     * when the pods are done
+     */
+    return new Promise((resolve, reject) => {
+        const stream = new PassThrough();
+
+        let pollTime = 0;
+        let hasAttached = false;
+
+        const i = setInterval(async () => {
+
+            // TODO: How do we fetch the job when we know the uid?
+            const { body: result } = await k8sBatchApi.listNamespacedJob(namespace);
+            kubeJob = result.items.find(j => j.metadata.uid == kubeJobMetadata.uid);
+
+            if (hasAttached) {
+
+                // This will keep running after the promise initially resolves
+                // Thus, we do not resolve the promise here.
+                if (kubeJob.status.active == 0) {
+                    clearInterval(i);
+                    logger.info("Job has stopped, closing log stream");
+                    stream.destroy();
+                    delete jobStreams[podName];
+                    job.endTime = Date.now();
+                    db.merge(job.id, job);
+                    OnJobComplete(pipeline, instance);
+                }
+            }
+            else {
+                if (kubeJob.status.active > 0) {
+                    hasAttached = true;
+
+                    logger.info("Found log stream for launched job");
+
+                    const { body: pods } = await k8sApi.listNamespacedPod(namespace);
+                    const jobPod = pods.items.find(p => p.metadata.annotations?.['job_id'] == podId);
+
+                    try {
+
+                        // stream.on("data", chunk => {
+                        //     console.log(new TextDecoder().decode(chunk));
+                        // });
+
+                        const req = await k8sLog.log(namespace, jobPod.metadata.name, podName, stream, {
+                            follow: true,
+                            pretty: false,
+                            timestamps: false,
+                        });
+
+                        jobStreams[podName] = {
+                            stream: stream,
+                            req
+                        };
+
+                        resolve(stream);
+                    }
+                    catch (err) {
+                        debugger;
+                    }
+
+                    return;
+                }
+
+                if (pollTime >= maxPollTime) {
+                    clearInterval(i);
+                    logger.warn("Gave up waiting to attach to log stream");
+                    stream.destroy();
+                    return reject();
+                }
+
+                pollTime += pollInterval;
+            }
+        }, pollInterval)
+    })
+}
+
+export async function PauseAgentJob(pipeline: PipelineDefinition, job: JobDefinition) {
+    // TODO
 }

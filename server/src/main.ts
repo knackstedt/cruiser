@@ -7,6 +7,7 @@ import { logger } from './util/util';
 import { DatabaseTableApi } from './api/database-controller';
 import { PipelineApi } from './api/pipeline';
 import { Scheduler } from './util/scheduler';
+import { JobActionsApi } from './api/job-actions';
 
 const onFinished = require('on-finished');
 
@@ -50,9 +51,10 @@ const getDuration = (req, res) => {
         next();
     })
 
-    app.use("/api/filesystem", FilesystemApi);
+    // app.use("/api/filesystem", FilesystemApi);
     app.use("/api/pipeline",   PipelineApi);
-    app.use("/api/db", DatabaseTableApi());
+    app.use("/api/jobs",   JobActionsApi);
+    app.use("/api/odata", DatabaseTableApi());
 
     app.use((req, res, next) => next(404));
     app.use(ErrorHandler);
