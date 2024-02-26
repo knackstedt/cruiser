@@ -36,7 +36,7 @@
               },
               {
                 "glob": "**/*",
-                "input": "node_modules/@dotglitch/ngx-web-components/assets/lib/vs/",
+                "input": "node_modules/@dotglitch/ngx-common/assets/lib/vs/",
                 "output": "./lib/monaco/vs"
               },
               "client/manifest.webmanifest"
