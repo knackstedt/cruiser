@@ -2,6 +2,7 @@ import * as express from "express";
 import { route } from '../util/util';
 import Surreal from 'surrealdb.js';
 import { SQLLang, createQuery } from '@dotglitch/odatav4';
+import { Visitor } from '@dotglitch/odatav4/dist/visitor';
 
 const db = new Surreal();
 (async () => {
@@ -40,22 +41,41 @@ export const DatabaseTableApi = () => {
     router.get('/:table', route(async (req, res, next) => {
         const table = req.params['table'];
 
+        const apiPath = '/api/odata';
+
+        const addOdataMetadata = (obj) => {
+            obj["@odata.id"] = `${apiPath}/${table}('${obj.id}')`;
+            // obj["@odata.etag"] = "W/\"08D1694C7E510464\"";
+            obj["@odata.editLink"] = `${apiPath}/${table}('${obj.id}')`;
+            return obj;
+        }
+
+
         if (table.includes(":")) {
             const [output] = await db.select(table);
-            res.contentType("application/json")
             res.send(output);
             return;
         }
 
-        const [unused, queryString] = req.url.split('?');
-        const query = createQuery(decodeURIComponent(queryString), {
-            type: SQLLang.SurrealDB
-        });
+        const [ unused, queryString ] = req.url.split('?');
 
-        let { parameters, skip, top, where, order } = query as any; //parseOdataParams(req);
+        const hasFilter = queryString?.includes("$filter");
+
+        const query = hasFilter ? createQuery(decodeURIComponent(queryString), {
+            type: SQLLang.SurrealDB
+        }) : {} as Visitor;
+
+        const {
+            select,
+            where,
+            parameters,
+            skip,
+            limit,
+            orderby
+        } = query;
 
         const props = {};
-        parameters.forEach((value, key) => props[key] = value);
+        parameters?.forEach((value, key) => props[key] = value);
 
         const p_count = db.query([
             `SELECT count() from ${table}`,
@@ -64,10 +84,10 @@ export const DatabaseTableApi = () => {
         ].join(' '), props);
 
         const sql = [
-            `SELECT * FROM ${table}`,
+            `SELECT ${select || '*'} FROM ${table}`,
             `${where ? 'WHERE (' + where + ')' : ''}`,
-            // `ORDER BY ${order} `,
-            typeof top == "number" ? `LIMIT ${top}` : '',
+            (typeof orderby == "string" && orderby != '1') ? `ORDER BY ${orderby}` : '',
+            typeof limit == "number" ? `LIMIT ${limit}` : '',
             typeof skip == "number" ? `START ${skip}` : ''
         ].join(' ');
         const [{result: data}] = await db.query(sql, props);
@@ -79,12 +99,12 @@ export const DatabaseTableApi = () => {
         pars.set('$skip', skip + (data as any)?.length as any);
 
         res.send({
-            '@odata.context': `/api/odata/$metadata#${table}`,
+            '@odata.context': `${apiPath}$metadata#${table}`,
             '@odata.count': count ?? (data as any)?.length ?? 0,
-            '@odata.nextlink': (top + skip) > (count as number)
+            '@odata.nextlink': (limit + skip) > (count as number)
                                 ? undefined
-                                : `/api/odata/${table}${decodeURIComponent(pars.toString())}`,
-            value: data
+                                : `${apiPath}${table}${decodeURIComponent(pars.toString())}`,
+            value: (data as any).map(d => addOdataMetadata(d))
         });
     }));
 
