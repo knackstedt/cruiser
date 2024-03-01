@@ -2,8 +2,7 @@ import express, { Express } from 'express';
 import http from 'http';
 
 import { ErrorHandler } from './util/errors';
-import { FilesystemApi } from "./api/files";
-import { logger } from './util/util';
+import { logger } from './util/logger';
 import { DatabaseTableApi } from './api/database-controller';
 import { PipelineApi } from './api/pipeline';
 import { Scheduler } from './util/scheduler';
