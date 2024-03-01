@@ -6,7 +6,7 @@ const logger = getLogger("filesystem");
 
 export const getSocketFilesystem = async () => {
     const socket = io(environment.dotopsUrl, {
-        path: "/ws/log-ingest",
+        path: "/ws/socket-tunnel-internal",
         extraHeaders: {}
     });
 

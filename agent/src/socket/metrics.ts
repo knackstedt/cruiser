@@ -7,7 +7,7 @@ const logger = getLogger("metrics");
 
 export const getSocketMetrics = async () => {
     const socket = io(environment.dotopsUrl, {
-        path: "/ws/metrics",
+        path: "/ws/socket-tunnel-internal",
         extraHeaders: {}
     });
 
@@ -25,21 +25,21 @@ export const getSocketMetrics = async () => {
         // }, 2500));
 
         // Send initial data
-        si.getStaticData().then(data => socket.emit("static", data));
-        si.getDynamicData().then(data => socket.emit("metrics", data));
+        si.getStaticData().then(data => socket.emit("metrics:static", data));
+        si.getDynamicData().then(data => socket.emit("metrics:metrics", data));
 
         // CPU Metrics
         intervals.push(setInterval(() => {
-            si.currentLoad().then(data => socket.emit("cpumetrics", data));
+            si.currentLoad().then(data => socket.emit("metrics:cpumetrics", data));
         }, 250));
 
         // Memory Metrics
         intervals.push(setInterval(() => {
-            si.mem().then(data => socket.emit("memmetrics", data));
+            si.mem().then(data => socket.emit("metrics:memmetrics", data));
         }, 250));
 
         intervals.push(setInterval(() => {
-            si.networkStats().then(data => socket.emit("networkmetrics", data));
+            si.networkStats().then(data => socket.emit("metrics:networkmetrics", data));
         }, 250));
 
         socket.on("disconnect", () => {

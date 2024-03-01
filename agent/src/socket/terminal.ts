@@ -60,7 +60,7 @@ class PTY {
 
 export const getSocketTerminal = async () => {
     const socket = io(environment.dotopsUrl, {
-        path: "/ws/ssh",
+        path: "/ws/socket-tunnel-internal",
         extraHeaders: {}
     });
 
