@@ -33,6 +33,7 @@ export const getSocketLogger = async () => {
             history.forEach(({ ev, data }) => originalEmit(ev, data))
         );
         socket.on("error", (err) => rej(err));
+        socket.connect();
     });
     pinoLogger.info("The socket has been connected");
 
