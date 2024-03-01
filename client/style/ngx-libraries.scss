@@ -1,0 +1,22 @@
+ng-scrollbar.ng-scrollbar {
+    --scrollbar-padding: 0px;
+    --scrollbar-size: 14px;
+    --scrollbar-border-radius: 0;
+    --scrollbar-thumb-color: #4440;
+    --scrollbar-thumb-transition: height ease-out .15s, width ease-out .15s, background-color ease 1200ms;
+    animation: fadeScrollbar 1200ms ease;
+
+    &:hover {
+        --scrollbar-thumb-color: #444f;
+    }
+}
+
+@keyframes fadeScrollbar {
+    from {
+        --scrollbar-thumb-color: #444f;
+    }
+
+    to {
+        --scrollbar-thumb-color: #4440;
+    }
+}
