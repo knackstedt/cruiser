@@ -9,6 +9,7 @@
     "dev:database": "",
     "dev:mobile": "ng serve --host 192.168.1.246 --port 4500 --ssl --proxy-config ./proxy.config.json",
     "build": "npm run build:client; npm run build:server",
+    "build:agent": "cd agent; npm run build; cd ..",
     "build:client": "ng build",
     "build:server": "tsc --project ./server/tsconfig.json"
   },
