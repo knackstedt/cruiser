@@ -16,5 +16,8 @@
 @import "./material.scss";
 @import "./global.scss";
 @import "./material.scss";
-// @import "./themes.scss";
+@import "./ngx-libraries.scss";
 // @import "./webkit-scrollbar.scss";
+
+@import "primeng/resources/themes/mdc-dark-indigo/theme.css";
+@import "primeng/resources/primeng.css";
