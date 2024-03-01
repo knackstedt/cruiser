@@ -4,10 +4,10 @@ import { ResolveSources } from './util/source-resolver';
 import environment from './util/environment';
 import { JobDefinition, TaskGroupDefinition } from '../types/pipeline';
 import { getSocketLogger } from './socket/logger';
-import { api } from 'util/axios';
-import { sleep } from 'util/sleep';
-import { orderSort } from 'util/order-sort';
-import { envSubstitute } from 'util/envsubst';
+import { api } from './util/axios';
+import { sleep } from './util/sleep';
+import { orderSort } from './util/order-sort';
+import { envSubstitute } from './util/envsubst';
 
 
 const freezePollInterval = parseInt(process.env['DOTOPS_FREEZE_POLL_INTERVAL'] || '5000');
