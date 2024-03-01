@@ -1,0 +1,125 @@
+<!-- <div class="root state-{{stage?.['_latestJob']?.state}}"> -->
+    <div class="header">
+        <table>
+            <thead>
+                <tr>
+                    <td>Pipeline</td>
+                    <td>Instance</td>
+                    <td>Stage</td>
+                    <td>Instance</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{pipeline?.label}}</td>
+                    <td>{{pipeline?.stats?.runCount}}</td>
+                    <td>{{stage?.label}}</td>
+                    <td>{{1}}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="icon-buttons">
+            <button mat-icon-button (click)="onPipelineRestart()">
+                <mat-icon>replay</mat-icon>
+            </button>
+            <button mat-icon-button>
+                <mat-icon>settings</mat-icon>
+            </button>
+        </div>
+    </div>
+    <div class="metadata">
+
+    </div>
+
+    <div class="content">
+        <div style="display: flex; justify-content: space-between;">
+            <div class="controls">
+                <button mat-flat-button [disabled]="1">Rerun Failed</button>
+                <button mat-flat-button [disabled]="1">Rerun Selected</button>
+            </div>
+            <div class="stats">
+                <div><span>Building: </span><span>0</span></div>
+                <div><span>Passed: </span><span>0</span></div>
+                <div><span>Failed: </span><span>0</span></div>
+            </div>
+        </div>
+
+
+        <div class="table">
+            <!-- Table -->
+            <!-- @for (job of stage.jobs; track job) {
+                <div>{{job.label}}</div>
+                <div></div>
+            } -->
+
+            <p-table
+                #dt1
+                [value]="allJobs"
+                [tableStyle]="{'min-width': '60rem'}"
+                [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
+            >
+                <ng-template pTemplate="caption">
+                    <div class="flex">
+                        <button pButton label="Clear" class="p-button-outlined" icon="pi pi-filter-slash" (click)="dt1.clear()"></button>
+                        <span class="p-input-icon-left ml-auto">
+                            <i class="pi pi-search"></i>
+                            <input #_ pInputText type="text" (input)="dt1.filterGlobal(_.value, 'contains')"
+                                placeholder="Search keyword" />
+                        </span>
+                    </div>
+                </ng-template>
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th pSortableColumn="label">
+                            Job Name
+                            <p-sortIcon field="label"></p-sortIcon>
+                            <p-columnFilter type="text" field="label" display="menu"/>
+                        </th>
+                        <th pSortableColumn="name">
+                            State
+                            <p-sortIcon field="state"></p-sortIcon>
+                            <p-columnFilter type="text" field="state" display="menu"/>
+                        </th>
+                        <!-- ? What does this column _actually_ represent? -->
+                        <th pSortableColumn="timeline">
+                            Timeline
+                            <p-sortIcon field="timeline"></p-sortIcon>
+                            <p-columnFilter type="text" field="timeline" display="menu"/>
+                        </th>
+                        <th pSortableColumn="duration">
+                            Duration
+                            <p-sortIcon field="duration"></p-sortIcon>
+                            <p-columnFilter type="number" field="duration" display="menu"/>
+                        </th>
+
+                        <!-- ? What is this really beneficial for? -->
+                        <th pSortableColumn="agent">
+                            Agent
+                            <p-sortIcon field="agent"></p-sortIcon>
+                            <p-columnFilter type="text" field="agent" display="menu"/>
+                        </th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-job>
+                    <tr>
+                        <td>
+                            <div>
+                                {{job.label}}
+                            </div>
+                            @if (job.is_instance) {
+                                <button mat-icon-button (click)="onViewLogs(job)">
+                                    <mat-icon>terminal</mat-icon>
+                                </button>
+                            }
+                        </td>
+                        <td>{{job.state}}</td>
+                        <td>todo</td>
+                        <td>{{job.runtime}}</td>
+                        <td>{{job.agent}}</td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+<!-- </div> -->

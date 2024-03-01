@@ -1,0 +1,59 @@
+<div class="controls">
+    <div style="flex: 1"></div>
+    <div>change theme</div>
+    <div>fullscreen</div>
+    <div>expand all</div>
+    <div>timestamps</div>
+    <div>raw output</div>
+    <div>scroll to end</div>
+    <div>download log</div>
+</div>
+
+<ng-scrollbar #scrollbar>
+    <cdk-virtual-scroll-viewport [itemSize]="lineHeight" scrollViewport [minBufferPx]="150">
+        <div
+            *cdkVirtualFor="let line of lines; let index = index"
+            class="line"
+            [style.height]="lineHeight + 'px'"
+            [attr.index]="index"
+        >
+            @if (line.stream == 'stdout') {
+                <div class="process stdout">
+                    <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
+                </div>
+            }
+            @else if (line.stream == 'stderr') {
+                <div class="process stderr">
+                    <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
+                </div>
+            }
+            @else {
+                <div
+                    class="shell"
+                    [attr.data-timestamp]="line.time"
+                    [attr.data-level]="line.logLevel"
+                >
+                    <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}"/>
+                </div>
+            }
+        </div>
+    </cdk-virtual-scroll-viewport>
+</ng-scrollbar>
+
+<ng-template #rowTemplate let-line>
+    <span class="">{{line?.time | date:'short'}} </span>
+
+    @if (line?.data) {
+        <span class="message" [innerHTML]="line._formatted"></span>
+    }
+    @else {
+        <span class="message">{{(line?.msg || line?.message)?.trim()}}</span>
+    }
+
+    <!-- If the row has additional attributes, render a click-to-view -->
+    @if (false) {
+        <div style="position: absolute">
+            <!-- <mat-icon></mat-icon> -->
+        </div>
+    }
+</ng-template>

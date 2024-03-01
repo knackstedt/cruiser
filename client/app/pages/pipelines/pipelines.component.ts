@@ -5,13 +5,14 @@ import { NgForOf, NgIf } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { LazyLoaderService, MenuDirective } from '@dotglitch/ngx-common';
+import { LazyLoaderService, MenuDirective, TabulatorComponent, TooltipDirective } from '@dotglitch/ngx-common';
 import { PipelineDefinition } from 'types/pipeline';
 import { ThemedIconDirective } from '../../services/theme.service';
 import Sortable from 'sortablejs';
 import { HeaderbarComponent } from '../../components/headerbar/headerbar.component';
 import { orderSort } from '../../services/utils';
 import { DialogService, Fetch, MenuItem } from '@dotglitch/ngx-common';
+import { StagePopupComponent } from 'client/app/pages/pipelines/stage-popup/stage-popup.component';
 
 
 
@@ -22,6 +23,7 @@ import { DialogService, Fetch, MenuItem } from '@dotglitch/ngx-common';
     imports: [
         NgForOf,
         NgIf,
+        TooltipDirective,
         MatExpansionModule,
         MatButtonModule,
         MatTooltipModule,
@@ -29,7 +31,9 @@ import { DialogService, Fetch, MenuItem } from '@dotglitch/ngx-common';
         DragDropModule,
         MenuDirective,
         ThemedIconDirective,
-        HeaderbarComponent
+        TabulatorComponent,
+        HeaderbarComponent,
+        StagePopupComponent
     ],
     standalone: true
 })
@@ -120,10 +124,25 @@ export class PipelinesComponent implements OnInit {
             { label: "default", items: [] },
         ];
 
-        this.pipelines = (await this.fetch.get('/api/odata/pipelines?$filter=isUserEditInstance ne true or isUserEditInstance eq null'))['value'];
-        this.ngAfterViewInit();
+        const pipelines = (await this.fetch.get('/api/odata/pipelines?$filter=isUserEditInstance ne true or isUserEditInstance eq null'))['value'];
+        const pipelineMap = {};
+        pipelines.forEach(p => pipelineMap[p.id] = p);
 
-        const jobs = (await this.fetch.get(`/api/odata/jobs?$filter=pipeline.id in ['pipelines:01HQG301BY6V1T1YEZWE4NM1VZ']`))['value'];
+
+        const jobs = (await this.fetch.get(`/api/odata/jobs?$filter=latest eq true`))['value'];
+
+        jobs.forEach(j => {
+            const pipeline = pipelineMap[j.pipeline];
+            const stage = pipeline?.stages.find(s => s.id == j.stage);
+
+            if (stage) {
+                stage['_latestJob'] = j;
+            }
+        });
+
+        this.pipelines = pipelines;
+
+        this.ngAfterViewInit();
     }
 
     ngAfterViewInit() {

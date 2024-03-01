@@ -70,10 +70,26 @@
                             <div>Triggered by {{1}} on {{1}} Local Time</div>
                         </div>
                         <div>
-                            <div *ngFor="let stage of pipeline.stages">
+                            <div
+                                class="stage-block"
+                                *ngFor="let stage of pipeline.stages"
+                                [ngx-tooltip]="tooltip"
+                                [ngx-tooltip-context]="stage"
+                                [ngx-tooltip-config]="{ position: 'bottom', alignment: 'start', triggers:['click'], stayOpen: true }"
+                                [style.background-color]="stage['_latestJob']?.state == 'failed' ? 'red' : 'blue'"
+                            >
                                 <!-- check block cancel-->
+
+                                {{stage['_latestJob']?.state}}
+
                                 <mat-icon [fontIcon]="(stage?.jobs || [])[0]?.runState"></mat-icon>
                             </div>
+                            <ng-template #tooltip let-data>
+                                <app-stage-popup
+                                    [pipeline]="pipeline"
+                                    [stage]="data"
+                                />
+                            </ng-template>
                         </div>
 
                         <button
