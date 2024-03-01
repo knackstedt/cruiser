@@ -12,7 +12,7 @@ const getPipeline = async id => {
     if (id.includes(':'))
         id = id.split(':').pop();
 
-    const [result] = await db.query<PipelineDefinition[]>(`SELECT * FROM pipelines:${id}`);
+    const [{result}] = await db.query<PipelineDefinition[]>(`SELECT * FROM pipelines:${id}`);
     return result[0];
 }
 
@@ -83,7 +83,7 @@ const createPipeline = async (pipeline: PipelineDefinition, stashId = false, rep
 router.use('/:id', route(async (req, res, next) => {
     const [table, id] = checkSurrealResource(req.params['id']).split(':');
 
-    const pipeline = await getPipeline(id);
+    const pipeline = await getPipeline(req.params['id']);
 
     if (!pipeline) throw { message: "Pipeline does not exist", status: 404 };
 
@@ -116,7 +116,7 @@ router.get('/:id/start', route(async (req, res, next) => {
 
     pipeline.stats.runCount += 1;
 
-    await db.merge(pipeline.id, pipeline.stats);
+    await db.merge(pipeline.id, { stats: pipeline.stats});
 
     await StartAgent(pipeline, stage);
 
