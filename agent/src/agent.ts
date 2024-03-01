@@ -53,7 +53,6 @@ export const RunAgentProcess = async (taskId: string) => {
 
     if (!kubeTask) {
         logger.fatal({ msg: `Failed to resolve ${taskId}` });
-        // process.exit(1);
         return;
     }
 
@@ -64,11 +63,10 @@ export const RunAgentProcess = async (taskId: string) => {
             logger.fatal({ msg: `Job does not have reference to Job`, jobInstance: kubeTask });
 
         await api.patch(`/api/odata/${taskId}`, { state: "failed" })
-        // process.exit(1)
         return;
     }
 
-    logger.emit("log:metadata", {
+    logger.emit("$metadata", {
         pipeline,
         job
     });
