@@ -125,8 +125,8 @@ export const RunAgentProcess = async (taskId: string) => {
                             windowsHide: true
                         });
 
-                        process.stdout.on('data', (data) => logger.emit("log:stdout", { t: Date.now(), data }));
-                        process.stderr.on('data', (data) => logger.emit("log:stderr", { t: Date.now(), data }));
+                        process.stdout.on('data', (data) => logger.emit("log:stdout", { data }));
+                        process.stderr.on('data', (data) => logger.emit("log:stderr", { data }));
 
                         process.on('error', (err) => logger.error(err));
 
