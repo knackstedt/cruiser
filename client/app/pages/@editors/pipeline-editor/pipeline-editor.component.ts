@@ -139,6 +139,7 @@ export class PipelineEditorComponent implements OnInit {
 
     async addStage() {
         const stage = {
+            id: "pipeline_stage:" + ulid(),
             label: 'Stage - ' + (this.pipeline.stages.length + 1),
             order: this.pipeline.stages.length,
             jobs: []
@@ -166,6 +167,7 @@ export class PipelineEditorComponent implements OnInit {
 
     async addJob(stage: StageDefinition) {
         const job = {
+            id: "pipeline_job:" + ulid(),
             label: 'Job - ' + (stage.jobs.length + 1),
             order: stage.jobs.length + 1,
             taskGroups: []
@@ -193,6 +195,7 @@ export class PipelineEditorComponent implements OnInit {
 
     async addTaskGroup(job: JobDefinition) {
         const taskGroup = {
+            id: "pipeline_task_group:" + ulid(),
             label: 'Task Group - ' + (job.taskGroups.length + 1),
             order: job.taskGroups.length + 1,
             tasks: []
@@ -222,6 +225,7 @@ export class PipelineEditorComponent implements OnInit {
 
     async addTask(taskGroup: TaskGroupDefinition) {
         const task = {
+            id: "pipeline_task:" + ulid(),
             label: 'Task - ' + (taskGroup.tasks.length + 1),
             command: "",
             arguments: [],
@@ -253,6 +257,7 @@ export class PipelineEditorComponent implements OnInit {
 
     async addSource() {
         const source = {
+            id: "pipeline_source:" + ulid(),
             label: 'Source - ' + (this.pipeline.sources.length + 1),
             order: this.pipeline.sources.length + 1
         } as SourceConfiguration;
