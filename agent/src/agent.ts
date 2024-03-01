@@ -1,21 +1,22 @@
 import { spawn } from 'child_process';
 import { JobInstance } from '../types/agent-task';
-import { getLogger, orderSort, sleep } from './util/util';
-import { ResolveSources } from './source-resolver';
-import { api, envSubstitute } from './util';
-import environment from './environment';
+import { ResolveSources } from './util/source-resolver';
+import environment from './util/environment';
 import { JobDefinition, TaskGroupDefinition } from '../types/pipeline';
+import { getSocketLogger } from './socket/logger';
+import { api } from 'util/axios';
+import { sleep } from 'util/sleep';
+import { orderSort } from 'util/order-sort';
+import { envSubstitute } from 'util/envsubst';
 
-const logger = getLogger("agent");
 
-
-const freezePollInterval = 5000;
+const freezePollInterval = parseInt(process.env['DOTOPS_FREEZE_POLL_INTERVAL'] || '5000');
 
 const validateJobCanRun = async (job: JobDefinition) => {
     const tasks = job.taskGroups?.map(t => t.tasks).flat();
     if (!tasks || tasks.length == 0)
         throw new Error("No work to do");
-}
+};
 
 async function freezeTaskProcessing({ taskGroup, agentTask }: { taskGroup: TaskGroupDefinition, agentTask: JobInstance; }) {
 
@@ -29,136 +30,16 @@ async function freezeTaskProcessing({ taskGroup, agentTask }: { taskGroup: TaskG
     while (true) {
         await sleep(freezePollInterval);
 
-        const {data} = await api.get(`/api/odata/job:${environment.agentId}`);
+        const { data } = await api.get(`/api/odata/job:${environment.agentId}`);
 
         // If the freeze point has been removed, resume the pipeline
         if (!data || data.state != "frozen") break;
     }
 }
 
-const RunTaskGroupsInParallel = (taskGroups: TaskGroupDefinition[], jobInstance) => {
-    taskGroups?.sort(orderSort);
-
-    return Promise.all(taskGroups.map(taskGroup => new Promise(async (r) => {
-        try {
-            logger.info({
-                msg: `Initiating TaskGroup ${taskGroup.label}`,
-                taskGroup
-            });
-
-            const tasks = taskGroup.tasks.sort(orderSort);
-
-            const environment: { key: string, value: string; }[] =
-                await api.get(`/api/jobs/${jobInstance.id}/environment`);
-
-            for (let i = 0; i < tasks.length; i++) {
-                const task = tasks[i];
-
-                logger.info({
-                    msg: `Initiating task ${task.label}`,
-                    task
-                });
-
-                const env = {};
-                Object.assign(environment, env);
-
-                if (task.freezeBeforeRun) {
-                    logger.info({
-                        msg: `Encountered freeze marker in task group ${taskGroup.label} before task ${task.label}`,
-                    });
-                    await freezeTaskProcessing({ taskGroup, agentTask: jobInstance });
-                    logger.info({
-                        msg: `Unfroze freeze marker in task group ${taskGroup.label} before task ${task.label}`,
-                    });
-                }
-
-                const command = envSubstitute(task.command);
-                const args = task.arguments.map(a => envSubstitute(a));
-
-                const process = await new Promise((res, rej) => {
-                    logger.info({
-                        msg: `spawning process ${task.label}`,
-                        command,
-                        args,
-                        task
-                    });
-
-                    const process = spawn(command, args, {
-                        env: env,
-                        cwd: task.workingDirectory,
-                        timeout: task.commandTimeout || 0,
-                        windowsHide: true
-                    });
-
-                    process.stdout.on('data', (data) => logger.info({
-                        task,
-                        data: data.toString(),
-                        stream: "stdout"
-                    }));
-
-                    process.stderr.on('data', (data) => logger.info({
-                        task,
-                        data: data.toString(),
-                        stream: "stderr"
-                    }));
-
-                    process.on('error', (err) => logger.error(err));
-
-                    process.on('disconnect', (...args) => {
-                        logger.error({
-                            msg: `Child process for Task ${task.label} in group ${taskGroup.label} disconnected!`,
-                            args
-                        });
-                        res(process);
-                    });
-
-                    process.on('exit', (code) => {
-                        if (code == 0) {
-                            logger.info(`Task ${task.label} in group ${taskGroup.label} successfully completed`, res);
-                            res(process);
-                        }
-                        else {
-                            logger.error({
-                                msg: `Task ${task.label} in group ${taskGroup.label} exited with non-zero exit code`,
-                                code
-                            });
-                            res(process);
-                        }
-                    });
-                })
-
-                logger.info({
-                    msg: `Completed task ${task.label}`,
-                    process
-                });
-
-                if (task.freezeAfterRun) {
-                    logger.info({
-                        msg: `Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`
-
-                    });
-                    await freezeTaskProcessing({ taskGroup, agentTask: jobInstance });
-                    logger.info({
-                        msg: `Unfroze freeze marker in task group ${taskGroup.label} after task ${task.label}`
-                    });
-                }
-            }
-        }
-        catch(ex) {
-            logger.error({
-                msg: "Unhandled error",
-                stack: ex.stack,
-                error: ex.message,
-                name: ex.name
-            })
-        }
-
-        await sleep(1);
-        r(0);
-    })));
-}
-
 export const RunAgentProcess = async (taskId: string) => {
+
+    const logger = await getSocketLogger();
 
     let res = await api.get(`/api/odata/${taskId}`);
     let kubeTask = res.data;
@@ -187,6 +68,125 @@ export const RunAgentProcess = async (taskId: string) => {
         return;
     }
 
+    logger.emit("log:metadata", {
+        pipeline,
+        job
+    });
+
+    const RunTaskGroupsInParallel = (taskGroups: TaskGroupDefinition[], jobInstance) => {
+        taskGroups?.sort(orderSort);
+
+        return Promise.all(taskGroups.map(taskGroup => new Promise(async (r) => {
+            try {
+                logger.info({
+                    msg: `Initiating TaskGroup ${taskGroup.label}`,
+                    taskGroup
+                });
+
+                const tasks = taskGroup.tasks.sort(orderSort);
+
+                const environment: { key: string, value: string; }[] =
+                    await api.get(`/api/jobs/${jobInstance.id}/environment`);
+
+                for (let i = 0; i < tasks.length; i++) {
+                    const task = tasks[i];
+
+                    logger.info({
+                        msg: `Initiating task ${task.label}`,
+                        task
+                    });
+
+                    const env = {};
+                    Object.assign(environment, env);
+
+                    if (task.freezeBeforeRun) {
+                        logger.info({
+                            msg: `Encountered freeze marker in task group ${taskGroup.label} before task ${task.label}`,
+                        });
+                        await freezeTaskProcessing({ taskGroup, agentTask: jobInstance });
+                        logger.info({
+                            msg: `Unfroze freeze marker in task group ${taskGroup.label} before task ${task.label}`,
+                        });
+                    }
+
+                    const command = envSubstitute(task.command);
+                    const args = task.arguments.map(a => envSubstitute(a));
+
+                    const process = await new Promise((res, rej) => {
+                        logger.info({
+                            msg: `spawning process ${task.label}`,
+                            command,
+                            args,
+                            task
+                        });
+
+                        const process = spawn(command, args, {
+                            env: env,
+                            cwd: task.workingDirectory,
+                            timeout: task.commandTimeout || 0,
+                            windowsHide: true
+                        });
+
+                        process.stdout.on('data', (data) => logger.emit("log:stdout", { t: Date.now(), data }));
+                        process.stderr.on('data', (data) => logger.emit("log:stderr", { t: Date.now(), data }));
+
+                        process.on('error', (err) => logger.error(err));
+
+                        process.on('disconnect', (...args) => {
+                            logger.error({
+                                msg: `Child process for Task ${task.label} in group ${taskGroup.label} disconnected!`,
+                                args
+                            });
+                            res(process);
+                        });
+
+                        process.on('exit', (code) => {
+                            if (code == 0) {
+                                logger.info({
+                                    msg: `Task ${task.label} in group ${taskGroup.label} successfully completed`
+                                });
+                                res(process);
+                            }
+                            else {
+                                logger.error({
+                                    msg: `Task ${task.label} in group ${taskGroup.label} exited with non-zero exit code`,
+                                    code
+                                });
+                                res(process);
+                            }
+                        });
+                    });
+
+                    logger.info({
+                        msg: `Completed task ${task.label}`,
+                        process
+                    });
+
+                    if (task.freezeAfterRun) {
+                        logger.info({
+                            msg: `Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`
+
+                        });
+                        await freezeTaskProcessing({ taskGroup, agentTask: jobInstance });
+                        logger.info({
+                            msg: `Unfroze freeze marker in task group ${taskGroup.label} after task ${task.label}`
+                        });
+                    }
+                }
+            }
+            catch (ex) {
+                logger.error({
+                    msg: "Unhandled error",
+                    stack: ex.stack,
+                    error: ex.message,
+                    name: ex.name
+                });
+            }
+
+            await sleep(1);
+            r(0);
+        })));
+    }
 
     // Perform preflight checks
     logger.info({ state: "Initializing", msg: "Begin initializing" });
@@ -219,5 +219,5 @@ export const RunAgentProcess = async (taskId: string) => {
 
 
     logger.info({ state: "finished", msg: "Agent has completed it's work." });
-    await api.patch(`/api/odata/${taskId}`, { state: "finished" })
+    await api.patch(`/api/odata/${taskId}`, { state: "finished" });
 }
