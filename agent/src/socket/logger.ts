@@ -22,6 +22,8 @@ export const getSocketLogger = async () => {
         return null;
     };
 
+    pinoLogger.info("We will await a socket connection ");
+    socket.onAny(pinoLogger.info);
     await new Promise((res, rej) => {
         socket.on("connection", (socket) => res(socket));
         socket.on("log:get-history", () =>
@@ -32,6 +34,7 @@ export const getSocketLogger = async () => {
         );
         socket.on("error", (err) => rej(err));
     });
+    pinoLogger.info("The socket has been connected");
 
     // Create a wrapper for the logger
     // such that all log records can be replayed
