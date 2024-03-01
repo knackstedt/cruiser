@@ -25,7 +25,7 @@ export const getSocketLogger = async () => {
     pinoLogger.info("We will await a socket connection ");
     socket.onAny(pinoLogger.info);
     await new Promise((res, rej) => {
-        socket.on("connection", (socket) => res(socket));
+        socket.on("connect", () => res(socket));
         socket.on("log:get-history", () =>
             // For each record stored in history, emit it to the client.
             // We emit it to the original emitter, so the records don't
