@@ -234,6 +234,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
     //         }
     //     }, pollInterval)
     // })
+    return 0;
 }
 
 export async function PauseAgentJob(pipeline: PipelineDefinition, job: JobDefinition) {
