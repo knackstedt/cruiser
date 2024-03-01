@@ -103,7 +103,7 @@ export const DatabaseTableApi = () => {
             '@odata.count': count ?? (data as any)?.length ?? 0,
             '@odata.nextlink': (limit + skip) > (count as number)
                                 ? undefined
-                                : `${apiPath}${table}${decodeURIComponent(pars.toString())}`,
+                                : `${apiPath}/${table}${decodeURIComponent(pars.toString())}`,
             value: (data as any).map(d => addOdataMetadata(d))
         });
     }));
