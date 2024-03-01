@@ -10,7 +10,11 @@ export const getSocketLogger = async () => {
         extraHeaders: {}
     });
 
-    const history = [];
+    const history: {
+        ev: string,
+        data: Object
+    }[] = [];
+
     const originalEmit = socket.emit;
     socket.emit = (ev: string, data: Object) => {
         originalEmit(ev, data);
