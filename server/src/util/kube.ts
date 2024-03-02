@@ -105,7 +105,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
             name: `dotops-ea-${podId}`,
         },
         spec: {
-            activeDeadlineSeconds: elasticAgentTemplate?.kubeCpuLimit ?? 1000,
+            activeDeadlineSeconds: Number.MAX_SAFE_INTEGER,
             template: {
                 metadata: {
                     annotations: {
@@ -118,7 +118,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
                     containers: [
                         {
                             name: podName,
-                            image: elasticAgentTemplate?.kubeContainerImage || "ghcr.io/knackstedt/dot-ops/dotops-agent:25ed866cd3e715ae8eea6d6686e41a640fd6d0ae",
+                            image: elasticAgentTemplate?.kubeContainerImage || "ghcr.io/knackstedt/dot-ops/dotops-agent:3671dae80d831a10e0a1adfd129f07647696ea19",
                             imagePullPolicy: 'IfNotPresent',
                             securityContext: {
                                 privileged: true
@@ -234,7 +234,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
     //         }
     //     }, pollInterval)
     // })
-    return 0;
+    return instance;
 }
 
 export async function PauseAgentJob(pipeline: PipelineDefinition, job: JobDefinition) {
