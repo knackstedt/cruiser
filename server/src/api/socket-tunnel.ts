@@ -6,15 +6,23 @@ export class SocketTunnelService {
 
     buffer: any[];
 
-    connectedClients: { [key: string]: Socket} = {};
+    connectedClients: {
+        [key: string]: {
+            id: string,
+            socket: Socket,
+            watchJobs: string[]
+        }
+    } = {};
     connectedSources: {
         [key: string]: {
-        socket: Socket,
-        metadata?: {
-            job: JobDefinition,
-            pipeline: PipelineDefinition,
+            id: string,
+            socket: Socket,
+            metadata?: {
+                job: JobDefinition,
+                pipeline: PipelineDefinition,
+            }
         }
-    }} = {};
+    } = {};
 
     constructor(private server) {
         this.startClientService();
@@ -23,20 +31,30 @@ export class SocketTunnelService {
 
     private startClientService() {
         const io = new Server(this.server, {
-            path: "/ws/socket-tunnel"
+            path: "/ws/socket-tunnel",
+            maxHttpBufferSize: 1e8
         });
 
         io.on("connection", socket => {
             const id = ulid();
 
-            this.connectedClients[id] = socket;
+            const client = this.connectedClients[id] = {
+                id,
+                socket,
+                watchJobs: []
+            };
 
-            socket.on("$connect", async (data: { agentId: string }) => {
-                // TODO: Find the right container
+            socket.on("$connect", async ({ job }: { job: string }) => {
+                if (!client.watchJobs.includes(job))
+                    client.watchJobs.push(job);
 
-                const { socket: srcSocket } = this.connectedSources[0];
+                // Find the right container to connect
+                const { socket: srcSocket } = (Object.values(this.connectedSources)
+                    .find(source => source.metadata?.job?.id == job) ?? {});
 
-                srcSocket.onAny(socket.emit);
+                if (srcSocket) {
+                    this.connectClientToSource(socket, srcSocket);
+                }
             });
 
             socket.on("disconnect", () => delete this.connectedClients[id]);
@@ -53,10 +71,30 @@ export class SocketTunnelService {
         io.on("connection", socket => {
             const id = ulid();
 
-            this.connectedSources[id] = { socket };
+            this.connectedSources[id] = { socket, id };
 
-            socket.on("$metadata", (data) => this.connectedSources[id].metadata = data);
+            socket.on("$metadata", (data) => {
+                this.connectedSources[id].metadata = data;
+                this.connectToWaitingClients(id);
+            });
             socket.on("disconnect", () => delete this.connectedSources[id]);
         });
+    }
+
+    private connectToWaitingClients(id: string) {
+        const { metadata, socket } = this.connectedSources[id];
+
+        Object.values(this.connectedClients).forEach(client => {
+            if (client.watchJobs.includes(metadata.job.id)) {
+                this.connectClientToSource(socket, client.socket);
+            }
+        })
+    }
+
+    private connectClientToSource(clientSocket, sourceSocket) {
+        clientSocket.emit("$connected");
+
+        // TODO: Should we intercept connect/disconnect?
+        sourceSocket.onAny((...args) => clientSocket.emit(...args));
     }
 }
