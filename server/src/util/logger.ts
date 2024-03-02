@@ -1,4 +1,6 @@
 import pino from 'pino';
+import os from 'os';
+import { getHeapStatistics } from 'v8';
 
 export const getLogger = (file: string) => pino({
     mixin: (_context, level) => {
@@ -25,7 +27,7 @@ export const getLogger = (file: string) => pino({
 
 const _logger = getLogger(`verbose-${process.pid}`);
 
-const heapStats = require('v8').getHeapStatistics();
+const heapStats = getHeapStatistics();
 const toGb = (stat) => {
     if (stat > 1024 ** 3)
         return (stat / 1024 ** 3).toFixed(2) + "GB";
@@ -38,9 +40,10 @@ const toGb = (stat) => {
 
 _logger.info({
     message: "Application Started",
+    cwd: process.cwd(),
     ...Object.entries(heapStats).map(([k, v]) => ({
         [k]: toGb(v)
-    })).reduce((a, b) => ({ ...a, ...b }), {})
+    })).reduce((a, b) => ({ ...a, ...b }), {}),
 });
 
 export const logger = _logger;
