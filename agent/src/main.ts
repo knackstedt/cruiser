@@ -10,9 +10,11 @@ if (!agentId || !/^[0-7][0-9A-Z]{25}$/i.test(agentId)) {
     process.exit(1);
 }
 
-process.on("uncaughtException", err => {
-    logger.error(err);
+process.on("uncaughtException", ex => {
+    logger.error(ex)
 });
 
 RunAgentProcess(taskId)
-    .catch(logger.error);
+    .catch(ex => {
+        logger.error(ex)
+    });
