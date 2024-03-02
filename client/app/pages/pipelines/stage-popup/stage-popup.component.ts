@@ -44,6 +44,13 @@ export class StagePopupComponent {
         runningJobs.forEach(j => runningJobMap[j.id] = j);
         this.stage.jobs.forEach(j => stageJobMap[j.id] = j);
 
+        runningJobs.forEach(rj => {
+            const job = stageJobMap[rj.job];
+            if (job) {
+                job['_runningJob'] = rj;
+            }
+        });
+
         // Combine the running jobs and the "defined" jobs
         this.allJobs = runningJobs.concat(this.stage.jobs.filter(j => !runningJobMap[j.id]));
     }
@@ -54,7 +61,10 @@ export class StagePopupComponent {
 
     onViewLogs(job: JobDefinition) {
         this.dialog.open(JobLogViewerComponent, {
-            data: job
+            data: {
+                job,
+                jobInstance: job['_runningJob']
+            }
         })
     }
 }

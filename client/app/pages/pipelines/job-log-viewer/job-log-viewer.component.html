@@ -41,10 +41,18 @@
 </ng-scrollbar>
 
 <ng-template #rowTemplate let-line>
-    <span class="">{{line?.time | date:'short'}} </span>
+    <span class="time">{{line?.time | date:'short'}} </span>
 
-    @if (line?.data) {
-        <span class="message" [innerHTML]="line._formatted"></span>
+    @if (line.data) {
+        <span class="message">
+            @for (segment of line.data; track segment) {
+                <span class="segment"
+                    [style]="segment.css"
+                >
+                    {{segment.text}}
+                </span>
+            }
+        </span>
     }
     @else {
         <span class="message">{{(line?.msg || line?.message)?.trim()}}</span>

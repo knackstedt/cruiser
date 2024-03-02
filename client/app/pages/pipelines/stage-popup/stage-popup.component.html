@@ -107,7 +107,7 @@
                             <div>
                                 {{job.label}}
                             </div>
-                            @if (job.is_instance) {
+                            @if (job['_runningJob']) {
                                 <button mat-icon-button (click)="onViewLogs(job)">
                                     <mat-icon>terminal</mat-icon>
                                 </button>
