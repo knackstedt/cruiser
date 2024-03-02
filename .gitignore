@@ -4,6 +4,10 @@
 /agent/dist
 /server/dist
 
+/agent/log
+/server/log
+/log
+
 # Compiled output
 /dist
 /tmp
