@@ -116,7 +116,7 @@ router.get('/:id/start', route(async (req, res, next) => {
 
     pipeline.stats.runCount += 1;
 
-    await db.merge(pipeline.id, { stats: pipeline.stats});
+    await db.merge(pipeline.id, { stats: pipeline.stats });
 
     await StartAgent(pipeline, stage);
 

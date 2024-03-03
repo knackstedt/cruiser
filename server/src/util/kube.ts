@@ -60,7 +60,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
 
     const [ instance ] = (await db.create(`jobs:${id}`, {
         state: "queued",
-        queueTime: new Date().toISOString(),
+        queueTime: Date.now(),
         errorCount: 0,
         warnCount: 0,
         job: job.id,

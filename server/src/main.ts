@@ -27,7 +27,7 @@ process.on("uncaughtException", err => {
     app.use(ErrorHandler);
 
     const server = http.createServer(app);
-    const port = 3000;
+    const port = 6800;
     server.listen(port);
 
     server.on("error", logger.error);

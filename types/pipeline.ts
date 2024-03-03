@@ -20,8 +20,9 @@ export type TaskDefinition = {
     order: number
     runIfPreviousTaskPassed: boolean
     runIfPreviousTaskFailed: boolean
-    freezeBeforeRun: boolean
-    freezeAfterRun: boolean
+    preBreakpoint: boolean
+    postBreakpoint: boolean
+    disableErrorBreakpoint: boolean
     taskOnSelfFailure: TaskDefinition
     environment?: EnvironmentVariable[]
 }
@@ -43,8 +44,6 @@ export type JobDefinition = {
     order: number
     timeout: string
     runType: string
-    invocationCount: number
-    failCount: number
     lastRun?: string
     lastTriggerReason?: "cron" | "changes" | "manual" | "webhook"
     runState?: "success" | "fail" | "running"
@@ -55,6 +54,10 @@ export type JobDefinition = {
 
     startTime: number,
     endTime: number,
+
+    runCount: number,
+    invocationCount: number
+    failCount: number
 }
 
 export type StageDefinition = {
