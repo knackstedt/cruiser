@@ -1,19 +1,7 @@
 :host {
     display: flex;
-    width: 80vw;
-    height: 80vh;
     flex-direction: column;
-    --mdc-secondary-navigation-tab-container-height: 32px;
-}
-
-.controls {
-    display: flex;
-    height: 48px;
-    align-items: center;
-    gap: 6px;
-    background-color: #181818;
-    border-bottom: 1px solid #2b2b2b;
-    padding: 0 12px;
+    height: 100%
 }
 
 .line {
@@ -44,7 +32,8 @@
         }
     }
 
-    .blank, .expansion_toggle {
+    .blank,
+    .expansion_toggle {
         display: inline-block;
         width: 32px;
     }
@@ -53,6 +42,7 @@
 .console {
     background: #1F1F1F;
     color: #BDDED6;
+    font-family: 'Courier New', Courier, monospace;
 
     *::selection {
         background-color: #6272A47f;
@@ -61,38 +51,33 @@
     .stdout {
         color: #91939d;
     }
+
     .stderr {
         color: #f06292
     }
 
     .time {
-        font-family: 'Courier New', Courier, monospace;
-        padding-right: 4px;
         position: relative;
         color: #6e7681;
-        display: flex;
-        align-items: center;
 
         &:after {
             content: "";
             position: absolute;
             width: 1px;
-            top: 0;
-            bottom: 0;
-            right: 0;
+            top: -1px;
+            bottom: -1px;
+            right: 4px;
             background-color: #7b7b7b;
         }
     }
 
-    .message {
-        padding-left: 4px;
-    }
+    // .message {
+    //     margin-left: 10px;
+    // }
 }
 
 .process {
-    height: 100%;
     width: 100%;
-    display: flex;
 }
 
 ng-scrollbar {
@@ -106,15 +91,8 @@ ng-scrollbar {
         box-shadow: #0000 0 6px 6px -6px inset;
         transition: box-shadow 300ms ease;
     }
+
     &.shadow::after {
         box-shadow: #000 0 6px 6px -6px inset;
     }
-}
-
-.rotate {
-    animation: rotate 1300ms linear infinite;
-}
-@keyframes rotate {
-    from { transform: rotate(360deg) }
-    to { transform: rotate(0) }
 }

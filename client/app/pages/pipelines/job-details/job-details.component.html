@@ -1,0 +1,43 @@
+
+<div class="controls">
+
+        @switch(jobInstance.state) {
+            @case ("initializing") { <mat-icon fontIcon="pending" /> }
+            @case ("cloning") { <mat-icon fontIcon="downloading" /> }
+            @case ("building") { <mat-icon class="rotate" fontIcon="change_circle" /> }
+            @case ("sealing") { <mat-icon fontIcon="archive" /> }
+            <!-- @case ("sealing") {
+                <mat-icon fontIcon="compress" />
+                <mat-icon fontIcon="circle" />
+            } -->
+            @case ("failed") { <mat-icon style="color: #ff5d5d" fontIcon="block" /> }
+            @case ("finished") { <mat-icon style="color: #80ffc0" fontIcon="check_circle" /> }
+        }
+
+    <div>
+        <span>{{job.label}}</span>
+    </div>
+
+    <div style="flex: 1"></div>
+</div>
+
+<mat-tab-group [mat-stretch-tabs]="false">
+    <mat-tab label="Output">
+        <app-job-logs
+            [jobInstance]="jobInstance"
+        />
+    </mat-tab>
+    <mat-tab label="Shell" [disabled]="['failed','finished'].includes(jobInstance.state)">
+        <app-xterm-wrapper
+            [jobInstance]="jobInstance"
+        />
+    </mat-tab>
+    <mat-tab label="File Explorer" [disabled]="['failed','finished'].includes(jobInstance.state)">
+        ...
+    </mat-tab>
+    <!-- <mat-tab label="Tests">???</mat-tab> -->
+    <!-- <mat-tab label="Artifacts"></mat-tab> -->
+    <!-- <mat-tab label="Sources">???</mat-tab> -->
+</mat-tab-group>
+
+

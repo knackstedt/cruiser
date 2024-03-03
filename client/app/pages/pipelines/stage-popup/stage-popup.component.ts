@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { JobDefinition, PipelineDefinition, StageDefinition } from 'types/pipeline';
 import { TableModule } from 'primeng/table';
 import { MatDialog } from '@angular/material/dialog';
-import { JobLogViewerComponent } from 'client/app/pages/pipelines/job-log-viewer/job-log-viewer.component';
+import { JobDetailsComponent } from '../job-details/job-details.component';
 import { Fetch } from '@dotglitch/ngx-common';
 
 @Component({
@@ -60,7 +60,7 @@ export class StagePopupComponent {
     }
 
     onViewLogs(job: JobDefinition) {
-        this.dialog.open(JobLogViewerComponent, {
+        this.dialog.open(JobDetailsComponent, {
             data: {
                 job,
                 jobInstance: job['_runningJob']
