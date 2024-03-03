@@ -1,7 +1,8 @@
 import { api } from '../util/axios';
 import { JobDefinition, PipelineDefinition } from '../../types/pipeline';
+import { logger } from '../util/logger';
 
-export const getConfig = async (taskId, logger) => {
+export const getConfig = async (taskId) => {
     const { data: kubeTask } = await api.get(`/api/odata/${taskId}`);
 
     if (!kubeTask) {
@@ -24,11 +25,6 @@ export const getConfig = async (taskId, logger) => {
 
         process.exit(1);
     }
-
-    logger.socket.emit("$metadata", {
-        pipeline,
-        job
-    });
 
     return {
         pipeline,

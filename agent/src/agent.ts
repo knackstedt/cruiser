@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { ResolveSources } from './util/source-resolver';
 import { JobDefinition, PipelineDefinition, TaskGroupDefinition } from '../types/pipeline';
 import { getSocketLogger } from './socket/logger';
@@ -8,6 +8,8 @@ import { orderSort } from './util/order-sort';
 import { envSubstitute } from './util/envsubst';
 import { getConfig } from './util/config';
 import { TripBreakpoint } from './util/breakpoint';
+import { getSocketTerminal } from './socket/terminal';
+import { getSocket } from './socket/socket';
 
 
 const validateJobCanRun = async (job: JobDefinition) => {
@@ -18,10 +20,11 @@ const validateJobCanRun = async (job: JobDefinition) => {
 
 
 export const RunAgentProcess = async (taskId: string) => {
+    const { job, pipeline, kubeTask } = await getConfig(taskId);
 
-    const logger = await getSocketLogger();
-    const { job, pipeline, kubeTask } = await getConfig(taskId, logger);
-
+    const socket = await getSocket(pipeline, job)
+    const logger = await getSocketLogger(socket);
+    const terminal = await getSocketTerminal(socket);
 
     const RunTaskGroupsInParallel = (taskGroups: TaskGroupDefinition[], jobInstance) => {
         taskGroups?.sort(orderSort);
@@ -33,7 +36,6 @@ export const RunAgentProcess = async (taskId: string) => {
                     taskGroup,
                     block: "start"
                 });
-                logger.socket.emit("log:block-start", { time: Date.now(), data: { taskGroup }, msg: `TaskGroup ${taskGroup.label}` })
 
                 const tasks = taskGroup.tasks.sort(orderSort);
 
@@ -48,27 +50,22 @@ export const RunAgentProcess = async (taskId: string) => {
                         task,
                         block: "start"
                     });
-                    logger.socket.emit("log:block-start", { time: Date.now(), data: { taskGroup, task }, msg: `Task ${task.label}` })
 
                     const env = {};
                     Object.assign(environment, env);
 
-                    if (task.freezeBeforeRun) {
-                        logger.info({
-                            msg: `Encountered freeze marker in task group ${taskGroup.label} before task ${task.label}`,
-                        });
-                        await TripBreakpoint({ taskGroup, agentTask: jobInstance });
-                        logger.info({
-                            msg: `Unfroze freeze marker in task group ${taskGroup.label} before task ${task.label}`,
-                        });
+                    if (task.preBreakpoint) {
+                        logger.info({ msg: `Tripping on Breakpoint`, breakpoint: true });
+                        await TripBreakpoint(taskId);
+                        logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false });
                     }
 
                     const command = envSubstitute(task.command);
                     const args = task.arguments.map(a => envSubstitute(a));
 
-                    const process = await new Promise((res, rej) => {
+                    const process = await new Promise<ChildProcessWithoutNullStreams>((res, rej) => {
                         logger.info({
-                            msg: `spawning process ${task.label}`,
+                            msg: `Spawning process`,
                             command,
                             args,
                             task
@@ -88,7 +85,7 @@ export const RunAgentProcess = async (taskId: string) => {
 
                         process.on('disconnect', (...args) => {
                             logger.error({
-                                msg: `Child process for Task ${task.label} in group ${taskGroup.label} disconnected!`,
+                                msg: `Process unexpectedly disconnected`,
                                 args
                             });
                             res(process);
@@ -96,37 +93,34 @@ export const RunAgentProcess = async (taskId: string) => {
 
                         process.on('exit', (code) => {
                             if (code == 0) {
-                                logger.info({
-                                    msg: `Task ${task.label} in group ${taskGroup.label} successfully completed`
-                                });
+                                logger.info({ msg: `Process exited successfully` });
                                 res(process);
                             }
                             else {
-                                logger.error({
-                                    msg: `Task ${task.label} in group ${taskGroup.label} exited with non-zero exit code`,
-                                    code
-                                });
+                                logger.error({ msg: `Process exited with non-zero exit code`, code });
                                 res(process);
                             }
                         });
                     });
 
-                    logger.info({
-                        msg: `Completed task ${task.label}`,
-                        process,
-                        block: "end"
-                    });
-                    logger.socket.emit("log:block-end", { time: Date.now(), data: { taskGroup, task }, msg: `Task ${task.label} completed` })
-
-                    if (task.freezeAfterRun) {
+                    if (process.exitCode == 0) {
                         logger.info({
-                            msg: `Encountered freeze marker in task group ${taskGroup.label} after task ${task.label}`
-
+                            msg: `Completed task ${task.label}`,
+                            process,
+                            block: "end"
                         });
-                        await TripBreakpoint({ taskGroup, agentTask: jobInstance });
-                        logger.info({
-                            msg: `Unfroze freeze marker in task group ${taskGroup.label} after task ${task.label}`
-                        });
+                        if (task.postBreakpoint) {
+                            logger.info({ msg: `Tripping on Breakpoint`, breakpoint: true });
+                            await TripBreakpoint(taskId);
+                            logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false });
+                        }
+                    }
+                    else {
+                        if (task.disableErrorBreakpoint != true) {
+                            logger.info({ msg: `Breaking on error`, breakpoint: true, error: true });
+                            await TripBreakpoint(taskId);
+                            logger.info({ msg: `Resuming from Breakpoint`, breakpoint: true, error: false });
+                        }
                     }
                 }
 
@@ -135,7 +129,6 @@ export const RunAgentProcess = async (taskId: string) => {
                     taskGroup,
                     block: "end"
                 });
-                logger.socket.emit("log:block-end", { time: Date.now(), data: { taskGroup }, msg: `TaskGroup ${taskGroup.label} completed` })
             }
             catch (ex) {
                 logger.error({
@@ -152,10 +145,10 @@ export const RunAgentProcess = async (taskId: string) => {
     }
 
     // Perform preflight checks
-    logger.info({ state: "Initializing", msg: "Begin initializing", block: "start" });
+    logger.info({ state: "Initializing", msg: "Begin initializing" });
     await api.patch(`/api/odata/${taskId}`, { state: "initializing" })
     await validateJobCanRun(job);
-    logger.info({ state: "Initializing", msg: "Agent initialize completed", block: "end" });
+    logger.info({ state: "Initializing", msg: "Agent initialize completed" });
 
     // Download sources
     logger.info({ state: "Cloning", msg: "Agent source cloning", block: "start" });
@@ -182,5 +175,5 @@ export const RunAgentProcess = async (taskId: string) => {
 
 
     logger.info({ state: "finished", msg: "Agent has completed it's work.", block: "end" });
-    await api.patch(`/api/odata/${taskId}`, { state: "finished" });
+    await api.patch(`/api/odata/${taskId}`, { state: "finished", endTime: Date.now() });
 }
