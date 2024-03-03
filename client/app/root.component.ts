@@ -1,7 +1,7 @@
-import { Component, HostListener, ViewChild } from '@angular/core';
+import { Component, HostListener, ViewChild, isDevMode } from '@angular/core';
 import { MatDrawer } from '@angular/material/sidenav';
 import { MatDialog } from '@angular/material/dialog';
-import { MenuItem } from '@dotglitch/ngx-common';
+import { CommandPaletteService, MenuItem, ThemeService } from '@dotglitch/ngx-common';
 import { NgIf } from '@angular/common';
 import { NavMenuComponent } from './components/navmenu/menu.component';
 import { Fetch, LazyLoaderComponent, KeyboardService, NavigationService } from '@dotglitch/ngx-common';
@@ -22,7 +22,6 @@ const desktopWidth = 1126;
 export class RootComponent {
     @ViewChild("drawer") drawer: MatDrawer;
 
-    theme = 'dark';
     isMobile = false;
 
     readonly mainCtxItems: MenuItem<any>[] = [
@@ -30,14 +29,14 @@ export class RootComponent {
             label: "Appearance",
             children: [
                 {
-                    labelTemplate: () => `${this.theme == "light" ? '⏺' : '\u00A0\u00A0\u00A0'} Light`,
+                    labelTemplate: () => `${this.theme.value == "light" ? '⏺' : '\u00A0\u00A0\u00A0'} Light`,
                     action: () => {
                         document.body.classList.remove("dark");
                         document.body.classList.add("light");
                     }
                 },
                 {
-                    labelTemplate: () => `${this.theme == "dark" ? '⏺' : '\u00A0\u00A0\u00A0\u00A0'} Dark`,
+                    labelTemplate: () => `${this.theme.value == "dark" ? '⏺' : '\u00A0\u00A0\u00A0\u00A0'} Dark`,
                     action: () => {
                         document.body.classList.remove("dark");
                         document.body.classList.add("light");
@@ -48,12 +47,27 @@ export class RootComponent {
     ];
 
     constructor(
-        private fetch: Fetch,
-        private keyboard: KeyboardService,
-        public navigator: NavigationService,
-        private dialog: MatDialog
+        private readonly fetch: Fetch,
+        private readonly keyboard: KeyboardService,
+        public readonly navigator: NavigationService,
+        private readonly dialog: MatDialog,
+        public readonly commandPalette: CommandPaletteService,
+        private readonly theme: ThemeService
     ) {
         this.onResize();
+
+        commandPalette.initialize({
+            keybind: "ctrl+p"
+        });
+        commandPalette.attachElementCommands([
+            isDevMode() ? {
+                label: "Debug", shortcutKey: "pause", action: () => {
+                    debugger;
+                }
+            } : { visibleInList: false },
+            { label: "Theme: Dark", action: () => this.theme.setTheme('dark') },
+            { label: "Theme: Light", action: () => this.theme.setTheme('light') },
+        ])
     }
 
     openInfo() {
