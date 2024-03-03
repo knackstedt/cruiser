@@ -72,12 +72,13 @@ export class SocketTunnelService {
             const id = ulid();
 
             this.connectedSources[id] = { socket, id };
+            socket.on("disconnect", () => delete this.connectedSources[id]);
 
             socket.on("$metadata", (data) => {
                 this.connectedSources[id].metadata = data;
                 this.connectToWaitingClients(id);
             });
-            socket.on("disconnect", () => delete this.connectedSources[id]);
+            socket.emit("$get-metadata", { data: id });
         });
     }
 
@@ -91,10 +92,13 @@ export class SocketTunnelService {
         })
     }
 
-    private connectClientToSource(clientSocket, sourceSocket) {
+    private connectClientToSource(clientSocket: Socket, sourceSocket: Socket) {
         clientSocket.emit("$connected");
 
         // TODO: Should we intercept connect/disconnect?
+        // @ts-ignore
         sourceSocket.onAny((...args) => clientSocket.emit(...args));
+        // @ts-ignore
+        clientSocket.onAny((...args) => sourceSocket.emit(...args));
     }
 }
