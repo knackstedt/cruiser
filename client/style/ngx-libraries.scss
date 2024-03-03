@@ -20,3 +20,9 @@ ng-scrollbar.ng-scrollbar {
         --scrollbar-thumb-color: #4440;
     }
 }
+
+.ng-scroll-viewport {
+    // This fixes a strange outline issue.
+    // I have no idea why an outline shows up in the first place.
+    outline: 0;
+}
