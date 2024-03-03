@@ -36,23 +36,23 @@ export class StagePopupComponent {
     }
 
     async ngOnInit() {
-        const runningJobs = (await this.fetch.get(`/api/odata/jobs?$filter=stage eq '${this.stage.id}'`))['value'];
+        // const runningJobs = (await this.fetch.get(`/api/odata/jobs?$filter=stage eq '${this.stage.id}'`))['value'];
 
-        const stageJobMap = {};
-        const runningJobMap = {};
+        // const stageJobMap = {};
+        // const runningJobMap = {};
 
-        runningJobs.forEach(j => runningJobMap[j.id] = j);
-        this.stage.jobs.forEach(j => stageJobMap[j.id] = j);
+        // runningJobs.forEach(j => runningJobMap[j.id] = j);
+        // this.stage.jobs.forEach(j => stageJobMap[j.id] = j);
 
-        runningJobs.forEach(rj => {
-            const job = stageJobMap[rj.job];
-            if (job) {
-                job['_runningJob'] = rj;
-            }
-        });
+        // runningJobs.forEach(rj => {
+        //     const job = stageJobMap[rj.job];
+        //     if (job) {
+        //         job['_runningJob'] = rj;
+        //     }
+        // });
 
-        // Combine the running jobs and the "defined" jobs
-        this.allJobs = runningJobs.concat(this.stage.jobs.filter(j => !runningJobMap[j.id]));
+        // // Combine the running jobs and the "defined" jobs
+        // this.allJobs = runningJobs.concat(this.stage.jobs.filter(j => !runningJobMap[j.id]));
     }
 
     onPipelineRestart() {

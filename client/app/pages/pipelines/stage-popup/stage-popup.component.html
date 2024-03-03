@@ -55,7 +55,7 @@
 
             <p-table
                 #dt1
-                [value]="allJobs"
+                [value]="stage.jobs"
                 [tableStyle]="{'min-width': '60rem'}"
                 [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
             >
@@ -104,19 +104,30 @@
                 <ng-template pTemplate="body" let-job>
                     <tr>
                         <td>
-                            <div>
-                                {{job.label}}
+                            <div style="display: flex;">
+                                @if (job['_runningJob']) {
+                                    <button mat-icon-button (click)="onViewLogs(job)">
+                                        <mat-icon>terminal</mat-icon>
+                                    </button>
+                                }
+                                <div>{{job.label}}</div>
                             </div>
-                            @if (job['_runningJob']) {
-                                <button mat-icon-button (click)="onViewLogs(job)">
-                                    <mat-icon>terminal</mat-icon>
-                                </button>
-                            }
                         </td>
-                        <td>{{job.state}}</td>
-                        <td>todo</td>
-                        <td>{{job.runtime}}</td>
-                        <td>{{job.agent}}</td>
+                        <td>
+                            {{job._runningJob.state}}
+                        </td>
+                        <td>
+                            {{job._runningJob.queueTime}}
+                            {{job._runningJob.startTime}}
+                            {{job._runningJob.endTime}}
+                        </td>
+                        <td>
+                            {{job.runtime}}
+                            {{job._runningJob.queueTime}}
+                        </td>
+                        <td>
+                            {{job._runningJob.kube.name}}
+                        </td>
                     </tr>
                 </ng-template>
             </p-table>
