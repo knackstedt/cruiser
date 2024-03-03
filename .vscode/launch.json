@@ -29,8 +29,9 @@
             "name": "Agent",
             "type": "node",
             "request": "launch",
+            "console": "integratedTerminal",
             "args": [
-                "agent.ts",
+                "src/main.ts",
                 "--project"
             ],
             "runtimeArgs": [
@@ -38,7 +39,12 @@
                 "-r",
                 "ts-node/register"
             ],
-            "sourceMaps": true,
+            "env": {
+                "DOTGLITCH_AGENT_ID" : "01HQYEEJDBPC9KYK1V0FWQXTZ2",
+                "DOTGLITCH_DOTOPS_CLUSTER_URL": "http://dotglitch.dev:8000",
+                // Log the agent websocket transmissions
+                "AGENT_WEBSOCKETS_VERBOSE": "true"
+            },
             "cwd": "${workspaceRoot}/agent",
         },
         {
