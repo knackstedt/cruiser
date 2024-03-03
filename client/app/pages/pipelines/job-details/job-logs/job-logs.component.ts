@@ -8,6 +8,7 @@ import ansi, { ParsedSpan, parse } from 'ansicolor';
 import { darkTheme } from 'client/app/services/theme.service';
 import { TooltipDirective } from '@dotglitch/ngx-common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatInputModule } from '@angular/material/input';
 
 type Line = ({
     stream: "stdout" | "stderr" | "agent",
@@ -34,7 +35,8 @@ type Line = ({
         NgScrollbarModule,
         TooltipDirective,
         MatIconModule,
-        MatCheckboxModule
+        MatCheckboxModule,
+        MatInputModule
     ],
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -50,12 +52,15 @@ export class JobLogsComponent {
 
     showStdOut = true;
     showStdErr = true;
+    showAgent = true;
     showTimestamps = true;
+    query = '';
 
     connected = false;
 
     lineCount = 0;
     lines: Line[] = [];
+    filteredLines: Line[] = [];
     renderedLines: Line[] = [];
 
 
@@ -118,6 +123,7 @@ export class JobLogsComponent {
 
             this.lines.push({
                 stream,
+                msg: line,
                 data: parse(line).spans,
                 fullTime: iso.replace('T', ' '),
                 time: iso.replace(/^[^T]+T/, ''),
@@ -127,7 +133,7 @@ export class JobLogsComponent {
             });
 
             if (doCommit) {
-                this.render();
+                this.filterLines();
             }
         };
 
@@ -173,7 +179,7 @@ export class JobLogsComponent {
             });
 
             if (doCommit) {
-                this.render();
+                this.filterLines();
             }
         };
     }
@@ -189,12 +195,102 @@ export class JobLogsComponent {
         this.socket.disconnect();
     }
 
-    render() {
+    filterLines() {
+        let lines = this.lines;
+
+        /**
+         * Filter the lines.
+         * This should be optimized where possible to minimize
+         * update delays when we receive many log records
+         * in a short period of time.
+         *
+         * Notably, we perform the easiest checks to reduce the
+         * data set first, before performing the slower checks
+         */
+
+        if (this.showStdOut == false) {
+            let ln = lines.length;
+            let temp = [];
+
+            for (let i = 0; i < ln; i++)
+                if (lines[i].stream != "stdout")
+                    temp.push(lines[i]);
+
+            lines = temp;
+        }
+
+        if (this.showStdErr == false) {
+            let ln = lines.length;
+            let temp = [];
+
+            for (let i = 0; i < ln; i++)
+                if (lines[i].stream != "stderr")
+                    temp.push(lines[i]);
+
+            lines = temp;
+        }
+
+        if (this.showAgent == false) {
+            let ln = lines.length;
+            let temp = [];
+
+            for (let i = 0; i < ln; i++)
+                if (lines[i].stream != "agent")
+                    temp.push(lines[i]);
+
+            lines = temp;
+        }
+
+        if (this.query?.trim().length > 1) {
+            let ln = lines.length;
+            let temp = [];
+
+            // Convert the string into a regex
+            const wordRx = this.query
+                .trim()
+                .split(' ')
+                .map(word => word
+                    .split('')
+                    // Transform all chars into their unicode values
+                    .map(char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`)
+                    .join('')
+                );
+
+            const matchPaths: string[][] = [];
+            const wordRxSource = wordRx.concat(wordRx);
+            wordRx.forEach((rx, i) => {
+                matchPaths.push(wordRxSource.slice(i, i + wordRx.length));
+            });
+
+            // Build a regex that arbitrarily matches order
+            const rx = '(' +
+                matchPaths
+                    .map(words => words.join('.*'))
+                    .join(")|(") +
+                ')';
+
+            const regex = new RegExp(rx, 'ui');
+
+            for (let i = 0; i < ln; i++) {
+                // If the line has a discrete msg property, check it.
+                // Any other lines will implicitly be shown
+                if (!lines[i].msg)
+                    temp.push(lines[i]);
+                else if (regex.test(lines[i].msg))
+                    temp.push(lines[i]);
+            }
+
+            lines = temp;
+        }
+
+        this.filteredLines = lines;
+
         this.onScroll(this.scrollbar.viewport.nativeElement);
     }
 
     onScroll(scroller: HTMLElement) {
         if (!scroller) return;
+        const lines = this.filteredLines;
 
         const pos = this.scrollbar.viewport.scrollTop;
         // const bounds = scroller.getBoundingClientRect();
@@ -204,10 +300,10 @@ export class JobLogsComponent {
         const VIRTUAL_SCROLLING_OVERLAP = this.lineHeight * this.bufferLines;
         // Quickly recalculate the heights of the swimlanes
         let currentY = 0;
-        const l = this.lines.length;
+        const l = lines.length;
 
         for (let i = 0; i < l; i++) {
-            const line = this.lines[i];
+            const line = lines[i];
 
             // The swimlane is visible if it's within 500px of the top of the viewport,
             // or if it's within 500px of the bottom of the viewport.
@@ -219,7 +315,15 @@ export class JobLogsComponent {
             currentY += this.lineHeight;
         }
 
-        this.renderedLines = this.lines.filter(l => l.rendered);
+        const rendered = [];
+        let ln = lines.length;
+        for (let i = 0; i < ln; i++)
+            if (lines[i].rendered)
+                rendered.push(lines[i]);
+
+        this.renderedLines = rendered;
+
+        console.log(this.renderedLines, this.filteredLines)
 
         this.changeDetector.detectChanges();
     }

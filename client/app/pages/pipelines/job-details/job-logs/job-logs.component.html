@@ -1,9 +1,9 @@
-<div style="display: flex;">
+<div style="display: flex; align-items: center; padding: 0 12px; gap: 8px">
     @if (connected) {
-        <span>{{lines.length}}</span>
+        <span>Ln {{lines.length}}</span>
     }
     @else {
-    <mat-icon style="color: #ff5d5d" fontIcon="mobiledata_off" />
+        <mat-icon style="color: #ff5d5d" fontIcon="mobiledata_off" />
     }
 
     <div style="flex: 1"></div>
@@ -16,10 +16,20 @@
             alignment: 'center'
         }"
     >
-        <mat-icon fontIcon="search"/>
+        <mat-icon [style.color]="query.trim().length > 1 ? 'var(--active-item-color)' : ''" fontIcon="search"/>
         <ng-template #search>
             <div style="padding: 12px; display: flex; flex-direction: column;">
-
+                <mat-form-field>
+                    <mat-label>Filter</mat-label>
+                    <input
+                        #_ matInput
+                        type="text"
+                        [value]="query"
+                        (keyup)="query = _.value; filterLines()"
+                        (paste)="query = _.value; filterLines()"
+                        (change)="query = _.value; filterLines()"
+                    />
+                </mat-form-field>
             </div>
         </ng-template>
     </div>
@@ -30,6 +40,7 @@
             position: 'bottom',
             alignment: 'center'
         }"
+        [style.color]="query.trim().length > 1 ? 'var(--active-item-color)' : ''"
     >
         <mat-icon fontIcon="filter_alt" />
         <ng-template #filter>
@@ -37,17 +48,35 @@
                 <mat-checkbox
                     labelPosition="before"
                     [checked]="showStdOut"
-                    (change)="showStdOut = $event.checked"
-                    matTooltip=""
+                    (change)="showStdOut = $event.checked; filterLines()"
                 >
-                    stdout
+                    <span
+                        [style.color]="!showStdOut ? 'var(--active-item-color)' : ''"
+                    >
+                        stdout
+                    </span>
                 </mat-checkbox>
                 <mat-checkbox
                     labelPosition="before"
                     [checked]="showStdErr"
-                    (change)="showStdErr = $event.checked"
+                    (change)="showStdErr = $event.checked; filterLines()"
                 >
-                    stderr
+                    <span
+                        [style.color]="!showStdErr ? 'var(--active-item-color)' : ''"
+                    >
+                        stderr
+                    </span>
+                </mat-checkbox>
+                <mat-checkbox
+                    labelPosition="before"
+                    [checked]="showAgent"
+                    (change)="showAgent = $event.checked; filterLines()"
+                >
+                    <span
+                        [style.color]="!showAgent ? 'var(--active-item-color)' : ''"
+                    >
+                        [agent]
+                    </span>
                 </mat-checkbox>
             </div>
         </ng-template>
@@ -69,7 +98,7 @@
     class="console"
     [class.shadow]="scrollbar?.viewport?.scrollTop > 2"
 >
-    <div cdkVirtualScrollingElement [style.height]="lines.length*lineHeight + 'px'">
+    <div cdkVirtualScrollingElement [style.height]="filteredLines.length*lineHeight + 'px'">
         @for (line of renderedLines; track line) {
             @if (line.rendered) {
                 <div
