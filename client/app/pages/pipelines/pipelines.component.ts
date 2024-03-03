@@ -7,7 +7,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { LazyLoaderService, MenuDirective, TabulatorComponent, TooltipDirective } from '@dotglitch/ngx-common';
 import { PipelineDefinition } from 'types/pipeline';
-import { ThemedIconDirective } from '../../services/theme.service';
 import Sortable from 'sortablejs';
 import { HeaderbarComponent } from '../../components/headerbar/headerbar.component';
 import { orderSort } from '../../services/utils';
@@ -30,7 +29,6 @@ import { StagePopupComponent } from 'client/app/pages/pipelines/stage-popup/stag
         MatIconModule,
         DragDropModule,
         MenuDirective,
-        ThemedIconDirective,
         TabulatorComponent,
         HeaderbarComponent,
         StagePopupComponent

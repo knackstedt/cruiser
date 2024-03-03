@@ -1,67 +1,166 @@
+
 <div class="controls">
+
+    @if (connected) {
+        @switch(jobInstance.state) {
+            @case ("initializing") { <mat-icon fontIcon="pending" /> }
+            @case ("cloning") { <mat-icon fontIcon="downloading" /> }
+            @case ("building") { <mat-icon class="rotate" fontIcon="change_circle" /> }
+            @case ("sealing") { <mat-icon fontIcon="archive" /> }
+            <!-- @case ("sealing") {
+                <mat-icon fontIcon="compress" />
+                <mat-icon fontIcon="circle" />
+            } -->
+            @case ("failed") { <mat-icon style="color: #ff5d5d" fontIcon="block" /> }
+            @case ("finished") { <mat-icon style="color: #80ffc0" fontIcon="check_circle" /> }
+        }
+    }
+    @else {
+        <mat-icon style="color: #ff5d5d" fontIcon="mobiledata_off" />
+    }
+
+    <div>
+        <span>{{job.label}}</span>
+        <span>{{lines.length}}</span>
+    </div>
+
     <div style="flex: 1"></div>
-    <div>change theme</div>
-    <div>fullscreen</div>
-    <div>expand all</div>
-    <div>timestamps</div>
-    <div>raw output</div>
-    <div>scroll to end</div>
+
+    <div
+        [ngx-tooltip]="search"
+        [ngx-tooltip-config]="{
+            triggers: ['click'],
+            position: 'bottom',
+            alignment: 'center'
+        }"
+    >
+        <mat-icon fontIcon="search"/>
+        <ng-template #search>
+            <div style="padding: 12px; display: flex; flex-direction: column;">
+
+            </div>
+        </ng-template>
+    </div>
+
+    <div
+        [ngx-tooltip]="filter"
+        [ngx-tooltip-config]="{
+            triggers: ['click'],
+            position: 'bottom',
+            alignment: 'center'
+        }"
+    >
+        <mat-icon fontIcon="filter_alt" />
+        <ng-template #filter>
+            <div style="padding: 12px; display: flex; flex-direction: column;">
+                <mat-checkbox
+                    labelPosition="before"
+                    [checked]="showStdOut"
+                    (change)="showStdOut = $event.checked"
+                    matTooltip=""
+                >
+                    stdout
+                </mat-checkbox>
+                <mat-checkbox
+                    labelPosition="before"
+                    [checked]="showStdErr"
+                    (change)="showStdErr = $event.checked"
+                >
+                    stderr
+                </mat-checkbox>
+            </div>
+        </ng-template>
+    </div>
+
+    <div style="flex: 1"></div>
+
+    <!-- <div>change theme</div> -->
+    <!-- <div>fullscreen</div> -->
+    <!-- <div>expand all</div> -->
+    <!-- <div>collapse all</div> -->
+    <div (click)="showTimestamps = !showTimestamps">timestamps</div>
+    <!-- <div>raw output</div> -->
+    <div>go to end</div>
     <div>download log</div>
 </div>
 
-<ng-scrollbar #scrollbar>
-    <cdk-virtual-scroll-viewport [itemSize]="lineHeight" scrollViewport [minBufferPx]="150">
-        <div
-            *cdkVirtualFor="let line of lines; let index = index"
-            class="line"
-            [style.height]="lineHeight + 'px'"
-            [attr.index]="index"
-        >
-            @if (line.stream == 'stdout') {
-                <div class="process stdout">
-                    <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
+<mat-tab-group [mat-stretch-tabs]="false">
+    <mat-tab label="Output">
+        <div style="display: flex; flex-direction: column; height: 100%">
+
+            <ng-scrollbar
+                #scrollbar
+                class="console"
+                [class.shadow]="scrollbar?.viewport?.scrollTop > 2"
+            >
+                <div cdkVirtualScrollingElement [style.height]="lines.length*lineHeight + 'px'">
+                    @for (line of renderedLines; track line) {
+                        @if (line.rendered) {
+                            <div
+                                class="line"
+                                [style.height]="lineHeight + 'px'"
+                                [attr.index]="line.index"
+                                [style.top]="(line.index*lineHeight)+'px'"
+                            >
+                                @if (line.stream == "agent") {
+                                    <span class="process agent">
+                                        @if (line.block == "start") {
+                                            <span class="expansion_toggle">
+                                                <mat-icon
+                                                    [style.transform]="line._expanded ? 'rotate(90deg)' : ''"
+                                                    fontIcon="navigate_next"
+                                                />
+                                            </span>
+                                        }
+                                        @else {
+                                            <span class="blank"></span>
+                                        }
+                                        @if (showTimestamps) {
+                                            <span class="time">{{line?.time}}</span>
+                                        }
+                                        <span class="message">[agent] {{line.msg.trim()}}</span>
+                                    </span>
+                                }
+                                @else if (line.stream == 'stdout') {
+                                    <span class="process stdout">
+                                        <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
+                                    </span>
+                                }
+                                @else if (line.stream == 'stderr') {
+                                    <span class="process stderr">
+                                        <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
+                                    </span>
+                                }
+                            </div>
+                        }
+                    }
                 </div>
-            }
-            @else if (line.stream == 'stderr') {
-                <div class="process stderr">
-                    <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
-                </div>
-            }
-            @else {
-                <div
-                    class="shell"
-                    [attr.data-timestamp]="line.time"
-                    [attr.data-level]="line.logLevel"
-                >
-                    <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}"/>
-                </div>
-            }
+            </ng-scrollbar>
         </div>
-    </cdk-virtual-scroll-viewport>
-</ng-scrollbar>
+    </mat-tab>
+    <mat-tab label="Shell" [disabled]="['failed','finished'].includes(jobInstance.state)">
+        <app-xterm-wrapper
+            [jobInstance]="jobInstance"
+        />
+    </mat-tab>
+    <mat-tab label="File Explorer" [disabled]="['failed','finished'].includes(jobInstance.state)">
+        ...
+    </mat-tab>
+    <!-- <mat-tab label="Tests">???</mat-tab> -->
+    <!-- <mat-tab label="Artifacts"></mat-tab> -->
+    <!-- <mat-tab label="Sources">???</mat-tab> -->
+</mat-tab-group>
 
 <ng-template #rowTemplate let-line>
-    <span class="time">{{line?.time | date:'short'}} </span>
+    <span class="blank"></span>
 
-    @if (line.data) {
-        <span class="message">
-            @for (segment of line.data; track segment) {
-                <span class="segment"
-                    [style]="segment.css"
-                >
-                    {{segment.text}}
-                </span>
-            }
-        </span>
-    }
-    @else {
-        <span class="message">{{(line?.msg || line?.message)?.trim()}}</span>
+    @if (showTimestamps) {
+        <span class="time">{{line?.time}}</span>
     }
 
-    <!-- If the row has additional attributes, render a click-to-view -->
-    @if (false) {
-        <div style="position: absolute">
-            <!-- <mat-icon></mat-icon> -->
-        </div>
-    }
+    <span class="message">
+        @for (segment of line.data; track segment) {
+            <span class="segment" [style]="segment.css">{{segment.text}}</span>
+        }
+    </span>
 </ng-template>

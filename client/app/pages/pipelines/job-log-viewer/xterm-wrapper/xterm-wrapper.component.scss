@@ -1,0 +1,26 @@
+@import "xterm/css/xterm.css";
+
+app-xterm-wrapper {
+    display: block;
+    height: 100%;
+    white-space: pre;
+    text-align: initial;
+
+    .terminal-container {
+        height: 100%;
+    }
+
+    .terminal-container .xterm-dom-renderer-owner-1 .xterm-rows {
+        // font-family: var(--font);
+
+        span {
+
+            width: 8px;
+            font-size: 15.5px;
+        }
+    }
+
+    .xterm .xterm-viewport {
+        background-color: #333;
+    }
+}
