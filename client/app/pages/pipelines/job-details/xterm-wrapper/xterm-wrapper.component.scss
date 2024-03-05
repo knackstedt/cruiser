@@ -1,13 +1,15 @@
 @import "xterm/css/xterm.css";
 
 app-xterm-wrapper {
-    display: block;
+    display: flex;
     height: 100%;
     white-space: pre;
     text-align: initial;
+    flex-direction: column;
 
     .terminal-container {
         height: 100%;
+        width: 100%;
     }
 
     .terminal-container .xterm-dom-renderer-owner-1 .xterm-rows {

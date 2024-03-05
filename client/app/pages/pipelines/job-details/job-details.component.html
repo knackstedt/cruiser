@@ -23,17 +23,23 @@
 
 <mat-tab-group [mat-stretch-tabs]="false">
     <mat-tab label="Output">
-        <app-job-logs
-            [jobInstance]="jobInstance"
-        />
+        <ng-template matTabContent>
+            <app-job-logs
+                [jobInstance]="jobInstance"
+            />
+        </ng-template>
     </mat-tab>
     <mat-tab label="Shell" [disabled]="['failed','finished'].includes(jobInstance.state)">
-        <app-xterm-wrapper
-            [jobInstance]="jobInstance"
-        />
+        <ng-template matTabContent>
+            <app-xterm-wrapper
+                [jobInstance]="jobInstance"
+            />
+        </ng-template>
     </mat-tab>
     <mat-tab label="File Explorer" [disabled]="['failed','finished'].includes(jobInstance.state)">
-        ...
+        <ng-template matTabContent>
+
+        </ng-template>
     </mat-tab>
     <!-- <mat-tab label="Tests">???</mat-tab> -->
     <!-- <mat-tab label="Artifacts"></mat-tab> -->

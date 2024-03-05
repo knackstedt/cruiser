@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, ViewChild, ViewEncapsulation, viewChild } from '@angular/core';
 
 import { Terminal } from "xterm";
 import { FitAddon } from 'xterm-addon-fit';
@@ -20,7 +20,6 @@ import { MatIconModule } from '@angular/material/icon';
     encapsulation: ViewEncapsulation.None
 })
 export class XtermWrapperComponent implements OnInit {
-
     @ViewChild("terminal") termElementRef: ElementRef;
     get terminalEl() { return this.termElementRef.nativeElement as HTMLElement }
 
@@ -37,6 +36,8 @@ export class XtermWrapperComponent implements OnInit {
     fitAddon: FitAddon;
     webglAddon: WebglAddon;
 
+    resizeObserver: ResizeObserver;
+
     constructor(
 
     ) { }
@@ -45,6 +46,9 @@ export class XtermWrapperComponent implements OnInit {
     }
 
     ngAfterViewInit() {
+        this.resizeObserver = new ResizeObserver(() => this.onResize);
+        this.resizeObserver.observe(this.terminalEl);
+
         const socket = this.socket = io({
             path: "/ws/socket-tunnel",
             withCredentials: true
@@ -120,6 +124,8 @@ export class XtermWrapperComponent implements OnInit {
             terminal.loadAddon(this.webglAddon = new WebglAddon());
 
             terminal.onData(data => this.socket.emit("ssh:input", { input: data, id: id }));
+
+            this.onResize();
         });
 
         socket.on("ssh:output", data => this.terminal?.write(data));
@@ -128,5 +134,19 @@ export class XtermWrapperComponent implements OnInit {
     ngOnDestroy() {
         this.terminal?.dispose();
         this.socket?.close();
+        this.resizeObserver.disconnect();
+    }
+
+    onResize() {
+        const rect = this.terminalEl.getBoundingClientRect();
+
+        const rows = Math.floor(rect.height / this.rowHeight);
+        const cols = Math.floor(rect.width / this.charWidth);
+
+        this.terminal.resize(cols, rows);
+        this.socket.emit("ssh:resize", {
+            rows,
+            cols
+        })
     }
 }
