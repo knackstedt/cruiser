@@ -11,7 +11,7 @@ import { TripBreakpoint } from './util/breakpoint';
 import { getSocketTerminal } from './socket/terminal';
 import { getSocket } from './socket/socket';
 import environment from './util/environment';
-import { mkdir } from 'fs-extra';
+import { exists, mkdir } from 'fs-extra';
 
 
 const validateJobCanRun = async (job: JobDefinition) => {
@@ -22,7 +22,7 @@ const validateJobCanRun = async (job: JobDefinition) => {
 
 
 export const RunAgentProcess = async (taskId: string) => {
-    const { job, pipeline, kubeTask } = await getConfig(taskId);
+    const { job, pipeline, kubeTask, jobInstance } = await getConfig(taskId);
 
     const socket = await getSocket(pipeline, job)
     const logger = await getSocketLogger(socket);
@@ -58,7 +58,7 @@ export const RunAgentProcess = async (taskId: string) => {
 
                     if (task.preBreakpoint) {
                         logger.info({ msg: `Tripping on Breakpoint`, breakpoint: true });
-                        await TripBreakpoint(taskId);
+                        await TripBreakpoint(jobInstance, taskId);
                         logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false });
                     }
 
@@ -66,7 +66,8 @@ export const RunAgentProcess = async (taskId: string) => {
                     const args = task.arguments.map(a => envSubstitute(a));
 
                     // Create the cwd if it's missing
-                    await mkdir(task.workingDirectory || environment.buildDir, { recursive: true })
+                    if (!await exists(task.workingDirectory || environment.buildDir))
+                        await mkdir(task.workingDirectory || environment.buildDir, { recursive: true })
 
                     const process = await new Promise<ChildProcessWithoutNullStreams>((res, rej) => {
                         logger.info({
@@ -116,14 +117,14 @@ export const RunAgentProcess = async (taskId: string) => {
                         });
                         if (task.postBreakpoint) {
                             logger.info({ msg: `Tripping on Breakpoint`, breakpoint: true });
-                            await TripBreakpoint(taskId);
+                            await TripBreakpoint(jobInstance, taskId);
                             logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false });
                         }
                     }
                     else {
                         if (task.disableErrorBreakpoint != true) {
                             logger.info({ msg: `Breaking on error`, breakpoint: true, error: true });
-                            await TripBreakpoint(taskId);
+                            await TripBreakpoint(jobInstance, taskId);
                             logger.info({ msg: `Resuming from Breakpoint`, breakpoint: true, error: false });
                         }
                     }
@@ -158,7 +159,7 @@ export const RunAgentProcess = async (taskId: string) => {
     // Download sources
     logger.info({ state: "Cloning", msg: "Agent source cloning", block: "start" });
     await api.patch(`/api/odata/${taskId}`, { state: "cloning", cloneEpoch: Date.now() })
-    await ResolveSources(pipeline, job);
+    await ResolveSources(pipeline, jobInstance);
     logger.info({ state: "Cloning", msg: "Agent source cloning completed", block: "end" });
 
     // Follow job steps to build code

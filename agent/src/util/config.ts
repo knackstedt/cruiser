@@ -1,6 +1,8 @@
 import { api } from '../util/axios';
 import { JobDefinition, PipelineDefinition } from '../../types/pipeline';
 import { logger } from '../util/logger';
+import environment from '../util/environment';
+import { JobInstance } from '../../types/agent-task';
 
 export const getConfig = async (taskId) => {
     const { data: kubeTask } = await api.get(`/api/odata/${taskId}`);
@@ -13,6 +15,8 @@ export const getConfig = async (taskId) => {
     const { data: pipeline } = await api.get<PipelineDefinition>(`/api/odata/${kubeTask.pipeline}`);
 
     const job = pipeline.stages.map(s => s.jobs).flat().find(j => j.id == kubeTask.job);
+
+    const { data: jobInstance } = await api.get<JobInstance>(`/api/odata/jobs:${environment.agentId}`)
 
     if (!pipeline || !job) {
         if (!pipeline)
@@ -29,6 +33,7 @@ export const getConfig = async (taskId) => {
     return {
         pipeline,
         job,
-        kubeTask
+        kubeTask,
+        jobInstance
     }
 }
