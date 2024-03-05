@@ -10,6 +10,7 @@ import { getConfig } from './util/config';
 import { TripBreakpoint } from './util/breakpoint';
 import { getSocketTerminal } from './socket/terminal';
 import { getSocket } from './socket/socket';
+import environment from './util/environment';
 
 
 const validateJobCanRun = async (job: JobDefinition) => {
@@ -39,7 +40,7 @@ export const RunAgentProcess = async (taskId: string) => {
 
                 const tasks = taskGroup.tasks.sort(orderSort);
 
-                const environment: { key: string, value: string; }[] =
+                const envVars: { key: string, value: string; }[] =
                     await api.get(`/api/jobs/${jobInstance.id}/environment`);
 
                 for (let i = 0; i < tasks.length; i++) {
@@ -52,7 +53,7 @@ export const RunAgentProcess = async (taskId: string) => {
                     });
 
                     const env = {};
-                    Object.assign(environment, env);
+                    Object.assign(envVars, env);
 
                     if (task.preBreakpoint) {
                         logger.info({ msg: `Tripping on Breakpoint`, breakpoint: true });
@@ -73,7 +74,7 @@ export const RunAgentProcess = async (taskId: string) => {
 
                         const process = spawn(command, args, {
                             env: env,
-                            cwd: task.workingDirectory,
+                            cwd: task.workingDirectory || environment.buildDir,
                             timeout: task.commandTimeout || 0,
                             windowsHide: true
                         });

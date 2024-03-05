@@ -1,7 +1,9 @@
+import { homedir } from 'os';
 import fs from 'fs-extra';
 import { simpleGit, SimpleGitProgressEvent, SimpleGitOptions, SimpleGit } from 'simple-git';
 import { logger } from './logger';
 import { JobDefinition, PipelineDefinition } from '../../types/pipeline';
+import environment from '../util/environment';
 
 export const ResolveSources = async (pipeline: PipelineDefinition, job: JobDefinition) => {
     if (!pipeline.sources || pipeline.sources.length == 0)
@@ -32,7 +34,7 @@ export const ResolveSources = async (pipeline: PipelineDefinition, job: JobDefin
                 // TODO: Perhaps there's a clean way to read a password from a storage vault
                 // or other secure manner for git?
                 // seems
-                fs.writeFile(`~/.gitconfig`,
+                fs.writeFile(homedir() + `/.gitconfig`,
                     `[credential "${host}"]\n` +
                     `	 username = ${source.username || 'DotOps'}\n` +
                     `    helper = "!f() { test \\"$1\\" = get && echo \\"password=${source.password}\\"; }; f"\n`
@@ -60,7 +62,7 @@ export const ResolveSources = async (pipeline: PipelineDefinition, job: JobDefin
 
                 logger.info({ msg: `Cloning GIT source`, source: sourceForLog });
 
-                await git.clone(source.url, null, {
+                await git.clone(source.url, environment.buildDir, {
                     "--depth": '1'
                 })
 
