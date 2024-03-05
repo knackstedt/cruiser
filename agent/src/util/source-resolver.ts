@@ -1,5 +1,5 @@
 import { homedir } from 'os';
-import fs from 'fs-extra';
+import fs, { mkdir } from 'fs-extra';
 import { simpleGit, SimpleGitProgressEvent, SimpleGitOptions, SimpleGit } from 'simple-git';
 import { logger } from './logger';
 import { JobDefinition, PipelineDefinition } from '../../types/pipeline';
@@ -62,6 +62,7 @@ export const ResolveSources = async (pipeline: PipelineDefinition, job: JobDefin
 
                 logger.info({ msg: `Cloning GIT source`, source: sourceForLog });
 
+                await mkdir(environment.buildDir, { recursive: true })
                 await git.clone(source.url, environment.buildDir, {
                     "--depth": '1'
                 })

@@ -16,6 +16,5 @@ WORKDIR /agent
 RUN apk add --no-cache python3 make g++ git
 RUN npm i
 RUN npm run build
-RUN mkdir /build
 
 CMD ["node", "src/main.js"]

@@ -26,4 +26,7 @@ process.on("uncaughtException", err => {
 RunAgentProcess(taskId)
     .catch(ex => {
         logger.error(ex)
-    });
+    })
+    .then(() => {
+        // process.exit(0)
+    })

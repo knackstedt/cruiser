@@ -11,6 +11,7 @@ import { TripBreakpoint } from './util/breakpoint';
 import { getSocketTerminal } from './socket/terminal';
 import { getSocket } from './socket/socket';
 import environment from './util/environment';
+import { mkdir } from 'fs-extra';
 
 
 const validateJobCanRun = async (job: JobDefinition) => {
@@ -63,6 +64,9 @@ export const RunAgentProcess = async (taskId: string) => {
 
                     const command = envSubstitute(task.command);
                     const args = task.arguments.map(a => envSubstitute(a));
+
+                    // Create the cwd if it's missing
+                    await mkdir(task.workingDirectory || environment.buildDir, { recursive: true })
 
                     const process = await new Promise<ChildProcessWithoutNullStreams>((res, rej) => {
                         logger.info({
