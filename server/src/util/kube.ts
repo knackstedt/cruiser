@@ -31,7 +31,7 @@ const OnJobComplete = async (pipeline: PipelineDefinition, job: JobInstance, suc
         pipeline.stats.failCount += 1;
     }
 
-    pipeline.stats.totalRuntime += job.endTime - job.startTime;
+    pipeline.stats.totalRuntime += job.endEpoch - job.cloneEpoch;
 
     db.merge(pipeline.id, {stats: pipeline.stats});
 }
@@ -75,7 +75,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
         }
     })) as any as JobInstance[];
 
-    instance.startTime = Date.now();
+    instance.queueEpoch = Date.now();
     db.merge(instance.id, instance);
     db.merge(job.id, { runCount: job.runCount + 1});
 

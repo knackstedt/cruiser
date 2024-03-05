@@ -1,9 +1,5 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, NgZone, ViewChild } from '@angular/core';
-import { ScrollingModule } from '@angular/cdk/scrolling';
-import { NgTemplateOutlet } from '@angular/common';
+import { Component, Inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Fetch, MenuDirective, TooltipDirective } from '@dotglitch/ngx-common';

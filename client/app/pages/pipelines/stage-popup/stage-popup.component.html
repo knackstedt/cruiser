@@ -71,23 +71,23 @@
                 </ng-template>
                 <ng-template pTemplate="header">
                     <tr>
-                        <th pSortableColumn="label">
+                        <th pSortableColumn="label" [width]="240">
                             Job Name
                             <p-sortIcon field="label"></p-sortIcon>
                             <p-columnFilter type="text" field="label" display="menu"/>
                         </th>
-                        <th pSortableColumn="name">
+                        <!-- <th pSortableColumn="state" [width]="130">
                             State
                             <p-sortIcon field="state"></p-sortIcon>
                             <p-columnFilter type="text" field="state" display="menu"/>
-                        </th>
+                        </th> -->
                         <!-- ? What does this column _actually_ represent? -->
-                        <th pSortableColumn="timeline">
+                        <th pSortableColumn="timeline" [width]="200">
                             Timeline
                             <p-sortIcon field="timeline"></p-sortIcon>
                             <p-columnFilter type="text" field="timeline" display="menu"/>
                         </th>
-                        <th pSortableColumn="duration">
+                        <th pSortableColumn="duration" [width]="150">
                             Duration
                             <p-sortIcon field="duration"></p-sortIcon>
                             <p-columnFilter type="number" field="duration" display="menu"/>
@@ -104,9 +104,22 @@
                 <ng-template pTemplate="body" let-job>
                     <tr>
                         <td>
-                            <div style="display: flex;">
+                            <div style="display: flex; align-items: center;">
+                                @switch(job._runningJob?.state) {
+                                    @case ("initializing") { <mat-icon fontIcon="pending" /> }
+                                    @case ("cloning") { <mat-icon fontIcon="downloading" /> }
+                                    @case ("building") { <mat-icon class="rotate" fontIcon="change_circle" /> }
+                                    @case ("sealing") { <mat-icon fontIcon="archive" /> }
+                                    <!-- @case ("sealing") {
+                                                    <mat-icon fontIcon="compress" />
+                                                    <mat-icon fontIcon="circle" />
+                                                } -->
+                                    @case ("failed") { <mat-icon style="color: #ff5d5d" fontIcon="block" /> }
+                                    @case ("finished") { <mat-icon style="color: #80ffc0" fontIcon="check_circle" /> }
+                                    @default { <mat-icon style="color: #64b5f6" fontIcon="schedule" /> }
+                                }
                                 @if (job['_runningJob']) {
-                                    <button mat-icon-button (click)="onViewLogs(job)">
+                                    <button mat-icon-button (click)="onViewLogs(job)" matTooltip="Open Job">
                                         <mat-icon>terminal</mat-icon>
                                     </button>
                                 }
@@ -114,19 +127,43 @@
                             </div>
                         </td>
                         <td>
-                            {{job._runningJob.state}}
+                            <svg style="width: 100%; height: 12px; border-radius: 3px;">
+                                <rect x="0" y="0"
+                                    width="100%"
+                                    height="100%"
+                                    style="fill: #f00"></rect>
+                                <rect x="0" y="0"
+                                    [attr.width]="getProgressDuration(job._runningJob?.uploadEpoch, job._runningJob?.endEpoch) + '%'"
+                                    height="100%"
+                                    style="fill: rgb(0, 255, 13)"></rect>
+                                <rect x="0" y="0"
+                                    [attr.width]="getProgressDuration(job._runningJob?.buildEpoch, job._runningJob?.uploadEpoch) + '%'"
+                                    height="100%"
+                                    style="fill: rgb(0, 38, 255)"></rect>
+                                <rect x="0" y="0"
+                                    [attr.width]="getProgressDuration(job._runningJob?.startEpoch, job._runningJob?.buildEpoch) + '%'"
+                                    height="100%"
+                                    style="fill: rgb(255, 242, 0)"></rect>
+                                <rect x="0" y="0"
+                                    [attr.width]="getProgressDuration(job._runningJob?.initEpoch, job._runningJob?.startEpoch) + '%'"
+                                    height="100%"
+                                    style="fill: rgb(255, 0, 195)"></rect>
+                                <rect x="0" y="0"
+                                    [attr.width]="getProgressDuration(job._runningJob?.queueEpoch, job._runningJob?.initEpoch) + '%'"
+                                    height="100%"
+                                    style="fill: rgb(255, 0, 195)"></rect>
+                            </svg>
+                            <ng-template>
+                                {{printDuration(job._runningJob?.queueEpoch)}}
+                                {{printDuration(job._runningJob?.startEpoch)}}
+                                {{job._runningJob?.endEpoch}}
+                            </ng-template>
                         </td>
                         <td>
-                            {{job._runningJob.queueTime}}
-                            {{job._runningJob.startTime}}
-                            {{job._runningJob.endTime}}
+                            {{printDuration(job._runningJob?.queueEpoch)}}
                         </td>
                         <td>
-                            {{job.runtime}}
-                            {{job._runningJob.queueTime}}
-                        </td>
-                        <td>
-                            {{job._runningJob.kube.name}}
+                            {{job._runningJob?.kube.name}}
                         </td>
                     </tr>
                 </ng-template>

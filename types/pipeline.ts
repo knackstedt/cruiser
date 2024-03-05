@@ -52,9 +52,6 @@ export type JobDefinition = {
     artifacts: BuildArtifact[]
     environment?: EnvironmentVariable[]
 
-    startTime: number,
-    endTime: number,
-
     runCount: number,
     invocationCount: number
     failCount: number

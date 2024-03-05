@@ -17,9 +17,14 @@ export type JobInstance = {
     pipeline: PipelineDefinition,
     kubeNamespace: string
     kubePod: string
-    queueTime: number
-    startTime: number
-    endTime: number
+
+    queueEpoch: number
+    initEpoch: number
+    cloneEpoch: number
+    buildEpoch: number
+    uploadEpoch: number
+    endEpoch: number
+
     errorCount: number
     warnCount: number
 };
