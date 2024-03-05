@@ -9,8 +9,17 @@ import { Scheduler } from './util/scheduler';
 import { JobActionsApi } from './api/job-actions';
 import { SocketTunnelService } from './api/socket-tunnel';
 
+process.on('unhandledRejection', (reason, p) => {
+    logger.error({
+        kind: "unhandledPromise",
+        reason,
+        p,
+        stack: reason['stack']
+    });
+});
 process.on("uncaughtException", err => {
-    logger.error("uncaught:", err);
+    err['kind'] = "Uncaught";
+    logger.error(err);
 });
 
 (async () => {
