@@ -104,8 +104,8 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
         kind: "Job",
         metadata: {
             annotations: {
-                "Created By": "$dotops",
-                "Job Id": id,
+                "Created_By": "$dotops",
+                "Job_Id": id,
                 ...elasticAgentTemplate?.kubeContainerAnnotations
             },
             labels: elasticAgentTemplate?.kubeContainerLabels,
@@ -116,9 +116,9 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
             template: {
                 metadata: {
                     annotations: {
-                        "Created By": "$dotops",
-                        "Pod Id": podId,
-                        "Job Id": id
+                        "Created_By": "$dotops",
+                        "Pod_Id": podId,
+                        "Job_Id": id
                     }
                 },
                 spec: {
@@ -127,7 +127,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
                     containers: [
                         {
                             name: podName,
-                            image: elasticAgentTemplate?.kubeContainerImage || "ghcr.io/knackstedt/dot-ops/dotops-agent:bed48ea6b47afb8d9e9f754e77c60c32a87caac5",
+                            image: elasticAgentTemplate?.kubeContainerImage || "ghcr.io/knackstedt/dot-ops/dotops-agent:e40f3ba7ec2c420a22d6982c382e5be1ef2b314d",
                             imagePullPolicy: 'IfNotPresent',
                             securityContext: {
                                 privileged: true
