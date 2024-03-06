@@ -90,7 +90,8 @@ export default async (ctx: LabelTemplateContext) => {
         };
 
         try {
-            const fn = eval(code);
+            // https://esbuild.github.io/content-types/#direct-eval
+            const fn = null as any; // eval(code);
             const res = await fn(ctx);
             this.result = JSON.stringify(res, null, 4);
         }
