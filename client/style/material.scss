@@ -1,4 +1,5 @@
 @use '@angular/material' as mat;
+mat.$theme-ignore-duplication-warnings: true;
 @include mat.core();
 
 $app-typography: mat.define-typography-config($font-family: 'Fira Sans');
@@ -13,7 +14,8 @@ $light-theme: mat.define-light-theme((
         accent: $light-accent,
         warn: $light-warn,
     ),
-    typography: $app-typography
+    typography: $app-typography,
+    density: -4
 ));
 
 $dark-primary: mat.define-palette(mat.$green-palette, A200, 400, 800);
@@ -26,7 +28,8 @@ $dark-theme: mat.define-dark-theme((
         accent: $dark-accent,
         warn: $dark-warn,
     ),
-    typography: $app-typography
+    typography: $app-typography,
+    density: -4
 ));
 
 :root {
@@ -43,6 +46,9 @@ $dark-theme: mat.define-dark-theme((
 
 @include mat.all-component-themes($dark-theme);
 
+@media (prefers-color-scheme: light) {
+    @include mat.all-component-colors($light-theme);
+}
 .light {
     @include mat.all-component-colors($light-theme);
 }
