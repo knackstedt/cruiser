@@ -1,14 +1,28 @@
 import os from "os";
+import shx from "shelljs";
 import * as pty from "node-pty";
 import { Socket, io } from "socket.io-client";
 import { ulid } from 'ulidx';
+
+// Make an attempt to get a compatible PTY program.
+const shell = os.platform() == "win32"
+    ? "powershell.exe"
+    : shx.which("bash")
+    ? "bash"
+    : shx.which("ash")
+    ? "ash"
+    : shx.which("zsh")
+    ? "zsh"
+    : shx.which("ksh")
+    ? "ksh"
+    : "sh";
 
 export const getSocketTerminal = async (socket: Socket) => {
 
     let ptyProcess: pty.IPty;
     let ptyArgs;
-    const shell = os.platform() == "win32" ? "powershell.exe" : "bash";
-    let uid = ulid();
+
+    const uid = ulid();
 
     socket.on("ssh:launch", (data) => {
         try {

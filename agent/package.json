@@ -8,6 +8,7 @@
     },
     "private": true,
     "dependencies": {
+        "@types/shelljs": "^0.8.15",
         "adm-zip": "^0.5.10",
         "axios": "^1.6.7",
         "express": "^4.18.3",
@@ -18,6 +19,7 @@
         "node-pty": "^0.10.1",
         "pino": "^8.19.0",
         "rxjs": "~7.8.1",
+        "shelljs": "^0.8.5",
         "simple-git": "^3.22.0",
         "socket.io": "^4.7.4",
         "socket.io-client": "^4.7.4",
