@@ -13,15 +13,14 @@ WORKDIR /app
 COPY ./nginx.conf /etc/nginx/nginx.conf
 # RUN rm /etc/nginx/conf.d/default.conf
 
-COPY dist /app/dist
-COPY server /app/server
+COPY dist/client /app/client
+COPY dist/server /app/server
 COPY package.json /app/package.json
 # COPY postinstall.sh /app/postinstall.sh
 COPY ecosystem.config.js /app/ecosystem.config.js
 
 # Install server deps
 RUN npm i --omit=dev
-RUN npm run build:server
 
 EXPOSE 80
 
