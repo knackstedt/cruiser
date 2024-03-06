@@ -38,7 +38,12 @@
     </mat-tab>
     <mat-tab label="File Explorer" [disabled]="['failed','finished'].includes(jobInstance.state)">
         <ng-template matTabContent>
-
+            @if (config) {
+                <app-filemanager
+                    gridSize="small"
+                    [config]="config"
+                />
+            }
         </ng-template>
     </mat-tab>
     <!-- <mat-tab label="Tests">???</mat-tab> -->
