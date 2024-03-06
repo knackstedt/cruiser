@@ -4,7 +4,7 @@
     "scripts": {
         "dev": "nodemon main.ts",
         "//build": "tsc",
-        "build": "tsc src/main.ts -t es2020 -m CommonJS --lib es2020,dom --esModuleInterop true --moduleResolution node --importHelpers true --types node"
+        "build": "tsc src/main.ts -t es2020 -m CommonJS --lib es2020,dom --esModuleInterop true --moduleResolution node --importHelpers true --types node --skipLibCheck true"
     },
     "private": true,
     "dependencies": {
