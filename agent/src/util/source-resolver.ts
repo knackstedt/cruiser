@@ -1,13 +1,17 @@
 import { homedir } from 'os';
 import fs, { exists, mkdir, readdir } from 'fs-extra';
 import { simpleGit, SimpleGitProgressEvent, SimpleGitOptions, SimpleGit } from 'simple-git';
-import { logger } from './logger';
 import { JobDefinition, PipelineDefinition } from '../../types/pipeline';
 import environment from '../util/environment';
 import { TripBreakpoint } from '../util/breakpoint';
 import { JobInstance } from '../../types/agent-task';
+import { getSocketLogger } from 'socket/logger';
 
-export const ResolveSources = async (pipeline: PipelineDefinition, jobInstance: JobInstance) => {
+export const ResolveSources = async (
+    pipeline: PipelineDefinition,
+    jobInstance: JobInstance,
+    logger: Awaited<ReturnType<typeof getSocketLogger>>
+) => {
     if (!pipeline.sources || pipeline.sources.length == 0)
         return null;
 
@@ -31,7 +35,7 @@ export const ResolveSources = async (pipeline: PipelineDefinition, jobInstance: 
             default:
             case "git": {
 
-                const [host] = source.url.split('/');
+                // const [host] = source.url.split('/');
 
                 // TODO: Perhaps there's a clean way to read a password from a storage vault
                 // or other secure manner for git?

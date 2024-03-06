@@ -4,7 +4,7 @@ import environment from './environment';
 import { JobDefinition } from '../../types/pipeline';
 import { JobInstance } from '../../types/agent-task';
 
-export const TripBreakpoint = async (jobInstance: JobInstance, taskId?: string) => {
+export const TripBreakpoint = async (jobInstance: JobInstance) => {
 
     // Tell the server that we're stuck on a breakpoint
     await api.patch(`/api/odata/${jobInstance.id}`, { state: "breakpoint" });

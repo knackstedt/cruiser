@@ -12,7 +12,10 @@ export const getSocketLogger = async(socket: Socket) => {
     const originalEmit = socket.emit.bind(socket);
     socket.emit = (ev: string, data: Object) => {
         originalEmit(ev, data);
-        history.push({ ev, data });
+
+        // Don't store non-log messages
+        if (ev.startsWith("log:"))
+            history.push({ ev, data });
         return null;
     };
 
