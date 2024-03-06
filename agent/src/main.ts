@@ -46,6 +46,10 @@ process.on("uncaughtException", err => {
     app.use((req, res, next) => next(404));
     app.use((err, req, res, next) => {
         logger.error(err);
+
+        res
+            .status(500)
+            .send(err);
     });
 
     const server = http.createServer(app);
