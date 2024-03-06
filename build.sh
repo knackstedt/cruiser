@@ -8,6 +8,7 @@ version=$(npm version --json | jq '.["dot-ops"]' | tr -d '"')
 # Run the build
 npm i
 npm run build:client
+npm run build:server
 docker build -f server.dockerfile . -t harbor.dotglitch.dev/library/dot-ops:$version
 
 # Once built, push the new build number
