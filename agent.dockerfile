@@ -17,4 +17,6 @@ RUN apk add --no-cache python3 make g++ git
 RUN npm i
 RUN npm run build
 
+EXPOSE 8080
+
 CMD ["node", "src/main.js"]
