@@ -8,6 +8,7 @@ import { PipelineApi } from './api/pipeline';
 import { Scheduler } from './util/scheduler';
 import { JobActionsApi } from './api/job-actions';
 import { SocketTunnelService } from './api/socket-tunnel';
+import { TunnelApi } from './api/api-tunnel';
 
 process.on('unhandledRejection', (reason, p) => {
     logger.error({
@@ -31,6 +32,7 @@ process.on("uncaughtException", err => {
     app.use("/api/pipeline",   PipelineApi);
     app.use("/api/jobs",   JobActionsApi);
     app.use("/api/odata", DatabaseTableApi());
+    app.use("/api/pod", TunnelApi);
 
     app.use((req, res, next) => next(404));
     app.use(ErrorHandler);

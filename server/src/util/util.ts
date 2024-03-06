@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { NextFunction, Request, Response } from "express";
 import * as fs from "fs-extra";
 
@@ -95,3 +96,5 @@ export const getFilesInFolderFlat = async (folder: string, showHidden?: boolean,
     }[];
 }
 
+export const randomString = (length: number) =>
+    randomBytes(length/2).toString('hex');

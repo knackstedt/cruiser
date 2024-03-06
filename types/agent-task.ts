@@ -16,7 +16,7 @@ export type JobInstance = {
     job: JobDefinition,
     pipeline: PipelineDefinition,
     kubeNamespace: string
-    kubePod: string
+    kubePodName: string
 
     queueEpoch: number
     initEpoch: number

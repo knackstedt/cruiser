@@ -32,7 +32,7 @@ export class SocketTunnelService {
     private startClientService() {
         const io = new Server(this.server, {
             path: "/ws/socket-tunnel",
-            maxHttpBufferSize: 1e8
+            maxHttpBufferSize: 1024**3
         });
 
         io.on("connection", socket => {

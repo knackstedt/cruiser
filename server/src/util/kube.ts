@@ -4,6 +4,7 @@ import * as k8s from '@kubernetes/client-node';
 import { db } from './db';
 import { JobInstance } from '../../types/agent-task';
 import { JobDefinition, PipelineDefinition, StageDefinition } from '../../types/pipeline';
+import { randomString } from './util';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
@@ -54,6 +55,8 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
     const namespace = elasticAgentTemplate?.kubeNamespace || process.env['AGENT_NAMESPACE'] || "dotops";
     const id = ulid();
     const podId = id.toLowerCase();
+    const kubeAuthnToken = randomString(128);
+    const podName = `dotops-ea-${podId}`;
 
     // Mark all other job instances as non-latest
     await db.query(`UPDATE jobs SET latest = false WHERE job.id = '${job.id}'`);
@@ -71,8 +74,11 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
         stage: stage.id,
         kube: {
             namespace,
-            name: `dotops-ea-${podId}`
-        }
+            name: podName
+        },
+        kubeNamespace: namespace,
+        kubePodName: podName,
+        kubeAuthnToken
     })) as any as JobInstance[];
 
     instance.queueEpoch = Date.now();
@@ -92,7 +98,6 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
     })
     .catch(e => { if (e.body?.reason != 'AlreadyExists') throw e; });
 
-    const podName = `dotops-ea-${podId}`;
 
     const result = await k8sBatchApi.createNamespacedJob(namespace, {
         apiVersion: "batch/v1",
@@ -104,7 +109,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
                 ...elasticAgentTemplate?.kubeContainerAnnotations
             },
             labels: elasticAgentTemplate?.kubeContainerLabels,
-            name: `dotops-ea-${podId}`,
+            name: podName,
         },
         spec: {
             activeDeadlineSeconds: Number.MAX_SAFE_INTEGER,
@@ -143,6 +148,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
                                 { name: "CI_ENVIRONMENT", value: "dotops" },
                                 { name: "DOTGLITCH_DOTOPS_CLUSTER_URL", value: 'http://dotglitch.dev:8000' },
                                 { name: "DOTGLITCH_AGENT_ID", value: id },
+                                { name: "DOTOPS_WEBSERVER_TOKEN", value: kubeAuthnToken },
                                 ...environment
                             ]
                         }
