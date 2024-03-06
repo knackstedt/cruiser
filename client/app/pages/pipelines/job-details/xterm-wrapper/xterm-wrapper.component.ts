@@ -8,6 +8,7 @@ import { Unicode11Addon } from 'xterm-addon-unicode11';
 import io, { Socket } from "socket.io-client";
 import { AnsiToXTermTheme, darkTheme } from 'client/app/services/theme.service';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialogRef } from '@angular/material/dialog';
 
 @Component({
     selector: 'app-xterm-wrapper',
@@ -39,7 +40,7 @@ export class XtermWrapperComponent implements OnInit {
     resizeObserver: ResizeObserver;
 
     constructor(
-
+        private readonly dialogRef: MatDialogRef<any>
     ) { }
 
     ngOnInit() {
@@ -76,7 +77,13 @@ export class XtermWrapperComponent implements OnInit {
 
         // The pty on the remote died
         socket.on("ssh:exit", code => {
+            // If exit code is zero, the user submitted "ctrl+d" to close.
+            // We'll thus close the dialog, assuming the user is done.
             console.log("Pty was killed", code);
+
+            if (code == 0) {
+                this.dialogRef.close();
+            }
         });
 
         socket.on("ssh:reconnect", id => {
@@ -132,9 +139,15 @@ export class XtermWrapperComponent implements OnInit {
     }
 
     ngOnDestroy() {
+        this.webglAddon?.dispose();
         this.terminal?.dispose();
         this.socket?.close();
         this.resizeObserver.disconnect();
+
+        this.webglAddon = null;
+        this.terminal = null;
+        this.socket = null;
+        this.resizeObserver = null;
     }
 
     onResize() {
@@ -143,8 +156,8 @@ export class XtermWrapperComponent implements OnInit {
         const rows = Math.floor(rect.height / this.rowHeight);
         const cols = Math.floor(rect.width / this.charWidth);
 
-        this.terminal.resize(cols, rows);
-        this.socket.emit("ssh:resize", {
+        this.terminal?.resize(cols, rows);
+        this.socket?.emit("ssh:resize", {
             rows,
             cols
         })
