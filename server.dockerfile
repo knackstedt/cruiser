@@ -1,9 +1,7 @@
-FROM ubuntu:22.04
+FROM node:20-alpine
 
-RUN apt update
-RUN apt install curl -y -qq
-RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
-RUN apt install nginx nodejs gcc g++ make -y -qq
+RUN apk add nginx g++ make py3-pip
+
 RUN npm i -g pm2
 # RUN service nginx enable
 
@@ -13,16 +11,15 @@ WORKDIR /app
 COPY ./nginx.conf /etc/nginx/nginx.conf
 # RUN rm /etc/nginx/conf.d/default.conf
 
-COPY dist/client /app/client
-COPY dist/server /app/server
-COPY package.json /app/package.json
+ADD ./dist/dot-ops/browser/ /app/client/
+ADD ./dist/server/src/ /app/server/
+COPY ./package.json /app/package.json
 # COPY postinstall.sh /app/postinstall.sh
-COPY ecosystem.config.js /app/ecosystem.config.js
+COPY ./ecosystem.config.js /app/ecosystem.config.js
 
 # Install server deps
 RUN npm i --omit=dev
 
 EXPOSE 80
 
-
-CMD ["/bin/bash", "-c", "service nginx start; pm2-runtime ecosystem.config.js"]
+CMD ["/bin/bash", "-c", "nginx start; pm2-runtime ecosystem.config.js"]
