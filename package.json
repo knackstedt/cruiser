@@ -1,6 +1,6 @@
 {
   "name": "dot-ops",
-  "version": "0.0.43",
+  "version": "0.0.44",
   "scripts": {
     "ng": "ng",
     "dev": "concurrently \"npm run dev:web\" \"npm run dev:server\"",
