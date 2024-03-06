@@ -107,12 +107,19 @@ export class JobLogsComponent {
         socket.on("log:history", (entries: { ev: string, data: object; }[]) => {
             console.time("Parse log history");
             const el = entries.length;
+
+            const notASwitch = {
+                "log:stdout": parseStdOut,
+                "log:stderr": parseStdErr,
+                "log:agent": parseAgent
+            }
+
             for (let i = 0; i < el; i++) {
-                entries[i].ev == "log:stdout" && parseStdOut(entries[i].data as any, false);
-                entries[i].ev == "log:stderr" && parseStdErr(entries[i].data as any, false);
-                entries[i].ev == "log:agent" && parseAgent(entries[i].data as any, false);
+                notASwitch[entries[i].ev]?.(entries[i].data, false);
             }
             console.timeEnd("Parse log history");
+
+            this.filterLines();
         });
 
 
