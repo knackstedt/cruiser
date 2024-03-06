@@ -190,6 +190,11 @@ router.use('/scandir', route(async (req, res, next) => {
 router.use('/', route(async (req, res, next) => {
     let { path, showHidden } = req.body;
 
+    if (!path)
+        return next({ status: 400, message: "Missing path" })
+    if (typeof path != "string")
+        return next({ status: 400, message: "Malformed path" })
+
     // TODO: make this work better?
     if (path.includes(".zip#/") || path.endsWith('.zip')) {
         let [outerpath, innerpath] = path.split("#/");
