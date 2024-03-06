@@ -5,7 +5,7 @@ import { JobDefinition, PipelineDefinition } from '../../types/pipeline';
 import environment from '../util/environment';
 import { TripBreakpoint } from '../util/breakpoint';
 import { JobInstance } from '../../types/agent-task';
-import { getSocketLogger } from 'socket/logger';
+import { getSocketLogger } from '../socket/logger';
 
 export const ResolveSources = async (
     pipeline: PipelineDefinition,

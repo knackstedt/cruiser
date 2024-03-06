@@ -1,7 +1,7 @@
 import { ResolveSources } from './util/source-resolver';
-import { getSocketLogger } from './socket/logger';
 import { api } from './util/axios';
 import { getConfig } from './util/config';
+import { getSocketLogger } from './socket/logger';
 import { getSocketTerminal } from './socket/terminal';
 import { getSocket } from './socket/socket';
 import { RunTaskGroupsInParallel } from './run-tasks';
