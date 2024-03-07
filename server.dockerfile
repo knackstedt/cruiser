@@ -1,6 +1,9 @@
-FROM node:20-alpine
+FROM node:20-bullseye
+# FROM node:20-alpine
 
-RUN apk add nginx g++ make py3-pip
+# RUN apk add nginx g++ make py3-pip
+RUN apt update
+RUN apt install nginx g++ make python3 -y -qq
 
 RUN npm i -g pm2
 # RUN service nginx enable
@@ -18,7 +21,6 @@ COPY ./package.json /app/package.json
 COPY ./ecosystem.config.js /app/ecosystem.config.js
 
 # Install server deps
-ENV CXXFLAGS="--std=c++17"
 RUN npm i --omit=dev
 
 EXPOSE 80
