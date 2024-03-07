@@ -8,6 +8,6 @@ const dbc = new Surreal();
         username: process.env['SURREAL_USER'] || 'root',
         password: process.env['SURREAL_PASSWORD'] || 'root',
     });
-    await dbc.use({ namespace: 'dotglitch', database: 'dotops' });
+    await dbc.use({ namespace: 'dotglitch', database: 'cruiser' });
 })();
 export const db = dbc;

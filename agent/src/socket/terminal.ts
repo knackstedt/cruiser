@@ -42,18 +42,18 @@ export const getSocketTerminal = async (socket: Socket) => {
 
         socket.emit("ssh:started", { id: uid });
 
-        ptyProcess.onData(data => socket.emit("ssh:output", data));
-        ptyProcess.onExit(e => socket.emit("ssh:exit", e));
+        ptyProcess?.onData(data => socket.emit("ssh:output", data));
+        ptyProcess?.onExit(e => socket.emit("ssh:exit", e));
     });
 
     socket.on("disconnect", () => {
         // TODO: Should we let this live for 5
         // minutes before killing it to allow users
         // to reconnect?
-        ptyProcess.kill();
+        ptyProcess?.kill();
     });
 
-    socket.on("ssh:exit", () => ptyProcess.kill());
+    socket.on("ssh:exit", () => ptyProcess?.kill());
     socket.on("ssh:input", ({ input, id }) => {
         if (!ptyProcess || id != uid) {
             socket.emit("ssh:reconnect");
@@ -62,7 +62,7 @@ export const getSocketTerminal = async (socket: Socket) => {
             ptyProcess?.write(input);
         }
     });
-    socket.on("ssh:resize", ({ rows, cols }) => ptyProcess.resize(cols, rows));
+    socket.on("ssh:resize", ({ rows, cols }) => ptyProcess?.resize(cols, rows));
 
     return socket;
 }

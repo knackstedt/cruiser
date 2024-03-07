@@ -1,5 +1,5 @@
 {
-    "name": "dot-ops-agent",
+    "name": "cruiser-agent",
     "version": "0.0.0",
     "scripts": {
         "dev": "nodemon main.ts",

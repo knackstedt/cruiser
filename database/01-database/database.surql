@@ -1,6 +1,6 @@
 DEFINE NS dotglitch;
 USE NS dotglitch;
-DEFINE DATABASE dotops;
+DEFINE DATABASE cruiser;
 
 
-USE NS dotglitch DB dotops;
+USE NS dotglitch DB cruiser;

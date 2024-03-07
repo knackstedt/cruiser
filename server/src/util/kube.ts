@@ -52,11 +52,11 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
         const [ap] = (await db.query(job.elasticAgentId)) as any as any[];
         elasticAgentTemplate = ap;
     }
-    const namespace = elasticAgentTemplate?.kubeNamespace || process.env['AGENT_NAMESPACE'] || "dotops";
+    const namespace = elasticAgentTemplate?.kubeNamespace || process.env['AGENT_NAMESPACE'] || "cruiser";
     const id = ulid();
     const podId = id.toLowerCase();
     const kubeAuthnToken = randomString(128);
-    const podName = `dotops-ea-${podId}`;
+    const podName = `cruiser-ea-${podId}`;
 
     // Mark all other job instances as non-latest
     await db.query(`UPDATE jobs SET latest = false WHERE job.id = '${job.id}'`);
@@ -72,10 +72,6 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
         latest: true,
         pipeline: pipeline.id,
         stage: stage.id,
-        kube: {
-            namespace,
-            name: podName
-        },
         kubeNamespace: namespace,
         kubePodName: podName,
         kubeAuthnToken
@@ -104,7 +100,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
         kind: "Job",
         metadata: {
             annotations: {
-                "Created_By": "$dotops",
+                "Created_By": "$cruiser",
                 "Job_Id": id,
                 ...elasticAgentTemplate?.kubeContainerAnnotations
             },
@@ -116,7 +112,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
             template: {
                 metadata: {
                     annotations: {
-                        "Created_By": "$dotops",
+                        "Created_By": "$cruiser",
                         "Pod_Id": podId,
                         "Job_Id": id
                     }
@@ -127,7 +123,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
                     containers: [
                         {
                             name: podName,
-                            image: elasticAgentTemplate?.kubeContainerImage || "ghcr.io/knackstedt/dot-ops/dotops-agent:e40f3ba7ec2c420a22d6982c382e5be1ef2b314d",
+                            image: elasticAgentTemplate?.kubeContainerImage || "ghcr.io/knackstedt/cruiser/cruiser-agent:655014915fc53379a5b3055df4c9e4d773d2bed6",
                             imagePullPolicy: 'IfNotPresent',
                             securityContext: {
                                 privileged: true
@@ -142,10 +138,13 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
                                     memory: elasticAgentTemplate?.kubeMemRequest
                                 }
                             },
+                            ports: [{ containerPort: 8080 }],
                             env: [
                                 // TODO: pass surreal connection string
                                 // consider using HTTP POST instead.
-                                { name: "CI_ENVIRONMENT", value: "dotops" },
+                                { name: "CI_ENVIRONMENT", value: "cruiser" },
+                                // TODO: calculate this value by introspecting the server
+                                // hostname -i => ip address
                                 { name: "DOTGLITCH_DOTOPS_CLUSTER_URL", value: 'http://dotglitch.dev:8000' },
                                 { name: "DOTGLITCH_AGENT_ID", value: id },
                                 { name: "DOTOPS_WEBSERVER_TOKEN", value: kubeAuthnToken },
@@ -162,7 +161,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
     const kubeJobMetadata = kubeJob.metadata;
 
     await db.merge(instance.id, {
-        kube_pod: kubeJobMetadata.uid
+        jobUid: kubeJobMetadata.uid,
     });
 
     /**

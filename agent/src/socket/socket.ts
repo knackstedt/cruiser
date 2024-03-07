@@ -10,7 +10,7 @@ export const getSocket = async (pipeline: PipelineDefinition, job: JobDefinition
     let socket: Socket;
 
     try {
-        socket = io(environment.dotopsUrl, {
+        socket = io(environment.cruiserUrl, {
             path: "/ws/socket-tunnel-internal",
             // extraHeaders: {}
         });

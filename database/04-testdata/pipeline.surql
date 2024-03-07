@@ -204,7 +204,7 @@ CREATE pipelineSource:ulid() CONTENT {
     label: "github",
     description: "",
     order: 0,
-    url: "https://github.com/knackstedt/dotops",
+    url: "https://github.com/knackstedt/cruiser",
     targetPath: "/build",
     type: "git"
 };

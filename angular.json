@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "dot-ops": {
+    "cruiser": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -20,7 +20,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/dot-ops",
+            "outputPath": "dist/cruiser",
             "index": "client/index.html",
             "browser": "client/main.ts",
             "polyfills": ["zone.js"],
@@ -78,10 +78,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "dot-ops:build:production"
+              "browserTarget": "cruiser:build:production"
             },
             "development": {
-              "browserTarget": "dot-ops:build:development"
+              "browserTarget": "cruiser:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -89,7 +89,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "dot-ops:build"
+            "browserTarget": "cruiser:build"
           }
         }
       }

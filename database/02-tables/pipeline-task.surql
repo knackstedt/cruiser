@@ -23,9 +23,9 @@ DEFINE TABLE pipelineTask SCHEMALESS;
     DEFINE FIELD runIfPreviousTaskFailed ON TABLE pipelineTask TYPE any
         VALUE $value OR false;
 
-    DEFINE FIELD freezeBeforeRun ON TABLE pipelineTask TYPE any
+    DEFINE FIELD preBreakpoint ON TABLE pipelineTask TYPE any
         VALUE $value OR false;
-    DEFINE FIELD freezeAfterRun ON TABLE pipelineTask TYPE any
+    DEFINE FIELD postBreakpoint ON TABLE pipelineTask TYPE any
         VALUE $value OR false;
 
 

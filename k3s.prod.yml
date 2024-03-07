@@ -9,7 +9,7 @@ spec:
     - match: Host(`cruiser.dev`)
       kind: Rule
       services:
-      - name: dot-ops-server
+      - name: cruiser-server
         port: 80
 
 ---
@@ -25,7 +25,7 @@ spec:
     - kind: Rule
       match: Host(`cruiser.dev`)
       services:
-        - name: dot-ops-server
+        - name: cruiser-server
           port: 80
   tls:
     secretName: cruiser.dev-tls
@@ -35,10 +35,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: dot-ops-server
+  name: cruiser-server
 spec:
   selector:
-    app: dot-ops-server
+    app: cruiser-server
   ports:
   - protocol: "TCP"
     port: 80
@@ -50,20 +50,20 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dot-ops-server
+  name: cruiser-server
 spec:
   selector:
     matchLabels:
-      app: dot-ops-server
+      app: cruiser-server
   replicas: 1
   template:
     metadata:
       labels:
-        app: dot-ops-server
+        app: cruiser-server
     spec:
       containers:
-      - name: dot-ops
-        image: harbor.dotglitch.dev/library/dot-ops:latest
+      - name: cruiser
+        image: harbor.dotglitch.dev/library/cruiser:latest
         ports:
         - containerPort: 80
       imagePullSecrets:

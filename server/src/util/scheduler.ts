@@ -7,8 +7,8 @@ const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
 const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
 
-const namespace = "dotops";
-const workerImage = "dotops-agent:latest";
+const namespace = "cruiser";
+const workerImage = "cruiser-agent:latest";
 const maxAgentLifetimeSeconds = 1000;
 
 const logger = getLogger("scheduler");
@@ -37,19 +37,19 @@ export const Scheduler = async () => {
             const environment: { key: string, value: string; }[] =
                 await db.query(`RETURN fn::job_get_environment(${job.id})`) as any;
 
-            const namespace = jobInstance.kubeNamespace || elasticAgent.kubeContainerImage || "dotops";
+            const namespace = jobInstance.kubeNamespace || elasticAgent.kubeContainerImage || "cruiser";
             k8sApi.createNamespacedPod(namespace, {
                 apiVersion: "v1",
                 kind: "pod",
                 metadata: {
-                    name: "dotops-" + jobInstance.id.split(':')[1],
+                    name: "cruiser-" + jobInstance.id.split(':')[1],
                     labels: {
 
                     }
                 },
                 spec: {
                     containers: [{
-                        name: "dotops-agent",
+                        name: "cruiser-agent",
                         image: elasticAgent.kubeContainerImage,
                         env: environment.map(e => ({ name: e.key, value: e.value }))
                     }]

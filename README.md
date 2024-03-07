@@ -1,6 +1,6 @@
-# Dot Ops
+# Cruiser
 
-.Ops -- a modern and robust CI/CD toolchain for tomorrow's applications.
+Cruiser -- a modern and robust CI/CD toolchain for tomorrow's applications.
 
 ## Motivation
 
@@ -20,7 +20,8 @@ solidifying the base of the framework and stabilizing the architecture.
 
 
 ## Roadmap
- - [ ] Create "freeze" points and allow remote terminal connections through web UI
+ - [X] Create "freeze" points and allow remote terminal connections through web UI
+ - [ ] Support Artillery load testing OOTB
  - [ ] Create base worker image and sample k8s setup
  - [ ] Enable disabling pipelines, jobs, stages, task groups etc.
  - [ ] Pipeline job execution labels can be defined from simple JS scripts
@@ -51,5 +52,6 @@ solidifying the base of the framework and stabilizing the architecture.
  - [ ] Support for hosting git repos
  - [ ] Support for load testing quality gate metric integration
  - [ ] Destroy all humans
+
 
 

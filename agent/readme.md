@@ -14,9 +14,9 @@ Pipeline
 3. Agent downloads any sources, reports errors
 4. Agent begins to execute commands as specified in job
     - Agent advertises "task ${calculatedName} starting"
-    - If task.freezeBeforeRun flag set, halt here.
+    - If task.preBreakpoint flag set, halt here.
     - Agent runs task
-    - If task.freezeAfterRun flag set, halt here.
+    - If task.postBreakpoint flag set, halt here.
     - Agent advertises "task ${calculatedName} complete!"
     - Agent advertises "task ${calculatedName} failed!"
 5. Agent uploads artifacts and dies

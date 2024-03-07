@@ -11,7 +11,7 @@ const db = new Surreal();
         username: process.env['SURREAL_USER'] || 'root',
         password: process.env['SURREAL_PASSWORD'] || 'root',
     });
-    await db.use({ namespace: 'dotglitch', database: 'dotops' });
+    await db.use({ namespace: 'dotglitch', database: 'cruiser' });
 })();
 
 

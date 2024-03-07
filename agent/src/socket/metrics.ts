@@ -6,7 +6,7 @@ import { getLogger } from '../util/logger';
 const logger = getLogger("metrics");
 
 export const getSocketMetrics = async () => {
-    const socket = io(environment.dotopsUrl, {
+    const socket = io(environment.cruiserUrl, {
         path: "/ws/socket-tunnel-internal",
         extraHeaders: {}
     });
