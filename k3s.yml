@@ -6,7 +6,7 @@ spec:
   entryPoints:
    - web
   routes:
-    - match: Host(`dev.ci.dotglitch.dev`)
+    - match: Host(`dev.cruiser.dev`)
       kind: Rule
       services:
       - name: dot-ops
@@ -23,12 +23,12 @@ spec:
     - websecure
   routes:
     - kind: Rule
-      match: Host(`dev.ci.dotglitch.dev`)
+      match: Host(`dev.cruiser.dev`)
       services:
         - name: dot-ops
           port: 80
   tls:
-    secretName: dev.ci.dotglitch.dev-tls
+    secretName: dev.cruiser.dev-tls
 
 ---
 
@@ -74,14 +74,14 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: dev.ci.dotglitch.dev
+  name: dev.cruiser.dev
 spec:
-  commonName: dev.ci.dotglitch.dev
+  commonName: dev.cruiser.dev
   dnsNames:
-    - dev.ci.dotglitch.dev
+    - dev.cruiser.dev
   issuerRef:
     kind: ClusterIssuer
     name: letsencrypt-prod
-  secretName: dev.ci.dotglitch.dev-tls
+  secretName: dev.cruiser.dev-tls
 
 

@@ -18,6 +18,7 @@ COPY ./package.json /app/package.json
 COPY ./ecosystem.config.js /app/ecosystem.config.js
 
 # Install server deps
+ENV CXXFLAGS="--std=c++17"
 RUN npm i --omit=dev
 
 EXPOSE 80
