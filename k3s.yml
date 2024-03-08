@@ -42,7 +42,7 @@ spec:
   ports:
   - protocol: "TCP"
     port: 80
-    targetPort: 80
+    targetPort: 6800
   type: ClusterIP
 
 ---
@@ -64,8 +64,38 @@ spec:
       containers:
       - name: cruiser
         image: harbor.dotglitch.dev/library/cruiser:latest
+        resources:
+          requests:
+            cpu: 10m
+            memory: 100Mi
+          limits:
+            cpu: 500m
+            memory: 1000Mi
         ports:
-        - containerPort: 80
+        - containerPort: 6800
+        environment:
+        - name: SURREAL_URL
+          value: 'http://cruiser-db.svc:8000'
+        - name: SURREAL_USER
+          valueFrom:
+            secretKeyRef:
+              name: cruiser-db-secret
+              key: SURREAL_USER
+        - name: SURREAL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cruiser-db-secret
+              key: SURREAL_PASS
+        - name: GITHUB_OAUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: cruiser-github-secret
+              key: GITHUB_OAUTH_SECRET
+        - name: GITHUB_OAUTH_CLIENTID
+          valueFrom:
+            secretKeyRef:
+              name: cruiser-github-secret
+              key: GITHUB_OAUTH_CLIENTID
       imagePullSecrets:
       - name: harbor-key
 
@@ -84,4 +114,124 @@ spec:
     name: letsencrypt-prod
   secretName: dev.cruiser.dev-tls
 
+---
 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvc-cruiser-db
+spec:
+  capacity:
+    storage: 16Gi
+  hostPath:
+    path: >-
+      /var/lib/rancher/k3s/storage/pvc-cruiser-db
+    type: DirectoryOrCreate
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: local-path
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k3s-03
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cruiser-db-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 16Gi
+  volumeName: pvc-cruiser-db
+  storageClassName: local-path
+  volumeMode: Filesystem
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cruiser-db
+  namespace: cruiser-dev
+spec:
+  selector:
+    matchLabels:
+      app: cruiser-db
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: cruiser-db
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: cruiser-db-pvc
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+      - name: cruiser-db
+        image: surrealdb/surrealdb:latest
+        ports:
+          - containerPort: 8000
+        resources:
+          requests:
+            cpu: 10m
+            memory: 100Mi
+          limits:
+            cpu: 500m
+            memory: 1000Mi
+        args: ["start", "file:/data/database.db"]
+        volumeMounts:
+          - name: data
+            mountPath: /data
+        env:
+        - name: SURREAL_AUTH
+          value: 'true'
+        - name: SURREAL_CAPS_ALLOW_ALL
+          value: 'true'
+        - name: SURREAL_LOG
+          valueFrom:
+            configMapKeyRef:
+              name: cruiser-db-config
+              key: SURREAL_LOG
+              optional: true
+        - name: SURREAL_USER
+          valueFrom:
+            secretKeyRef:
+              name: cruiser-db-secret
+              key: SURREAL_USER
+        - name: SURREAL_PASS
+          valueFrom:
+            secretKeyRef:
+              name: cruiser-db-secret
+              key: SURREAL_PASS
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cruiser-db
+spec:
+  selector:
+    app: cruiser-db
+  ports:
+  - protocol: "TCP"
+    port: 8000
+    targetPort: 8000
+  type: ClusterIP
