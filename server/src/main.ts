@@ -60,6 +60,8 @@ process.on("uncaughtException", err => {
 
     // app.use("/api/filesystem", FilesystemApi);
     app.use("/api/user",     UserApi);
+    // Temporary access block
+    app.use((req, res, next) => req.session.gh_user.login == "knackstedt" ? next() : next(401))
     app.use("/api/pipeline", PipelineApi);
     app.use("/api/jobs",     JobActionsApi);
     app.use("/api/odata",    DatabaseTableApi());
