@@ -49,19 +49,16 @@ process.on("uncaughtException", err => {
             sessionHandler(req, res, next);
         }
     })
-    app.use((req, res, next) => {
-        if (req['_api']) {
-            next();
-        }
-        else {
-            OpenIDHandler(req, res, next);
-        }
-    })
 
+    app.use("/api/oauth/gh", OpenIDHandler);
     // app.use("/api/filesystem", FilesystemApi);
     app.use("/api/user",     UserApi);
     // Temporary access block
-    app.use((req, res, next) => req.session.gh_user.login == "knackstedt" ? next() : next(401))
+    app.use((req, res, next) => {
+        req.session.gh_user.login == "knackstedt"
+            ? next()
+            : next(401)
+    })
     app.use("/api/pipeline", PipelineApi);
     app.use("/api/jobs",     JobActionsApi);
     app.use("/api/odata",    DatabaseTableApi());
