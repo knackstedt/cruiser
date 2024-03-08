@@ -1,6 +1,6 @@
 import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { interpolateRgbBasis } from 'd3';
+import gsap from 'gsap';
 
 @Component({
     selector: 'app-lazy-progress-distractor',
@@ -12,33 +12,112 @@ import { interpolateRgbBasis } from 'd3';
 export class LazyProgressDistractorComponent {
     @Input() isDestroying = false;
 
-    colors = [
-        { hex: "", opacity: .5 },
-    ]
-    index = 0;
-    current = []
-
     constructor() {
-        const gradient = interpolateRgbBasis(
-            // ["#ff0000", "#8994bb", "#00ff00", "#484d54"]
-            ["#0d47a1", "#4a5477", "#ff9800", "#4f4f4f"]
-        );
-
-        this.colors = this.current = [
-            gradient(0),
-            gradient(1/8),
-            gradient(2/8),
-            gradient(3/8),
-            gradient(4/8),
-            gradient(5/8),
-            gradient(6/8),
-            gradient(7/8),
-        ]
-        .map(g => ({hex: g, opacity: .5}));
-
 
     }
+
     ngAfterViewInit() {
-        // this.current = [...this.colors, ...this.colors].slice(this.index, this.index + 8);
+        gsap.set('svg', {
+            visibility: 'visible'
+        });
+        gsap.set('.dot', {
+            transformOrigin: '50% 50%',
+            attr: {
+                cx: 'random(350, 450)',
+                cy: 440,
+                r: 'random(4, 20)'
+            }
+        });
+        gsap.set('.outsideDot', {
+            transformOrigin: '50% 50%',
+            attr: {
+                cx: 'random(370, 420)',
+                cy: 420,
+                r: 'random(3, 19)'
+            }
+        });
+        let tl1 = gsap.timeline();
+        tl1.to('.dots1 .dot', {
+            duration: 'random(2,8)',
+            attr: {
+                cy: 'random(-220, -320)'
+            },
+            stagger: {
+                each: 0.16,
+                repeat: -1,
+                // repeatRefresh: false
+            },
+            ease: 'linear'
+        }).seek(100);
+
+        let tl2 = gsap.timeline();
+        tl2.to('.dots2 .dot', {
+            duration: 'random(2,5)',
+            attr: {
+                cy: 'random(-220, -320)'
+            },
+            stagger: {
+                each: 0.16,
+                repeat: -1,
+                // repeatRefresh: false
+            },
+            ease: 'sine.in'
+        }).seek(100);
+
+        let tl3 = gsap.timeline();
+        tl3.to('.dots3 .dot', {
+            duration: 'random(6,12)',
+            attr: {
+                cy: 'random(-220, -320)'
+            },
+            stagger: {
+                each: 0.16,
+                repeat: -1,
+                // repeatRefresh: false
+            },
+            ease: 'sine.in'
+        }).seek(100);
+
+        let tl4 = gsap.timeline();
+        tl4.to('.dots4 .dot', {
+            duration: 'random(3,9)',
+            attr: {
+                cy: 'random(-220, -320)'
+            },
+            stagger: {
+                each: 0.16,
+                repeat: -1,
+                // repeatRefresh: false
+            },
+            ease: 'sine.in'
+        }).seek(100);
+
+        let tl5 = gsap.timeline();
+        tl5.to('.dots5 .outsideDot', {
+            duration: 'random(3,9)',
+            attr: {
+                cy: 'random(-220, -320)',
+                r: 0
+            },
+            stagger: {
+                each: 0.16,
+                repeat: -1,
+                // repeatRefresh: false
+            },
+            ease: 'power2.in'
+        }).seek(100);
+
+        gsap.to('.outline', {
+            duration: gsap.utils.wrap([7, 6.1, 5.2]),
+            svgOrigin: '400 300',
+            rotation: gsap.utils.wrap([-360, -360]),
+            ease: 'linear',
+            stagger: {
+                each: 1,
+                repeat: -1
+            }
+        }).seek(200);
+        //ScrubGSAPTimeline(tl)
+        //gsap.globalTimeline.timeScale(0.25)
     }
 }

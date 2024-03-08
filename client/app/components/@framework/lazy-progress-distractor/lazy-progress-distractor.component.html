@@ -1,29 +1,142 @@
-<!-- <div [class.clear]="isDestroying">
-    <mat-progress-spinner mode='indeterminate'></mat-progress-spinner>
-    <h3>Loading...</h3>
-</div> -->
+<svg id="mainSVG" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+    <defs>
+<!--
+        <filter id="drop" x="-100%" y="-100%" width="250%" height="250%">
+            <feGaussianBlur stdDeviation="5" result="coloredBlur" />
+            <feOffset dx="0" dy="60" result="offsetblur"></feOffset>
+            <feFlood id="glowAlpha" flood-color="#555" flood-opacity="0.12"></feFlood>
+            <feComposite in2="offsetblur" operator="in"></feComposite>
+            <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter> -->
 
-<div style="max-width: 240px; max-height: 240px">
-    <svg width="100%" height="100%" viewBox="0 0 135.46667 135.46667" version="1.1" xml:space="preserve"
-        xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
-        <g>
-            <path [style.fill]="current[4].hex" [style.fill-opacity]="current[4].opacity"
-                d="M 67.733667,135.46617 A 67.732642,67.732642 0 0 0 135.46667,67.73317 67.732642,67.732642 0 0 0 133.38645,51.235313 66.836403,66.413959 0 0 1 66.838105,111.79549 66.836403,66.413959 0 0 1 0.96114202,56.566257 67.732642,67.732642 0 0 0 0.00185353,67.73317 67.732642,67.732642 0 0 0 67.733667,135.46617 Z" />
-            <path [style.fill]="current[2].hex" [style.fill-opacity]="current[2].opacity"
-                d="M 135.46548,67.73317 A 67.732642,67.732642 0 0 0 67.732479,1.6859042e-4 67.732642,67.732642 0 0 0 51.234622,2.0804045 66.413959,66.836403 0 0 1 111.7948,68.628754 66.413959,66.836403 0 0 1 56.565568,134.5057 67.732642,67.732642 0 0 0 67.732479,135.46499 67.732642,67.732642 0 0 0 135.46548,67.73317 Z" />
-            <path [style.fill]="current[0].hex" [style.fill-opacity]="current[0].opacity"
-                d="M 67.733667,1.6859042e-4 A 67.732642,67.732642 0 0 0 6.6567548e-4,67.73317 67.732642,67.732642 0 0 0 2.0808786,84.231026 66.836403,66.413959 0 0 1 68.629228,23.670851 66.836403,66.413959 0 0 1 134.50619,78.900081 67.732642,67.732642 0 0 0 135.46548,67.73317 67.732642,67.732642 0 0 0 67.733667,1.6859042e-4 Z" />
-            <path [style.fill]="current[6].hex" [style.fill-opacity]="current[6].opacity"
-                d="M 6.6567548e-4,67.73317 A 67.732642,67.732642 0 0 0 67.733667,135.46617 67.732642,67.732642 0 0 0 84.231523,133.38595 66.413959,66.836403 0 0 1 23.671348,66.837608 66.413959,66.836403 0 0 1 78.900579,0.96064493 67.732642,67.732642 0 0 0 67.733667,0.00135645 67.732642,67.732642 0 0 0 6.6567548e-4,67.73317 Z" />
+        <filter id="drop2" x="-100%" y="-100%" width="250%" height="250%">
+            <feGaussianBlur stdDeviation="6" result="coloredBlur" />
+            <feOffset dx="0" dy="6" result="offsetblur"></feOffset>
+            <feFlood id="glowAlpha" flood-color="#555" flood-opacity="0.51"></feFlood>
+            <feComposite in2="offsetblur" operator="in"></feComposite>
+            <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
 
-            <path [style.fill]="current[5].hex" [style.fill-opacity]="current[5].opacity"
-                d="m 19.838691,115.6278 a 67.732642,67.732642 0 0 0 95.788949,0 67.732642,67.732642 0 0 0 10.19481,-13.13668 66.836403,66.413959 45 0 1 -89.879317,-4.23429 66.836403,66.413959 45 0 1 -7.529069,-85.635005 67.732642,67.732642 0 0 0 -8.574528,7.217876 67.732642,67.732642 0 0 0 -8.45e-4,95.788099 z" />
-            <path [style.fill]="current[3].hex" [style.fill-opacity]="current[3].opacity"
-                d="m 115.62679,115.62696 a 67.732642,67.732642 0 0 0 0,-95.788926 67.732642,67.732642 0 0 0 -13.1367,-10.1948135 66.413959,66.836403 45 0 1 -4.23427,89.8793185 66.413959,66.836403 45 0 1 -85.635003,7.529041 67.732642,67.732642 0 0 0 7.217874,8.57453 67.732642,67.732642 0 0 0 95.788099,8.5e-4 z" />
-            <path [style.fill]="current[1].hex" [style.fill-opacity]="current[1].opacity"
-                d="m 115.62761,19.838856 a 67.732642,67.732642 0 0 0 -95.788919,0 67.732642,67.732642 0 0 0 -10.1948137,13.136681 66.836403,66.413959 45 0 1 89.8793187,4.234292 66.836403,66.413959 45 0 1 7.529064,85.635011 67.732642,67.732642 0 0 0 8.57453,-7.21788 67.732642,67.732642 0 0 0 8.2e-4,-95.788104 z" />
-            <path [style.fill]="current[7].hex" [style.fill-opacity]="current[7].opacity"
-                d="m 19.838691,19.838856 a 67.732642,67.732642 0 0 0 0,95.788944 67.732642,67.732642 0 0 0 13.136681,10.19481 66.413959,66.836403 45 0 1 4.234292,-89.879313 66.413959,66.836403 45 0 1 85.635006,-7.529067 67.732642,67.732642 0 0 0 -7.21788,-8.574529 67.732642,67.732642 0 0 0 -95.788099,-8.45e-4 z" />
+        <filter id="goo">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 21 -9" result="cm" />
+            <feBlend />
+        </filter>
+        <linearGradient id="grad1" gradientUnits="userSpaceOnUse" x1="400" y1="100" x2="400" y2="600">
+            <stop offset="0" style="stop-color:#059FF6" />
+            <stop offset="1" style="stop-color:#0369F3" />
+        </linearGradient>
+        <path id="copyright-cg" d="" />
+        <linearGradient id="grad2" gradientUnits="userSpaceOnUse" x1="400" y1="200" x2="400" y2="400">
+            <stop offset="0" style="stop-color:#059FF6" />
+            <stop offset="1" style="stop-color:#0408A7" />
+        </linearGradient>
+        <linearGradient id="grad3" gradientUnits="userSpaceOnUse" x1="400" y1="500" x2="400" y2="600">
+            <stop offset="0" style="stop-color:#059FF6" />
+            <stop offset="1" style="stop-color:#0369F3" />
+        </linearGradient>
+
+        <linearGradient id="grad4" gradientUnits="userSpaceOnUse" x1="400" y1="200" x2="400" y2="300">
+            <stop offset="0" style="stop-color:#02DBFE" />
+            <stop offset="1" style="stop-color:#0369F3" />
+        </linearGradient>
+
+        <linearGradient id="grad5" gradientUnits="userSpaceOnUse" x1="400" y1="100" x2="400" y2="600">
+            <stop offset="0" style="stop-color:#0369F3" />
+            <stop offset="1" style="stop-color:#02DBFE" />
+        </linearGradient>
+
+        <clipPath id="mainMask">
+            <circle cx="400" cy="300" r="100" />
+        </clipPath>
+
+        <clipPath id="otherMask">
+            <rect x="300" y="0" width="200" height="400" rx="100" ry="100" />
+        </clipPath>
+    </defs>
+
+    <g >
+
+        <g id="whole" clip-path="url(#mainMask)">
+            <g class="dots1" filter="url(#goo)" fill="url(#grad1)">
+                <circle class="outline" cx="400" cy="300" r="90" fill="none" stroke="#0369F3" stroke-width="23"
+                    stroke-dasharray="160 65" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+
+            </g>
+
+            <g class="dots2" filter="url(#goo)" fill="url(#grad2)">
+                <circle class="outline" cx="400" cy="300" r="90" fill="none" stroke="#0408A7" stroke-width="23"
+                    stroke-dasharray="160 40" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+
+            </g>
+
+            <g class="dots3" filter="url(#goo)" fill="url(#grad3)">
+                <circle class="outline" cx="400" cy="300" r="90" fill="none" stroke="url(#grad3)" stroke-width="23"
+                    stroke-dasharray="240 " />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+            </g>
+
+            <g class="dots4" filter="url(#goo)" fill="url(#grad4)">
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+                <circle class="dot" cx="0" cy="0" r="20" />
+            </g>
+
         </g>
-    </svg>
-</div>
+
+    </g>
+    <g filter="url(#drop2)">
+        <g clip-path="url(#otherMask)">
+            <g class="dots5" fill="url(#grad2)" filter="url(#goo)">
+                <circle class="outsideDot" cx="0" cy="0" r="20" />
+                <circle class="outsideDot" cx="0" cy="0" r="20" />
+                <circle class="outsideDot" cx="0" cy="0" r="20" />
+                <circle class="outsideDot" cx="0" cy="0" r="20" />
+                <circle class="outsideDot" cx="0" cy="0" r="20" />
+                <circle class="outsideDot" cx="0" cy="0" r="20" />
+                <circle class="outsideDot" cx="0" cy="0" r="20" />
+                <circle class="outsideDot" cx="0" cy="0" r="20" />
+                <circle class="outsideDot" cx="0" cy="0" r="20" />
+            </g>
+        </g>
+
+    </g>
+</svg>

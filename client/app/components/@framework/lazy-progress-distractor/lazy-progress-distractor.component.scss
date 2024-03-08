@@ -21,27 +21,3 @@ div {
         opacity: 0
     }
 }
-
-h3 {
-    color: #212121;
-}
-
-path {
-    transition-property: fill, fill-opacity;
-    transition-duration: 100ms;
-    transition-timing-function: ease;
-}
-
-svg {
-    // animation: rotate 2000ms linear infinite;
-}
-
-@keyframes rotate {
-    from {
-        transform: rotate3D(0, 1, 0, 180deg) rotate(359.99deg);
-    }
-
-    to {
-        transform: rotate3D(0, 1, 0, 180deg) rotate(0deg);
-    }
-}
