@@ -29,6 +29,14 @@ router.use("/api/oauth/gh/login", (req, res, next) => {
     })
 });
 
+router.use("/api/oauth/gh/logout", (req, res, next) => {
+    req.session.destroy(err => {
+        err
+            ? next(err)
+            : res.redirect('/')
+    })
+});
+
 
 router.use("/api/oauth/gh/code", route(async (req, res, next) => {
     const requestToken = req.query.code;

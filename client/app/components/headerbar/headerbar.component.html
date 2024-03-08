@@ -3,8 +3,12 @@
 
 <div style="flex: 1"></div>
 
-<div>
-    <mat-icon></mat-icon>
+<div
+    style="display: flex; align-items: center; height: 100%"
+    [ngx-menu]="userMenu"
+    [ngx-menu-config]="{position: 'bottom', alignment: 'end'}"
+>
+    <mat-icon>person</mat-icon>
     {{(user | async).login}}
-    <mat-icon></mat-icon>
+    <mat-icon>keyboard_arrow_down</mat-icon>
 </div>

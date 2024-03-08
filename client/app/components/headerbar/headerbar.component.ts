@@ -1,6 +1,7 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
+import { MenuDirective, MenuItem } from '@dotglitch/ngx-common';
 import { UserService } from 'client/app/services/user.service';
 
 @Component({
@@ -9,13 +10,21 @@ import { UserService } from 'client/app/services/user.service';
     styleUrls: ['./headerbar.component.scss'],
     imports: [
         MatIconModule,
-        AsyncPipe
+        AsyncPipe,
+        MenuDirective
     ],
     standalone: true
 })
 export class HeaderbarComponent implements OnInit {
 
-    @Input() label: string;
+
+    userMenu: MenuItem[] = [
+        { label: "User Profile", link: "" },
+        { label: "Change Password", link: "" },
+        { label: "About", link: "" },
+        "separator",
+        { label: "Log Out", link: "/api/oauth/gh/logout" },
+    ]
 
     constructor(
         public readonly user: UserService
