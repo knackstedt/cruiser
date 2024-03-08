@@ -4,7 +4,7 @@ import * as k8s from '@kubernetes/client-node';
 
 import { route } from '../util/util';
 import { db } from '../util/db';
-import { JobInstance } from '../../types/agent-task';
+import { JobInstance } from '../types/agent-task';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();

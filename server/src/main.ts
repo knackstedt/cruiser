@@ -1,3 +1,4 @@
+import "./types";
 import express, { Express } from 'express';
 import http from 'http';
 
@@ -9,6 +10,9 @@ import { Scheduler } from './util/scheduler';
 import { JobActionsApi } from './api/job-actions';
 import { SocketTunnelService } from './api/socket-tunnel';
 import { TunnelApi } from './api/api-tunnel';
+import { ApiTokenMiddleware } from './middleware/api-token';
+import { sessionHandler } from './middleware/session';
+import { OpenIDHandler } from './middleware/sso-openid';
 
 process.on('unhandledRejection', (reason, p) => {
     logger.error({
@@ -25,8 +29,33 @@ process.on("uncaughtException", err => {
 
 (async () => {
     const app: Express = express();
+    app.disable('x-powered-by');
+    app.set('trust proxy', 1);
 
-    app.use(express.json())
+    app.use((req, res, next) => {
+        req.headers['x-forwarded-proto'] = "https";
+        next();
+    });
+
+    app.use(express.json());
+    app.use((req, res, next) => {
+        if (req.get("authorization")) {
+            req['_api'] = true;
+            ApiTokenMiddleware(req, res, next);
+        }
+        else {
+            req['_api'] = false;
+            sessionHandler(req, res, next);
+        }
+    })
+    app.use((req, res, next) => {
+        if (req['_api']) {
+            next();
+        }
+        else {
+            OpenIDHandler(req, res, next);
+        }
+    })
 
     // app.use("/api/filesystem", FilesystemApi);
     app.use("/api/pipeline",   PipelineApi);

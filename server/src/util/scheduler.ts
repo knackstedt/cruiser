@@ -1,6 +1,6 @@
 import * as k8s from '@kubernetes/client-node';
 import { db } from './db';
-import { JobInstance } from '../../types/agent-task';
+import { JobInstance } from '../types/agent-task';
 import { getLogger } from './logger';
 
 const kc = new k8s.KubeConfig();

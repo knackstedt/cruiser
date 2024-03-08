@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { ulid } from 'ulidx';
-import { JobDefinition, PipelineDefinition } from '../../types/pipeline';
+import { JobDefinition, PipelineDefinition } from '../types/pipeline';
 
 export class SocketTunnelService {
 

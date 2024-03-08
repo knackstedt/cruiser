@@ -2,8 +2,8 @@ import { ulid } from 'ulidx';
 import { PassThrough } from 'stream';
 import * as k8s from '@kubernetes/client-node';
 import { db } from './db';
-import { JobInstance } from '../../types/agent-task';
-import { JobDefinition, PipelineDefinition, StageDefinition } from '../../types/pipeline';
+import { JobInstance } from '../types/agent-task';
+import { JobDefinition, PipelineDefinition, StageDefinition } from '../types/pipeline';
 import { randomString } from './util';
 
 const kc = new k8s.KubeConfig();

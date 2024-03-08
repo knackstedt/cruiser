@@ -16,9 +16,6 @@ export const route = (fn: (req: Request, res: Response, next: NextFunction) => a
     }
 }
 
-
-
-
 export const getFilesInFolder:
     (folder: string, showHidden: boolean, recurse?: number) => Promise<{
         dirs: {
