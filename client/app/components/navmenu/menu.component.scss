@@ -7,7 +7,7 @@
 .menu {
     display: flex;
     flex-direction: column;
-    width: 200px;
+    width: 235px;
     height: 100%;
     transition: width 200ms ease;
     background: #242729;
@@ -44,7 +44,7 @@
     }
 
     .item {
-        height: 40px;
+        height: 36px;
         display: flex;
         width: 100%;
         overflow: hidden;
@@ -52,6 +52,7 @@
         border-radius: 8px;
         user-select: none;
         cursor: pointer;
+        padding: 0 12px;
 
         &.selected {
             background-color: #4b4b4b;
@@ -65,8 +66,6 @@
         }
 
         .icon {
-            width: 40px;
-            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -74,6 +73,11 @@
 
             img {
                 width: 24px;
+            }
+            mat-icon {
+                width: 22px;
+                height: 22px;
+                font-size: 22px;
             }
         }
         .label {

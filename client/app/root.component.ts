@@ -5,6 +5,10 @@ import { CommandPaletteService, MenuItem, ThemeService } from '@dotglitch/ngx-co
 import { NgIf } from '@angular/common';
 import { NavMenuComponent } from './components/navmenu/menu.component';
 import { Fetch, LazyLoaderComponent, KeyboardService, NavigationService } from '@dotglitch/ngx-common';
+import { UserService } from 'client/app/services/user.service';
+import { LoginComponent } from 'client/app/pages/login/login.component';
+import { HeaderbarComponent } from 'client/app/components/headerbar/headerbar.component';
+import { LazyProgressDistractorComponent } from 'client/app/components/@framework/lazy-progress-distractor/lazy-progress-distractor.component';
 
 const desktopWidth = 1126;
 
@@ -13,9 +17,11 @@ const desktopWidth = 1126;
     templateUrl: './root.component.html',
     styleUrls: ['./root.component.scss'],
     imports: [
-        NgIf,
         NavMenuComponent,
-        LazyLoaderComponent
+        LazyLoaderComponent,
+        LoginComponent,
+        HeaderbarComponent,
+        LazyProgressDistractorComponent
     ],
     standalone: true
 })
@@ -23,6 +29,7 @@ export class RootComponent {
     @ViewChild("drawer") drawer: MatDrawer;
 
     isMobile = false;
+    isAuthenticated = false;
 
     readonly mainCtxItems: MenuItem<any>[] = [
         {
@@ -49,11 +56,13 @@ export class RootComponent {
     constructor(
         private readonly fetch: Fetch,
         private readonly keyboard: KeyboardService,
-        public readonly navigator: NavigationService,
+        public  readonly navigator: NavigationService,
         private readonly dialog: MatDialog,
-        public readonly commandPalette: CommandPaletteService,
-        private readonly theme: ThemeService
+        public  readonly commandPalette: CommandPaletteService,
+        private readonly theme: ThemeService,
+        public  readonly user: UserService
     ) {
+        window['root'] = this;
         this.onResize();
 
         commandPalette.initialize({

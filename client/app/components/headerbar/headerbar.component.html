@@ -1,6 +1,10 @@
-<div class="headerbar">
-    <div>
-        <mat-icon></mat-icon>
-        {{label}}
-    </div>
+<img src="./assets/sailing_FILL0_wght400_GRAD0_opsz24.svg"/>
+<div>Cruiser</div>
+
+<div style="flex: 1"></div>
+
+<div>
+    <mat-icon></mat-icon>
+    {{(user | async).login}}
+    <mat-icon></mat-icon>
 </div>

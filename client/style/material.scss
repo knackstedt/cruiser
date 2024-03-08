@@ -15,7 +15,7 @@ $light-theme: mat.define-light-theme((
         warn: $light-warn,
     ),
     typography: $app-typography,
-    density: -4
+    density: -1
 ));
 
 $dark-primary: mat.define-palette(mat.$green-palette, A200, 400, 800);
@@ -29,7 +29,7 @@ $dark-theme: mat.define-dark-theme((
         warn: $dark-warn,
     ),
     typography: $app-typography,
-    density: -4
+    density: -1
 ));
 
 :root {

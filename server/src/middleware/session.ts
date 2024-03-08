@@ -27,7 +27,7 @@ router.use(session({
             namespace: "dotglitch",
             database: "cruiser",
         },
-        tableName: "sessions"
+        tableName: null
     }),
     unset: "destroy"
 }));

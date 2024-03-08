@@ -13,6 +13,7 @@ import { TunnelApi } from './api/api-tunnel';
 import { ApiTokenMiddleware } from './middleware/api-token';
 import { sessionHandler } from './middleware/session';
 import { OpenIDHandler } from './middleware/sso-openid';
+import { UserApi } from './api/user';
 
 process.on('unhandledRejection', (reason, p) => {
     logger.error({
@@ -58,10 +59,11 @@ process.on("uncaughtException", err => {
     })
 
     // app.use("/api/filesystem", FilesystemApi);
-    app.use("/api/pipeline",   PipelineApi);
-    app.use("/api/jobs",   JobActionsApi);
-    app.use("/api/odata", DatabaseTableApi());
-    app.use("/api/pod", TunnelApi);
+    app.use("/api/user",     UserApi);
+    app.use("/api/pipeline", PipelineApi);
+    app.use("/api/jobs",     JobActionsApi);
+    app.use("/api/odata",    DatabaseTableApi());
+    app.use("/api/pod",      TunnelApi);
 
     app.use((req, res, next) => next(404));
     app.use(ErrorHandler);

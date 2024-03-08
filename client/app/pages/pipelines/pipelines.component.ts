@@ -30,7 +30,6 @@ import { StagePopupComponent } from 'client/app/pages/pipelines/stage-popup/stag
         DragDropModule,
         MenuDirective,
         TabulatorComponent,
-        HeaderbarComponent,
         StagePopupComponent
     ],
     standalone: true

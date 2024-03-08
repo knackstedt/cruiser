@@ -1,28 +1,35 @@
 import { Injectable } from '@angular/core';
-import { Fetch } from 'client/app/services/fetch.service';
 import { Observer, Subject, Subscription } from 'rxjs';
+import { Fetch } from '@dotglitch/ngx-common';
+import { RootComponent } from 'client/app/root.component';
+import { GitHubUser } from 'client/types/user';
 
-type User = {
-    name: string,
-    email: string
-};
 
 @Injectable({
     providedIn: 'root'
 })
-export class UserService extends Subject<User> {
-    public value: User;
+export class UserService extends Subject<GitHubUser> {
+    public value: GitHubUser;
 
-    constructor(
-        private fetch: Fetch
-    ) {
-        super();
-        fetch.get('/api/user').then(u => this.next(u as User))
+    get root() {
+        return window['root'] as RootComponent
     }
 
-    override subscribe(observer?: Partial<Observer<User>>): Subscription;
-    override subscribe(next: (value: User) => void): Subscription;
-    override subscribe(next?: (value: User) => void, error?: (error: any) => void, complete?: () => void): Subscription;
+    constructor(
+        private readonly fetch: Fetch,
+    ) {
+        super();
+        window['user'] = this;
+
+        fetch.get<GitHubUser>('/api/user').then(u => {
+            this.root.isAuthenticated = true;
+            this.next(this.value = u);
+        })
+    }
+
+    override subscribe(observer?: Partial<Observer<GitHubUser>>): Subscription;
+    override subscribe(next: (value: GitHubUser) => void): Subscription;
+    override subscribe(next?: (value: GitHubUser) => void, error?: (error: any) => void, complete?: () => void): Subscription;
     override subscribe(next?: unknown, error?: unknown, complete?: unknown): import("rxjs").Subscription {
         if (this.value != undefined) {
             // @ts-ignore
@@ -31,5 +38,13 @@ export class UserService extends Subject<User> {
 
         // @ts-ignore
         return super.subscribe(next, error, complete);
+    }
+
+    login() {
+        location.href = "/api/oauth/gh/login";
+    }
+
+    logout() {
+
     }
 }

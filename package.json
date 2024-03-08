@@ -33,6 +33,7 @@
     "express-session": "^1.18.0",
     "fs-extra": "^11.2.0",
     "glob": "^7.2.0",
+    "gsap": "^3.12.5",
     "helmet": "^6.0.0",
     "ioredis": "^5.3.2",
     "istextorbinary": "^6.0.0",

@@ -1,11 +1,11 @@
-import { NgForOf, NgIf } from '@angular/common';
+import { AsyncPipe, NgForOf, NgIf } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { LogoComponent } from '../logo/logo.component';
 import { Pages } from '../../component.registry';
-import { MenuDirective, MenuItem, ThemeService } from '@dotglitch/ngx-common';
+import { MenuDirective, MenuItem, NavigationService, ThemeService } from '@dotglitch/ngx-common';
 
 
 @Component({
@@ -13,12 +13,11 @@ import { MenuDirective, MenuItem, ThemeService } from '@dotglitch/ngx-common';
     templateUrl: './menu.component.html',
     styleUrls: ['./menu.component.scss'],
     imports: [
-        NgForOf,
-        NgIf,
         MenuDirective,
         MatTooltipModule,
         MatIconModule,
-        LogoComponent
+        LogoComponent,
+        AsyncPipe
     ],
     standalone: true
 })
@@ -74,7 +73,8 @@ export class NavMenuComponent {
 
     constructor(
         public readonly sanitizer: DomSanitizer,
-        private readonly theme: ThemeService
+        private readonly theme: ThemeService,
+        public readonly navigator: NavigationService
     ) {
 
     }

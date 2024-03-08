@@ -26,3 +26,10 @@ ng-scrollbar.ng-scrollbar {
     // I have no idea why an outline shows up in the first place.
     outline: 0;
 }
+
+.ngx-menu ngx-menu a {
+    color: #e0e0e0;
+}
+.light .ngx-menu ngx-menu a {
+    color: #272727;
+}
