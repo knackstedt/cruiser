@@ -87,12 +87,12 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
         .map(({key, value}) => ({name: key, value}))
         .filter(e => e.name != undefined);
 
-    await k8sApi.createNamespace({
-        metadata: {
-            name: namespace
-        }
-    })
-    .catch(e => { if (e.body?.reason != 'AlreadyExists') throw e; });
+    // await k8sApi.createNamespace({
+    //     metadata: {
+    //         name: namespace
+    //     }
+    // })
+    // .catch(e => { if (e.body?.reason != 'AlreadyExists') throw e; });
 
 
     const result = await k8sBatchApi.createNamespacedJob(namespace, {
