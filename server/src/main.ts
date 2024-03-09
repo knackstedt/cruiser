@@ -18,6 +18,7 @@ import { ApiTokenMiddleware } from './middleware/api-token';
 import { sessionHandler } from './middleware/session';
 import { OpenIDHandler } from './middleware/sso-openid';
 import { UserApi } from './api/user';
+import { GetJobToken } from './util/token-cache';
 
 (async () => {
     const app: Express = express();
@@ -46,7 +47,10 @@ import { UserApi } from './api/user';
     app.use("/api/user",     UserApi);
     // Temporary access block
     app.use((req, res, next) => {
-        req.session.gh_user.login == "knackstedt"
+        (
+            req.session?.gh_user?.login == "knackstedt" ||
+            GetJobToken(req.get("X-Cruiser-Token"))
+        )
             ? next()
             : next(401)
     })

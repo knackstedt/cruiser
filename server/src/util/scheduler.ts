@@ -55,8 +55,6 @@ export const Scheduler = async () => {
                     }]
                 }
             });
-
-
         }
 
     }, jobExecutionPlanPollInterval);

@@ -61,6 +61,7 @@ spec:
       labels:
         app: cruiser
     spec:
+      serviceAccountName: cruiser-server
       containers:
       - name: cruiser
         image: harbor.dotglitch.dev/library/cruiser:latest
@@ -247,3 +248,38 @@ spec:
     port: 8000
     targetPort: 8000
   type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cruiser-server
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cruiser-server-job-scheduler
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cruiser-server-job-scheduler-binding
+subjects:
+  - kind: ServiceAccount
+    name: cruiser-server
+roleRef:
+  kind: Role
+  name: cruiser-server-job-scheduler
+  apiGroup: rbac.authorization.k8s.io

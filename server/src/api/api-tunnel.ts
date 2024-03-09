@@ -50,7 +50,7 @@ router.use('/:id', route(async (req, res, next) => {
         preserveHostHdr: false,
         limit: '50mb',
         proxyReqOptDecorator(proxyReqOpts, srcReq) {
-            proxyReqOpts.headers['Authorization'] = job['kubeAuthnToken'];
+            proxyReqOpts.headers['X-Cruiser-Token'] = job['kubeAuthnToken'];
             return proxyReqOpts;
         },
     });

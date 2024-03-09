@@ -5,6 +5,7 @@ import { db } from './db';
 import { JobInstance } from '../types/agent-task';
 import { JobDefinition, PipelineDefinition, StageDefinition } from '../types/pipeline';
 import { randomString } from './util';
+import { SetJobToken } from './token-cache';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
@@ -94,6 +95,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
     // })
     // .catch(e => { if (e.body?.reason != 'AlreadyExists') throw e; });
 
+    SetJobToken(kubeAuthnToken);
 
     const result = await k8sBatchApi.createNamespacedJob(namespace, {
         apiVersion: "batch/v1",
@@ -145,9 +147,9 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
                                 { name: "CI_ENVIRONMENT", value: "cruiser" },
                                 // TODO: calculate this value by introspecting the server
                                 // hostname -i => ip address
-                                { name: "DOTGLITCH_DOTOPS_CLUSTER_URL", value: process.env['DOTGLITCH_DOTOPS_CLUSTER_URL'] },
-                                { name: "DOTGLITCH_AGENT_ID", value: id },
-                                { name: "DOTOPS_WEBSERVER_TOKEN", value: kubeAuthnToken },
+                                { name: "CRUISER_CLUSTER_URL", value: process.env['DOTGLITCH_DOTOPS_CLUSTER_URL'] },
+                                { name: "CRUISER_AGENT_ID", value: id },
+                                { name: "CRUISER_SERVER_TOKEN", value: kubeAuthnToken },
                                 ...environment
                             ]
                         }

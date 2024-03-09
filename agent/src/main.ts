@@ -20,7 +20,7 @@ if (!agentId || !/^[0-7][0-9A-Z]{25}$/i.test(agentId)) {
     app.use(express.json());
     app.use((req, res, next) => {
         // Ensure the access is only coming from the system that spawned this agent
-        if (environment.webserverToken == req.get("Authorization"))
+        if (environment.cruiserToken == req.get("X-Cruiser-Token"))
             return next();
 
         res
