@@ -123,8 +123,8 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
                     containers: [
                         {
                             name: podName,
-                            image: elasticAgentTemplate?.kubeContainerImage || "ghcr.io/knackstedt/cruiser/cruiser-agent:655014915fc53379a5b3055df4c9e4d773d2bed6",
-                            imagePullPolicy: 'IfNotPresent',
+                            image: elasticAgentTemplate?.kubeContainerImage || "ghcr.io/knackstedt/cruiser/cruiser-agent:latest",
+                            imagePullPolicy: 'Always',
                             securityContext: {
                                 privileged: true
                             },
