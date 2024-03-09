@@ -164,7 +164,37 @@ button:disabled img {
 }
 
 .stage-block {
-    width: 32px;
-    height: 32px;
+    width: 46px;
+    height: 30px;
     background-color: #444;
+    position: relative;
+    border-radius: 3px;
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    &.running {
+        padding-bottom: 4px;
+    }
+
+    app-job-instance-icon::ng-deep mat-icon {
+        height: 22px;
+        width: 22px;
+        font-size: 22px;
+    }
+
+    mat-progress-bar {
+        position: absolute;
+        bottom: 0;
+        height: 2px;
+    }
+
+
+    &.queued {
+
+    }
+
 }

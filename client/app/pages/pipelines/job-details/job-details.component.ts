@@ -6,6 +6,7 @@ import { Fetch, FilemanagerComponent, MenuDirective, NGX_WEB_COMPONENTS_CONFIG, 
 import { JobDefinition } from 'types/pipeline';
 import { XtermWrapperComponent } from 'client/app/pages/pipelines/job-details/xterm-wrapper/xterm-wrapper.component';
 import { JobLogsComponent } from 'client/app/pages/pipelines/job-details/job-logs/job-logs.component';
+import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
 
 @Component({
     selector: 'app-job-details',
@@ -25,7 +26,8 @@ import { JobLogsComponent } from 'client/app/pages/pipelines/job-details/job-log
         MenuDirective,
         XtermWrapperComponent,
         JobLogsComponent,
-        FilemanagerComponent
+        FilemanagerComponent,
+        JobInstanceIconComponent
     ],
     standalone: true
 })

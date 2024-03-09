@@ -7,6 +7,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { JobDetailsComponent } from '../job-details/job-details.component';
 import { Fetch } from '@dotglitch/ngx-common';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
 
 @Component({
     selector: 'app-stage-popup',
@@ -16,7 +17,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
         MatIconModule,
         MatButtonModule,
         MatTooltipModule,
-        TableModule
+        TableModule,
+        JobInstanceIconComponent
     ],
     standalone: true,
     host: {

@@ -1,18 +1,6 @@
 
 <div class="controls">
-
-        @switch(jobInstance.state) {
-            @case ("initializing") { <mat-icon fontIcon="pending" /> }
-            @case ("cloning") { <mat-icon fontIcon="downloading" /> }
-            @case ("building") { <mat-icon class="rotate" fontIcon="change_circle" /> }
-            @case ("sealing") { <mat-icon fontIcon="archive" /> }
-            <!-- @case ("sealing") {
-                <mat-icon fontIcon="compress" />
-                <mat-icon fontIcon="circle" />
-            } -->
-            @case ("failed") { <mat-icon style="color: #ff5d5d" fontIcon="block" /> }
-            @case ("finished") { <mat-icon style="color: #80ffc0" fontIcon="check_circle" /> }
-        }
+    <app-job-instance-icon [jobInstance]="jobInstance"/>
 
     <div>
         <span>{{job.label}}</span>

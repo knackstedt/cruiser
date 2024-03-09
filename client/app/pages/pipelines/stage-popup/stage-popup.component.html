@@ -105,19 +105,8 @@
                     <tr>
                         <td>
                             <div style="display: flex; align-items: center;">
-                                @switch(job._runningJob?.state) {
-                                    @case ("initializing") { <mat-icon fontIcon="pending" /> }
-                                    @case ("cloning") { <mat-icon fontIcon="downloading" /> }
-                                    @case ("building") { <mat-icon class="rotate" fontIcon="change_circle" /> }
-                                    @case ("sealing") { <mat-icon fontIcon="archive" /> }
-                                    <!-- @case ("sealing") {
-                                                    <mat-icon fontIcon="compress" />
-                                                    <mat-icon fontIcon="circle" />
-                                                } -->
-                                    @case ("failed") { <mat-icon style="color: #ff5d5d" fontIcon="block" /> }
-                                    @case ("finished") { <mat-icon style="color: #80ffc0" fontIcon="check_circle" /> }
-                                    @default { <mat-icon style="color: #64b5f6" fontIcon="schedule" /> }
-                                }
+                                <app-job-instance-icon [jobInstance]="job" />
+
                                 @if (job['_runningJob']) {
                                     <button mat-icon-button (click)="onViewLogs(job)" matTooltip="Open Job">
                                         <mat-icon>terminal</mat-icon>

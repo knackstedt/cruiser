@@ -1,36 +1,35 @@
 import { ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, QueryList, ViewChild, ViewChildren, ViewContainerRef, Inject } from '@angular/core';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { NgForOf, NgIf } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { LazyLoaderService, MenuDirective, TabulatorComponent, TooltipDirective } from '@dotglitch/ngx-common';
 import { PipelineDefinition } from 'types/pipeline';
 import Sortable from 'sortablejs';
-import { HeaderbarComponent } from '../../components/headerbar/headerbar.component';
 import { orderSort } from '../../services/utils';
 import { DialogService, Fetch, MenuItem } from '@dotglitch/ngx-common';
 import { StagePopupComponent } from 'client/app/pages/pipelines/stage-popup/stage-popup.component';
-
-
+import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
+import { PipelineHistoryComponent } from 'client/app/pages/pipelines/pipeline-history/pipeline-history.component';
 
 @Component({
     selector: 'app-pipelines',
     templateUrl: './pipelines.component.html',
     styleUrls: ['./pipelines.component.scss'],
     imports: [
-        NgForOf,
-        NgIf,
         TooltipDirective,
         MatExpansionModule,
         MatButtonModule,
         MatTooltipModule,
         MatIconModule,
+        MatProgressBarModule,
         DragDropModule,
         MenuDirective,
         TabulatorComponent,
-        StagePopupComponent
+        StagePopupComponent,
+        JobInstanceIconComponent
     ],
     standalone: true
 })
@@ -113,6 +112,11 @@ export class PipelinesComponent implements OnInit {
             id: "pipeline-editor",
             group: "dynamic",
             load: () => import('../@editors/pipeline-editor/pipeline-editor.component')
+        });
+        lazyLoader.registerComponent({
+            id: "history",
+            group: "dynamic",
+            load: () => import('./pipeline-history/pipeline-history.component')
         });
     }
 
@@ -261,6 +265,16 @@ export class PipelinesComponent implements OnInit {
             })
     }
 
+    viewHistory(pipeline: PipelineDefinition) {
+        this.dialog.open('history', 'dynamic', {
+            width: "90vw",
+            height: "90vh",
+            inputs: {
+                pipeline
+            }
+        })
+    }
+
     async simplePatchPipeline(pipeline: PipelineDefinition, data: Partial<PipelineDefinition>) {
         const updated = await this.fetch.patch(`/api/odata/${pipeline.id}`, data);
         Object.keys(updated).forEach(key => {
@@ -283,10 +297,11 @@ export class PipelinesComponent implements OnInit {
         }
     }
 
-    async triggerPipeline(pipeline: PipelineDefinition) {
-        await this.fetch.get(`/api/pipeline/${pipeline.id}/start`);
-        pipeline.stats = pipeline.stats ?? { runCount: 0, successCount: 0, failCount: 0, totalRuntime: 0 };
-        pipeline.stats.runCount += 1;
+    async triggerPipeline(targetPipeline: PipelineDefinition) {
+        await this.fetch.get(`/api/pipeline/${targetPipeline.id}/start`)
+            .then(({ pipeline }) => {
+                Object.assign(targetPipeline, pipeline);
+            });
     }
 
     async triggerPipelineWithOptions(pipeline: PipelineDefinition) {

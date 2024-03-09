@@ -18,10 +18,3 @@
 
 
 
-.rotate {
-    animation: rotate 1300ms linear infinite;
-}
-@keyframes rotate {
-    from { transform: rotate(360deg) }
-    to { transform: rotate(0) }
-}
