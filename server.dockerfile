@@ -25,4 +25,4 @@ RUN npm i --omit=dev
 
 EXPOSE 8080
 
-CMD ["/bin/bash", "-c", "nginx start; pm2-runtime ecosystem.config.js"]
+CMD ["/bin/bash", "-c", "service nginx start; pm2-runtime ecosystem.config.js"]
