@@ -73,7 +73,7 @@ spec:
             memory: 1000Mi
         ports:
         - containerPort: 8080
-        environment:
+        env:
         - name: SURREAL_URL
           value: 'http://cruiser-db.svc:8000'
         - name: SURREAL_USER
