@@ -1,6 +1,5 @@
 <svg id="mainSVG" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
     <defs>
-<!--
         <filter id="drop" x="-100%" y="-100%" width="250%" height="250%">
             <feGaussianBlur stdDeviation="5" result="coloredBlur" />
             <feOffset dx="0" dy="60" result="offsetblur"></feOffset>
@@ -10,7 +9,7 @@
                 <feMergeNode />
                 <feMergeNode in="SourceGraphic"></feMergeNode>
             </feMerge>
-        </filter> -->
+        </filter>
 
         <filter id="drop2" x="-100%" y="-100%" width="250%" height="250%">
             <feGaussianBlur stdDeviation="6" result="coloredBlur" />
@@ -29,27 +28,27 @@
             <feBlend />
         </filter>
         <linearGradient id="grad1" gradientUnits="userSpaceOnUse" x1="400" y1="100" x2="400" y2="600">
-            <stop offset="0" style="stop-color:#059FF6" />
-            <stop offset="1" style="stop-color:#0369F3" />
+            <stop offset="0" [style.stop-color]="primary" />
+            <stop offset="1" [style.stop-color]="primarySubtle" />
         </linearGradient>
         <path id="copyright-cg" d="" />
         <linearGradient id="grad2" gradientUnits="userSpaceOnUse" x1="400" y1="200" x2="400" y2="400">
-            <stop offset="0" style="stop-color:#059FF6" />
-            <stop offset="1" style="stop-color:#0408A7" />
+            <stop offset="0" [style.stop-color]="primary" />
+            <stop offset="1" [style.stop-color]="secondary" />
         </linearGradient>
         <linearGradient id="grad3" gradientUnits="userSpaceOnUse" x1="400" y1="500" x2="400" y2="600">
-            <stop offset="0" style="stop-color:#059FF6" />
-            <stop offset="1" style="stop-color:#0369F3" />
+            <stop offset="0" [style.stop-color]="primary" />
+            <stop offset="1" [style.stop-color]="primarySubtle" />
         </linearGradient>
 
         <linearGradient id="grad4" gradientUnits="userSpaceOnUse" x1="400" y1="200" x2="400" y2="300">
-            <stop offset="0" style="stop-color:#02DBFE" />
-            <stop offset="1" style="stop-color:#0369F3" />
+            <stop offset="0" [style.stop-color]="secondarySubtle" />
+            <stop offset="1" [style.stop-color]="primarySubtle" />
         </linearGradient>
 
         <linearGradient id="grad5" gradientUnits="userSpaceOnUse" x1="400" y1="100" x2="400" y2="600">
-            <stop offset="0" style="stop-color:#0369F3" />
-            <stop offset="1" style="stop-color:#02DBFE" />
+            <stop offset="0" [style.stop-color]="primarySubtle" />
+            <stop offset="1" [style.stop-color]="secondarySubtle" />
         </linearGradient>
 
         <clipPath id="mainMask">
@@ -65,7 +64,7 @@
 
         <g id="whole" clip-path="url(#mainMask)">
             <g class="dots1" filter="url(#goo)" fill="url(#grad1)">
-                <circle class="outline" cx="400" cy="300" r="90" fill="none" stroke="#0369F3" stroke-width="23"
+                <circle class="outline" cx="400" cy="300" r="90" fill="none" [attr.stroke]="primarySubtle" stroke-width="23"
                     stroke-dasharray="160 65" />
                 <circle class="dot" cx="0" cy="0" r="20" />
                 <circle class="dot" cx="0" cy="0" r="20" />
@@ -80,7 +79,7 @@
             </g>
 
             <g class="dots2" filter="url(#goo)" fill="url(#grad2)">
-                <circle class="outline" cx="400" cy="300" r="90" fill="none" stroke="#0408A7" stroke-width="23"
+                <circle class="outline" cx="400" cy="300" r="90" fill="none" [attr.stroke]="secondary" stroke-width="23"
                     stroke-dasharray="160 40" />
                 <circle class="dot" cx="0" cy="0" r="20" />
                 <circle class="dot" cx="0" cy="0" r="20" />
@@ -137,6 +136,5 @@
                 <circle class="outsideDot" cx="0" cy="0" r="20" />
             </g>
         </g>
-
     </g>
 </svg>

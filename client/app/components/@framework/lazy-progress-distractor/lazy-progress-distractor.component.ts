@@ -12,6 +12,17 @@ import gsap from 'gsap';
 export class LazyProgressDistractorComponent {
     @Input() isDestroying = false;
 
+    // Original colors
+    // primary = '#059FF6';
+    // primarySubtle = '#0369F3';
+    // secondary = '#0408A7';
+    // secondarySubtle = '#02DBFE';
+
+    primary = '#00a2ff';
+    primarySubtle = '#00fbff';
+    secondary = '#0077bc';
+    secondarySubtle = '#00c4c8';
+
     constructor() {
 
     }
