@@ -75,7 +75,7 @@ spec:
         - containerPort: 8080
         env:
         - name: SURREAL_URL
-          value: 'http://cruiser-db.svc:8000'
+          value: 'http://cruiser-db.cruiser-dev.svc.cluster.local:8000'
         - name: SURREAL_USER
           valueFrom:
             secretKeyRef:
