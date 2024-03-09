@@ -32,6 +32,9 @@ if (!agentId || !/^[0-7][0-9A-Z]{25}$/i.test(agentId)) {
 
     app.use("/fs", FilesystemApi);
 
+    // Handle a ping endpoint to check if this is even up
+    app.use("/ping", (req, res, next) => res.send(Date.now()));
+
     app.use((req, res, next) => next(404));
     app.use((err, req, res, next) => {
         logger.error(err);
