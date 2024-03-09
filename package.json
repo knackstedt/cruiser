@@ -1,6 +1,6 @@
 {
   "name": "cruiser",
-  "version": "0.0.58",
+  "version": "0.0.59",
   "scripts": {
     "ng": "ng",
     "dev": "concurrently \"npm run dev:web\" \"npm run dev:server\"",
@@ -42,9 +42,9 @@
     "gsap": "^3.12.5",
     "ansicolor": "^2.0.1",
     "echarts": "^5.4.3",
-        "ngx-reactflow": "^1.0.23",
+    "ngx-reactflow": "^1.0.23",
     "@fontsource/material-icons-outlined": "^5.0.11",
-        "ngx-stackedit": "^1.1.56",
+    "ngx-stackedit": "^1.1.56",
     "@angular-devkit/build-angular": "^17.2.0",
     "@angular/animations": "^17.2.1",
     "@angular/cdk": "^17.2.0",
@@ -97,9 +97,9 @@
     "xterm-addon-unicode11": "^0.6.0",
     "xterm-addon-web-links": "^0.9.0",
     "xterm-addon-webgl": "^0.16.0",
-        "primeng": "^17.8.0",
-        "rxjs": "~7.8.1",
-        "sortablejs": "^1.15.2",
+    "primeng": "^17.8.0",
+    "rxjs": "~7.8.1",
+    "sortablejs": "^1.15.2",
     "zone.js": "~0.14.4"
   },
   "browser": {
