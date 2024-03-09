@@ -74,8 +74,17 @@ export class RootComponent {
                     debugger;
                 }
             } : { visibleInList: false },
+            { label: "Logout", action: () => this.user.logout() },
             { label: "Theme: Dark", action: () => this.theme.setTheme('dark') },
             { label: "Theme: Light", action: () => this.theme.setTheme('light') },
+            ...(location.host != "cruiser.dev" ? [
+                {
+                    label: "Debug: View distractor",
+                    action: () => {
+                        this.dialog.open(LazyProgressDistractorComponent);
+                    }
+                }
+        ] : []),
         ])
     }
 
