@@ -7,7 +7,12 @@ const dbc = new Surreal();
     await dbc.signin({
         username: process.env['SURREAL_USER'],
         password: process.env['SURREAL_PASSWORD'],
+        namespace: 'dotglitch',
+        database: 'cruiser'
     });
-    await dbc.use({ namespace: 'dotglitch', database: 'cruiser' });
+    await dbc.use({
+        namespace: 'dotglitch',
+        database: 'cruiser'
+    });
 })();
 export const db = dbc;

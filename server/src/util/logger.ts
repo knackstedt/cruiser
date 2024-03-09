@@ -46,4 +46,19 @@ _logger.info({
     })).reduce((a, b) => ({ ...a, ...b }), {}),
 });
 
+
+process.on('unhandledRejection', (reason, p) => {
+    _logger.error({
+        kind: "unhandledPromise",
+        reason,
+        p,
+        stack: reason['stack']
+    });
+});
+
+process.on("uncaughtException", err => {
+    err['kind'] = "Uncaught";
+    _logger.error(err);
+});
+
 export const logger = _logger;

@@ -1,11 +1,6 @@
 import * as express from "express";
-import dotenv from 'dotenv';
 import axios from 'axios';
 import { randomString, route } from '../util/util';
-
-dotenv.config({
-    path: process.cwd() + '/../.env'
-});
 
 const router = express.Router();
 

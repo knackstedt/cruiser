@@ -86,6 +86,11 @@ spec:
             secretKeyRef:
               name: cruiser-db-secret
               key: SURREAL_PASS
+        - name: SESSION_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: cruiser-secret
+              key: SESSION_SECRET
         - name: GITHUB_OAUTH_SECRET
           valueFrom:
             secretKeyRef:

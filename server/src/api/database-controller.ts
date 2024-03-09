@@ -1,19 +1,8 @@
 import * as express from "express";
 import { route } from '../util/util';
-import Surreal from 'surrealdb.js';
 import { SQLLang, createQuery } from '@dotglitch/odatav4';
 import { Visitor } from '@dotglitch/odatav4/dist/visitor';
-
-const db = new Surreal();
-(async () => {
-    await db.connect(process.env['SURREAL_URL']);
-    await db.signin({
-        username: process.env['SURREAL_USER'],
-        password: process.env['SURREAL_PASSWORD'],
-    });
-    await db.use({ namespace: 'dotglitch', database: 'cruiser' });
-})();
-
+import { db } from '../util/db';
 
 // List of tables that cannot be accessed through this endpoint.
 const tableBlackList = [

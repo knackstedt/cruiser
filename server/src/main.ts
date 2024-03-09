@@ -1,12 +1,16 @@
 import "./types";
 import express, { Express } from 'express';
 import http from 'http';
+import dotenv from 'dotenv';
+
+dotenv.config({
+    path: process.cwd() + '/../.env'
+});
 
 import { ErrorHandler } from './util/errors';
 import { logger } from './util/logger';
 import { DatabaseTableApi } from './api/database-controller';
 import { PipelineApi } from './api/pipeline';
-import { Scheduler } from './util/scheduler';
 import { JobActionsApi } from './api/job-actions';
 import { SocketTunnelService } from './api/socket-tunnel';
 import { TunnelApi } from './api/api-tunnel';
@@ -14,19 +18,6 @@ import { ApiTokenMiddleware } from './middleware/api-token';
 import { sessionHandler } from './middleware/session';
 import { OpenIDHandler } from './middleware/sso-openid';
 import { UserApi } from './api/user';
-
-process.on('unhandledRejection', (reason, p) => {
-    logger.error({
-        kind: "unhandledPromise",
-        reason,
-        p,
-        stack: reason['stack']
-    });
-});
-process.on("uncaughtException", err => {
-    err['kind'] = "Uncaught";
-    logger.error(err);
-});
 
 (async () => {
     const app: Express = express();
@@ -77,5 +68,5 @@ process.on("uncaughtException", err => {
     const sts = new SocketTunnelService(server);
 
     // Start the CRONTAB scheduler
-    Scheduler();
+    // Scheduler();
 })();

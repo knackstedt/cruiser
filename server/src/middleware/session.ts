@@ -6,9 +6,7 @@ const router = express.Router();
 
 
 router.use(session({
-    secret: 'foobar',
-    // proxy: true,
-    // resave: false,
+    secret: process.env['SESSION_SECRET'],
     saveUninitialized: false,
     cookie: {
         // path: "/",
@@ -20,8 +18,8 @@ router.use(session({
     store: new SurrealDBStore({
         url: process.env['SURREAL_URL'],
         signinOpts: {
-            username: "root",
-            password: "root",
+            username: process.env['SURREAL_USER'],
+            password: process.env['SURREAL_PASSWORD'],
         },
         connectionOpts: {
             namespace: "dotglitch",
