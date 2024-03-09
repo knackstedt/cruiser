@@ -1,6 +1,9 @@
+# Agent
 
-//
+The Agent is the component that runs jobs. Each agent must have a solid HTTP and Websocket 
+connection to the Cruiser Server.
 
+#### State progression
 Structure:
 Pipeline
     Stage (build/quality/dev/stage/uat/preprod/prod)
