@@ -7,6 +7,7 @@ import crypto from 'crypto';
 import { readZipFolder } from './zip';
 import { secureWipe } from './fs-wipe';
 import { getFilesInFolder, route } from './util';
+import { logger } from '../util/logger';
 
 const router = express.Router();
 
@@ -190,7 +191,16 @@ router.use('/scandir', route(async (req, res, next) => {
 router.use('/', route(async (req, res, next) => {
     let { path, showHidden } = req.body;
 
-    path = path || '/';
+    path = path || req.query['path'] as any || '/';
+
+    logger.info({
+        msg: "Debug path props",
+        path,
+        b: req.body,
+        p: req.params,
+        q: req.query,
+        headers: req.headers
+    })
 
     if (typeof path != "string")
         return next({ status: 400, message: "Malformed path" })
