@@ -31,8 +31,8 @@
               "client/assets",
               {
                 "glob": "**/*",
-                "input": "node_modules/material-icon-theme/icons",
-                "output": "./lib/mit"
+                "input": "node_modules/@dotglitch/ngx-common/assets",
+                "output": "assets/lib/icons"
               },
               {
                 "glob": "**/*",

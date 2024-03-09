@@ -58,7 +58,7 @@
     "@angular/platform-browser": "^17.2.1",
     "@angular/platform-browser-dynamic": "^17.2.1",
     "@angular/service-worker": "^17.2.1",
-    "@dotglitch/ngx-common": "^1.1.28",
+    "@dotglitch/ngx-common": "^1.1.30",
     "@fontsource/fira-mono": "^5.0.8",
     "@fontsource/fira-sans": "^5.0.18",
     "@fontsource/material-icons": "^5.0.12",
