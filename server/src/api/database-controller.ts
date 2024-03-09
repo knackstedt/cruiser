@@ -6,10 +6,10 @@ import { Visitor } from '@dotglitch/odatav4/dist/visitor';
 
 const db = new Surreal();
 (async () => {
-    await db.connect(process.env['SURREAL_URL'] || 'http://127.0.0.1:8000');
+    await db.connect(process.env['SURREAL_URL']);
     await db.signin({
-        username: process.env['SURREAL_USER'] || 'root',
-        password: process.env['SURREAL_PASSWORD'] || 'root',
+        username: process.env['SURREAL_USER'],
+        password: process.env['SURREAL_PASSWORD'],
     });
     await db.use({ namespace: 'dotglitch', database: 'cruiser' });
 })();

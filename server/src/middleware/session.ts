@@ -18,7 +18,7 @@ router.use(session({
         maxAge: 1000 * 60 * 60 * 24 * 1
     },
     store: new SurrealDBStore({
-        url: "http://127.0.0.1:8000/rpc",
+        url: process.env['SURREAL_URL'],
         signinOpts: {
             username: "root",
             password: "root",

@@ -145,7 +145,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
                                 { name: "CI_ENVIRONMENT", value: "cruiser" },
                                 // TODO: calculate this value by introspecting the server
                                 // hostname -i => ip address
-                                { name: "DOTGLITCH_DOTOPS_CLUSTER_URL", value: 'http://dotglitch.dev:8000' },
+                                { name: "DOTGLITCH_DOTOPS_CLUSTER_URL", value: process.env['DOTGLITCH_DOTOPS_CLUSTER_URL'] },
                                 { name: "DOTGLITCH_AGENT_ID", value: id },
                                 { name: "DOTOPS_WEBSERVER_TOKEN", value: kubeAuthnToken },
                                 ...environment
