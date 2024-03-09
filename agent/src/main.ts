@@ -1,7 +1,7 @@
 import express from 'express';
 import http from 'http';
 
-import { logger } from './util/logger';
+import { HTTPLogger, logger } from './util/logger';
 import { RunAgentProcess } from './agent';
 import environment from './util/environment';
 import { FilesystemApi } from './api/filesystem';
@@ -28,6 +28,7 @@ if (!agentId || !/^[0-7][0-9A-Z]{25}$/i.test(agentId)) {
     })
 
     app.use(express.json());
+    app.use(HTTPLogger);
 
     app.use("/fs", FilesystemApi);
 

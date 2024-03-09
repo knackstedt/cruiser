@@ -53,6 +53,10 @@ router.use('/:id', route(async (req, res, next) => {
             proxyReqOpts.headers['X-Cruiser-Token'] = job['kubeAuthnToken'];
             return proxyReqOpts;
         },
+        userResHeaderDecorator: (headers) => {
+            headers['X-Cruiser-Target'] = job.id;
+            return headers;
+        },
     });
     prox(req, res, next);
 }));

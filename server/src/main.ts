@@ -8,7 +8,7 @@ dotenv.config({
 });
 
 import { ErrorHandler } from './util/errors';
-import { logger } from './util/logger';
+import { HTTPLogger, logger } from './util/logger';
 import { DatabaseTableApi } from './api/database-controller';
 import { PipelineApi } from './api/pipeline';
 import { JobActionsApi } from './api/job-actions';
@@ -31,6 +31,7 @@ import { GetJobToken } from './util/token-cache';
     });
 
     app.use(express.json());
+    app.use(HTTPLogger);
     app.use((req, res, next) => {
         if (req.get("authorization")) {
             req['_api'] = true;
@@ -40,7 +41,7 @@ import { GetJobToken } from './util/token-cache';
             req['_api'] = false;
             sessionHandler(req, res, next);
         }
-    })
+    });
 
     app.use("/api/oauth/gh", OpenIDHandler);
     // app.use("/api/filesystem", FilesystemApi);
