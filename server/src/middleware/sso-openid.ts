@@ -16,7 +16,7 @@ const providers = {
     }
 }
 
-router.use("/api/oauth/gh/login", (req, res, next) => {
+router.use("/login", (req, res, next) => {
     req.session._state = randomString(128);
     const url = "https://github.com/login/oauth/authorize" +
         "?client_id=" + providers.gh.clientId +
@@ -29,7 +29,7 @@ router.use("/api/oauth/gh/login", (req, res, next) => {
     })
 });
 
-router.use("/api/oauth/gh/logout", (req, res, next) => {
+router.use("/logout", (req, res, next) => {
     req.session.destroy(err => {
         err
             ? next(err)
@@ -38,7 +38,7 @@ router.use("/api/oauth/gh/logout", (req, res, next) => {
 });
 
 
-router.use("/api/oauth/gh/code", route(async (req, res, next) => {
+router.use("/code", route(async (req, res, next) => {
     const requestToken = req.query.code;
 
     // Prevent sign-in hijacking.
