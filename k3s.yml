@@ -185,7 +185,7 @@ spec:
         runAsGroup: 1000
       containers:
       - name: cruiser-db
-        image: surrealdb/surrealdb:latest
+        image: surrealdb/surrealdb:v1.2.2
         ports:
           - containerPort: 8000
         resources:
