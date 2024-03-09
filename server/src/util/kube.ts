@@ -52,7 +52,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
         const [ap] = (await db.query(job.elasticAgentId)) as any as any[];
         elasticAgentTemplate = ap;
     }
-    const namespace = elasticAgentTemplate?.kubeNamespace || process.env['AGENT_NAMESPACE'] || "cruiser";
+    const namespace = elasticAgentTemplate?.kubeNamespace || process.env['CRUISER_AGENT_NAMESPACE'] || "cruiser";
     const id = ulid();
     const podId = id.toLowerCase();
     const kubeAuthnToken = randomString(128);

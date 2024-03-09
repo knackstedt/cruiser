@@ -76,6 +76,8 @@ spec:
         env:
         - name: SURREAL_URL
           value: 'http://cruiser-db.cruiser-dev.svc.cluster.local:8000'
+        - name: CRUISER_AGENT_NAMESPACE
+          value: cruiser-dev
         - name: SURREAL_USER
           valueFrom:
             secretKeyRef:
