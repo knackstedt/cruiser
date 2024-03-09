@@ -72,9 +72,26 @@ export class SocketTunnelService {
             const id = ulid();
 
             this.connectedSources[id] = { socket, id };
-            socket.on("disconnect", () => delete this.connectedSources[id]);
+            socket.on("disconnect", () => {
+                const oldSrc = this.connectedSources[id];
+                oldSrc.socket.disconnect();
 
-            socket.on("$metadata", (data) => {
+                delete this.connectedSources[id];
+            });
+
+            socket.on("$metadata", (data: { job: JobDefinition, pipeline: PipelineDefinition }) => {
+
+                // Remove any old entries that haven't been disconnected
+                Object.entries(this.connectedSources).forEach(([idx, source]) => {
+                    // Check if we have a socket connection to replace.
+                    if (!(source.metadata?.job?.id == data?.job?.id)) return;
+
+                    const oldSrc = this.connectedSources[idx];
+                    oldSrc.socket.disconnect();
+
+                    delete this.connectedSources[idx];
+                })
+
                 this.connectedSources[id].metadata = data;
                 this.connectToWaitingClients(id);
             });
