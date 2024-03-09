@@ -46,7 +46,7 @@ router.use('/:id', route(async (req, res, next) => {
     const prox = proxy(`http://${ip.replace(/\./g, '-')}.${job.kubeNamespace}.pod.cluster.local:8080`, {
         reqAsBuffer: true,
         reqBodyEncoding: null,
-        parseReqBody: false,
+        // parseReqBody: false,
         preserveHostHdr: false,
         limit: '50mb',
         proxyReqOptDecorator(proxyReqOpts, srcReq) {
