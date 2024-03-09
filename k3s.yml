@@ -42,7 +42,7 @@ spec:
   ports:
   - protocol: "TCP"
     port: 80
-    targetPort: 6800
+    targetPort: 8080
   type: ClusterIP
 
 ---
@@ -72,7 +72,7 @@ spec:
             cpu: 500m
             memory: 1000Mi
         ports:
-        - containerPort: 6800
+        - containerPort: 8080
         environment:
         - name: SURREAL_URL
           value: 'http://cruiser-db.svc:8000'

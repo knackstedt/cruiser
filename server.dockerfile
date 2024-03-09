@@ -23,6 +23,6 @@ COPY ./ecosystem.config.js /app/ecosystem.config.js
 # Install server deps
 RUN npm i --omit=dev
 
-EXPOSE 6800
+EXPOSE 8080
 
 CMD ["/bin/bash", "-c", "nginx start; pm2-runtime ecosystem.config.js"]
