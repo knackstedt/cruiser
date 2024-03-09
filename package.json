@@ -1,6 +1,6 @@
 {
   "name": "cruiser",
-  "version": "0.0.68",
+  "version": "0.0.69",
   "scripts": {
     "ng": "ng",
     "dev": "concurrently \"npm run dev:web\" \"npm run dev:server\"",
