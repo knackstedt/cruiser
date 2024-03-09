@@ -15,7 +15,7 @@ COPY ./nginx.conf /etc/nginx/nginx.conf
 # RUN rm /etc/nginx/conf.d/default.conf
 
 ADD ./dist/cruiser/browser/ /app/client/
-ADD ./dist/server/src/ /app/server/
+ADD ./dist/server/ /app/server/
 COPY ./package.json /app/package.json
 # COPY postinstall.sh /app/postinstall.sh
 COPY ./ecosystem.config.js /app/ecosystem.config.js
