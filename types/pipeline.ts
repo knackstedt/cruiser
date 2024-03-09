@@ -121,6 +121,8 @@ export type PipelineDefinition = {
     sources?: SourceConfiguration[],
     history?: HistoryObject[]
 
+    lastScheduledEpoch?: number,
+    lastScheduledBy?: string
 
     stats?: {
         runCount: number,

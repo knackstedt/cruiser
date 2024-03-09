@@ -10,9 +10,8 @@ export type JobInstance = {
         "building"      | // Job is actively running build code
         "frozen"        | // Job (task group) is frozen
         "sealing"       | // Job is compressing
-        "finished"      | // Job has self-completed.
-        "complete"      | // Job is finished and acknowledged by scheduler
-        "resume";         // A user has resumed a job from the frozen state.
+        "completed"     | // Job is finished and acknowledged by scheduler
+        "failed"
     job: JobDefinition,
     pipeline: PipelineDefinition,
     kubeNamespace: string

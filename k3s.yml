@@ -79,6 +79,11 @@ spec:
           value: 'http://cruiser-db.cruiser-dev.svc.cluster.local:8000'
         - name: CRUISER_AGENT_NAMESPACE
           value: cruiser-dev
+        - name: CRUISER_ADMINISTRATOR
+          valueFrom:
+            configMapKeyRef:
+              name: cruiser-config
+              key: CRUISER_ADMINISTRATOR
         - name: SURREAL_USER
           valueFrom:
             secretKeyRef:

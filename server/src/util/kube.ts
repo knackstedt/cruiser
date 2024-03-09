@@ -53,6 +53,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
         const [ap] = (await db.query(job.elasticAgentId)) as any as any[];
         elasticAgentTemplate = ap;
     }
+
     const namespace = elasticAgentTemplate?.kubeNamespace || process.env['CRUISER_AGENT_NAMESPACE'] || "cruiser";
     const id = ulid();
     const podId = id.toLowerCase();
@@ -166,85 +167,6 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
         jobUid: kubeJobMetadata.uid,
     });
 
-    /**
-     * It exists so that we can create a log stream and automatically detach from the container
-     * when the pods are done
-     */
-    // return new Promise((resolve, reject) => {
-    //     const stream = new PassThrough();
-
-    //     let pollTime = 0;
-    //     let hasAttached = false;
-
-    //     const i = setInterval(async () => {
-
-    //         // TODO: How do we fetch the job when we know the uid?
-    //         const { body: result } = await k8sBatchApi.listNamespacedJob(namespace);
-    //         kubeJob = result.items.find(j => j.metadata.uid == kubeJobMetadata.uid);
-
-    //         if (hasAttached) {
-
-    //             // This will keep running after the promise initially resolves
-    //             // Thus, we do not resolve the promise here.
-    //             if (kubeJob.status.active == 0) {
-    //                 clearInterval(i);
-    //                 logger.info("Job has stopped, closing log stream");
-    //                 stream.destroy();
-    //                 delete jobStreams[podName];
-    //                 job.endTime = Date.now();
-    //                 db.merge(job.id, job);
-    //                 OnJobComplete(pipeline, instance);
-    //             }
-    //         }
-    //         else {
-    //             if (kubeJob.status.active > 0) {
-    //                 hasAttached = true;
-
-    //                 logger.info("Found log stream for launched job");
-
-    //                 const { body: pods } = await k8sApi.listNamespacedPod(namespace);
-    //                 const jobPod = pods.items.find(p => p.metadata.annotations?.['job_id'] == podId);
-
-    //                 try {
-    //                     const req = await k8sLog.log(namespace, jobPod.metadata.name, podName, stream, {
-    //                         follow: true,
-    //                         pretty: false,
-    //                         timestamps: false,
-    //                     });
-
-    //                     jobStreams[podName] = {
-    //                         stream: stream,
-    //                         req
-    //                     };
-
-    //                     stream.on('data', data => {
-    //                         db.create("joblogs:ulid()", {
-    //                             job: instance.id,
-    //                             msg: new TextDecoder().decode(data)
-    //                         })
-    //                     })
-
-    //                     resolve(stream);
-    //                 }
-    //                 catch (err) {
-    //                     console.warn(err)
-    //                     // debugger;
-    //                 }
-
-    //                 return;
-    //             }
-
-    //             if (pollTime >= maxPollTime) {
-    //                 clearInterval(i);
-    //                 logger.warn("Gave up waiting to attach to log stream");
-    //                 stream.destroy();
-    //                 return reject();
-    //             }
-
-    //             pollTime += pollInterval;
-    //         }
-    //     }, pollInterval)
-    // })
     return instance;
 }
 

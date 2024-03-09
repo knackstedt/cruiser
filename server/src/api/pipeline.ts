@@ -116,11 +116,21 @@ router.get('/:id/start', route(async (req, res, next) => {
 
     pipeline.stats.runCount += 1;
 
-    await db.merge(pipeline.id, { stats: pipeline.stats });
+    pipeline.lastScheduledEpoch = Date.now();
+    pipeline.lastScheduledBy = req.session.gh_user.login;
+
+    await db.merge(pipeline.id, {
+        stats: pipeline.stats,
+        lastScheduledEpoch: pipeline.lastScheduledEpoch,
+        lastScheduledBy: pipeline.lastScheduledBy
+    });
 
     await StartAgent(pipeline, stage);
 
-    res.send({ message: "ok" });
+    res.send({
+        message: "ok",
+        pipeline
+    });
 }));
 
 router.get('/:id/freeze', route(async (req, res, next) => {

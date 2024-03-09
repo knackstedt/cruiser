@@ -19,6 +19,7 @@ import { sessionHandler } from './middleware/session';
 import { OpenIDHandler } from './middleware/sso-openid';
 import { UserApi } from './api/user';
 import { GetJobToken } from './util/token-cache';
+import { UserAccessHandler } from './middleware/user-access';
 
 (async () => {
     const app: Express = express();
@@ -44,12 +45,16 @@ import { GetJobToken } from './util/token-cache';
     });
 
     app.use("/api/oauth/gh", OpenIDHandler);
+
+    app.use(UserAccessHandler);
+
     // app.use("/api/filesystem", FilesystemApi);
     app.use("/api/user",     UserApi);
     // Temporary access block
     app.use((req, res, next) => {
         (
-            req.session?.gh_user?.login == "knackstedt" ||
+            // For the current cycle, only allow administrator access to do anything
+            req.roles.includes("administrator") ||
             GetJobToken(req.get("X-Cruiser-Token"))
         )
             ? next()
