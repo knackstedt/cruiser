@@ -81,7 +81,10 @@ export class RootComponent {
                 {
                     label: "Debug: View distractor",
                     action: () => {
-                        this.dialog.open(LazyProgressDistractorComponent);
+                        this.dialog.open(LazyProgressDistractorComponent, {
+                            width: '640px',
+                            height: "480px"
+                        });
                     }
                 }
         ] : []),
