@@ -57,7 +57,7 @@ router.use("/logout", (req, res, next) => {
     req.session.destroy(err => {
         err
             ? next(err)
-            : res.redirect('/')
+            : res.redirect('/?ngsw-bypass=true')
     })
 });
 
@@ -67,7 +67,7 @@ router.use("/code", route(async (req, res, next) => {
 
     // Prevent sign-in hijacking.
     if (req.session._state != req.query.state)
-        return next(401);
+        return next({ status: 403, message: "Handshake failure" });
 
     const url = `https://github.com/login/oauth/access_token` +
         `?client_id=${providers.gh.clientId}` +
@@ -98,7 +98,8 @@ router.use("/code", route(async (req, res, next) => {
                 const roles = profile.roles;
                 if (!roles || roles.length == 0) {
                     req.session.lockout = true;
-                    res.redirect('/');
+
+                    req.session.save(err => err ? next(err) : res.redirect('/?ngsw-bypass=true'))
                     return;
                 }
 
@@ -108,9 +109,11 @@ router.use("/code", route(async (req, res, next) => {
                 profile.image = user.avatar_url;
 
                 req.session.profile = profile;
-                req.session.save(err => err ? next(err) : res.redirect('/'))
+                req.session.save(err => err ? next(err) : res.redirect('/?ngsw-bypass=true'))
             })
-            .catch(err => next(err))
+            .catch(err =>
+                next(err)
+            )
     })
 }));
 

@@ -1,7 +1,7 @@
 import * as express from "express";
 import { route } from '../util/util';
 import { db } from '../util/db';
-import { CruiserUserProfile, CruiserUserRoles } from '../types';
+import { CruiserUserProfile } from '../types';
 
 
 const router = express.Router();
