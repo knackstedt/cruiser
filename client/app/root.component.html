@@ -1,5 +1,8 @@
 <app-headerbar />
-@if (isAuthenticated) {
+@if (isLockedOut) {
+    <app-lockout/>
+}
+@else if (isAuthenticated) {
     @defer(when isAuthenticated) {
         <div style="display: flex; flex: 1">
             <app-menu [isMobile]="isMobile"></app-menu>

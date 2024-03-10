@@ -1,19 +1,19 @@
 import { Injectable } from '@angular/core';
 import { Observer, Subject, Subscription } from 'rxjs';
 import { Fetch } from '@dotglitch/ngx-common';
-import { RootComponent } from 'client/app/root.component';
-import { GitHubUser } from 'client/types/user';
-
+import { CruiserUserProfile } from 'server/src/types';
 
 @Injectable({
     providedIn: 'root'
 })
-export class UserService extends Subject<GitHubUser> {
-    public value: GitHubUser;
+export class UserService extends Subject<CruiserUserProfile> {
+    public value: CruiserUserProfile;
 
-    get root() {
-        return window['root'] as RootComponent
-    }
+
+    get isAdministrator() { return this.value?.roles?.includes('administrator') }
+    get isManager()       { return this.value?.roles?.includes('manager') || this.value?.roles?.includes('administrator') }
+    get isUser()          { return this.value?.roles?.includes('user') }
+    get isGuest()         { return this.value?.roles?.includes('guest') }
 
     constructor(
         private readonly fetch: Fetch,
@@ -21,15 +21,20 @@ export class UserService extends Subject<GitHubUser> {
         super();
         window['user'] = this;
 
-        fetch.get<GitHubUser>('/api/user').then(u => {
-            this.root.isAuthenticated = true;
-            this.next(this.value = u);
+        fetch.get<CruiserUserProfile>('/api/user').then(u => {
+            if (u['lockedOut'] == true) {
+                window.root.isLockedOut = true;
+            }
+            else {
+                this.next(this.value = u);
+                window.root.isAuthenticated = true;
+            }
         })
     }
 
-    override subscribe(observer?: Partial<Observer<GitHubUser>>): Subscription;
-    override subscribe(next: (value: GitHubUser) => void): Subscription;
-    override subscribe(next?: (value: GitHubUser) => void, error?: (error: any) => void, complete?: () => void): Subscription;
+    override subscribe(observer?: Partial<Observer<CruiserUserProfile>>): Subscription;
+    override subscribe(next: (value: CruiserUserProfile) => void): Subscription;
+    override subscribe(next?: (value: CruiserUserProfile) => void, error?: (error: any) => void, complete?: () => void): Subscription;
     override subscribe(next?: unknown, error?: unknown, complete?: unknown): import("rxjs").Subscription {
         if (this.value != undefined) {
             // @ts-ignore
@@ -45,6 +50,6 @@ export class UserService extends Subject<GitHubUser> {
     }
 
     logout() {
-
+        location.href = "/api/oauth/gh/logout";
     }
 }

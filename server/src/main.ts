@@ -19,7 +19,6 @@ import { sessionHandler } from './middleware/session';
 import { OpenIDHandler } from './middleware/sso-openid';
 import { UserApi } from './api/user';
 import { GetJobToken } from './util/token-cache';
-import { UserAccessHandler } from './middleware/user-access';
 
 (async () => {
     const app: Express = express();
@@ -46,19 +45,26 @@ import { UserAccessHandler } from './middleware/user-access';
 
     app.use("/api/oauth/gh", OpenIDHandler);
 
-    app.use(UserAccessHandler);
 
     // app.use("/api/filesystem", FilesystemApi);
     app.use("/api/user",     UserApi);
+
     // Temporary access block
     app.use((req, res, next) => {
+        // Users who are locked out can't access and below APIs.
+        if (req.session.lockout || !req.session.profile) return next(401);
+
+        // TODO: this logic is painful
         (
             // For the current cycle, only allow administrator access to do anything
-            req.roles.includes("administrator") ||
+            (req.method != "get"
+                ? req.session.profile.roles.includes("user")
+                : req.session.profile.roles.includes("guest")
+            ) ||
             GetJobToken(req.get("X-Cruiser-Token"))
         )
             ? next()
-            : next(401)
+            : next(401);
     })
     app.use("/api/pipeline", PipelineApi);
     app.use("/api/jobs",     JobActionsApi);

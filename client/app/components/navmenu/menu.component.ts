@@ -3,7 +3,6 @@ import { Component, Input } from '@angular/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
-import { LogoComponent } from '../logo/logo.component';
 import { Pages } from '../../component.registry';
 import { MenuDirective, MenuItem, NavigationService, ThemeService } from '@dotglitch/ngx-common';
 
@@ -16,7 +15,6 @@ import { MenuDirective, MenuItem, NavigationService, ThemeService } from '@dotgl
         MenuDirective,
         MatTooltipModule,
         MatIconModule,
-        LogoComponent,
         AsyncPipe
     ],
     standalone: true
@@ -26,6 +24,7 @@ export class NavMenuComponent {
     readonly pages: any[] =
         Pages
         .filter(c => !c['hidden'])
+        .filter(c => c['isVisible'] ? c['isVisible']() : true)
         .sort((a, b) => (a['order'] || 0) - (b['order'] || 0))
         .map(i => {
 

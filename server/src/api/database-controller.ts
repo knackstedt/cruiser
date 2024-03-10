@@ -3,6 +3,7 @@ import { route } from '../util/util';
 import { SQLLang, createQuery } from '@dotglitch/odatav4';
 import { Visitor } from '@dotglitch/odatav4/dist/visitor';
 import { db } from '../util/db';
+import { CruiserUserRole } from '../types';
 
 // List of tables that cannot be accessed through this endpoint.
 const tableBlackList = [
@@ -20,8 +21,80 @@ export const checkSurrealResource = (resource: string) => {
     return resource;
 }
 
+type RestrictionMap = {
+    [key: string]: {
+        read?: CruiserUserRole[],
+
+        post?: CruiserUserRole[],
+        patch?: CruiserUserRole[],
+        delete?: CruiserUserRole[],
+
+        // Write encompasses `post` `patch` and `delete` together.
+        write?: CruiserUserRole[];
+        // Ensure that the user has at least one of the listed roles,
+        // for ANY of the methods
+        all?: CruiserUserRole[];
+    };
+};
+
+// Set restrictions on who can read/write/update on a table.
+// If not present, the table will effectively have no permission
+// constraints
+const restrictionMap: RestrictionMap = {
+    "users": {
+        "write": [
+            "administrator"
+        ]
+    }
+};
+
 export const DatabaseTableApi = () => {
     const router = express.Router();
+
+    router.use('/:table', (req, res, next) => {
+        const table = req.params.table?.split('(')[0];
+
+        // Anything that isn't possibly valid is a 404.
+        if (/[^a-zA-Z0-9_-]/.test(table))
+            return next(404);
+
+        const restriction = restrictionMap[table];
+        const target = table;
+
+        if (!target) return next(404);
+
+        if (restriction) {
+            const groups = req.session.profile.roles;
+
+            if (restriction.read && req.method == 'get') {
+                if (!restriction.read.find(r => groups.includes(r)))
+                    return next(403);
+            }
+
+            if (restriction.patch && req.method == 'patch') {
+                if (!restriction.patch.find(r => groups.includes(r)))
+                    return next(403);
+            }
+
+            if (restriction.delete && req.method == 'delete') {
+                if (!restriction.delete.find(r => groups.includes(r)))
+                    return next(403);
+            }
+
+            if (restriction.post && req.method == 'post') {
+                if (!restriction.post.find(r => groups.includes(r)))
+                    return next(403);
+            }
+
+            // If it's something that would modify a table, check for write access.
+            if (restriction.write && ['post', 'patch', 'delete'].includes(req.method)) {
+                if (!restriction.write.find(r => groups.includes(r)))
+                    return next(403);
+            }
+        }
+
+        next();
+    })
 
     // router.use(proxy('http://127.0.0.1:8000/rpc'));
     /**

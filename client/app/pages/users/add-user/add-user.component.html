@@ -1,0 +1,14 @@
+
+<mat-form-field>
+    <label>GitHub User ID</label>
+    <input
+        matInput
+        type="text"
+        [(ngModel)]="userId"
+        (keydown)="$event.key == 'Enter' ? addUser() : 1"
+    />
+</mat-form-field>
+
+<div>
+    <button style="float: right;" mat-flat-button (click)="addUser()">Ok</button>
+</div>

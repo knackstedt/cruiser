@@ -1,8 +1,37 @@
 import * as express from "express";
 import axios from 'axios';
 import { randomString, route } from '../util/util';
+import { afterDatabaseConnected, db } from '../util/db';
+import { logger } from '../util/logger';
+import { CruiserUserProfile, CruiserUserRole } from '../types';
+import { GitHubUser } from '../types/user';
 
 const router = express.Router();
+
+const getProfile = async (userId: string, roles?: CruiserUserRole[]) => {
+    let [{result}] = await db.query("SELECT * from users WHERE login = $user", { user: userId });
+    let [profile] = result as any;
+
+    if (!profile) {
+        [ profile ] = await db.create("users:ulid()", {
+            login: userId,
+            roles: roles || []
+        }) as any;
+    }
+
+    return profile as any as CruiserUserProfile;
+}
+
+afterDatabaseConnected(async () => {
+    // Always ensure that the root administrator exists on startup.
+    getProfile(process.env['CRUISER_ADMINISTRATOR'] ?? 'root', ['administrator']).catch(err => {
+            logger.fatal({
+                msg: "Failed to create administrator account!",
+                err
+            });
+        });
+})
+
 
 const providers = {
     "gh": {
@@ -49,7 +78,7 @@ router.use("/code", route(async (req, res, next) => {
 
 
     const url2 = `https://api.github.com/user`;
-    const { data: user } = await axios.get(url2, { headers: {
+    const { data: user } = await axios.get<GitHubUser>(url2, { headers: {
         accept: 'application/vnd.github+json',
         Authorization: "Bearer " + token.access_token,
         "X-GitHub-Api-Version": "2022-11-28"
@@ -63,7 +92,25 @@ router.use("/code", route(async (req, res, next) => {
         req.session.gh_scope = token.scope;
         req.session.gh_token_type = token.token_type;
 
-        res.redirect('/');
+        getProfile(user.login)
+            .then(profile => {
+
+                const roles = profile.roles;
+                if (!roles || roles.length == 0) {
+                    req.session.lockout = true;
+                    res.redirect('/');
+                    return;
+                }
+
+                // profile.gh_id    = user.id;
+                profile.label = user.login;
+                profile.name  = user.login;
+                profile.image = user.avatar_url;
+
+                req.session.profile = profile;
+                req.session.save(err => err ? next(err) : res.redirect('/'))
+            })
+            .catch(err => next(err))
     })
 }));
 

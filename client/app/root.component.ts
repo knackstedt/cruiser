@@ -9,6 +9,7 @@ import { UserService } from 'client/app/services/user.service';
 import { LoginComponent } from 'client/app/pages/login/login.component';
 import { HeaderbarComponent } from 'client/app/components/headerbar/headerbar.component';
 import { LazyProgressDistractorComponent } from 'client/app/components/@framework/lazy-progress-distractor/lazy-progress-distractor.component';
+import { LockoutComponent } from 'client/app/pages/lockout/lockout.component';
 
 const desktopWidth = 1126;
 
@@ -20,6 +21,7 @@ const desktopWidth = 1126;
         NavMenuComponent,
         LazyLoaderComponent,
         LoginComponent,
+        LockoutComponent,
         HeaderbarComponent,
         LazyProgressDistractorComponent
     ],
@@ -28,8 +30,14 @@ const desktopWidth = 1126;
 export class RootComponent {
     @ViewChild("drawer") drawer: MatDrawer;
 
+    // Should we use a mobile layout
     isMobile = false;
+
+    // Is the user successfully logged in
     isAuthenticated = false;
+
+    // Is the user locked out (they have no access granted)
+    isLockedOut = false;
 
     readonly mainCtxItems: MenuItem<any>[] = [
         {
