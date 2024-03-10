@@ -61,10 +61,41 @@ router.post('/grant-role/:id', route(async (req, res, next) => {
     res.send({ profile });
 }));
 
-// router.post('/invite', route(async (req, res, next) => {
-//     req.session.gh_user
-//         ? res.send(req.session.gh_user)
-//         : next(401)
-// }));
+router.post('/revoke-role/:id', route(async (req, res, next) => {
+    const id = req.params['id'];
+
+    if (!id.startsWith('users:'))
+        return next(404);
+
+    const role = req.body.role as string;
+
+    let [profile] = await db.select<CruiserUserProfile>(id);
+
+    // If the role isn't there, we'll do nothing.
+    if (!profile.roles.includes(role as any)) {
+        res.send({ profile });
+        return;
+    }
+
+    profile.roles.splice(profile.roles.indexOf(role as any), 1);
+
+    [profile] = await db.merge(id, {
+        roles: profile.roles
+    } as CruiserUserProfile);
+
+    res.send({ profile });
+}));
+
+router.delete('/:id', route(async (req, res, next) => {
+    const id = req.params['id'];
+
+    if (!id.startsWith('users:'))
+        return next(404);
+
+    const [ item ] = await db.delete(id);
+
+    res.send({ success: !!item });
+}));
+
 
 export const UserApi = router;
