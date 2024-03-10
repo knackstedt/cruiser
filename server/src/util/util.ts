@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import crypto, { randomBytes } from 'crypto';
 import { NextFunction, Request, Response } from "express";
 import * as fs from "fs-extra";
 
@@ -95,3 +95,6 @@ export const getFilesInFolderFlat = async (folder: string, showHidden?: boolean,
 
 export const randomString = (length: number) =>
     randomBytes(length/2).toString('hex');
+
+export const checksum = (kind: string, source: string) =>
+    crypto.createHash(kind).update(source).digest("hex")
