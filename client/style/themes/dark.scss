@@ -5,6 +5,9 @@
     --panel-background-color: #2f2f2f;
     --text-color: #dfdfdf;
 
+    --theme-primary: #18ffff;
+    --theme-secondary: #07fa87;
+
     --splitter-background-color: #242424;
 
     --ngx-ctx-menu-hover-background-color: #145588;
@@ -13,16 +16,17 @@
 
 
 
-    --splitter-hover-background-color: #07fa87;
+    --splitter-hover-background-color: var(--theme-primary);
     --splitter-background-color: #555;
     --splitter-transition: 200ms ease;
+
+    --ngx-menu-hover-background-color: var(--theme-primary);
 
     --inner-panel-background-color: #1d1f20;
     .mat-mdc-dialog-container {
         --mdc-dialog-container-color: #181818;
     }
 
-    --theme-primary: #18ffff;
 
     a {
         color: #3391ff

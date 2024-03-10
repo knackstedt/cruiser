@@ -2,33 +2,38 @@
     <p-table
         #dt1
         [value]="users"
-        [globalFilterFields]="['id']"
+        [globalFilterFields]="['login']"
+
     >
         <ng-template pTemplate="caption">
             <div style="display: flex; gap: 12px">
                 <button mat-flat-button (click)="addUser()">Add User</button>
 
-                <button mat-flat-button label="Clear" class="p-button-outlined" icon="pi pi-filter-slash" (click)="dt1.clear()">Clear Filters</button>
-                <span class="p-input-icon-left ml-auto">
-                    <i class="pi pi-search"></i>
-                    <input #_ pInputText type="text" (input)="dt1.filterGlobal(_.value, 'contains')"
-                        placeholder="Search keyword" />
-                </span>
+                <!-- <button mat-flat-button label="Clear" class="p-button-outlined" icon="pi pi-filter-slash" (click)="dt1.clear()">Clear Filters</button> -->
+                <mat-form-field>
+                    <input
+                        #_
+                        matInput
+                        type="text"
+                        (input)="dt1.filterGlobal(_.value, 'contains')"
+                        placeholder="Search"
+                    />
+                </mat-form-field>
             </div>
         </ng-template>
         <ng-template pTemplate="header">
             <tr>
-                <th pSortableColumn="label" [width]="240">
+                <th [width]="48"></th>
+                <th pSortableColumn="login">
                     Name
-                    <p-sortIcon field="label"></p-sortIcon>
+                    <p-sortIcon field="login"></p-sortIcon>
                     <p-columnFilter type="text" field="login" display="menu"/>
                 </th>
-                <th pSortableColumn="label" [width]="240">
+                <th pSortableColumn="roles" [width]="'40%'">
                     Roles
-                    <p-sortIcon field="label"></p-sortIcon>
+                    <p-sortIcon field="roles"></p-sortIcon>
                     <p-columnFilter type="text" field="roles" display="menu"/>
                 </th>
-                <th [width]="48"></th>
             </tr>
         </ng-template>
         <ng-template pTemplate="body" let-user>
@@ -37,18 +42,19 @@
                 [ngx-menu-context]="user"
             >
                 <td>
-                    {{user.login || user.id}}
-                </td>
-                <td>
-                    {{user.roles?.join(', ')}}
-                </td>
-                <td>
                     <button
+                        mat-icon-button
                         [ngx-menu]="menu"
                         [ngx-menu-context]="user"
                     >
                         <mat-icon>more_vert</mat-icon>
                     </button>
+                </td>
+                <td>
+                    {{user.login || user.id}}
+                </td>
+                <td>
+                    {{user.roles?.join(', ')}}
                 </td>
             </tr>
         </ng-template>

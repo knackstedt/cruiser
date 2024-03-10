@@ -7,6 +7,10 @@
 
     --text-color: #212121;
 
+    // TODO: These aren't set right for light mode
+    --theme-primary: #18ffff;
+    --theme-secondary: #07fa87;
+
     // Context Menu coloring
     --ctx-menu-text-color: #333;
     --ctx-menu-disabled-text-color: #666;
