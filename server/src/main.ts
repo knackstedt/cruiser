@@ -54,12 +54,15 @@ import { GetJobToken } from './util/token-cache';
         // Users who are locked out can't access and below APIs.
         if (req.session.lockout || !req.session.profile) return next(401);
 
-        // TODO: this logic is painful
+        // TODO: this logic is painful.
         (
+            req.session.profile.roles.includes("administrator") ||
+            req.session.profile.roles.includes("manager") ||
+
             // For the current cycle, only allow administrator access to do anything
-            (req.method != "get"
-                ? req.session.profile.roles.includes("user")
-                : req.session.profile.roles.includes("guest")
+            (req.method == "get" &&
+                req.session.profile.roles.includes("user") ||
+                req.session.profile.roles.includes("guest")
             ) ||
             GetJobToken(req.get("X-Cruiser-Token"))
         )
