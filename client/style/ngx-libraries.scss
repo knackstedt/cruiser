@@ -61,3 +61,11 @@ ng-scrollbar.ng-scrollbar {
         left: 100%;
     }
 }
+
+
+/**
+ * PrimeNG global style overrides
+ */
+.p-datatable .p-datatable-tbody>tr>td {
+    padding: 0;
+}
