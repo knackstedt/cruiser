@@ -37,7 +37,7 @@ router.post('/add', route(async (req, res, next) => {
 }));
 
 router.post('/grant-role/:id', route(async (req, res, next) => {
-    const id = req.params.id;
+    const id = req.params['id'];
 
     if (!id.startsWith('users:'))
         return next(404);
@@ -54,7 +54,7 @@ router.post('/grant-role/:id', route(async (req, res, next) => {
 
     profile.roles.push(role as any);
 
-    [profile] = await db.merge("users:ulid()", {
+    [profile] = await db.merge(id, {
         roles: profile.roles
     } as CruiserUserProfile);
 
