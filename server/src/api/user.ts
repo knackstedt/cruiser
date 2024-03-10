@@ -8,10 +8,6 @@ const router = express.Router();
 
 // Get user.
 router.get('/', route(async (req, res, next) => {
-    if (req.session.lockout) {
-        return res.send({ lockedOut: true });
-    }
-
     req.session.profile
         ? res.send(req.session.profile)
         : next(401)

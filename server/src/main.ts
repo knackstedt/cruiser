@@ -19,6 +19,8 @@ import { sessionHandler } from './middleware/session';
 import { OpenIDHandler } from './middleware/sso-openid';
 import { UserApi } from './api/user';
 import { GetJobToken } from './util/token-cache';
+import { SourcesApi } from './api/sources';
+import { Guest, User } from './guards/role-guards';
 
 (async () => {
     const app: Express = express();
@@ -33,6 +35,11 @@ import { GetJobToken } from './util/token-cache';
     app.use(express.json());
     app.use(HTTPLogger);
     app.use((req, res, next) => {
+        const cruiserToken = req.get("X-Cruiser-Token");
+        if (cruiserToken) {
+            req['_agentToken'] = cruiserToken;
+            GetJobToken(cruiserToken) ? next() : next(401);
+        }
         if (req.get("authorization")) {
             req['_api'] = true;
             ApiTokenMiddleware(req, res, next);
@@ -43,37 +50,35 @@ import { GetJobToken } from './util/token-cache';
         }
     });
 
+    // Login APIs _must_ be bound before the below
+    // access block API
     app.use("/api/oauth/gh", OpenIDHandler);
 
-
-    // app.use("/api/filesystem", FilesystemApi);
-    app.use("/api/user",     UserApi);
-
-    // Temporary access block
     app.use((req, res, next) => {
-        // Users who are locked out can't access and below APIs.
-        if (req.session.lockout || !req.session.profile) return next(401);
+        // Agents get to bypass the auth checks
+        if (req['_agentToken']) {
+            return next();
+        }
+        if (!req.session.profile) {
+            return next(401);
+        }
+        if (req.session.lockout) {
+            return res.send({ lockedOut: true });
+        }
 
-        // TODO: this logic is painful.
-        (
-            req.session.profile.roles.includes("administrator") ||
-            req.session.profile.roles.includes("manager") ||
+        if (req.method == "get") {
+            Guest(req, res, next);
+        }
+        else {
+            User(req, res, next);
+        }
+    });
 
-            // For the current cycle, only allow administrator access to do anything
-            (req.method == "get" &&
-                req.session.profile.roles.includes("user") ||
-                req.session.profile.roles.includes("guest")
-            ) ||
-            (req.method != "get" && req.session.profile.roles.includes("user")) ||
-
-            GetJobToken(req.get("X-Cruiser-Token"))
-        )
-            ? next()
-            : next(401);
-    })
-    app.use("/api/pipeline", PipelineApi);
-    app.use("/api/jobs",     JobActionsApi);
+    app.use("/api/user", UserApi);
     app.use("/api/odata",    DatabaseTableApi());
+    app.use("/api/pipeline", PipelineApi);
+    app.use("/api/sources",  SourcesApi);
+    app.use("/api/jobs",     JobActionsApi);
     app.use("/api/pod",      TunnelApi);
 
     app.use((req, res, next) => next(404));
