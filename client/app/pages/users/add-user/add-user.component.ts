@@ -27,7 +27,8 @@ export class AddUserComponent {
 
     addUser() {
         this.fetch.post(`/api/user/add`, {
-            userId: this.userId
+            userId: this.userId,
+            roles: ['user']
         })
         .then(res => this.dialogRef.close(res));
     }
