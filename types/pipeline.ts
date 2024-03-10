@@ -84,6 +84,7 @@ export type SourceConfiguration = Partial<{
     password: string
     cloneDepth: number
     pollingBehavior: string
+    pollForUpdates: boolean,
 
     denyList: string
     invertFilter: boolean

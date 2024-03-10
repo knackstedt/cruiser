@@ -1,0 +1,73 @@
+@if (sources?.length > 0) {
+    <p-table
+        #dt1
+        [value]="sources"
+        [globalFilterFields]="['login']"
+
+    >
+        <ng-template pTemplate="caption">
+            <div style="display: flex; gap: 12px">
+                <button mat-flat-button (click)="editSource()">Add Source</button>
+
+                <!-- <button mat-flat-button label="Clear" class="p-button-outlined" icon="pi pi-filter-slash" (click)="dt1.clear()">Clear Filters</button> -->
+                <mat-form-field>
+                    <input
+                        #_
+                        matInput
+                        type="text"
+                        (input)="dt1.filterGlobal(_.value, 'contains')"
+                        placeholder="Search"
+                    />
+                </mat-form-field>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+            <tr>
+                <th [width]="48"></th>
+                <th pSortableColumn="label">
+                    Name
+                    <p-sortIcon field="label"></p-sortIcon>
+                    <p-columnFilter type="text" field="label" display="menu"/>
+                </th>
+                <th pSortableColumn="url" [width]="'40%'">
+                    Url
+                    <p-sortIcon field="url"></p-sortIcon>
+                    <p-columnFilter type="text" field="url" display="menu"/>
+                </th>
+                <th pSortableColumn="login" [width]="'40%'">
+                    Login
+                    <p-sortIcon field="login"></p-sortIcon>
+                    <p-columnFilter type="text" field="login" display="menu"/>
+                </th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-source>
+            <tr
+                [ngx-contextmenu]="menu"
+                [ngx-menu-context]="source"
+            >
+                <td>
+                    <button
+                        mat-icon-button
+                        [ngx-menu]="menu"
+                        [ngx-menu-context]="source"
+                    >
+                        <mat-icon>more_vert</mat-icon>
+                    </button>
+                </td>
+                <td>
+                    {{source.label || source.id}}
+                </td>
+                <td>
+                    {{source.url}}
+                </td>
+                <td>
+                    {{source.login}}
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+}
+@else {
+    Loading...
+}

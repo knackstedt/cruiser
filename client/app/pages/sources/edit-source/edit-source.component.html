@@ -1,0 +1,66 @@
+<!-- <mat-form-field>
+    <input matInput type="" [(ngModel)]=""/>
+</mat-form-field> -->
+
+<mat-form-field>
+    <mat-label>Kind</mat-label>
+
+    <mat-select>
+        <mat-option value="github">GitHub</mat-option>
+        <!-- <mat-option>GitLab</mat-option> -->
+        <!-- <mat-option>BitBucket</mat-option> -->
+        <!-- <mat-option>Gitea</mat-option> -->
+        <!-- <mat-option>Azure DevOps</mat-option> -->
+        <!-- <mat-option>Basic Git</mat-option> -->
+    </mat-select>
+</mat-form-field>
+
+<!-- TODO: Provider specific options -->
+
+<mat-form-field>
+    <mat-label>Repository URL</mat-label>
+    <input matInput type="text" [(ngModel)]="source.url"/>
+</mat-form-field>
+
+<div>
+    <button
+        mat-flat-button
+        (click)="1"
+        style="height: 48px; float: right"
+    >
+        Test connection
+    </button>
+</div>
+
+<!-- Expansion panel: Advanced Settings -->
+
+<mat-form-field>
+    <mat-label>Branch</mat-label>
+    <input matInput type="text" [(ngModel)]="source.branch"/>
+</mat-form-field>
+<mat-form-field>
+    <mat-label>Username</mat-label>
+    <input matInput type="text" [(ngModel)]="source.username"/>
+</mat-form-field>
+<mat-form-field>
+    <mat-label>Password</mat-label>
+    <input matInput type="text" [(ngModel)]="source.password"/>
+</mat-form-field>
+
+<mat-form-field>
+    <mat-label>Checkout Depth</mat-label>
+    <input matInput type="number" [(ngModel)]="source.cloneDepth"/>
+</mat-form-field>
+
+<mat-checkbox [(ngModel)]="source.pollForUpdates">
+    <mat-label>Poll for Updates</mat-label>
+</mat-checkbox>
+
+<mat-form-field>
+    <mat-label>Deny List</mat-label>
+    <input matInput type="text" [(ngModel)]="source.denyList"/>
+</mat-form-field>
+
+<mat-checkbox [(ngModel)]="source.invertFilter">
+    <mat-label>Invert deny list? (Becomes allowlist instead)</mat-label>
+</mat-checkbox>

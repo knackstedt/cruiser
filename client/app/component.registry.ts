@@ -7,6 +7,7 @@ export const Pages: ComponentRegistration[] = [
 
     { id: 'Pipelines', load: () => import('./pages/pipelines/pipelines.component'), icon: "line_axis" },
     { id: 'Agents', load: () => import('./pages/agents/agents.component'), icon: "dns" },
+    { id: 'Sources', load: () => import('./pages/sources/sources.component'), icon: "source" },
 
     { id: 'Users', load: () => import('./pages/users/users.component'), icon: "manage_accounts", isVisible: () => {
         return window.user.isManager;
