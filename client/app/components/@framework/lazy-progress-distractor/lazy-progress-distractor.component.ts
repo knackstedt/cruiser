@@ -7,10 +7,14 @@ import gsap from 'gsap';
     templateUrl: './lazy-progress-distractor.component.html',
     styleUrls: ['./lazy-progress-distractor.component.scss'],
     imports: [MatProgressSpinnerModule],
-    standalone: true
+    standalone: true,
+    host: {
+        "[class.clear]": "isDestroying"
+    }
 })
 export class LazyProgressDistractorComponent {
     @Input() isDestroying = false;
+    @Input() text = 'Connecting';
 
     // Original colors
     // primary = '#059FF6';

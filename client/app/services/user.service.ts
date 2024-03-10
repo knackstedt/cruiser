@@ -29,6 +29,12 @@ export class UserService extends Subject<CruiserUserProfile> {
                 this.next(this.value = u);
                 window.root.isAuthenticated = true;
             }
+        }).finally(() => {
+            window.root.isLoggingIn = false;
+
+            setTimeout(() => {
+                window.root.renderPageDistractor = false;
+            }, 400)
         })
     }
 

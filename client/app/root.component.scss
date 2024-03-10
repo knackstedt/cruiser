@@ -13,15 +13,22 @@ ngx-lazy-loader {
     contain: content;
 }
 
-
 app-menu {
     position: relative;
     z-index: 1;
 }
+
 .container {
     display: flex;
     flex-direction: column;
     width: 100%;
     contain: content;
     overflow: hidden;
+}
+
+.distractor {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    z-index: 99;
 }

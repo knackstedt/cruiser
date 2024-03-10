@@ -39,6 +39,9 @@ export class RootComponent {
     // Is the user locked out (they have no access granted)
     isLockedOut = false;
 
+    isLoggingIn = true;
+    renderPageDistractor = true;
+
     readonly mainCtxItems: MenuItem<any>[] = [
         {
             label: "Appearance",

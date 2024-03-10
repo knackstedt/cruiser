@@ -1,4 +1,14 @@
 <app-headerbar />
+
+<!-- Render a distractor on initial load -->
+@if (renderPageDistractor) {
+    <div class="distractor">
+        <app-lazy-progress-distractor
+            [isDestroying]="!isLoggingIn"
+        />
+    </div>
+}
+
 @if (isLockedOut) {
     <app-lockout/>
 }
