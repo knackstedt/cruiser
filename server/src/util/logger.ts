@@ -88,6 +88,7 @@ router.use((req, res, next) => {
         const length = parseInt(res.get("content-length"));
         httpLogger.info({
             user: req['session']?.gh_user?.login,
+            agent: req.get("X-Cruiser-Token") ? req.get("X-Cruiser-Agent") : null,
             ip: req.ip,
             method: req.method,
             status: res.statusCode,
