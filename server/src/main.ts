@@ -64,6 +64,8 @@ import { GetJobToken } from './util/token-cache';
                 req.session.profile.roles.includes("user") ||
                 req.session.profile.roles.includes("guest")
             ) ||
+            (req.method != "get" && req.session.profile.roles.includes("user")) ||
+
             GetJobToken(req.get("X-Cruiser-Token"))
         )
             ? next()
