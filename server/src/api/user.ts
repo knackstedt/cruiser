@@ -36,6 +36,31 @@ router.post('/add', route(async (req, res, next) => {
     res.send({ profile });
 }));
 
+router.post('/grant-role/:id', route(async (req, res, next) => {
+    const id = req.params.id;
+
+    if (!id.startsWith('users:'))
+        return next(404);
+
+    const role = req.body.role as string;
+
+    let [profile] = await db.select<CruiserUserProfile>(id);
+
+    // Prevent duplicate role additions
+    if (profile.roles.includes(role as any)) {
+        res.send({ profile });
+        return;
+    }
+
+    profile.roles.push(role as any);
+
+    [profile] = await db.merge("users:ulid()", {
+        roles: profile.roles
+    } as CruiserUserProfile);
+
+    res.send({ profile });
+}));
+
 // router.post('/invite', route(async (req, res, next) => {
 //     req.session.gh_user
 //         ? res.send(req.session.gh_user)

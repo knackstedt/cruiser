@@ -28,16 +28,27 @@
                     <p-sortIcon field="label"></p-sortIcon>
                     <p-columnFilter type="text" field="roles" display="menu"/>
                 </th>
-
+                <th [width]="48"></th>
             </tr>
         </ng-template>
         <ng-template pTemplate="body" let-user>
-            <tr>
+            <tr
+                [ngx-contextmenu]="menu"
+                [ngx-menu-context]="user"
+            >
                 <td>
                     {{user.login || user.id}}
                 </td>
                 <td>
                     {{user.roles?.join(', ')}}
+                </td>
+                <td>
+                    <button
+                        [ngx-menu]="menu"
+                        [ngx-menu-context]="user"
+                    >
+                        <mat-icon>more_vert</mat-icon>
+                    </button>
                 </td>
             </tr>
         </ng-template>
