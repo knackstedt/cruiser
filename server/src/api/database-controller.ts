@@ -21,6 +21,69 @@ export const checkSurrealResource = (resource: string) => {
     return resource;
 }
 
+export const tableGuard = (req, res, next) => {
+    let target = req.params.table;
+
+    let targetId: string;
+    if (target.startsWith("(")) {
+        if (target.endsWith(")")) {
+            targetId = target.slice(1, -1);
+        }
+        else {
+            return next(400);
+        }
+    }
+
+    const [table, id] = (targetId ?? target).split(':');
+
+    if (id && !/^[0-7][0-9A-Z]{25}$/.test(id))
+        throw { status: 400, message: "Invalid resource" };
+
+    if (tableBlackList.includes(table.toLowerCase()))
+        throw { status: 403, message: "You do not have access to this resource" };
+
+    // Verify the table name is semantically valid
+    if (/[^a-zA-Z0-9_-]/.test(table))
+        return next(404);
+
+    const restriction = restrictionMap[table];
+
+    if (restriction) {
+        const groups = req.session.profile.roles;
+
+        if (restriction.read && req.method == 'get') {
+            if (!restriction.read.find(r => groups.includes(r)))
+                return next(403);
+        }
+
+        if (restriction.patch && req.method == 'patch') {
+            if (!restriction.patch.find(r => groups.includes(r)))
+                return next(403);
+        }
+
+        if (restriction.delete && req.method == 'delete') {
+            if (!restriction.delete.find(r => groups.includes(r)))
+                return next(403);
+        }
+
+        if (restriction.post && req.method == 'post') {
+            if (!restriction.post.find(r => groups.includes(r)))
+                return next(403);
+        }
+
+        // If it's something that would modify a table, check for write access.
+        if (restriction.write && ['post', 'patch', 'delete'].includes(req.method)) {
+            if (!restriction.write.find(r => groups.includes(r)))
+                return next(403);
+        }
+    }
+
+    req['_table'] = table;
+    req['_id'] = id;
+
+    next();
+}
+
 type RestrictionMap = {
     [key: string]: {
         read?: CruiserUserRole[],
@@ -51,57 +114,23 @@ const restrictionMap: RestrictionMap = {
 export const DatabaseTableApi = () => {
     const router = express.Router();
 
-    router.use('/:table', (req, res, next) => {
-        const table = req.params.table?.split('(')[0];
-
-        // Anything that isn't possibly valid is a 404.
-        if (/[^a-zA-Z0-9_-]/.test(table))
-            return next(404);
-
-        const restriction = restrictionMap[table];
-        const target = table;
-
-        if (!target) return next(404);
-
-        if (restriction) {
-            const groups = req.session.profile.roles;
-
-            if (restriction.read && req.method == 'get') {
-                if (!restriction.read.find(r => groups.includes(r)))
-                    return next(403);
-            }
-
-            if (restriction.patch && req.method == 'patch') {
-                if (!restriction.patch.find(r => groups.includes(r)))
-                    return next(403);
-            }
-
-            if (restriction.delete && req.method == 'delete') {
-                if (!restriction.delete.find(r => groups.includes(r)))
-                    return next(403);
-            }
-
-            if (restriction.post && req.method == 'post') {
-                if (!restriction.post.find(r => groups.includes(r)))
-                    return next(403);
-            }
-
-            // If it's something that would modify a table, check for write access.
-            if (restriction.write && ['post', 'patch', 'delete'].includes(req.method)) {
-                if (!restriction.write.find(r => groups.includes(r)))
-                    return next(403);
-            }
-        }
-
-        next();
-    })
-
-    // router.use(proxy('http://127.0.0.1:8000/rpc'));
     /**
-     * Scan the library and build the metadata database.
+     * Metadata endpoint must be first
+     * TODO: Should this endpoint be secured?
+     * Seems arbitrary on the surface
      */
-    router.get('/:table', route(async (req, res, next) => {
-        const table = req.params['table'];
+    router.get('/$metadata#:table', tableGuard, route(async (req, res, next) => {
+        const table = req['_table'] as string;
+        const schemaFields = Object.keys((
+            (await db.query(`INFO FOR TABLE ` + table))[0][0].result as any)?.fd
+        );
+        res.send(schemaFields);
+    }));
+
+    router.use('/:table', tableGuard);
+
+    router.get('/:table', tableGuard, route(async (req, res, next) => {
+        const table = req['_table'] as string;
 
         const apiPath = '/api/odata';
 
@@ -171,11 +200,6 @@ export const DatabaseTableApi = () => {
     }));
 
 
-    router.get('/$metadata#:table', route(async (req, res, next) => {
-        const table = req.params['table'];
-        const schemaFields = Object.keys(((await db.query(`INFO FOR TABLE ` + table))[0][0].result as any)?.fd);
-        res.send(schemaFields);
-    }));
 
     router.post('/:table', route(async (req, res, next) => {
 
@@ -256,7 +280,6 @@ export const DatabaseTableApi = () => {
             )
         ));
     }));
-
 
 
     router.delete('/:id', route(async (req, res, next) => {
