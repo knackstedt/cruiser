@@ -80,6 +80,9 @@ mat-accordion {
         background-color: #333333;
         transition: background-color 300ms ease;
 
+        &:hover {
+            background-color: #444;
+        }
         &.selected {
             background-color: var(--ngx-ctx-menu-hover-background-color);
         }
@@ -95,4 +98,9 @@ mat-accordion {
     height: 48px;
     border: 4px dashed #555;
     border-radius: 6px;
+}
+
+ngx-stackedit {
+    border-top-right-radius: 2px;
+    border-top-left-radius: 2px;
 }

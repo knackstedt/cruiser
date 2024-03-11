@@ -96,7 +96,10 @@ export class PipelineEditorComponent {
         let data = {
             ...this.pipeline,
             isUserEditInstance: false,
-            id: this._pipeline.id
+            id: this._pipeline.id,
+            _sourceId: null,
+            "@odata.editLink": null,
+            "@odata.id": null
         };
         const res = await this.fetch.patch(`/api/odata/${this._pipeline.id}`, data) as any;
 
