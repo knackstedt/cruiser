@@ -1,0 +1,45 @@
+
+
+<mat-tab-group [mat-stretch-tabs]="false">
+    <!-- Release pipelines will have various stages -->
+    @if (pipeline.isReleasePipeline) {
+        <mat-tab label="Stages">
+            <ng-template matTabContent>
+                <app-stages [pipeline]="pipeline"/>
+            </ng-template>
+        </mat-tab>
+    }
+    @else {
+        <!-- Build pipelines will always have 1 stage -->
+        <mat-tab label="Tasks">
+            <ng-template matTabContent>
+                @if (pipeline.stages) {
+                    <app-stage-editor
+                        [stage]="pipeline.stages?.[0]"
+                        [pipeline]="pipeline"
+                    />
+                }
+            </ng-template>
+        </mat-tab>
+    }
+    <mat-tab label="variables">
+        <ng-template matTabContent>
+        </ng-template>
+    </mat-tab>
+    <mat-tab label="triggers">
+        <ng-template matTabContent>
+        </ng-template>
+    </mat-tab>
+    <mat-tab label="listeners">
+        <ng-template matTabContent>
+        </ng-template>
+    </mat-tab>
+    <mat-tab label="options">
+        <ng-template matTabContent>
+        </ng-template>
+    </mat-tab>
+    <mat-tab label="history">
+        <ng-template matTabContent>
+        </ng-template>
+    </mat-tab>
+</mat-tab-group>

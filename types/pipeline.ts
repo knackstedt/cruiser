@@ -11,20 +11,25 @@ export type BuildArtifact = {
 
 export type TaskDefinition = {
     id: `pipelineTask:${string}`;
-    command: string
-    arguments: string[]
+    disabled: boolean,
     commandTimeout: number
     label: string
     description?: string
     workingDirectory?: string
     order: number
+
     runIfPreviousTaskPassed: boolean
     runIfPreviousTaskFailed: boolean
     preBreakpoint: boolean
     postBreakpoint: boolean
     disableErrorBreakpoint: boolean
+
     taskOnSelfFailure: TaskDefinition
     environment?: EnvironmentVariable[]
+
+    // Id of the schema that applies to this task
+    taskKind: string,
+    taskInstructions: Object
 }
 
 export type TaskGroupDefinition = {
@@ -55,6 +60,8 @@ export type JobDefinition = {
     runCount: number,
     invocationCount: number
     failCount: number
+
+    platform: `agent_${string}` | 'agentless' | `kube_${string}`
 }
 
 export type StageDefinition = {
@@ -103,6 +110,9 @@ export type PipelineDefinition = {
     lockingBehavior: "singleton" | "singletonNoFail" | "multiple"
     group: string
     isTemplate: boolean
+
+    isReleasePipeline: boolean,
+
     // record id for the pipeline's template
     pipelineTemplate: string,
     // If the pipeline is a clone so a user can edit and save

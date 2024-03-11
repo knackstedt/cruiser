@@ -4,6 +4,7 @@
     --background-color: #1f1f1f;
     --panel-background-color: #2f2f2f;
     --text-color: #dfdfdf;
+    --text-subtle-color: #a5a5a5;
 
     --theme-primary: #18ffff;
     --theme-secondary: #07fa87;
@@ -14,7 +15,9 @@
     --mdc-protected-button-disabled-label-text-color: #ccc;
     // --mdc-tab-indicator-active-indicator-color: #fbb86c;
 
-
+    --mdc-filled-text-field-container-color: #303030;
+    --mdc-filled-text-field-disabled-container-color: #464646;
+    --mat-form-field-focus-state-layer-opacity: 0.1;
 
     --splitter-hover-background-color: var(--theme-primary);
     --splitter-background-color: #555;

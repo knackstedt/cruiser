@@ -1,0 +1,98 @@
+:host {
+    display: flex;
+    height: 100%;
+
+    --mat-expansion-container-background-color: #0000
+}
+
+ng-scrollbar {
+    flex: 0 0 450px;
+    background-color: #181818;
+}
+
+mat-accordion {
+    border-right: 1px solid #2b2b2b;
+    // padding: 12px;
+
+    mat-tab-group {
+        background-color: #1f1f1f;
+    }
+
+    mat-expansion-panel-header {
+        padding: 0;
+
+        ::ng-deep {
+            .mat-content {
+                height: 100%;
+
+            }
+            .mat-expansion-indicator {
+                position: absolute;
+                right: 34px;
+            }
+        }
+    }
+    ::ng-deep .mat-expansion-panel-body {
+        padding: 0 12px;
+    }
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 12px;
+    width: 100%;
+    height: 100%;
+
+    .label {
+        padding-left: 24px
+    }
+}
+
+.content {
+    flex: 1;
+}
+
+.titlebar {
+    display: flex;
+    gap: 12px;
+    padding: 0 12px;
+    align-items: center;
+}
+
+
+::ng-deep {
+    .draggable-task.cdk-drag-preview {
+        box-sizing: border-box;
+        border-radius: 4px;
+        box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
+            0 8px 10px 1px rgba(0, 0, 0, 0.14),
+            0 3px 14px 2px rgba(0, 0, 0, 0.12);
+    }
+
+    .draggable-task {
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        gap: 12px;
+        height: 48px;
+        background-color: #333333;
+        transition: background-color 300ms ease;
+
+        &.selected {
+            background-color: var(--ngx-ctx-menu-hover-background-color);
+        }
+
+        &.disabled {
+            text-decoration: line-through;
+            color: var(--text-subtle-color);
+        }
+    }
+}
+
+.placeholder {
+    height: 48px;
+    border: 4px dashed #555;
+    border-radius: 6px;
+}

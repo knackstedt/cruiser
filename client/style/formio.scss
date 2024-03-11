@@ -1,0 +1,992 @@
+// Raw input styles modified from
+//
+.formio-component-selectBoxes label.form-check-label,
+.formio-component-checkbox label.form-check-label {
+
+    width: 80px;
+    height: 26px;
+    background: #333;
+    margin: 20px auto;
+    border-radius: 50px;
+    position: relative;
+    box-shadow: inset 0px 1px 1px rgba(0, 0, 0, 0.5), 0px 1px 0px rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+
+    &[disabled] {
+        background: #313131;
+        pointer-events: none;
+    }
+
+    &:after {
+        content: 'OFF';
+        font: 12px/26px Arial, sans-serif;
+        color: #ff9800;
+        position: absolute;
+        right: 10px;
+        z-index: 0;
+        font-weight: bold;
+        text-shadow: 1px 1px 0px rgba(0, 0, 0, .15);
+        top: 2px;
+    }
+
+    &:before {
+        content: 'ON';
+        font: 12px/26px Arial, sans-serif;
+        color: #4fc3f7;
+        position: absolute;
+        left: 10px;
+        z-index: 0;
+        font-weight: bold;
+        top: 2px;
+    }
+
+    &[disabled]:after,
+    &[disabled]:before {
+        color: #848484;
+    }
+
+    input[type=checkbox] {
+        display: none;
+    }
+
+    input[type=checkbox]+span:before {
+        content: "";
+        position: absolute;
+        left: -77px;
+        width: 34px;
+        height: 20px;
+        border-radius: 12px;
+        transition: all .4s ease;
+        display: block;
+        box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
+        background: #858585;
+    }
+
+    &[disabled] input[type=checkbox]+span:before {
+        background: #5b5b5b;
+    }
+
+    input[type=checkbox]:checked+span:before {
+        left: -38px;
+    }
+
+    input[type=checkbox]+span {
+        display: block;
+        // width: 34px;
+        width: 300px;
+        height: 20px;
+        border-radius: 50px;
+        cursor: pointer;
+        position: relative;
+        top: 4px;
+        left: 100%;
+        z-index: 1;
+        padding-left: 14px;
+    }
+}
+
+
+.form-check.checkbox {
+    min-width: 300px;
+}
+
+.formio-component-radio label.form-check-label {
+    line-height: 26px;
+
+    span {
+        margin-left: 10px;
+    }
+
+    input[type="radio"] {
+        appearance: none;
+        background-color: #333;
+        width: 18.4px;
+        height: 18.4px;
+        border: 2.5px solid #333;
+        border-radius: 50%;
+        position: relative;
+    }
+
+    input[type="radio"]::before {
+        content: "";
+        width: 100%;
+        height: 100%;
+        padding: 3px;
+        border-radius: 50%;
+        transform: scale(0);
+        transition: 400ms transform ease;
+        background: #03a9f4;
+        display: block
+    }
+
+    input[type="radio"]:checked::before {
+        transform: scale(1);
+    }
+
+}
+
+.formio-dialog {
+    color: #ddd;
+    background: rgba(0, 0, 0, 0);
+}
+
+.formio-dialog.formio-dialog-theme-default .formio-dialog-content {
+    background: #303030;
+    max-height: 90%;
+    height: 90%;
+    top: 5%;
+    left: 5%;
+    width: 90%;
+    position: absolute;
+}
+
+.choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: #093c64;
+}
+
+.is-open .choices__list--dropdown {
+    border-color: #4c4c4c;
+}
+
+.choices__list--multiple .choices__item {
+    background-color: #1b5e20 !important;
+    border: 3px solid #1b5e20 !important;
+    border-radius: 3px !important;
+}
+
+.choices[data-type*=select-one] .choices__button {
+    filter: invert(1)
+}
+
+.choices[data-type*=select-one]:after {
+    border-color: #999 transparent transparent;
+}
+
+.formio-form {
+    padding: 0 !important;
+}
+
+.formio {
+    background: #222;
+
+    .fa {
+        width: 24px;
+
+        &:before {
+            position: relative;
+            font-size: 40px;
+            line-height: 0;
+            font-weight: bold;
+            transform: rotate(45deg);
+            left: 0;
+            top: 7px;
+        }
+    }
+
+    .fa-plus {
+        transform: rotate(45deg);
+
+    }
+
+    .fa-plus:before {
+        content: "×";
+        left: 0;
+        font-size: 40px;
+        line-height: 0;
+        top: 7px;
+        font-weight: bold;
+    }
+
+    .formio-dialog-close:before {
+        content: "×";
+        cursor: pointer;
+    }
+
+    .fa-edit,
+    .fa-pencil-square-o {
+        transform: scaleX(-1);
+    }
+
+    .fa-edit:before,
+    .fa-pencil-square-o:before {
+        content: "✎";
+        font-size: 26px;
+        line-height: 22px;
+        top: 0;
+    }
+
+    .fa-trash:before,
+    .fa-times-circle-o:before {
+        content: "×";
+        color: red;
+        font-weight: bold;
+    }
+
+    .fa-trash:before {
+        color: #fff;
+    }
+
+    .fa-question-circle::before {
+        font-size: 20px;
+        top: 0;
+    }
+
+
+    .form-text.text-muted {
+        margin-top: 4px;
+    }
+
+    button {
+        transition: all 400ms ease;
+    }
+
+    button[ref="openModal"] {
+        background-color: #333;
+
+        &:hover {
+            background-color: #444;
+        }
+    }
+
+    fieldset {
+        border: none;
+    }
+
+    textarea.form-control {
+        height: unset;
+    }
+
+    .choices[data-type*=select-one] .choices__input {
+        border-bottom: 1px solid #848484;
+        background-color: #363636;
+    }
+
+    a {
+        color: #2780e3;
+        color: rgb(59, 151, 230);
+        text-decoration: none;
+        background-color: transparent;
+    }
+
+    a:hover {
+        color: #165ba8;
+        text-decoration: underline;
+    }
+
+    [tabindex="-1"]:focus:not(:focus-visible) {
+        outline: 0 !important;
+    }
+
+    p {
+        margin-top: 0;
+        margin-bottom: 1rem;
+    }
+
+    ul {
+        margin-top: 0;
+        margin-bottom: 1rem;
+    }
+
+    table {
+        border-collapse: collapse;
+        color: rgb(196, 191, 183);
+        width: 100%;
+        margin-bottom: 1rem;
+
+        border-color: #383d3f thead th {
+            vertical-align: bottom;
+            border-bottom: 2px solid rgb(56, 61, 63);
+        }
+
+        th {
+            text-align: inherit;
+            text-align: -webkit-match-parent;
+        }
+
+        td,
+        th {
+            padding: .75rem;
+            vertical-align: top;
+            border-top: 1px solid rgb(56, 61, 63);
+        }
+    }
+
+    caption {
+        padding-top: .75rem;
+        padding-bottom: .75rem;
+        color: rgb(161, 152, 140);
+        text-align: left;
+        caption-side: bottom;
+    }
+
+
+    label {
+        display: inline-block;
+        margin-bottom: .5rem;
+    }
+
+    button {
+        border-radius: 0;
+    }
+
+    button:focus:not(:focus-visible) {
+        outline: 0;
+    }
+
+    button,
+    input,
+    select {
+        margin: 0;
+        font-family: inherit;
+        font-size: inherit;
+        line-height: inherit;
+    }
+
+    button,
+    input {
+        overflow: visible;
+    }
+
+    button,
+    select {
+        text-transform: none;
+    }
+
+    select {
+        word-wrap: normal;
+    }
+
+    input[type=checkbox],
+    input[type=radio] {
+        box-sizing: border-box;
+        padding: 0;
+    }
+
+    [hidden] {
+        display: none !important;
+    }
+
+    .row {
+        display: flex;
+        flex-wrap: nowrap;
+        margin-right: -15px;
+        margin-left: -15px;
+        justify-content: space-between;
+    }
+
+    .list-group-header .row {
+        justify-content: start;
+    }
+
+
+    .col-md-6,
+    .col-sm-2 {
+        position: relative;
+        width: 100%;
+        padding-right: 15px;
+        padding-left: 15px;
+    }
+
+    .col-md-3 {
+        width: 24%
+    }
+
+    .col-md-4 {
+        width: 32%
+    }
+
+    .col-md-8 {
+        width: 65%
+    }
+
+    .col-md-9 {
+        width: 74%
+    }
+
+    @media (min-width:576px) {
+        .col-sm-2 {
+            -ms-flex: 0 0 16.666667%;
+            flex: 0 0 16.666667%;
+            max-width: 16.666667%;
+        }
+    }
+
+    @media (min-width:768px) {
+        .col-md-6 {
+            -ms-flex: 0 0 50%;
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+    }
+
+
+    .table-bordered {
+        border: 1px solid #313131;
+
+        td,
+        th {
+            border: 1px solid #313131;
+        }
+
+        thead th {
+            border-bottom-width: 2px;
+        }
+    }
+
+
+    .table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .form-control {
+        display: block;
+        width: 100%;
+        height: calc(1.5em + .75rem + 2px);
+        padding: .375rem .75rem;
+        font-size: .9375rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: rgb(181, 175, 166);
+        background-color: #303030;
+        border: 0; // reset `input` border
+        // border: 2px solid rgba(60, 65, 68, 0.446);
+        border-bottom: 1px solid #878787;
+        border-radius: 2px;
+        transition: all 200ms ease;
+
+        &:hover {
+            color: #e6e6e6;
+            border-bottom: 2px solid #e6e6e6;
+            background-color: #3f3f3f;
+        }
+        &:focus {
+            outline: 0;
+            color: #ffffff;
+            border-bottom: 2px solid #69f0ae;
+            background-color: #424242;
+        }
+
+        &::placeholder {
+            color: rgb(161, 152, 140);
+            opacity: 1;
+        }
+
+        &:disabled {
+            background-color: rgb(35, 38, 39);
+            opacity: 1;
+        }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+        .form-control {
+            transition: none;
+        }
+    }
+
+
+    .col-form-label {
+        padding-top: calc(.375rem + 1px);
+        padding-bottom: calc(.375rem + 1px);
+        margin-bottom: 0;
+        font-size: inherit;
+        line-height: 1.5;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-check {
+        position: relative;
+        display: block;
+        padding-left: 1.25rem;
+    }
+
+    .form-check-input {
+        position: absolute;
+        margin-top: .3rem;
+        margin-left: -1.25rem;
+    }
+
+    .form-check-label {
+        margin-bottom: 0;
+    }
+
+    .invalid-feedback {
+        display: none;
+        width: 100%;
+        margin-top: .25rem;
+        font-size: 80%;
+        color: #ff0039;
+    }
+
+    .btn {
+        display: inline-block;
+        font-weight: 400;
+        color: #ccc;
+        height: auto;
+        vertical-align: middle;
+        user-select: none;
+        background-color: transparent;
+        border: 0px solid transparent;
+        border-radius: 5px;
+        padding: .375rem .75rem;
+        font-size: .9375rem;
+        line-height: 1.5;
+        position: relative;
+        transition: color .15s ease, background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+        word-break: keep-all;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        background: #333;
+
+        &:hover {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        &:focus {
+            outline: 0;
+            box-shadow: rgba(23, 95, 175, 0.25) 0px 0px 0px 0.2rem;
+        }
+
+        &:disabled {
+            opacity: .65;
+        }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+        .btn {
+            transition: none;
+        }
+    }
+
+
+
+    .btn-primary {
+        color: #ddd;
+        background-color: rgb(23, 95, 175);
+        border-color: rgb(20, 84, 155);
+
+        &:hover {
+            background-color: rgb(21, 87, 162);
+            border-color: rgb(22, 91, 168);
+        }
+
+        &:focus {
+            background-color: rgb(21, 87, 162);
+            border-color: rgb(22, 91, 168);
+            box-shadow: rgba(20, 85, 156, 0.5) 0px 0px 0px 0.2rem;
+        }
+
+        &:disabled {
+            background-color: rgb(23, 95, 175);
+            border-color: rgb(20, 84, 155);
+        }
+    }
+
+    .btn-secondary {
+        color: rgb(232, 230, 227);
+        background-color: rgb(43, 47, 49);
+        border-color: rgb(121, 112, 99);
+
+        &:hover {
+            background-color: rgb(29, 31, 33);
+            border-color: rgb(129, 120, 106);
+        }
+
+        &:focus {
+            background-color: rgb(29, 31, 33);
+            border-color: rgb(129, 120, 106);
+            box-shadow: rgba(66, 71, 74, 0.5) 0px 0px 0px 0.2rem;
+        }
+
+        &:disabled {
+            background-color: rgb(43, 47, 49);
+            border-color: rgb(121, 112, 99);
+        }
+    }
+
+
+    .btn-success {
+        color: rgb(232, 230, 227);
+        background-color: rgb(50, 146, 19);
+        border-color: rgb(59, 171, 23);
+
+        &:hover {
+            background-color: rgb(41, 118, 16);
+            border-color: rgb(63, 184, 24);
+        }
+
+        &:focus {
+            background-color: rgb(41, 118, 16);
+            border-color: rgb(63, 184, 24);
+            box-shadow: rgba(74, 154, 47, 0.5) 0px 0px 0px 0.2rem;
+        }
+
+        &:disabled {
+            background-color: rgb(50, 146, 19);
+            border-color: rgb(59, 171, 23);
+        }
+    }
+
+
+    .btn-info {
+        color: rgb(232, 230, 227);
+        background-color: rgb(111, 55, 139);
+        border-color: rgb(100, 49, 124);
+
+        &:hover {
+            background-color: rgb(106, 53, 134);
+            border-color: rgb(108, 54, 135);
+        }
+
+        &:focus {
+            background-color: rgb(106, 53, 134);
+            border-color: rgb(108, 54, 135);
+            box-shadow: rgba(99, 49, 123, 0.5) 0px 0px 0px 0.2rem;
+        }
+
+        &:disabled {
+            background-color: rgb(111, 55, 139);
+            border-color: rgb(100, 49, 124);
+        }
+    }
+
+
+    .btn-warning {
+        color: rgb(232, 230, 227);
+        background-color: #ff7518;
+        border-color: #ff7518;
+
+        &:hover {
+            background-color: #f16100;
+            border-color: #e45c00;
+        }
+
+        &:focus {
+            background-color: #f16100;
+            border-color: #e45c00;
+            box-shadow: 0 0 0 .2rem rgba(255, 138, 59, .5);
+        }
+
+        &:disabled {
+            background-color: #ff7518;
+            border-color: #ff7518;
+        }
+    }
+
+
+    .btn-danger {
+        color: rgb(232, 230, 227);
+        background-color: #ff0039;
+        border-color: #ff0039;
+
+        &:hover {
+            background-color: #d90030;
+            border-color: #cc002e;
+        }
+
+        &:focus {
+            background-color: #d90030;
+            border-color: #cc002e;
+            box-shadow: 0 0 0 .2rem rgba(255, 38, 87, .5);
+        }
+
+        &:disabled {
+            background-color: #ff0039;
+            border-color: #ff0039;
+        }
+    }
+
+
+    .nav {
+        display: flex;
+        flex-wrap: wrap;
+        padding-left: 0;
+        margin-bottom: 0;
+        list-style: none;
+        list-style-image: initial;
+
+    }
+
+    .nav-link {
+        display: block;
+        padding: .5rem 1rem;
+
+        &:focus,
+        &:hover {
+            text-decoration: none;
+        }
+    }
+
+
+    .nav-tabs {
+        border-bottom: 1px solid rgb(56, 61, 63);
+
+        .nav-link {
+            margin-bottom: -1px;
+            border: 1px solid transparent;
+        }
+
+        .nav-link:focus,
+        .nav-link:hover {
+            border-color: rgb(53, 58, 60) rgb(53, 58, 60) rgb(56, 61, 63);
+        }
+
+        .nav-link.active {
+            color: rgb(181, 175, 166);
+            background-color: rgb(24, 26, 27);
+            border-color: rgb(56, 61, 63) rgb(56, 61, 63) rgb(48, 52, 54);
+        }
+    }
+
+
+    .card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        word-wrap: break-word;
+        background-color: #222;
+        background-clip: border-box;
+        border: 1px solid rgba(140, 130, 115, 0.13);
+    }
+
+    .card-body {
+        flex: 1 1 auto;
+        min-height: 1px;
+        padding: 1.25rem;
+    }
+
+    .card-title {
+        margin-bottom: .75rem;
+    }
+
+    .card-header {
+        padding: .75rem 1.25rem;
+        margin-bottom: 0;
+        background-color: rgba(0, 0, 0, 0.03);
+        border-bottom: 1px solid rgba(140, 130, 115, 0.13);
+    }
+
+    .card-header-tabs {
+        margin-right: -.625rem;
+        margin-bottom: -.75rem;
+        margin-left: -.625rem;
+        border-bottom: 0;
+    }
+
+    .list-group {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        padding-left: 0;
+    }
+
+    .list-group-item {
+        position: relative;
+        display: block;
+        padding: .75rem 1.25rem;
+        background-color: #262626;
+        border: 1px solid rgba(140, 130, 115, 0.13);
+    }
+
+    .list-group-item:disabled {
+        pointer-events: none;
+        color: rgb(161, 152, 140);
+        background-color: rgb(24, 26, 27);
+    }
+
+    .bg-light {
+        background-color: rgb(27, 30, 31) !important;
+    }
+
+    .border {
+        border-color: rgb(56, 61, 63) !important;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .mb-0 {
+        margin-bottom: 0 !important;
+    }
+
+    .mb-2 {
+        margin-bottom: .5rem !important;
+    }
+
+    .mb-3 {
+        margin-bottom: 1rem !important;
+    }
+}
+
+
+
+/*! CSS Used from: https://formio.github.io/formio.js/dist/formio.full.min.css */
+.choices {
+    position: relative;
+    margin-bottom: 24px;
+    font-size: 16px;
+
+    &:focus {
+        outline: 0;
+    }
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+
+    & [hidden] {
+        display: none !important;
+    }
+
+    &[data-type*=text] .choices__inner {
+        cursor: text;
+    }
+}
+
+
+.choices__inner {
+    display: inline-block;
+    vertical-align: top;
+    width: 100%;
+    background-color: #333;
+    color: #ddd;
+    padding: 7.5px 7.5px 3.75px;
+    border: 1px solid rgb(58, 62, 65);
+    border-radius: 2.5px;
+    font-size: 14px;
+    min-height: 44px;
+    overflow: hidden;
+}
+
+.choices__list {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.choices__list--multiple {
+    display: inline;
+}
+
+.choices__list--dropdown {
+    visibility: hidden;
+    z-index: 1;
+    position: absolute;
+    width: 100%;
+    background-color: rgb(24, 26, 27);
+    border: 1px solid rgb(58, 62, 65);
+    top: 100%;
+    margin-top: -1px;
+    border-bottom-left-radius: 2.5px;
+    border-bottom-right-radius: 2.5px;
+    overflow: hidden;
+    word-break: break-all;
+    will-change: visibility;
+}
+
+.choices__input:focus {
+    outline: 0;
+}
+
+.choices__input {
+    display: inline-block;
+    vertical-align: baseline;
+    background-color: rgb(27, 30, 31);
+    font-size: 14px;
+    margin-bottom: 5px;
+    border: 0;
+    border-radius: 0;
+    max-width: 100%;
+    padding: 4px 0 4px 2px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+.formio-form {
+    position: relative;
+    min-height: 80px;
+    padding: 1em;
+}
+
+.has-feedback .form-control {
+    padding-right: 10px;
+}
+
+td>.form-group {
+    margin-bottom: 0;
+}
+
+.choices__list--dropdown {
+    z-index: 100;
+}
+
+.choices__input {
+    padding: 2px;
+}
+
+.formio-component-label-hidden {
+    position: relative;
+}
+
+.editgrid-listgroup {
+    margin-bottom: 10px;
+}
+
+.formio-component .table {
+    margin-bottom: 0;
+}
+
+.formio-component-datagrid .datagrid-table>tbody>tr>td:last-child {
+    position: relative;
+}
+
+.formio-select-autocomplete-input {
+    opacity: 0;
+    position: relative;
+    z-index: -1;
+    display: block;
+    height: 0;
+    border: none;
+}
+
+.no-top-border-table>.table>tbody>tr:first-child>td {
+    border-top: none;
+}
+
+.table>tbody>tr>td.cell-align-left {
+    text-align: left;
+}
+
+.table-responsive[ref=component] {
+    overflow-x: visible;
+}
+
+.help-block {
+    margin: 0;
+}

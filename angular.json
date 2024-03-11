@@ -39,6 +39,11 @@
                 "input": "node_modules/@dotglitch/ngx-common/assets/lib/vs/",
                 "output": "./lib/monaco/vs"
               },
+              {
+                  "glob": "**/*",
+                  "input": "node_modules/formiojs/dist/",
+                  "output": "./lib/formio/"
+              },
               "client/manifest.webmanifest"
             ],
             "styles": [

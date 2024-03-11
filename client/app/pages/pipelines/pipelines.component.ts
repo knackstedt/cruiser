@@ -111,7 +111,7 @@ export class PipelinesComponent implements OnInit {
         lazyLoader.registerComponent({
             id: "pipeline-editor",
             group: "dynamic",
-            load: () => import('../@editors/pipeline-editor/pipeline-editor.component')
+            load: () => import('./editor/editor.component')
         });
         lazyLoader.registerComponent({
             id: "history",
@@ -144,6 +144,10 @@ export class PipelinesComponent implements OnInit {
         this.pipelines = pipelines;
 
         this.ngAfterViewInit();
+
+        setTimeout(() => {
+            this.editPipeline(this.pipelines[0])
+        })
     }
 
     ngAfterViewInit() {

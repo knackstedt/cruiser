@@ -1,0 +1,13 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 800px;
+    width: 1200px;
+}
+
+
+mat-tab-group ::ng-deep {
+    .mat-mdc-tab-body-content {
+        overflow: hidden;
+    }
+}
