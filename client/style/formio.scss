@@ -454,7 +454,8 @@
         border: 0; // reset `input` border
         // border: 2px solid rgba(60, 65, 68, 0.446);
         border-bottom: 1px solid #878787;
-        border-radius: 2px;
+        border-top-right-radius: 2px;
+        border-top-left-radius: 2px;
         transition: all 200ms ease;
 
         &:hover {
