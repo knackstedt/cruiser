@@ -1,6 +1,8 @@
 FROM node:20-bullseye
 # FROM node:20-alpine
 
+ENV NODE_ENV production
+
 # RUN apk add nginx g++ make py3-pip
 RUN apt update
 RUN apt install nginx g++ make python3 -y -qq

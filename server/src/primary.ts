@@ -26,6 +26,19 @@ const spawnWorker = () => {
     workers.push(worker);
 }
 
+const spawnSocketWorker = () => {
+    let worker = cluster.fork({ SOCKET_LISTENER: 1 });
+    logger.info(`Spawned socket worker ${worker.id}`);
+
+    worker.on("exit", (code, signal) => {
+        logger.warn(`Socket worker ${worker.id} exited with code ${code}`);
+
+        setTimeout(() => {
+            spawnSocketWorker();
+        }, 1000);
+    });
+}
+
 if (cluster.isPrimary) {
     let i = 0;
 
@@ -38,6 +51,8 @@ if (cluster.isPrimary) {
         }, 1000);
     }
     spawn();
+
+    spawnSocketWorker();
 }
 else {
     // Workers will run the normal webserver service.

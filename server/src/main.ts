@@ -22,7 +22,9 @@ import { GetJobToken } from './util/token-cache';
 import { SourcesApi } from './api/sources';
 import { Guest, User } from './guards/role-guards';
 
-(async () => {
+const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
+
+const bootstrapServer = async () => {
     const app: Express = express();
     app.disable('x-powered-by');
     app.set('trust proxy', 1);
@@ -81,6 +83,7 @@ import { Guest, User } from './guards/role-guards';
     app.use("/api/jobs",     JobActionsApi);
     app.use("/api/pod",      TunnelApi);
 
+
     app.use((req, res, next) => next(404));
     app.use(ErrorHandler);
 
@@ -91,8 +94,26 @@ import { Guest, User } from './guards/role-guards';
     server.on("error", logger.error);
     server.on("listening", () => logger.info(`Server listening on port ${port}`));
 
-    const sts = new SocketTunnelService(server);
+    return server;
+};
 
-    // Start the CRONTAB scheduler
-    // Scheduler();
-})();
+
+// If running as a dedicated socket instance, create
+// an otherwise empty server.
+if (isDedicatedSocketService) {
+    const server = http.createServer();
+    const port = 6820;
+    server.listen(port);
+
+    new SocketTunnelService(server);
+}
+// Running as a clustered worker.
+else if (process.env['NODE_ENV'] == 'production') {
+    bootstrapServer();
+}
+// Development mode, run both API server and socket server.
+else {
+    bootstrapServer().then(server => {
+        new SocketTunnelService(server);
+    })
+}
