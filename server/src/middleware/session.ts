@@ -22,6 +22,7 @@ const store = new SurrealDBStore({
 router.use(session({
     secret: process.env['SESSION_SECRET'],
     saveUninitialized: false,
+    resave: false,
     cookie: {
         // path: "/",
         sameSite: "lax",
