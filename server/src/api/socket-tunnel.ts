@@ -53,6 +53,7 @@ export class SocketTunnelService {
                 !session.profile.roles.includes("user")
             ) {
                 // If the request isn't secure, purge it.
+                socket.emit("error", { status: 403, message: "Forbidden" });
                 socket.disconnect(true);
                 return;
             }
