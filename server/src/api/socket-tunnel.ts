@@ -1,6 +1,9 @@
 import { Server, Socket } from "socket.io";
 import { ulid } from 'ulidx';
 import { JobDefinition, PipelineDefinition } from '../types/pipeline';
+import { sessionHandler } from '../middleware/session';
+import { GetJobToken } from '../util/token-cache';
+import { Session, SessionData } from 'express-session';
 
 export class SocketTunnelService {
 
@@ -24,7 +27,10 @@ export class SocketTunnelService {
         }
     } = {};
 
-    constructor(private server) {
+    constructor(
+        private server,
+
+    ) {
         this.startClientService();
         this.startSourceService();
     }
@@ -34,8 +40,23 @@ export class SocketTunnelService {
             path: "/ws/socket-tunnel",
             maxHttpBufferSize: 1024**3
         });
+        io.engine.use(sessionHandler);
 
         io.on("connection", socket => {
+            const req = socket.request;
+            const session: SessionData = req['session'];
+
+            if (
+                !session?.profile?.roles ||
+                !session.profile.roles.includes("administrator") ||
+                !session.profile.roles.includes("manager") ||
+                !session.profile.roles.includes("user")
+            ) {
+                // If the request isn't secure, purge it.
+                socket.disconnect(true);
+                return;
+            }
+
             const id = ulid();
 
             const client = this.connectedClients[id] = {
@@ -65,8 +86,18 @@ export class SocketTunnelService {
     private startSourceService() {
         // TODO: restrict this to only allow connections from the internal cluster or known agents?
         const io = new Server(this.server, {
-            path: "/ws/socket-tunnel-internal"
+            path: "/ws/socket-tunnel-internal",
+            maxHttpBufferSize: 1024 ** 3
         });
+
+        // io.engine.use((req, res, next) => {
+        //     const cruiserToken = req.get("X-Cruiser-Token");
+        //     if (cruiserToken) {
+        //         req['_agentToken'] = cruiserToken;
+        //         GetJobToken(cruiserToken) ? next() : next(401);
+        //     }
+        //     next(404);
+        // })
 
         io.on("connection", socket => {
             const id = ulid();
