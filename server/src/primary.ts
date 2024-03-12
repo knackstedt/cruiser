@@ -31,7 +31,7 @@ if (cluster.isPrimary) {
 
     const spawn = () => {
         setTimeout(() => {
-            if (i++ < cpus) {
+            if (i++ < Math.min(maxWorkers, cpus)) {
                 spawnWorker();
                 spawn();
             }
