@@ -60,15 +60,16 @@ const tryLoadCache = async (uid: string, jobId: string, job) => {
     // Test if we got a new one
     isOk = await axios.get(url + '/ping')
         .then(r => true)
-        .catch(e => false);
+        .catch(e => e);
 
-    if (isOk) {
+    if (isOk === true) {
         return url;
     }
     else {
         throw {
             status: 421,
-            message: "Agent is unreachable"
+            message: "Agent is unreachable",
+            err: isOk
         }
     }
 }

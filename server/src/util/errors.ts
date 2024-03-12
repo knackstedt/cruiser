@@ -1,4 +1,5 @@
 import * as express from "express";
+import { logger } from './logger';
 
 export const router = express.Router();
 const isProduction = process.env["NODE_ENV"]?.toLowerCase() == "production";
@@ -88,14 +89,11 @@ export const ErrorHandler = (err, req, res, next) => {
 
     if (!jsonResult.status) {
         jsonResult.status = 500;
-        console.error("SEVERE: jsonResult status was never defined")
+        logger.error("SEVERE: jsonResult status was never defined")
     }
 
     if (jsonResult.status >= 405) {
-        if (jsonResult.constructor.name.endsWith("Error"))
-            console.error(jsonResult);
-        else
-            console.error(`${jsonResult.name}\n${jsonResult.message}\n${jsonResult.stack}`);
+        logger.error(jsonResult);
     }
 
     // if (jsonResult.status >= 500) {
