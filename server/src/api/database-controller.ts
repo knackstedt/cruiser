@@ -32,7 +32,7 @@ export const tableGuard = (req, res, next) => {
             targetId = target.slice(1, -1);
         }
         else {
-            return next(400);
+            throw { status: 400, message: "Unauthorized" };
         }
     }
 
@@ -46,7 +46,7 @@ export const tableGuard = (req, res, next) => {
 
     // Verify the table name is semantically valid
     if (/[^a-zA-Z0-9_-]/.test(table))
-        return next(404);
+        throw { status: 404, message: "Invalid target" };
 
     const restriction = restrictionMap[table];
 
@@ -55,28 +55,28 @@ export const tableGuard = (req, res, next) => {
 
         if (restriction.read && req.method == 'get') {
             if (!restriction.read.find(r => groups.includes(r)))
-                return next(403);
+                throw { status: 403, message: "Forbidden" };
         }
 
         if (restriction.patch && req.method == 'patch') {
             if (!restriction.patch.find(r => groups.includes(r)))
-                return next(403);
+                throw { status: 403, message: "Forbidden" };
         }
 
         if (restriction.delete && req.method == 'delete') {
             if (!restriction.delete.find(r => groups.includes(r)))
-                return next(403);
+                throw { status: 403, message: "Forbidden" };
         }
 
         if (restriction.post && req.method == 'post') {
             if (!restriction.post.find(r => groups.includes(r)))
-                return next(403);
+                throw { status: 403, message: "Forbidden" };
         }
 
         // If it's something that would modify a table, check for write access.
         if (restriction.write && ['post', 'patch', 'delete'].includes(req.method)) {
             if (!restriction.write.find(r => groups.includes(r)))
-                return next(403);
+                throw { status: 403, message: "Forbidden" };
         }
     }
 
