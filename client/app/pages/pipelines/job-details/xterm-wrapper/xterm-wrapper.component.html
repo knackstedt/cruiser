@@ -1,10 +1,40 @@
+@if (loadingState != 'ready') {
+    <mat-progress-bar [mode]="'indeterminate'"/>
+}
 <div>
-    @if (connected) {
-        <mat-icon fontIcon="terminal" />
-    }
-    @else {
-        <mat-icon style="color: #ff5d5d" fontIcon="mobiledata_off" />
+    @switch(loadingState) {
+        @case ("ready") {
+            <mat-icon fontIcon="terminal" />
+        }
+        @case("disconnected") {
+            <mat-icon style="color: #ff5d5d" fontIcon="mobiledata_off" />
+        }
+        @case("pty_died") {
+            <mat-icon style="color: #fe3030" fontIcon="sync_problem" />
+        }
+        @case("connected") {
+            <mat-icon class="rotate" fontIcon="progress_activity" />
+        }
+        @case("launching_pty") {
+            <mat-icon class="rotate" fontIcon="progress_activity" />
+        }
+        @case("connecting") {
+            <mat-icon class="rotate" fontIcon="cycle" />
+        }
     }
 </div>
 
-<div class="terminal-container" #terminal></div>
+<div class="content">
+    @if (!showTerminal) {
+        <div class="error">
+            <div>
+                <img src="" />
+            </div>
+            <div>
+                Connecting...
+            </div>
+        </div>
+    }
+
+    <div class="terminal-container" #terminal></div>
+</div>

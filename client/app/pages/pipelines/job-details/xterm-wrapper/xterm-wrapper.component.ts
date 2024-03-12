@@ -9,13 +9,15 @@ import io, { Socket } from "socket.io-client";
 import { AnsiToXTermTheme, darkTheme } from 'client/app/services/theme.service';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogRef } from '@angular/material/dialog';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 @Component({
     selector: 'app-xterm-wrapper',
     templateUrl: './xterm-wrapper.component.html',
     styleUrls: ['./xterm-wrapper.component.scss'],
     imports: [
-        MatIconModule
+        MatIconModule,
+        MatProgressBarModule
     ],
     standalone: true,
     encapsulation: ViewEncapsulation.None
@@ -26,7 +28,12 @@ export class XtermWrapperComponent implements OnInit {
 
     @Input() jobInstance;
 
-    connected = false;
+    loadingState: 'connecting' |
+    "pty_died" | "disconnected" |
+    "connected" | "launching_pty" |
+    "ready" = 'connecting';
+
+    showTerminal = false;
 
     rowHeight = 17;
     charWidth = 8;
@@ -49,6 +56,7 @@ export class XtermWrapperComponent implements OnInit {
     ngAfterViewInit() {
         this.resizeObserver = new ResizeObserver(() => this.onResize);
         this.resizeObserver.observe(this.terminalEl);
+        this.loadingState = 'connecting';
 
         const socket = this.socket = io({
             path: "/ws/socket-tunnel",
@@ -56,15 +64,17 @@ export class XtermWrapperComponent implements OnInit {
         });
 
         socket.on("connect", () => {
-            this.connected = true;
+            this.loadingState = 'connected';
             socket.emit("$connect", { job: this.jobInstance.job });
         });
 
         socket.on("disconnect", () => {
-            this.connected = false;
+            this.loadingState = 'disconnected';
         });
 
         socket.on("$connected", () => {
+            this.loadingState = 'launching_pty';
+
             socket.emit("ssh:launch", {
                 // shell: this.config.shell,
                 // cwd: this.cwd || this.config.homedir
@@ -77,6 +87,8 @@ export class XtermWrapperComponent implements OnInit {
 
         // The pty on the remote died
         socket.on("ssh:exit", code => {
+            this.loadingState = 'pty_died';
+
             // If exit code is zero, the user submitted "ctrl+d" to close.
             // We'll thus close the dialog, assuming the user is done.
             console.log("Pty was killed", code);
@@ -87,14 +99,20 @@ export class XtermWrapperComponent implements OnInit {
         });
 
         socket.on("ssh:reconnect", id => {
+            this.loadingState = 'launching_pty';
+
             this.webglAddon.dispose();
             this.terminal?.dispose();
+
             socket.emit("ssh:launch", {
                 // shell: this.config.shell,
                 // cwd: this.cwd || this.config.homedir
             });
         });
+
         socket.on("ssh:started", ({ id }) => {
+            this.loadingState = 'ready';
+
             // this.terminal?.dispose();
 
             // this.loadFont("ubuntumono");
@@ -132,6 +150,7 @@ export class XtermWrapperComponent implements OnInit {
 
             terminal.onData(data => this.socket.emit("ssh:input", { input: data, id: id }));
 
+            this.showTerminal = true;
             this.onResize();
         });
 
@@ -148,6 +167,7 @@ export class XtermWrapperComponent implements OnInit {
         this.terminal = null;
         this.socket = null;
         this.resizeObserver = null;
+        this.showTerminal = false;
     }
 
     onResize() {
