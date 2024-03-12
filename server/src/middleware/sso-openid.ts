@@ -9,7 +9,7 @@ import { GitHubUser } from '../types/user';
 const router = express.Router();
 
 const getProfile = async (userId: string, roles?: CruiserUserRole[]) => {
-    let [{result}] = await db.query("SELECT * from users WHERE login = $user", { user: userId });
+    let [result] = await db.query("SELECT * from users WHERE login = $user", { user: userId });
     let [profile] = result as any;
 
     if (!profile) {
@@ -63,10 +63,10 @@ router.use("/logout", (req, res, next) => {
 
 
 router.use("/code", route(async (req, res, next) => {
-    const requestToken = req.query.code;
+    const requestToken = req.query['code'];
 
     // Prevent sign-in hijacking.
-    if (req.session._state != req.query.state)
+    if (req.session._state != req.query['state'])
         return next({ status: 403, message: "Handshake failure" });
 
     const url = `https://github.com/login/oauth/access_token` +

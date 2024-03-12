@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/', route(async (req, res, next) => {
     db.query(`SELECT * from array::flatten((select sources from pipelines where isUserEditInstance != true or isUserEditInstance = null).sources)`)
-        .then(([data]) => res.send(data.result))
+        .then(([data]) => res.send(data))
         .catch(err => next(err));
 }));
 

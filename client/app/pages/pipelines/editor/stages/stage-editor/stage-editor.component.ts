@@ -125,7 +125,7 @@ export class StageEditorComponent {
             id: "pipeline_task:" + ulid(),
             label: 'Task - ' + (taskGroup.tasks.length + 1),
             order: taskGroup.tasks.length + 1,
-            taskInstructions: {}
+            taskScriptArguments: {}
         } as TaskDefinition;
 
         taskGroup.tasks.push(task);
@@ -137,6 +137,6 @@ export class StageEditorComponent {
 
     selectTask(task: TaskDefinition) {
         this.selectedTask = task;
-        this.selectedTaskSchema = Schemas.find(s => s.kind == task.taskKind) || DefaultSchema;
+        this.selectedTaskSchema = Schemas.find(s => s.kind == task.taskScriptId) || DefaultSchema;
     }
 }

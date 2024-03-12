@@ -2,6 +2,8 @@ import * as express from "express";
 import { route } from '../util/util';
 import { SQLLang, createQuery } from '@dotglitch/odatav4';
 import { Visitor } from '@dotglitch/odatav4/dist/visitor';
+import formidable, { IncomingForm } from "formidable";
+
 import { db } from '../util/db';
 import { CruiserUserRole } from '../types';
 
@@ -181,10 +183,10 @@ export const DatabaseTableApi = () => {
             typeof limit == "number" ? `LIMIT ${limit}` : '',
             typeof skip == "number" ? `START ${skip}` : ''
         ].join(' ');
-        const [{result: data}] = await db.query(sql, props);
+        const [ data ] = await db.query(sql, props);
 
         const [{ result: countResult }] = await p_count as any;
-        const count = countResult[0]?.count;
+        const count = countResult?.[0]?.count;
 
         const pars = new URLSearchParams(req.url);
         pars.set('$skip', skip + (data as any)?.length as any);

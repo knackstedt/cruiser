@@ -12,7 +12,7 @@ const getPipeline = async id => {
     if (id.includes(':'))
         id = id.split(':').pop();
 
-    const [{result}] = await db.query<PipelineDefinition[]>(`SELECT * FROM pipelines:${id}`);
+    const [ result ] = await db.query<PipelineDefinition[]>(`SELECT * FROM pipelines:${id}`);
     return result[0];
 }
 

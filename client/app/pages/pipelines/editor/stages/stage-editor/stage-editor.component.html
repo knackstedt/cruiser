@@ -41,7 +41,7 @@
                                         <img />
                                         <div>
                                             <div>{{task.label}}</div>
-                                            <div>{{task.taskKind}}</div>
+                                            <div>{{task.taskScriptId}}</div>
                                         </div>
 
                                         <div style="flex: 1"></div>
@@ -130,7 +130,7 @@
                     />
 
                     <app-formio-wrapper
-                        [data]="selectedTask.taskInstructions"
+                        [data]="selectedTask.taskScriptId"
                         [formSchema]="selectedTaskSchema?.['schema']"
                         [formOptions]="{}"
                     />

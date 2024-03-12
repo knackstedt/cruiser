@@ -205,7 +205,7 @@ export class PipelineEditorComponent {
             id: "pipeline_task:" + ulid(),
             label: 'Task - ' + (taskGroup.tasks.length + 1),
             order: taskGroup.tasks.length + 1,
-            taskInstructions: {}
+            taskScriptArguments: {},
         } as TaskDefinition;
 
         taskGroup.tasks.push(task);

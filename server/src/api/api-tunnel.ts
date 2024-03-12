@@ -77,7 +77,7 @@ router.use('/:id', route(async (req, res, next) => {
 
     const id = req.params['id'];
 
-    const [{ result: jobs }] = await db.query<JobInstance[][]>(`SELECT * FROM ${id}`);
+    const [jobs] = await db.query<JobInstance[][]>(`SELECT * FROM ${id}`);
     const [ job ] = jobs;
 
     if (!job)

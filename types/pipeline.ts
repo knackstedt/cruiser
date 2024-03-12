@@ -24,12 +24,22 @@ export type TaskDefinition = {
     postBreakpoint: boolean
     disableErrorBreakpoint: boolean
 
-    taskOnSelfFailure: TaskDefinition
+    numberOfFailureRetries: number
+    continueOnError: boolean,
+
+
+    //taskOnSelfFailure: TaskDefinition
+
     environment?: EnvironmentVariable[]
 
-    // Id of the schema that applies to this task
-    taskKind: string,
-    taskInstructions: Object
+    // Id of the agent container script the task will run
+    // defaults to `command`
+    taskScriptId: string
+    // For task scripts that have more than 1 command, enable
+    // specifying the command to execute
+    taskScriptSubId: string
+    // Arguments to be fed into the specified task script.
+    taskScriptArguments: Object
 }
 
 export type TaskGroupDefinition = {
