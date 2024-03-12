@@ -20,4 +20,4 @@ RUN npm i --omit=dev
 
 EXPOSE 8080
 
-CMD ["/bin/bash", "-c", "service nginx start; node dist/server/primary.js"]
+CMD ["/bin/bash", "-c", "service nginx start; node server/primary.js"]
