@@ -84,10 +84,10 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
     db.merge(job.id, { runCount: job.runCount + 1});
 
 
-    const environment: { name: string, value: string; }[] =
-        (await db.query(`RETURN fn::job_get_environment(${job.id})`) as any[])
-        .map(({key, value}) => ({name: key, value}))
-        .filter(e => e.name != undefined);
+    // const environment: { name: string, value: string; }[] =
+    //     (await db.query(`RETURN fn::job_get_environment(${job.id})`) as any[])
+    //     .map(({key, value}) => ({name: key, value}))
+    //     .filter(e => e.name != undefined);
 
     // await k8sApi.createNamespace({
     //     metadata: {
@@ -151,7 +151,7 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
                                 { name: "CRUISER_CLUSTER_URL", value: process.env['DOTGLITCH_DOTOPS_CLUSTER_URL'] },
                                 { name: "CRUISER_AGENT_ID", value: id },
                                 { name: "CRUISER_SERVER_TOKEN", value: kubeAuthnToken },
-                                ...environment
+                                // ...environment
                             ]
                         }
                     ]
