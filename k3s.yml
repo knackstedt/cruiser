@@ -33,6 +33,48 @@ spec:
 ---
 
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvc-cruiser-filestore
+spec:
+  capacity:
+    storage: 16Gi
+  hostPath:
+    path: >-
+      /var/lib/rancher/k3s/storage/pvc-cruiser-filestore
+    type: DirectoryOrCreate
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: local-path
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k3s-02
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cruiser-filestore-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 4Gi
+  volumeName: pvc-cruiser-filestore
+  storageClassName: local-path
+  volumeMode: Filesystem
+
+---
+
+apiVersion: v1
 kind: Service
 metadata:
   name: cruiser
@@ -61,6 +103,10 @@ spec:
       labels:
         app: cruiser
     spec:
+      volumes:
+        - name: filestore
+          persistentVolumeClaim:
+            claimName: cruiser-filestore-pvc
       serviceAccountName: cruiser-server
       containers:
       - name: cruiser
@@ -114,6 +160,9 @@ spec:
             configMapKeyRef:
               name: cruiser-config
               key: DOTGLITCH_DOTOPS_CLUSTER_URL
+        volumeMounts:
+          - name: filestore
+            mountPath: /filestore
       imagePullSecrets:
       - name: harbor-key
 
