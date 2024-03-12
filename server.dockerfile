@@ -5,9 +5,6 @@ FROM node:20-bullseye
 RUN apt update
 RUN apt install nginx g++ make python3 -y -qq
 
-RUN npm i -g pm2
-# RUN service nginx enable
-
 WORKDIR /app
 
 # Pull in nginx configuration
@@ -25,4 +22,4 @@ RUN npm i --omit=dev
 
 EXPOSE 8080
 
-CMD ["/bin/bash", "-c", "service nginx start; pm2-runtime ecosystem.config.js"]
+CMD ["/bin/bash", "-c", "service nginx start; node dist/server/primary.js"]
