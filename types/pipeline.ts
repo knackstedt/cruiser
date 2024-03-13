@@ -57,19 +57,18 @@ export type JobDefinition = {
     description?: string
     elasticAgentId?: string
     order: number
-    timeout: string
-    runType: string
+    timeout?: string
     lastRun?: string
     lastTriggerReason?: "cron" | "changes" | "manual" | "webhook"
     runState?: "success" | "fail" | "running"
 
     taskGroups: TaskGroupDefinition[]
-    artifacts: BuildArtifact[]
+    artifacts?: BuildArtifact[]
     environment?: EnvironmentVariable[]
 
-    runCount: number,
-    invocationCount: number
-    failCount: number
+    runCount?: number,
+    invocationCount?: number
+    failCount?: number
 
     platform: `agent_${string}` | 'agentless' | `kube_${string}`
 }
