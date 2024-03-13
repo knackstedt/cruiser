@@ -1,25 +1,28 @@
 ng-scrollbar.ng-scrollbar {
     --scrollbar-padding: 0px;
-    --scrollbar-size: 14px;
+    --scrollbar-size: 4px;
     --scrollbar-border-radius: 0;
-    --scrollbar-thumb-color: #4440;
-    --scrollbar-thumb-transition: height ease-out .15s, width ease-out .15s, background-color ease 1200ms;
-    animation: fadeScrollbar 1200ms ease;
+    --scrollbar-thumb-color: #444f;
+    --scrollbar-thumb-transition:
+        height ease-out 100ms,
+        width ease-out 100ms,
+        background-color ease 1200ms;
+    // animation: fadeScrollbar 1200ms ease;
 
     &:hover {
-        --scrollbar-thumb-color: #444f;
+        --scrollbar-size: 14px;
     }
 }
 
-@keyframes fadeScrollbar {
-    from {
-        --scrollbar-thumb-color: #444f;
-    }
+// @keyframes fadeScrollbar {
+//     from {
+//         --scrollbar-thumb-color: #444f;
+//     }
 
-    to {
-        --scrollbar-thumb-color: #4440;
-    }
-}
+//     to {
+//         --scrollbar-thumb-color: #4440;
+//     }
+// }
 
 .ng-scroll-viewport {
     // This fixes a strange outline issue.
