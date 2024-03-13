@@ -2,24 +2,30 @@
     <input matInput type="" [(ngModel)]=""/>
 </mat-form-field> -->
 
-<mat-form-field>
+<!-- <mat-form-field>
     <mat-label>Kind</mat-label>
 
     <mat-select>
         <mat-option value="github">GitHub</mat-option>
-        <!-- <mat-option>GitLab</mat-option> -->
-        <!-- <mat-option>BitBucket</mat-option> -->
-        <!-- <mat-option>Gitea</mat-option> -->
-        <!-- <mat-option>Azure DevOps</mat-option> -->
-        <!-- <mat-option>Basic Git</mat-option> -->
+        <mat-option value="git">Git</mat-option>
+        <- <mat-option>GitLab</mat-option> ->
+        <- <mat-option>BitBucket</mat-option> ->
+        <- <mat-option>Gitea</mat-option> ->
+        <- <mat-option>Azure DevOps</mat-option> ->
+        <- <mat-option>Basic Git</mat-option> ->
     </mat-select>
-</mat-form-field>
+</mat-form-field> -->
 
 <!-- TODO: Provider specific options -->
 
 <mat-form-field>
     <mat-label>Repository URL</mat-label>
-    <input matInput type="text" [(ngModel)]="source.url"/>
+    <input
+        matInput
+        type="text"
+        [(ngModel)]="source.url"
+        (ngModelChange)="urlChangeEmitter.next(0)"
+    />
 </mat-form-field>
 
 <div>
@@ -36,7 +42,20 @@
 
 <mat-form-field>
     <mat-label>Branch</mat-label>
-    <input matInput type="text" [(ngModel)]="source.branch"/>
+    <input
+        #_
+        matInput
+        type="text"
+        [(ngModel)]="source.branch"
+        (input)="filterBranches(_)"
+        (focus)="filterBranches(_)"
+        [matAutocomplete]="auto"
+    />
+    <mat-autocomplete #auto="matAutocomplete">
+        @for (branch of filteredBranches; track branch) {
+            <mat-option [value]="branch">{{branch}}</mat-option>
+        }
+    </mat-autocomplete>
 </mat-form-field>
 <mat-form-field>
     <mat-label>Username</mat-label>
