@@ -1,5 +1,6 @@
-import { Component, ElementRef, Input, SimpleChange, SimpleChanges, ViewEncapsulation } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, Output, SimpleChange, SimpleChanges, ViewEncapsulation } from '@angular/core';
 import { Formio } from 'formiojs/dist/formio.form.min.js';
+import { isValidElement } from 'react';
 
 
 @Component({
@@ -18,6 +19,7 @@ export class FormioWrapperComponent {
     @Input() formOptions = {};
 
     @Input() data = {};
+    @Output() dataChange = new EventEmitter<Object>();
 
     isDirty = false;
 
@@ -56,12 +58,18 @@ export class FormioWrapperComponent {
             const formInitializeTime = new Date().getTime();
 
             // Set the previous form submission
-            form.submission = null// = { data: this.data };
+            form.submission = { data: this.data };
 
             form.on('change', changed => {
                 // Wait 1 second before detecting if the form is dirty.
                 if (changed.changed != undefined && (new Date().getTime() - formInitializeTime > 1000)) {
                     this.isDirty = true;
+                }
+
+                // If the form is valid, update the object.
+                if (changed.isValid) {
+                    Object.assign(this.data, changed.data);
+                    this.dataChange.emit(this.data);
                 }
             });
 
