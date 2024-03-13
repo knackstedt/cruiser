@@ -5,7 +5,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTabsModule } from '@angular/material/tabs';
-import { Fetch } from '@dotglitch/ngx-common';
+import { Fetch, MenuDirective, MenuItem } from '@dotglitch/ngx-common';
 import { ulid } from 'ulidx';
 import { JobDefinition, PipelineDefinition, StageDefinition, TaskDefinition, TaskGroupDefinition } from 'types/pipeline';
 import { NgScrollbarModule } from 'ngx-scrollbar';
@@ -13,6 +13,7 @@ import { FormioWrapperComponent } from 'client/app/components/formio-wrapper/for
 import { Schemas, DefaultSchema } from './task-schemas';
 import { StackEditorComponent } from 'ngx-stackedit';
 import { FormsModule } from '@angular/forms';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
     selector: 'app-stage-editor',
@@ -23,11 +24,13 @@ import { FormsModule } from '@angular/forms';
         MatIconModule,
         MatInputModule,
         MatTabsModule,
+        MatTooltipModule,
         FormsModule,
         DragDropModule,
         NgScrollbarModule,
         FormioWrapperComponent,
-        StackEditorComponent
+        StackEditorComponent,
+        MenuDirective
     ],
     templateUrl: './stage-editor.component.html',
     styleUrl: './stage-editor.component.scss'
@@ -37,11 +40,22 @@ export class StageEditorComponent {
     @Input() pipeline: PipelineDefinition = {} as any;
     @Input() stage: StageDefinition = {} as any;
 
+    selectedJob: JobDefinition;
+    selectedTaskGroup: TaskGroupDefinition;
     selectedTask: TaskDefinition;
     selectedTaskSchema: Object;
-    selectedJob: JobDefinition;
 
     currentSelection: "pipeline" | "stage" | "job" | "taskGroup" | "task" = 'task';
+
+    jobMenu: MenuItem<JobDefinition>[] = [
+        { label: "Delete Job", action: item => this.deleteJob(item) }
+    ];
+    taskGroupMenu: MenuItem<{ job: JobDefinition, taskGroup: TaskGroupDefinition}>[] = [
+        { label: "Delete Task Group", action: item => this.deleteTaskGroup(item.job, item.taskGroup) }
+    ];
+    taskMenu: MenuItem<{ taskGroup: TaskGroupDefinition, task: TaskDefinition}>[] = [
+        { label: "Delete Task", action: item => this.deleteTask(item.taskGroup, item.task) }
+    ];
 
     constructor(
         private readonly fetch: Fetch
@@ -50,10 +64,92 @@ export class StageEditorComponent {
     }
 
     ngOnInit() {
+        if (!this.stage) return;
+
         this.stage.jobs = this.stage.jobs ?? [];
 
         // Attempt to auto pick the first task.
         this.selectTask(this.stage.jobs?.[0]?.taskGroups?.[0]?.tasks?.[0])
+    }
+
+    async addJob() {
+        this.stage.jobs = this.stage.jobs ?? [];
+        const job = {
+            id: "pipeline_job:" + ulid(),
+            label: 'Job - ' + (this.stage.jobs.length + 1),
+            order: this.stage.jobs.length + 1,
+            taskGroups: [
+                {
+                    id: `pipelineTaskGroup:${ulid()}`,
+                    label: "Task Group 1",
+                    order: 0,
+                    tasks: []
+                }
+            ]
+        } as JobDefinition;
+
+        this.stage.jobs.push(job);
+
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
+        });
+    }
+
+    async deleteJob(job: JobDefinition) {
+        this.stage.jobs = this.stage.jobs.filter(j => j != job);
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
+        });
+    }
+
+    async addTaskGroup(job: JobDefinition) {
+        job.taskGroups = job.taskGroups ?? [];
+
+        const taskGroup = {
+            id: "pipeline_task_group:" + ulid(),
+            label: 'Task Group - ' + (job.taskGroups.length + 1),
+            order: job.taskGroups.length + 1,
+            tasks: []
+        } as TaskGroupDefinition;
+
+        job.taskGroups.push(taskGroup);
+
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
+        });
+    }
+
+    async deleteTaskGroup(job: JobDefinition, taskGroup: TaskGroupDefinition) {
+        job.taskGroups = job.taskGroups.filter(tg => tg != taskGroup);
+
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
+        });
+    }
+
+    addTask(taskGroup: TaskGroupDefinition) {
+        taskGroup.tasks = taskGroup.tasks ?? [];
+
+        const task = {
+            id: "pipeline_task:" + ulid(),
+            label: 'Task - ' + (taskGroup.tasks.length + 1),
+            order: taskGroup.tasks.length + 1,
+            taskScriptArguments: {}
+        } as TaskDefinition;
+
+        taskGroup.tasks.push(task);
+
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
+        });
+    }
+
+    async deleteTask(taskGroup: TaskGroupDefinition, task: TaskDefinition) {
+        taskGroup.tasks = taskGroup.tasks.filter(t => t != task);
+
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
+        });
     }
 
     async taskDrop(taskGroup: TaskGroupDefinition, event: CdkDragDrop<any, any, any>) {
@@ -120,23 +216,22 @@ export class StageEditorComponent {
         }
     }
 
-    addTask(taskGroup: TaskGroupDefinition) {
-        const task = {
-            id: "pipeline_task:" + ulid(),
-            label: 'Task - ' + (taskGroup.tasks.length + 1),
-            order: taskGroup.tasks.length + 1,
-            taskScriptArguments: {}
-        } as TaskDefinition;
+    selectJob(job: JobDefinition) {
+        this.selectedJob = job;
+        this.currentSelection = 'job';
+    }
 
-        taskGroup.tasks.push(task);
-
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
+    selectTaskGroup(taskGroup: TaskGroupDefinition) {
+        this.selectedTaskGroup = taskGroup;
+        this.currentSelection = 'taskGroup';
     }
 
     selectTask(task: TaskDefinition) {
+        // Ensure that the task has the proper argument object
+        if (!task.taskScriptArguments) task.taskScriptArguments = {};
+
         this.selectedTask = task;
         this.selectedTaskSchema = Schemas.find(s => s.kind == task.taskScriptId) || DefaultSchema;
+        this.currentSelection = 'task';
     }
 }

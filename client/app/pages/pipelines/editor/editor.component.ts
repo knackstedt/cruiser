@@ -17,6 +17,7 @@ import { StackEditorComponent } from 'ngx-stackedit';
 import { BehaviorSubject } from 'rxjs';
 import { JobDefinition, PipelineDefinition, SourceConfiguration, StageDefinition, TaskDefinition, TaskGroupDefinition } from 'types/pipeline';
 import { ulid } from 'ulidx';
+import { UserService } from 'client/app/services/user.service';
 
 @Component({
     selector: 'app-pipeline-editor',
@@ -36,41 +37,83 @@ import { ulid } from 'ulidx';
         VscodeComponent,
         StackEditorComponent,
         StagesComponent,
-        StageEditorComponent
+        StageEditorComponent,
+
     ],
     standalone: true
 })
 export class PipelineEditorComponent {
 
     public pipeline: PipelineDefinition = {} as any;
+
+    // Incoming pipeline
     @Input('pipeline') _pipeline: PipelineDefinition;
 
     ngxShowDistractor$ = new BehaviorSubject(false);
 
     isUnsavedState = false;
+    isRestoredSave = false;
 
 
     constructor(
         @Optional() @Inject(MAT_DIALOG_DATA) public data: any = {},
         @Optional() public dialogRef: MatDialogRef<any>,
         private readonly fetch: Fetch,
+        private readonly user: UserService
     ) { }
+
+    private initPipelineObject() {
+        const p = this.pipeline;
+
+        p.sources = p.sources ?? [];
+        p.stages = p.stages ?? [];
+
+        if (p.stages.length == 0) {
+            p.stages.push({
+                id: `pipelineStage:${ulid() }`,
+                label: "Stage 1",
+                order: 0,
+                jobs: [
+                    {
+                        id: `pipelineJob:${ulid()}`,
+                        taskGroups: [
+                            {
+                                id: `pipelineTaskGroup:${ulid()}`,
+                                label: "Task Group 1",
+                                order: 0,
+                                tasks: []
+                            }
+                        ],
+                        label: "Job 1",
+                        order: 0,
+                        platform: "kube_foo"
+                    }
+                ]
+            })
+        }
+
+        this.pipeline = p;
+    }
 
     async ngOnInit() {
         if (typeof this._pipeline.id == "string") {
-            const url = `/api/odata/pipelines?$filter=isUserEditInstance eq true and _sourceId eq '${this._pipeline.id}'`;
+            const url = `/api/odata/pipelines?$filter=_isUserEditInstance eq true and _sourceId eq '${this._pipeline.id}' and _userEditing eq '${this.user.value.login}'`;
             const previouslyEdited = await this.fetch.get<any>(url);
 
             if (previouslyEdited.value.length > 0) {
                 this.pipeline = previouslyEdited.value[0];
+                this.initPipelineObject();
+
                 this.isUnsavedState = true;
+                this.isRestoredSave = true;
             }
             else {
                 this.pipeline = await this.fetch.put(`/api/odata/pipelines:${ulid()}`, {
                     ...this._pipeline,
                     _sourceId: this._pipeline.id,
                     id: undefined,
-                    isUserEditInstance: true
+                    _isUserEditInstance: true,
+                    _userEditing: this.user.value.login
                 });
             }
         }
@@ -78,30 +121,30 @@ export class PipelineEditorComponent {
             this.pipeline = await this.fetch.post(`/api/odata/pipelines/`, {
                 label: 'My new Pipeline',
                 state: 'new',
-                isUserEditInstance: true,
+                _isUserEditInstance: true,
+                _userEditing: this.user.value.login,
                 order: -1,
                 group: this._pipeline.group || 'default',
                 stages: [],
                 sources: []
             });
             this._pipeline.id = this.pipeline.id;
+            this.initPipelineObject();
         }
-
-        if (!Array.isArray(this.pipeline.stages))
-            this.pipeline.stages = [];
     }
 
     // Apply the changes of the cloned pipeline
     async save() {
         let data = {
             ...this.pipeline,
-            isUserEditInstance: false,
             id: this._pipeline.id,
-            _sourceId: null,
-            "@odata.editLink": null,
-            "@odata.id": null
+            _isUserEditInstance: undefined,
+            _sourceId: undefined,
+            "@odata.editLink": undefined,
+            "@odata.id": undefined
         };
-        const res = await this.fetch.patch(`/api/odata/${this._pipeline.id}`, data) as any;
+        const res = await this.fetch.put(`/api/odata/${this._pipeline.id}`, data) as any;
+        await this.fetch.delete(`/api/odata/${this.pipeline.id}`);
 
         this.dialogRef?.close(res);
     }
@@ -110,125 +153,6 @@ export class PipelineEditorComponent {
     async cancel() {
         await this.fetch.delete(`api/odata/${this.pipeline.id}`);
         this.dialogRef.close();
-    }
-
-
-
-    async addStage() {
-        const stage = {
-            id: "pipeline_stage:" + ulid(),
-            label: 'Stage - ' + (this.pipeline.stages.length + 1),
-            order: this.pipeline.stages.length,
-            jobs: []
-        } as any;
-
-        this.pipeline.stages.push(stage);
-
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
-    }
-
-    editStage(stage) {
-        console.log("edit da fuckin stage yobbie");
-        // this.selectedStage = stage;
-        // this.tabIndex = 1;
-    }
-
-    async deleteStage(stage) {
-        this.pipeline.stages = this.pipeline.stages.filter(s => s != stage);
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
-    }
-
-    async addJob(stage: StageDefinition) {
-        const job = {
-            id: "pipeline_job:" + ulid(),
-            label: 'Job - ' + (stage.jobs.length + 1),
-            order: stage.jobs.length + 1,
-            taskGroups: []
-        } as JobDefinition;
-
-        stage.jobs.push(job);
-
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
-    }
-
-    editJob(stage: StageDefinition, job: JobDefinition) {
-        // this.selectedStage = stage;
-        // this.selectedJob = job;
-        // this.tabIndex = 2;
-    }
-
-    async deleteJob(stage: StageDefinition, job: JobDefinition) {
-        stage.jobs = stage.jobs.filter(j => j != job);
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
-    }
-
-    async addTaskGroup(job: JobDefinition) {
-        const taskGroup = {
-            id: "pipeline_task_group:" + ulid(),
-            label: 'Task Group - ' + (job.taskGroups.length + 1),
-            order: job.taskGroups.length + 1,
-            tasks: []
-        } as TaskGroupDefinition;
-
-        job.taskGroups.push(taskGroup);
-
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
-    }
-
-    async editTaskGroup(stage: StageDefinition, job: JobDefinition, taskGroup: TaskGroupDefinition) {
-        // this.selectedStage = stage;
-        // this.selectedJob = job;
-        // this.selectedTaskGroup = taskGroup;
-        // this.tabIndex = 3;
-    }
-
-    async deleteTaskGroup(stage: StageDefinition, job: JobDefinition, taskGroup: TaskGroupDefinition) {
-        job.taskGroups = job.taskGroups.filter(tg => tg != taskGroup);
-
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
-    }
-
-    async addTask(taskGroup: TaskGroupDefinition) {
-        const task = {
-            id: "pipeline_task:" + ulid(),
-            label: 'Task - ' + (taskGroup.tasks.length + 1),
-            order: taskGroup.tasks.length + 1,
-            taskScriptArguments: {},
-        } as TaskDefinition;
-
-        taskGroup.tasks.push(task);
-
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
-    }
-
-    async editTask(stage: StageDefinition, job: JobDefinition, taskGroup: TaskGroupDefinition, task: TaskDefinition) {
-        // this.selectedStage = stage;
-        // this.selectedJob = job;
-        // this.selectedTaskGroup = taskGroup;
-        // this.selectedTask = task;
-        // this.tabIndex = 4;
-    }
-
-    async deleteTask(stage: StageDefinition, job: JobDefinition, taskGroup: TaskGroupDefinition, task: TaskDefinition) {
-        taskGroup.tasks = taskGroup.tasks.filter(t => t != task);
-
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
     }
 
     async addSource() {

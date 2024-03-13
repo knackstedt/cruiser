@@ -1,5 +1,17 @@
 
+<div class="toolbar">
+    <mat-form-field style="flex: 1 0 0">
+        <input matInput type="text" [(ngModel)]="pipeline.label"/>
+    </mat-form-field>
 
+    <div style="flex: 1"></div>
+
+    <div style="display: flex; gap: 12px">
+        <button mat-flat-button (click)="cancel()">Cancel</button>
+        <button mat-flat-button (click)="save()">Save</button>
+    </div>
+
+</div>
 <mat-tab-group [mat-stretch-tabs]="false">
     <!-- Release pipelines will have various stages -->
     @if (pipeline.isReleasePipeline) {
@@ -44,8 +56,3 @@
     </mat-tab>
 </mat-tab-group>
 
-
-<div style="position: absolute; top: 6px; right: 6px; display: flex; gap: 6px; z-index: 1;">
-    <button mat-flat-button (click)="cancel()">Cancel</button>
-    <button mat-flat-button (click)="save()">Save</button>
-</div>

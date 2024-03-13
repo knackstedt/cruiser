@@ -2,56 +2,88 @@
     display: flex;
     height: 100%;
 
-    --mat-expansion-container-background-color: #0000
+    --mat-expansion-container-background-color: #0000;
+    --editor-background-color: #303030;
 }
 
-ng-scrollbar {
+
+.sidebar {
     flex: 0 0 450px;
     background-color: #181818;
-}
 
-mat-accordion {
-    border-right: 1px solid #2b2b2b;
-    // padding: 12px;
-
-    mat-tab-group {
-        background-color: #1f1f1f;
+    ::ng-deep .ng-scroll-content {
+        width: 100%;
     }
+    mat-accordion {
+        border-right: 1px solid #2b2b2b;
+        // padding: 12px;
 
-    mat-expansion-panel-header {
-        padding: 0;
+        mat-tab-group {
+            background-color: #1f1f1f;
+        }
 
-        ::ng-deep {
-            .mat-content {
-                height: 100%;
+        mat-expansion-panel-header {
+            padding: 0;
 
-            }
-            .mat-expansion-indicator {
-                position: absolute;
-                right: 34px;
+            ::ng-deep {
+                .mat-content {
+                    height: 100%;
+
+                }
+                .mat-expansion-indicator {
+                    display: none;
+                }
             }
         }
+        ::ng-deep .mat-expansion-panel-body {
+            padding: 0 12px;
+        }
+
+        .selected {
+            background-color: var(--ngx-ctx-menu-hover-background-color);
+        }
+        .expand_button {
+            position: absolute;
+            right: 12px;
+            transition: transform 300ms ease;
+        }
     }
-    ::ng-deep .mat-expansion-panel-body {
+    .header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
         padding: 0 12px;
+        width: 100%;
+        height: 100%;
+        background-color: #333;
+
+        .label {
+            padding-left: 24px
+        }
     }
-}
-
-.header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 12px;
-    width: 100%;
-    height: 100%;
-
-    .label {
-        padding-left: 24px
+    .tab_header {
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        width: 100%;
+        height: 100%;
+        background-color: #333;
+    }
+    .task_group ::ng-deep {
+        .mat-mdc-tab {
+            padding: 0;
+            min-width: 0;
+        }
+        .mdc-tab__text-label {
+            display: contents;
+        }
     }
 }
 
 .content {
     flex: 1;
+    background-color: #1f1f1f;
+    box-shadow: 0 0 8px #00000094;
 }
 
 .titlebar {

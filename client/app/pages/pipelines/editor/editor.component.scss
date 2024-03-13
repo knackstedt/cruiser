@@ -11,3 +11,22 @@ mat-tab-group ::ng-deep {
         overflow: hidden;
     }
 }
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 12px;
+    height: 48px;
+
+    --mat-form-field-container-height: 32px;
+    --mat-form-field-container-vertical-padding: 4px;
+    ::ng-deep {
+        .mat-mdc-form-field-subscript-wrapper {
+            display: none;
+        }
+        .mat-mdc-form-field-infix {
+            width: unset;
+        }
+    }
+}

@@ -1,142 +1,225 @@
-
-<ng-scrollbar>
-    <mat-accordion>
-        @for (job of stage?.jobs; track job) {
-            <mat-expansion-panel [expanded]="true">
-                <mat-expansion-panel-header
-                >
-                    <div class="header">
-                        <div>
-                            <div class="label">{{job.label}}</div>
-                            <div class="platform">{{job.platform}}</div>
-                        </div>
-
-                        <!-- <button mat-icon-button>
-                            <mat-icon>add</mat-icon>
-                        </button> -->
-                    </div>
-                </mat-expansion-panel-header>
-
-                <mat-tab-group [mat-stretch-tabs]="false" dynamicHeight>
-                    @for (taskGroup of job.taskGroups; track taskGroup) {
-                        <mat-tab [label]="taskGroup.label">
-                            <div
-                                class="task-list"
-                                cdkDropList
-                                [cdkDropListData]="taskGroup.id"
-                                (cdkDropListDropped)="taskDrop(taskGroup, $event)"
-                            >
-
-                                @for (task of taskGroup.tasks; track task) {
-                                    <div
-                                        class="task draggable-task"
-                                        [class.disabled]="task.disabled"
-                                        [class.selected]="selectedTask == task"
-                                        cdkDrag
-                                        [cdkDragData]="task"
-                                        (click)="selectTask(task)"
-                                    >
-                                        <div class="placeholder" *cdkDragPlaceholder></div>
-
-                                        <img />
-                                        <div>
-                                            <div>{{task.label}}</div>
-                                            <div>{{task.taskScriptId}}</div>
-                                        </div>
-
-                                        <div style="flex: 1"></div>
-
-                                        <div>
-                                            <mat-icon>drag_indicator</mat-icon>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-
+@if (stage) {
+    <ng-scrollbar class="sidebar">
+        <mat-accordion [multi]="true">
+            @for (job of stage?.jobs; track job) {
+                <mat-expansion-panel #panel [expanded]="true">
+                    <mat-expansion-panel-header
+                        collapsedHeight="48px"
+                        expandedHeight="48px"
+                    >
+                        <div
+                            class="header"
+                            [class.selected]="job == selectedJob && currentSelection == 'job'"
+                            [ngx-contextmenu]="jobMenu"
+                            [ngx-menu-context]="job"
+                            (click)="$event.stopPropagation(); selectJob(job)"
+                        >
                             <div>
-                                <button mat-icon-button (click)="addTask(taskGroup)">
-                                    <mat-icon>add</mat-icon>
-                                </button>
+                                <div class="label">{{job.label}}</div>
+                                <div class="platform">{{job.platform}}</div>
                             </div>
+
+                            <button
+                                mat-icon-button
+                                class="expand_button"
+                                [style.transform]="panel.expanded ? '' : 'rotate(-90deg)'"
+                                (click)="panel.toggle()"
+                            >
+                                <mat-icon>expand_more</mat-icon>
+                            </button>
+                        </div>
+                    </mat-expansion-panel-header>
+
+
+                    <ng-template matExpansionPanelContent>
+
+                        <mat-tab-group [mat-stretch-tabs]="false" dynamicHeight class="task_group">
+                            @for (taskGroup of job.taskGroups; track taskGroup) {
+                                <mat-tab
+                                    [class.selected]="selectedTaskGroup == taskGroup && currentSelection == 'taskGroup'"
+                                >
+                                    <ng-template mat-tab-label>
+                                        <div
+                                            class="tab_header"
+                                            (click)="selectTaskGroup(taskGroup)"
+                                            [ngx-contextmenu]="taskGroupMenu"
+                                            [ngx-menu-context]="{taskGroup, job}"
+                                        >
+                                            {{taskGroup.label}}
+                                        </div>
+                                    </ng-template>
+                                    <div
+                                        class="task-list"
+                                        cdkDropList
+                                        [cdkDropListData]="taskGroup.id"
+                                        (cdkDropListDropped)="taskDrop(taskGroup, $event)"
+                                    >
+                                        @for (task of taskGroup.tasks; track task) {
+                                            <div
+                                                class="task draggable-task"
+                                                [class.disabled]="task.disabled"
+                                                [class.selected]="selectedTask == task && currentSelection == 'task'"
+                                                cdkDrag
+                                                [cdkDragData]="task"
+                                                [ngx-contextmenu]="taskMenu"
+                                                [ngx-menu-context]="{task, taskGroup, job}"
+                                                (click)="selectTask(task)"
+                                            >
+                                                <div class="placeholder" *cdkDragPlaceholder></div>
+
+                                                <img />
+                                                <div>
+                                                    <div>{{task.label}}</div>
+                                                    <div>{{task.taskScriptId}}</div>
+                                                </div>
+
+                                                <div style="flex: 1"></div>
+
+                                                <div>
+                                                    <mat-icon>drag_indicator</mat-icon>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div>
+                                        <button mat-icon-button (click)="addTask(taskGroup)" matTooltip="Add Task">
+                                            <mat-icon>add</mat-icon>
+                                        </button>
+                                    </div>
+                                </mat-tab>
+                            }
+
+                            <mat-tab>
+                                <ng-template mat-tab-label>
+                                    <div>
+                                        <button mat-icon-button (click)="addTaskGroup(job); $event.stopPropagation()" matTooltip="Add Task Group">
+                                            <mat-icon>add</mat-icon>
+                                        </button>
+                                    </div>
+                                </ng-template>
+                            </mat-tab>
+                        </mat-tab-group>
+                    </ng-template>
+                </mat-expansion-panel>
+            }
+        </mat-accordion>
+
+        <div>
+            <button mat-icon-button (click)="addJob()" matTooltip="Add job">
+                <mat-icon>add</mat-icon>
+            </button>
+        </div>
+    </ng-scrollbar>
+
+    <div class="content">
+
+        @switch (currentSelection) {
+            @case("job") {
+                @if (selectedJob) {
+                    <ng-scrollbar>
+                        <div style="padding: 16px;">
+                            <mat-form-field style="width: 100%">
+                                <mat-label>Label</mat-label>
+                                <input matInput type="text" [(ngModel)]="selectedJob.label"/>
+                            </mat-form-field>
+
+                            <p style="margin-top: 0;">Description</p>
+                            <ngx-stackedit
+                                style="height: 400px"
+                                [(value)]="selectedJob.description"
+                                showPreview="off"
+                                showToc="off"
+                            />
+                        </div>
+                    </ng-scrollbar>
+                }
+                @else {
+                    Select a task.
+                }
+            }
+            @case("taskGroup") {
+                @if (selectedTaskGroup) {
+                    <mat-tab-group [mat-stretch-tabs]="false">
+                        <mat-tab label="Properties">
+                            <ng-scrollbar>
+                                <div style="padding: 16px;">
+                                    <mat-form-field style="width: 100%">
+                                        <mat-label>Task Group Label</mat-label>
+                                        <input matInput type="text" [(ngModel)]="selectedTaskGroup.label"/>
+                                    </mat-form-field>
+
+                                    <p style="margin-top: 0;">Description</p>
+                                    <ngx-stackedit
+                                        style="height: 400px"
+                                        [(value)]="selectedTaskGroup.description"
+                                        showPreview="off"
+                                        showToc="off"
+                                    />
+                                </div>
+                            </ng-scrollbar>
                         </mat-tab>
-                    }
-                </mat-tab-group>
-            </mat-expansion-panel>
+                        <mat-tab label="All">
+
+                        </mat-tab>
+                        <mat-tab label="Build">
+
+                        </mat-tab>
+                        <mat-tab label="Utility">
+
+                        </mat-tab>
+                        <mat-tab label="Test">
+
+                        </mat-tab>
+                        <mat-tab label="Package">
+
+                        </mat-tab>
+                        <mat-tab label="Deploy">
+
+                        </mat-tab>
+                        <mat-tab label="Tool">
+
+                        </mat-tab>
+                        <!-- <mat-tab label="Plugins"></mat-tab> -->
+                    </mat-tab-group>
+                }
+                @else {
+                    Select a Task Group.
+                }
+            }
+            @case("task") {
+                @if (selectedTask) {
+                    <ng-scrollbar>
+                        <div style="padding: 16px;">
+                            <mat-form-field style="width: 100%">
+                                <mat-label>Task Label</mat-label>
+                                <input matInput type="text" [(ngModel)]="selectedTask.label"/>
+                            </mat-form-field>
+
+                            <p style="margin-top: 0;">Description</p>
+                            <ngx-stackedit
+                                style="height: 400px"
+                                [(value)]="selectedTask.description"
+                                showPreview="off"
+                                showToc="off"
+                            />
+
+                            <app-formio-wrapper
+                                [data]="selectedTask.taskScriptArguments"
+                                [formSchema]="selectedTaskSchema?.['schema']"
+                                [formOptions]="{}"
+                            />
+                        </div>
+                    </ng-scrollbar>
+                }
+                @else {
+                    Select a task.
+                }
+            }
         }
-    </mat-accordion>
-</ng-scrollbar>
 
-<div class="content">
-
-    @switch (currentSelection) {
-        @case("job") {
-            <div class="titlebar">
-                <div>
-                    <div>Add Tasks</div>
-                    <div>|</div>
-                    <div>Refresh</div>
-                </div>
-                <div style="flex: 1"></div>
-                <div>
-                    <mat-form-field>
-                        <mat-label>Search</mat-label>
-                        <input matInput type="text">
-                    </mat-form-field>
-                </div>
-            </div>
-
-            <mat-tab-group [mat-stretch-tabs]="false">
-                <mat-tab label="All">
-
-                </mat-tab>
-                <mat-tab label="Build">
-
-                </mat-tab>
-                <mat-tab label="Utility">
-
-                </mat-tab>
-                <mat-tab label="Test">
-
-                </mat-tab>
-                <mat-tab label="Package">
-
-                </mat-tab>
-                <mat-tab label="Deploy">
-
-                </mat-tab>
-                <mat-tab label="Tool">
-
-                </mat-tab>
-                <!-- <mat-tab label="Plugins"></mat-tab> -->
-            </mat-tab-group>
-        }
-        @case("taskGroup") {
-            Task Group
-        }
-        @case("task") {
-            <ng-scrollbar>
-                <div style="padding: 16px;">
-                    <mat-form-field style="width: 100%">
-                        <mat-label>Label</mat-label>
-                        <input matInput type="text" [(ngModel)]="selectedTask.label"/>
-                    </mat-form-field>
-
-                    <p style="margin-top: 0;">Description</p>
-                    <ngx-stackedit
-                        style="height: 400px"
-                        [(value)]="selectedTask.description"
-                        showPreview="off"
-                        showToc="off"
-                    />
-
-                    <app-formio-wrapper
-                        [data]="selectedTask.taskScriptId"
-                        [formSchema]="selectedTaskSchema?.['schema']"
-                        [formOptions]="{}"
-                    />
-                </div>
-            </ng-scrollbar>
-        }
-    }
-
-</div>
+    </div>
+}
+@else {
+    STAGE IS MISSING!
+}
