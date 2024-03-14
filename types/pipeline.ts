@@ -111,7 +111,7 @@ export type SourceConfiguration = Partial<{
 
 
 export type PipelineDefinition = {
-    id: `pipeline:${string}`
+    id: `pipelines:${string}`
     label: string
     description: string
     labelTemplate: string

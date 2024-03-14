@@ -1,10 +1,8 @@
-import { JobDefinition, PipelineDefinition } from './pipeline';
-
 export type JobInstance = {
     id: string
     label: string
     state:
-        "pending"       | // Pending provisioning of job container
+        "queued"        | // Pending provisioning of job container
         "initializing"  | // Job is just starting up
         "cloning"       | // Job is downloading source
         "building"      | // Job is actively running build code
@@ -12,10 +10,13 @@ export type JobInstance = {
         "sealing"       | // Job is compressing
         "completed"     | // Job is finished and acknowledged by scheduler
         "failed"
-    job: JobDefinition,
-    pipeline: PipelineDefinition,
+    pipeline: string,
+    job: string,
+    jobUid: string
+    stage?: string,
     kubeNamespace: string
     kubePodName: string
+    kubeAuthnToken?: string,
 
     queueEpoch: number
     initEpoch: number
@@ -28,24 +29,3 @@ export type JobInstance = {
     warnCount: number
 };
 
-
-export type ElasticAgentConfig = {
-    id: string;
-    label: string;
-    kubeNamespace: string;
-    kubeContainerImage: string;
-    errorCount: number;
-    warnCount: number;
-};
-
-export type ElasticAgent = {
-
-}
-
-export type StaticAgentConfig = {
-
-}
-
-export type StaticAgent = {
-
-}

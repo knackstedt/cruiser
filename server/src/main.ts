@@ -18,7 +18,7 @@ import { ApiTokenMiddleware } from './middleware/api-token';
 import { sessionHandler } from './middleware/session';
 import { OpenIDHandler } from './middleware/sso-openid';
 import { UserApi } from './api/user';
-import { GetJobToken } from './util/token-cache';
+import { CheckJobToken } from './util/token-cache';
 import { SourcesApi } from './api/sources';
 import { Guest, User } from './guards/role-guards';
 
@@ -40,7 +40,8 @@ const bootstrapServer = async () => {
         const cruiserToken = req.get("X-Cruiser-Token");
         if (cruiserToken) {
             req['_agentToken'] = cruiserToken;
-            GetJobToken(cruiserToken) ? next() : next(401);
+            return CheckJobToken(cruiserToken)
+                .then(hasToken => hasToken ? next() : next(401));
         }
         if (req.get("authorization")) {
             req['_api'] = true;

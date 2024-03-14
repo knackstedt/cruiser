@@ -2,7 +2,6 @@ import { Server, Socket } from "socket.io";
 import { ulid } from 'ulidx';
 import { JobDefinition, PipelineDefinition } from '../types/pipeline';
 import { sessionHandler } from '../middleware/session';
-import { GetJobToken } from '../util/token-cache';
 import { Session, SessionData } from 'express-session';
 
 export class SocketTunnelService {
@@ -48,9 +47,11 @@ export class SocketTunnelService {
 
             if (
                 !session?.profile?.roles ||
-                !session.profile.roles.includes("administrator") ||
-                !session.profile.roles.includes("manager") ||
-                !session.profile.roles.includes("user")
+                !(
+                    session.profile.roles.includes("administrator") ||
+                    session.profile.roles.includes("manager") ||
+                    session.profile.roles.includes("user")
+                )
             ) {
                 // If the request isn't secure, purge it.
                 socket.emit("error", { status: 403, message: "Forbidden" });
