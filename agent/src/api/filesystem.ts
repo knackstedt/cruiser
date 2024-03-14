@@ -4,6 +4,8 @@ import { isText } from 'istextorbinary';
 import mime from "mime-types";
 import fs from "fs-extra";
 import crypto from 'crypto';
+import formidable, { IncomingForm } from "formidable";
+
 import { readZipFolder } from './zip';
 import { secureWipe } from './fs-wipe';
 import { getFilesInFolder, route } from './util';
@@ -155,6 +157,42 @@ router.use('/checksum/:type', route(async (req, res, next) => {
 
     stream.on('error', (error) => {
         next(error);
+    });
+}));
+
+
+router.use('/upload', route(async (req, res, next) => {
+    let form = new IncomingForm();
+    form.parse(req, async function (err, fields, files) {
+        if (err) {
+            return next({ status: err.httpCode, message: err.message, stack: err.stack });
+        }
+        try {
+            const uploadFiles: formidable.File[] = files as any;
+
+            const data = JSON.parse(fields['data'][0]);
+            const names = Object.keys(files);
+            const path = data.path == "/" ? "/" : data.path.substring(1);
+
+
+            if (/[<>{}\\]/.test(names.join()))
+                return next({ message: "Invalid upload name", status: 400 });
+
+
+            let filePath = (data.path as string).replace(/\/\//g, '/'); // Remove double slashes.
+            if (filePath.startsWith('/')) filePath = filePath.slice(1); // Remove leading slash.
+
+            const keys = Object.keys(uploadFiles);
+
+            for (let i = 0; i < keys.length; i++) {
+                for (const file of uploadFiles[keys[i]]) {
+                    file.filepath
+                }
+            }
+
+            res.send({ files: [] });
+        }
+        catch (ex) { next(ex); }
     });
 }));
 

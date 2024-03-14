@@ -6,6 +6,7 @@ import { getSocketTerminal } from './socket/terminal';
 import { getSocket } from './socket/socket';
 import { RunTaskGroupsInParallel } from './run-tasks';
 import { JobDefinition } from '../types/pipeline';
+import { BindSocketBreakpoint } from './socket/breakpoint';
 
 
 const validateJobCanRun = async (job: JobDefinition) => {
@@ -21,7 +22,7 @@ export const RunAgentProcess = async (taskId: string) => {
     const socket = await getSocket(pipeline, job)
     const logger = await getSocketLogger(socket);
     const terminal = await getSocketTerminal(socket);
-
+    await BindSocketBreakpoint(socket);
 
 
     // Perform preflight checks

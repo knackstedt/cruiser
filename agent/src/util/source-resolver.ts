@@ -1,11 +1,10 @@
-import { homedir } from 'os';
-import fs, { exists, mkdir, readdir } from 'fs-extra';
+import { exists, mkdir, readdir } from 'fs-extra';
 import { simpleGit, SimpleGitProgressEvent, SimpleGitOptions, SimpleGit } from 'simple-git';
 import { JobDefinition, PipelineDefinition } from '../../types/pipeline';
 import environment from '../util/environment';
-import { TripBreakpoint } from '../util/breakpoint';
 import { JobInstance } from '../../types/agent-task';
 import { getSocketLogger } from '../socket/logger';
+import { TripBreakpoint } from 'socket/breakpoint';
 
 export const ResolveSources = async (
     pipeline: PipelineDefinition,
@@ -77,7 +76,7 @@ export const ResolveSources = async (
                         state: 'failed'
                     });
 
-                    await TripBreakpoint(jobInstance);
+                    await TripBreakpoint(jobInstance, false);
                     return 1;
                 }
 
