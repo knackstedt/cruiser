@@ -5,16 +5,8 @@ import { getSocketLogger } from './socket/logger';
 import { getSocketTerminal } from './socket/terminal';
 import { getSocket } from './socket/socket';
 import { RunTaskGroupsInParallel } from './run-tasks';
-import { JobDefinition } from '../types/pipeline';
 import { BindSocketBreakpoint } from './socket/breakpoint';
-
-
-const validateJobCanRun = async (job: JobDefinition) => {
-    const tasks = job.taskGroups?.map(t => t.tasks).flat();
-    if (!tasks || tasks.length == 0)
-        throw new Error("No work to do");
-};
-
+import { validateJobCanRun } from './util/job-validator';
 
 export const RunAgentProcess = async (taskId: string) => {
     const { job, pipeline, kubeTask, jobInstance } = await getConfig(taskId);
@@ -28,7 +20,7 @@ export const RunAgentProcess = async (taskId: string) => {
     // Perform preflight checks
     logger.info({ state: "Initializing", msg: "Begin initializing" });
     await api.patch(`/api/odata/${taskId}`, { state: "initializing", initEpoch: Date.now() })
-    await validateJobCanRun(job);
+    await validateJobCanRun(job, logger);
     logger.info({ state: "Initializing", msg: "Agent initialize completed" });
 
     // Download sources
