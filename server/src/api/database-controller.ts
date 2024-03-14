@@ -2,7 +2,6 @@ import * as express from "express";
 import { route } from '../util/util';
 import { SQLLang, createQuery } from '@dotglitch/odatav4';
 import { Visitor } from '@dotglitch/odatav4/dist/visitor';
-import formidable, { IncomingForm } from "formidable";
 
 import { db } from '../util/db';
 import { CruiserUserRole } from '../types';
@@ -134,6 +133,10 @@ export const DatabaseTableApi = () => {
     router.get('/:table', tableGuard, route(async (req, res, next) => {
         const table = req['_table'] as string;
 
+        // Tables with a colon are specifying a record id.
+        if (req.params.table.includes(":"))
+            return next();
+
         const apiPath = '/api/odata';
 
         const addOdataMetadata = (obj) => {
@@ -220,7 +223,7 @@ export const DatabaseTableApi = () => {
     // });
 
     router.get('/:id', route(async (req, res, next) => {
-        const data = await db.select(checkSurrealResource(req.params['id']));
+        const data = await db.select(req.params['id']);
         res.send(data[0]);
     }));
 
@@ -240,7 +243,9 @@ export const DatabaseTableApi = () => {
 
 
     router.put('/:id', route(async (req, res, next) => {
-        res.send((await db.update(checkSurrealResource(req.params['id']), req.body))[0]);
+        db.update(req.params['id'], req.body)
+            .then(data => res.send(data))
+            .catch(err => next(err))
     }));
     // batch PUT
     // [{ id: "id123", data: {prop1: val}}]
