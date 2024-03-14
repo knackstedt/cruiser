@@ -72,8 +72,8 @@ export const RunProcess = async (
 
             return {
                 executor,
-                command,
-                args
+                command: '',
+                args: []
             }
         })()
 
