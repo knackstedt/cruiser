@@ -26,7 +26,7 @@ const loadIntoCache = async (uid: string, jobId: string, job) => {
     }
     const pod = podCache[uid];
 
-    const ip = pod.status.podIP;
+    const ip = pod.status?.podIP;
     if (!ip) {
         throw {
             status: 425,
@@ -78,7 +78,7 @@ router.use('/:id', route(async (req, res, next) => {
 
     const id = req.params['id'];
 
-    const [jobs] = await db.query<JobInstance[][]>(`SELECT * FROM ${id}`);
+    const [ jobs ] = await db.query<JobInstance[][]>(`SELECT * FROM ${id}`);
     const [ job ] = jobs;
 
     if (!job)

@@ -103,8 +103,10 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
         kind: "Job",
         metadata: {
             annotations: {
-                "Created_By": "$cruiser",
-                "Job_Id": id,
+                "created-by": "$cruiser",
+                "pipeline-id": pipeline.id,
+                "stage-id": stage.id,
+                "job-id": id,
                 ...elasticAgentTemplate?.kubeContainerAnnotations
             },
             labels: elasticAgentTemplate?.kubeContainerLabels,
@@ -115,9 +117,11 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
             template: {
                 metadata: {
                     annotations: {
-                        "Created_By": "$cruiser",
-                        "Pod_Id": podId,
-                        "Job_Id": id
+                        "created-by": "$cruiser",
+                        "pipeline-id": pipeline.id,
+                        "stage-id": stage.id,
+                        "job-id": id,
+                        "pod-id": podId
                     }
                 },
                 spec: {
@@ -172,4 +176,14 @@ export async function StartAgentJob(pipeline: PipelineDefinition, stage: any, jo
 
 export async function PauseAgentJob(pipeline: PipelineDefinition, job: JobDefinition) {
     // TODO
+}
+
+export async function GetAllRunningJobs(namespace = process.env['CRUISER_AGENT_NAMESPACE'] || "cruiser") {
+    const { body: { items: jobs } } = await k8sBatchApi.listNamespacedJob(namespace);
+
+    const runningJobs = jobs
+        .filter(j => j.status.active)
+        .filter(j => j.metadata.annotations['created-by'] == "$cruiser");
+
+    return runningJobs;
 }
