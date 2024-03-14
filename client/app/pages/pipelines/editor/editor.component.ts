@@ -96,6 +96,12 @@ export class PipelineEditorComponent {
     }
 
     async ngOnInit() {
+        if (!this._pipeline?.id) {
+            this._pipeline = {
+                _isUserEditInstance: true
+            } as any;
+        }
+
         if (typeof this._pipeline.id == "string") {
             const url = `/api/odata/pipelines?$filter=_isUserEditInstance eq true and _sourceId eq '${this._pipeline.id}' and _userEditing eq '${this.user.value.login}'`;
             const previouslyEdited = await this.fetch.get<any>(url);
@@ -128,7 +134,7 @@ export class PipelineEditorComponent {
                 stages: [],
                 sources: []
             });
-            this._pipeline.id = this.pipeline.id;
+            this._pipeline.id = `pipelines:${ulid()}`;
             this.initPipelineObject();
         }
     }
