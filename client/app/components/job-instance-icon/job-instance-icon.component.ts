@@ -9,7 +9,10 @@ import { JobInstance } from 'server/src/types/agent-task';
     imports: [
         MatIconModule
     ],
-    standalone: true
+    standalone: true,
+    host: {
+        "[attr.state]": "jobInstance.state"
+    }
 })
 export class JobInstanceIconComponent {
 

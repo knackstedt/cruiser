@@ -1,4 +1,5 @@
 @switch(jobInstance?.state) {
+    @case ("queued") { <mat-icon fontIcon="pending" /> }
     @case ("initializing") { <mat-icon fontIcon="pending" /> }
     @case ("cloning") { <mat-icon fontIcon="downloading" /> }
     @case ("building") { <mat-icon class="rotate" fontIcon="change_circle" /> }
@@ -9,5 +10,7 @@
                 } -->
     @case ("failed") { <mat-icon style="color: #ff5d5d" fontIcon="block" /> }
     @case ("completed") { <mat-icon style="color: #80ffc0" fontIcon="check_circle" /> }
-    @default { <mat-icon fontIcon="warning" /> }
+    @default {
+        <!-- Has not been run before -->
+    }
 }
