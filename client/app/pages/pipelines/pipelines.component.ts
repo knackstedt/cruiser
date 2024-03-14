@@ -6,13 +6,15 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { LazyLoaderService, MenuDirective, TabulatorComponent, TooltipDirective } from '@dotglitch/ngx-common';
-import { PipelineDefinition } from 'types/pipeline';
+import { JobDefinition, PipelineDefinition } from 'types/pipeline';
 import Sortable from 'sortablejs';
 import { orderSort } from '../../services/utils';
 import { DialogService, Fetch, MenuItem } from '@dotglitch/ngx-common';
 import { StagePopupComponent } from 'client/app/pages/pipelines/stage-popup/stage-popup.component';
 import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
 import { PipelineHistoryComponent } from 'client/app/pages/pipelines/pipeline-history/pipeline-history.component';
+import * as k8s from '@kubernetes/client-node';
+import { JobInstance } from 'server/src/types/agent-task';
 
 @Component({
     selector: 'app-pipelines',
@@ -127,37 +129,29 @@ export class PipelinesComponent implements OnInit {
 
         const {
             pipelines,
-            kubeJobs
+            kubeJobs,
+            jobs
         } = (await this.fetch.get<{
             pipelines: PipelineDefinition[],
-            kubeJobs: any[]
+            kubeJobs: k8s.V1Job[],
+            jobs: JobInstance[]
         }>('/api/pipelines/'));
 
         const pipelineMap = {};
         pipelines.forEach(p => pipelineMap[p.id] = p);
 
-        // const jobs = (await this.fetch.get(`/api/odata/jobs?$filter=latest eq true`))['value'];
+        jobs.forEach(j => {
+            const pipeline = pipelineMap[j.pipeline];
+            const stage = pipeline?.stages.find(s => s.id == j.stage);
 
-        // jobs.forEach(j => {
-        //     const pipeline = pipelineMap[j.pipeline];
-        //     const stage = pipeline?.stages.find(s => s.id == j.stage);
-
-        //     if (stage) {
-        //         stage['_latestJob'] = j;
-        //     }
-        // });
+            if (stage) {
+                stage['_latestJob'] = j;
+            }
+        });
 
         this.pipelines = pipelines;
 
         this.ngAfterViewInit();
-
-        setTimeout(() => {
-            this.editPipeline(this.pipelines[0])
-        });
-
-        pipelines.forEach(async p => {
-            this.fetch.get(`/api/pipelines/${p.id}/status`)
-        })
     }
 
     ngAfterViewInit() {
@@ -262,20 +256,7 @@ export class PipelinesComponent implements OnInit {
     editPipeline(pipeline: Partial<PipelineDefinition> = {}) {
         this.dialog.open("pipeline-editor", 'dynamic', { inputs: { pipeline }, autoFocus: false })
             .then((pipeline: PipelineDefinition) => {
-                console.log("res", pipeline)
-                if (pipeline) {
-                    const old = this.pipelines.find(p => p.id == pipeline.id);
-                    if (old) {
-                        // Clear the old props
-                        Object.keys(old).forEach(k => old[k] = undefined);
-                        // Update the new props
-                        Object.keys(pipeline).forEach(k => old[k] = pipeline[k]);
-                    }
-                    else {
-                        this.pipelines.push(pipeline);
-                    }
-                    this.ngAfterViewInit();
-                }
+                this.ngOnInit();
             })
     }
 

@@ -94,10 +94,12 @@
                                             <app-job-instance-icon
                                                 [jobInstance]="stage['_latestJob']"
                                             />
-                                            <mat-progress-bar
-                                                color="primary"
-                                                mode="indeterminate"
-                                            />
+                                            @if (![null, "failed", "completed"].includes(stage['_latestJob'].status)) {
+                                                <mat-progress-bar
+                                                    color="primary"
+                                                    mode="indeterminate"
+                                                />
+                                            }
                                         </div>
                                         <ng-template #tooltip let-data>
                                             <app-stage-popup
