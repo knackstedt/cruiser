@@ -57,7 +57,7 @@ export class PipelinesComponent implements OnInit {
             action: async pipeline => {
                 const link = document.createElement("a");
                 link.download = pipeline.label.replace(/[^a-z0-9A-Z_\-$ ]/g, '') + '.json';
-                link.href = `/api/pipeline/${pipeline.id}`;
+                link.href = `/api/pipelines/${pipeline.id}`;
                 link.click();
                 link.remove();
             }
@@ -125,21 +125,27 @@ export class PipelinesComponent implements OnInit {
             { label: "default", items: [] },
         ];
 
-        const pipelines = (await this.fetch.get('/api/odata/pipelines?$filter=isUserEditInstance ne true or isUserEditInstance eq null'))['value'];
+        const {
+            pipelines,
+            kubeJobs
+        } = (await this.fetch.get<{
+            pipelines: PipelineDefinition[],
+            kubeJobs: any[]
+        }>('/api/pipelines/'));
+
         const pipelineMap = {};
         pipelines.forEach(p => pipelineMap[p.id] = p);
 
+        // const jobs = (await this.fetch.get(`/api/odata/jobs?$filter=latest eq true`))['value'];
 
-        const jobs = (await this.fetch.get(`/api/odata/jobs?$filter=latest eq true`))['value'];
+        // jobs.forEach(j => {
+        //     const pipeline = pipelineMap[j.pipeline];
+        //     const stage = pipeline?.stages.find(s => s.id == j.stage);
 
-        jobs.forEach(j => {
-            const pipeline = pipelineMap[j.pipeline];
-            const stage = pipeline?.stages.find(s => s.id == j.stage);
-
-            if (stage) {
-                stage['_latestJob'] = j;
-            }
-        });
+        //     if (stage) {
+        //         stage['_latestJob'] = j;
+        //     }
+        // });
 
         this.pipelines = pipelines;
 
@@ -147,6 +153,10 @@ export class PipelinesComponent implements OnInit {
 
         setTimeout(() => {
             this.editPipeline(this.pipelines[0])
+        });
+
+        pipelines.forEach(async p => {
+            this.fetch.get(`/api/pipelines/${p.id}/status`)
         })
     }
 
@@ -302,14 +312,14 @@ export class PipelinesComponent implements OnInit {
     }
 
     async triggerPipeline(targetPipeline: PipelineDefinition) {
-        await this.fetch.get(`/api/pipeline/${targetPipeline.id}/start`)
+        await this.fetch.get(`/api/pipelines/${targetPipeline.id}/start`)
             .then(({ pipeline }) => {
                 Object.assign(targetPipeline, pipeline);
             });
     }
 
     async triggerPipelineWithOptions(pipeline: PipelineDefinition) {
-        await this.fetch.get(`/api/pipeline/${pipeline.id}/start`);
+        await this.fetch.get(`/api/pipelines/${pipeline.id}/start`);
         pipeline.stats = pipeline.stats ?? { runCount: 0, successCount: 0, failCount: 0, totalRuntime: 0 };
         pipeline.stats.runCount += 1;
     }

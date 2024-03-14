@@ -1,6 +1,6 @@
 @if (stage) {
     <ng-scrollbar class="sidebar">
-        <mat-accordion [multi]="true">
+        <mat-accordion [multi]="true" displayMode="flat">
             @for (job of stage?.jobs; track job) {
                 <mat-expansion-panel #panel [expanded]="true">
                     <mat-expansion-panel-header
@@ -12,7 +12,7 @@
                             [class.selected]="job == selectedJob && currentSelection == 'job'"
                             [ngx-contextmenu]="jobMenu"
                             [ngx-menu-context]="job"
-                            (click)="$event.stopPropagation(); selectJob(job)"
+                            (click)="$event.stopPropagation(); selectJob(job); panel.toggle()"
                         >
                             <div>
                                 <div class="label">{{job.label}}</div>
@@ -23,7 +23,6 @@
                                 mat-icon-button
                                 class="expand_button"
                                 [style.transform]="panel.expanded ? '' : 'rotate(-90deg)'"
-                                (click)="panel.toggle()"
                             >
                                 <mat-icon>expand_more</mat-icon>
                             </button>
@@ -32,7 +31,6 @@
 
 
                     <ng-template matExpansionPanelContent>
-
                         <mat-tab-group [mat-stretch-tabs]="false" dynamicHeight class="task_group">
                             @for (taskGroup of job.taskGroups; track taskGroup) {
                                 <mat-tab
@@ -75,7 +73,7 @@
 
                                                 <div style="flex: 1"></div>
 
-                                                <div>
+                                                <div class="drag_handle">
                                                     <mat-icon>drag_indicator</mat-icon>
                                                 </div>
                                             </div>
@@ -83,7 +81,7 @@
                                     </div>
 
                                     <div>
-                                        <button mat-icon-button (click)="addTask(taskGroup)" matTooltip="Add Task">
+                                        <button (click)="addTask(taskGroup)" matTooltip="Add Task">
                                             <mat-icon>add</mat-icon>
                                         </button>
                                     </div>
@@ -93,7 +91,7 @@
                             <mat-tab>
                                 <ng-template mat-tab-label>
                                     <div>
-                                        <button mat-icon-button (click)="addTaskGroup(job); $event.stopPropagation()" matTooltip="Add Task Group">
+                                        <button (click)="addTaskGroup(job); $event.stopPropagation()" matTooltip="Add Task Group">
                                             <mat-icon>add</mat-icon>
                                         </button>
                                     </div>
@@ -105,8 +103,14 @@
             }
         </mat-accordion>
 
-        <div>
-            <button mat-icon-button (click)="addJob()" matTooltip="Add job">
+        <div
+            style="display: flex;justify-content: center;"
+        >
+            <button
+                class="job_add_button"
+                (click)="addJob()"
+                matTooltip="Add job"
+            >
                 <mat-icon>add</mat-icon>
             </button>
         </div>
@@ -121,13 +125,19 @@
                         <div style="padding: 16px;">
                             <mat-form-field style="width: 100%">
                                 <mat-label>Label</mat-label>
-                                <input matInput type="text" [(ngModel)]="selectedJob.label"/>
+                                <input
+                                    matInput
+                                    type="text"
+                                    [(ngModel)]="selectedJob.label"
+                                    (change)="dataChangeEmitter.next(0)"
+                                />
                             </mat-form-field>
 
                             <p style="margin-top: 0;">Description</p>
                             <ngx-stackedit
                                 style="height: 400px"
                                 [(value)]="selectedJob.description"
+                                (valueChange)="dataChangeEmitter.next(0)"
                                 showPreview="off"
                                 showToc="off"
                             />
@@ -146,13 +156,19 @@
                                 <div style="padding: 16px;">
                                     <mat-form-field style="width: 100%">
                                         <mat-label>Task Group Label</mat-label>
-                                        <input matInput type="text" [(ngModel)]="selectedTaskGroup.label"/>
+                                        <input
+                                            matInput
+                                            type="text"
+                                            [(ngModel)]="selectedTaskGroup.label"
+                                            (change)="dataChangeEmitter.next(0)"
+                                        />
                                     </mat-form-field>
 
                                     <p style="margin-top: 0;">Description</p>
                                     <ngx-stackedit
                                         style="height: 400px"
                                         [(value)]="selectedTaskGroup.description"
+                                        (valueChange)="dataChangeEmitter.next(0)"
                                         showPreview="off"
                                         showToc="off"
                                     />
@@ -193,19 +209,26 @@
                         <div style="padding: 16px;">
                             <mat-form-field style="width: 100%">
                                 <mat-label>Task Label</mat-label>
-                                <input matInput type="text" [(ngModel)]="selectedTask.label"/>
+                                <input
+                                    matInput
+                                    type="text"
+                                    [(ngModel)]="selectedTask.label"
+                                    (change)="dataChangeEmitter.next(0)"
+                                />
                             </mat-form-field>
 
                             <p style="margin-top: 0;">Description</p>
                             <ngx-stackedit
                                 style="height: 400px"
                                 [(value)]="selectedTask.description"
+                                (valueChange)="dataChangeEmitter.next(0)"
                                 showPreview="off"
                                 showToc="off"
                             />
 
                             <app-formio-wrapper
-                                [data]="selectedTask.taskScriptArguments"
+                                [(data)]="selectedTask.taskScriptArguments"
+                                (dataChange)="dataChangeEmitter.next(0)"
                                 [formSchema]="selectedTaskSchema?.['schema']"
                                 [formOptions]="{}"
                             />

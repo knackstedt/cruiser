@@ -1,5 +1,5 @@
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +14,8 @@ import { Schemas, DefaultSchema } from './task-schemas';
 import { StackEditorComponent } from 'ngx-stackedit';
 import { FormsModule } from '@angular/forms';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { BehaviorSubject, Subject, debounceTime } from 'rxjs';
+import { PipelineEditorComponent } from 'client/app/pages/pipelines/editor/editor.component';
 
 @Component({
     selector: 'app-stage-editor',
@@ -57,8 +59,21 @@ export class StageEditorComponent {
         { label: "Delete Task", action: item => this.deleteTask(item.taskGroup, item.task) }
     ];
 
+    dataChangeEmitter = new Subject();
+    dataChange$ = this.dataChangeEmitter.pipe(debounceTime(500));
+
+    subscriptions = [
+        // Save partial changes every 3s
+        this.dataChange$.subscribe(() => {
+            this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+                stages: this.pipeline.stages
+            });
+        })
+    ]
+
     constructor(
-        private readonly fetch: Fetch
+        private readonly fetch: Fetch,
+        private readonly editor: PipelineEditorComponent
     ) {
 
     }
@@ -70,6 +85,10 @@ export class StageEditorComponent {
 
         // Attempt to auto pick the first task.
         this.selectTask(this.stage.jobs?.[0]?.taskGroups?.[0]?.tasks?.[0])
+    }
+
+    ngOnDestroy() {
+
     }
 
     async addJob() {

@@ -1,7 +1,12 @@
 
 <div class="toolbar">
     <mat-form-field style="flex: 1 0 0">
-        <input matInput type="text" [(ngModel)]="pipeline.label"/>
+        <input
+            matInput
+            type="text"
+            [(ngModel)]="pipeline.label"
+            (blur)="saveClone()"
+        />
     </mat-form-field>
 
     <div style="flex: 1"></div>

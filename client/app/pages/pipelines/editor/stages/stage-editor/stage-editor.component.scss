@@ -3,7 +3,8 @@
     height: 100%;
 
     --mat-expansion-container-background-color: #0000;
-    --editor-background-color: #303030;
+    --editor-background-color: #2b2b2b;
+    // --mdc-secondary-navigation-tab-container-height
 }
 
 
@@ -11,15 +12,22 @@
     flex: 0 0 450px;
     background-color: #181818;
 
-    ::ng-deep .ng-scroll-content {
-        width: 100%;
+    ::ng-deep {
+        .ng-scroll-content {
+            width: 100%;
+        }
+        .mat-mdc-tab-header {
+            --mdc-secondary-navigation-tab-container-height: 32px;
+        }
     }
     mat-accordion {
+        display: block;
         border-right: 1px solid #2b2b2b;
         // padding: 12px;
 
         mat-tab-group {
-            background-color: #1f1f1f;
+            background-color: #181818;
+            border-left: 1px solid #585858;
         }
 
         mat-expansion-panel-header {
@@ -40,7 +48,15 @@
         }
 
         .selected {
-            background-color: var(--ngx-ctx-menu-hover-background-color);
+            background-color: #37373d;
+        }
+        // :focus .selected, :focus.selected {
+        //     background-color: #04395e;
+        // }
+        .header, .tab_header {
+            &:hover {
+                background-color: #2a2d2e;
+            }
         }
         .expand_button {
             position: absolute;
@@ -48,6 +64,7 @@
             transition: transform 300ms ease;
         }
     }
+
     .header {
         display: flex;
         align-items: center;
@@ -55,20 +72,24 @@
         padding: 0 12px;
         width: 100%;
         height: 100%;
-        background-color: #333;
+        background-color: #181818;
+        transition: background-color 100ms ease;
 
         .label {
             padding-left: 24px
         }
     }
+
     .tab_header {
         display: flex;
         align-items: center;
         padding: 0 24px;
         width: 100%;
         height: 100%;
-        background-color: #333;
+        background-color: #181818;
+        transition: background-color 100ms ease;
     }
+
     .task_group ::ng-deep {
         .mat-mdc-tab {
             padding: 0;
@@ -93,6 +114,16 @@
     align-items: center;
 }
 
+button {
+    border: 0;
+    background: #0000;
+    border-radius: 6px;
+    transition: background-color 100ms ease;
+
+    &:hover {
+        background-color: #2a2d2e;
+    }
+}
 
 ::ng-deep {
     .draggable-task.cdk-drag-preview {
@@ -108,26 +139,41 @@
         align-items: center;
         padding: 0 12px;
         gap: 12px;
-        height: 48px;
-        background-color: #333333;
-        transition: background-color 300ms ease;
+        height: 32px;
+        background-color: #181818;
+        transition: background-color 100ms ease;
+        user-select: none;
 
         &:hover {
-            background-color: #444;
+            background-color: #2a2d2e;
+
+            .drag_handle {
+                opacity: .7;
+            }
         }
         &.selected {
-            background-color: var(--ngx-ctx-menu-hover-background-color);
+            background-color: #37373d;
+        }
+        &:focus.selected {
+            background-color: #04395e;
         }
 
         &.disabled {
             text-decoration: line-through;
             color: var(--text-subtle-color);
         }
+
+        .drag_handle {
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 100ms ease;
+        }
     }
 }
 
 .placeholder {
-    height: 48px;
+    height: 32px;
     border: 4px dashed #555;
     border-radius: 6px;
 }
@@ -135,4 +181,16 @@
 ngx-stackedit {
     border-top-right-radius: 2px;
     border-top-left-radius: 2px;
+}
+
+.job_add_button {
+    cursor: pointer;
+    width: 100px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    transition: background-color 100ms ease;
+}
+
+ng-scrollbar:hover .job_add_button {
+    background: #0078d4;
 }

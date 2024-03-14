@@ -149,6 +149,11 @@ export class PipelineEditorComponent {
         this.dialogRef?.close(res);
     }
 
+    // Perform a save of the current clone
+    async saveClone() {
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, this.pipeline) as any;
+    }
+
     // Delete the cloned pipeline
     async cancel() {
         await this.fetch.delete(`api/odata/${this.pipeline.id}`);
