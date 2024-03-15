@@ -18,7 +18,7 @@ if (!agentId || !/^[0-7][0-9A-Z]{25}$/i.test(agentId)) {
     const app = express();
 
     // Handle a ping endpoint to check if this is even up
-    app.use("/ping", (req, res, next) => res.send(Date.now()));
+    app.use("/ping", (req, res, next) => res.send(Date.now().toString()));
     app.use((req, res, next) => {
         // Ensure the access is only coming from the system that spawned this agent
         if (environment.cruiserToken == req.get("X-Cruiser-Token"))
