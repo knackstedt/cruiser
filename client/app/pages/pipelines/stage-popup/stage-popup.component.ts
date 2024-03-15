@@ -8,6 +8,7 @@ import { JobDetailsComponent } from '../job-details/job-details.component';
 import { Fetch } from '@dotglitch/ngx-common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
+import { DurationViewerComponent } from 'client/app/components/duration-viewer/duration-viewer.component';
 
 @Component({
     selector: 'app-stage-popup',
@@ -18,7 +19,8 @@ import { JobInstanceIconComponent } from 'client/app/components/job-instance-ico
         MatButtonModule,
         MatTooltipModule,
         TableModule,
-        JobInstanceIconComponent
+        JobInstanceIconComponent,
+        DurationViewerComponent
     ],
     standalone: true,
     host: {
@@ -75,23 +77,5 @@ export class StagePopupComponent {
 
     getProgressDuration(selfEpoch: number, nextEpoch: number) {
         return (nextEpoch ?? Date.now()) / selfEpoch * 100;
-    }
-
-    printDuration(epoch: number) {
-        const duration = (Date.now() - epoch);
-
-        const date = new Date(Date.UTC(0, 0, 0, 0, 0, 0, duration));
-
-        const days    = date.getUTCDay();
-        const hours   = date.getUTCHours();
-        const minutes = date.getUTCMinutes();
-        const seconds = date.getUTCSeconds();
-
-        if (days > 0) return days + 'd' + hours + 'h' + minutes + 'm';
-        if (hours > 0) return hours + 'h' + minutes + 'm' + seconds + 's';
-        if (minutes > 0) return minutes + 'm' + seconds + 's';
-        if (seconds > 0) return seconds + 's';
-
-        return '⏳';
     }
 }

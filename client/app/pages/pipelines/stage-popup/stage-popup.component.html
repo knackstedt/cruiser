@@ -143,13 +143,13 @@
                                     style="fill: rgb(255, 0, 195)"></rect> -->
                             </svg>
                             <ng-template>
-                                {{printDuration(job._runningJob?.queueEpoch)}}
-                                {{printDuration(job._runningJob?.startEpoch)}}
+                                <app-duration-viewer [epoch]="job._runningJob?.queueEpoch" />
+                                <app-duration-viewer [epoch]="job._runningJob?.startEpoch" />
                                 {{job._runningJob?.endEpoch}}
                             </ng-template>
                         </td>
                         <td>
-                            {{printDuration(job._runningJob?.queueEpoch)}}
+                            <app-duration-viewer [epoch]="job._runningJob?.queueEpoch" />
                         </td>
                         <td>
                             {{job._runningJob?.kube?.name}}
