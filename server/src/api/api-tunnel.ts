@@ -69,7 +69,7 @@ const tryLoadCache = async (uid: string, jobId: string, job) => {
         throw {
             status: 421,
             message: "Agent is unreachable",
-            err: isOk
+            error: isOk
         }
     }
 }

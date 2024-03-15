@@ -74,9 +74,8 @@ export const ErrorHandler = (err, req, res, next) => {
         case (typeof err == 'object'): {
             // General error handling
             jsonResult = {
-                name: err.name?.toString() || "Request Failed",
-                title: err.title?.toString() || "Failed to handle request",
-                message: err.message?.toString() || (!err.stack && err.toString()) || "General Error",
+                message: err.msg || err.message || (!err.stack && err.toString()) || "Unknown Error",
+                error: err.err ?? err.error ?? err.ex,
                 status:
                     (typeof err.response?.status == "number" && err.response?.status) ||
                     (typeof err.status == "number" && err.status) ||
