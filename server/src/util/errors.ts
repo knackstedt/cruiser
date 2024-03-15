@@ -35,6 +35,7 @@ export const ErrorHandler = (err, req, res, next) => {
 
         logger.error(error);
         res.status(500).send(error);
+        return;
     }
 
     let error: any = {};
