@@ -41,7 +41,15 @@ if (!agentId || !/^[0-7][0-9A-Z]{25}$/i.test(agentId)) {
 
         res
             .status(500)
-            .send(err);
+            .send(err.hasOwnProperty("isAxiosError") ? {
+                message: err.message,
+                status: err.status,
+                code: err.code,
+                headers: err.config.headers,
+                url: err.config.url,
+                data: err.response?.data,
+                responseHeaders: err.response?.headers
+            } : err);
     });
 
     const server = http.createServer(app);
