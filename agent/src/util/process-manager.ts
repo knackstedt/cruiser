@@ -6,6 +6,7 @@ import { TaskDefinition } from '../../types/pipeline';
 import { getSocketLogger } from '../socket/logger';
 import { JobInstance } from '../../types/agent-task';
 import { TripBreakpoint } from '../socket/breakpoint';
+import { ParseCommand } from './command-parser';
 
 export const RunProcess = async (
     jobInstance: JobInstance,
@@ -23,76 +24,29 @@ export const RunProcess = async (
             logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false });
         }
 
-        const {
-            executor,
-            command,
-            args
-        } = await (async () => {
-
-            let executor: Function;
-            let originalExecutor: any;
-            try {
-                if (task.taskScriptId == "command" || !task.taskScriptId?.trim()) {
-                    originalExecutor = executor = require(__dirname + "../scripts/_command.js");
-                }
-                else {
-                    originalExecutor = executor = require(__dirname + "../scripts/" + task.taskScriptId);
-                }
-            }
-            catch (ex) {
-                logger.error({
-                    msg: "Failed to import base command script",
-                    task
-                });
-                if (task.disableErrorBreakpoint != true) {
-                    logger.info({ msg: `Breaking on error`, breakpoint: true, error: true });
-                    await TripBreakpoint(jobInstance);
-                    logger.info({ msg: `Resuming from Breakpoint`, breakpoint: true, error: false });
-                }
-            }
-
-            // Attempt to automatically resolve imports
-            if (executor['default'])
-                executor = executor['default'];
-            if (task.taskScriptSubId)
-                executor = executor[task.taskScriptSubId];
-
-            if (!executor) {
-                logger.error({
-                    msg: "Could not resolve script executor",
-                    task,
-                    originalExecutor
-                });
-                if (task.disableErrorBreakpoint != true) {
-                    logger.info({ msg: `Breaking on error`, breakpoint: true, error: true });
-                    await TripBreakpoint(jobInstance);
-                    logger.info({ msg: `Resuming from Breakpoint`, breakpoint: true, error: false });
-                }
-            }
-
-            return {
-                executor,
-                command: '',
-                args: []
-            }
-        })()
-
-
         // Try to create the CWD.
         if (!await exists(task.workingDirectory || environment.buildDir))
             await mkdir(task.workingDirectory || environment.buildDir, { recursive: true });
 
         const process = await new Promise<ChildProcessWithoutNullStreams>((res, rej) => {
 
+            // TODO: join env separately.
+            // const specifiedCommand = task.taskScriptArguments['command'];
+            const {
+                command,
+                args,
+                env
+            } = ParseCommand(task.taskScriptArguments['command'] + ' ' + task.taskScriptArguments['arguments']);
+
             logger.info({
                 msg: `Spawning process`,
-                command,
+                command: command,
                 args,
                 task
             });
 
             const process = spawn(command, args, {
-                env: {},//env,
+                env: env,
                 cwd: task.workingDirectory || environment.buildDir,
                 timeout: task.commandTimeout || 0,
                 windowsHide: true
