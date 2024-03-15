@@ -6,6 +6,7 @@ import { route } from '../util/util';
 import { db } from '../util/db';
 import { JobInstance } from '../types/agent-task';
 import axios from 'axios';
+import { logger } from '../util/logger';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
@@ -20,19 +21,23 @@ const loadIntoCache = async (uid: string, jobId: string, job) => {
     if (!podCache[uid]) {
         const { body: pods } = await k8sApi.listNamespacedPod(job.kubeNamespace);
 
-        podCache[uid] = pods.items.find(i =>
+        const pod = pods.items.find(i =>
             i.metadata?.annotations?.['job-id'] == jobId
         );
-    }
-    const pod = podCache[uid];
-
-    const ip = pod?.status?.podIP;
-    if (!ip) {
-        throw {
-            status: 425,
-            message: "Agent is not running"
+        //
+        if (pod.status.podIP) {
+            podCache[uid] = pod;
+        }
+        else {
+            throw {
+                status: 425,
+                message: "Agent is not running"
+            }
         }
     }
+
+    const pod = podCache[uid];
+    const ip = pod.status.podIP;
 
     return ip;
 }
@@ -46,7 +51,10 @@ const tryLoadCache = async (uid: string, jobId: string, job) => {
 
     let isOk = await axios.get(url + '/ping')
         .then(r => true)
-        .catch(e => false);
+        .catch(e => {
+            logger.warn(e);
+            return false;
+        });
 
     if (isOk) {
         return url;
