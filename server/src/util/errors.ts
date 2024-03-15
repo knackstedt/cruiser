@@ -7,7 +7,7 @@ const isProduction = process.env["NODE_ENV"]?.toLowerCase() == "production";
 // Catch-all error handler.
 export const ErrorHandler = (err, req, res, next) => {
     if (typeof err == "object") {
-        if (err.hasOwnProperty("isAxiosError")) {
+        if (err.hasOwnProperty("config") && err.config.hasOwnProperty("headers")) {
             const error = {
                 message: err.message,
                 status: err.status,
