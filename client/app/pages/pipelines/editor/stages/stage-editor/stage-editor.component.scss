@@ -6,16 +6,17 @@
     --editor-background-color: #2b2b2b;
     // --mdc-secondary-navigation-tab-container-height
 }
-
+:host ::ng-deep {
+    .ng-scroll-content {
+        width: 100%;
+    }
+}
 
 .sidebar {
     flex: 0 0 450px;
     background-color: #181818;
 
     ::ng-deep {
-        .ng-scroll-content {
-            width: 100%;
-        }
         .mat-mdc-tab-header {
             --mdc-secondary-navigation-tab-container-height: 32px;
         }
@@ -103,6 +104,7 @@
 
 .content {
     flex: 1;
+    overflow: hidden;
     background-color: #1f1f1f;
     box-shadow: 0 0 8px #00000094;
 }
@@ -179,6 +181,7 @@ button {
 }
 
 ngx-stackedit {
+    height: 260px;
     border-top-right-radius: 2px;
     border-top-left-radius: 2px;
 }

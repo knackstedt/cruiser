@@ -50,13 +50,20 @@ export class StageEditorComponent {
     currentSelection: "pipeline" | "stage" | "job" | "taskGroup" | "task" = 'task';
 
     jobMenu: MenuItem<JobDefinition>[] = [
+        { label: "Enable Job", action: item => this.enableJob(item), isVisible: item => item.disabled },
+        { label: "Disable Job", action: item => this.disableJob(item), isVisible: item => !item.disabled },
         { label: "Delete Job", action: item => this.deleteJob(item) }
     ];
     taskGroupMenu: MenuItem<{ job: JobDefinition, taskGroup: TaskGroupDefinition}>[] = [
+        { label: "Enable Task Group", action: item => this.enableTaskGroup(item.job, item.taskGroup), isVisible: item => item.taskGroup.disabled },
+        { label: "Disable Task Group", action: item => this.disableTaskGroup(item.job, item.taskGroup), isVisible: item => !item.taskGroup.disabled },
         { label: "Delete Task Group", action: item => this.deleteTaskGroup(item.job, item.taskGroup) }
     ];
     taskMenu: MenuItem<{ taskGroup: TaskGroupDefinition, task: TaskDefinition}>[] = [
-        { label: "Delete Task", action: item => this.deleteTask(item.taskGroup, item.task) }
+        { label: "Enable Task", action: item => this.enableTask(item.taskGroup, item.task), isVisible: item => item.task.disabled },
+        { label: "Disable Task", action: item => this.disableTask(item.taskGroup, item.task), isVisible: item => !item.task.disabled },
+        { label: "Delete Task", action: item => this.deleteTask(item.taskGroup, item.task) },
+        { label: "Clone Task", action: item => this.cloneTask(item.taskGroup, item.task) }
     ];
 
     dataChangeEmitter = new Subject();
@@ -90,6 +97,11 @@ export class StageEditorComponent {
     ngOnDestroy() {
 
     }
+    private patchPipeline() {
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
+        });
+    }
 
     async addJob() {
         this.stage.jobs = this.stage.jobs ?? [];
@@ -116,9 +128,15 @@ export class StageEditorComponent {
 
     async deleteJob(job: JobDefinition) {
         this.stage.jobs = this.stage.jobs.filter(j => j != job);
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
+        this.patchPipeline();
+    }
+    async disableJob(job: JobDefinition) {
+        job.disabled = true;
+        this.patchPipeline();
+    }
+    async enableJob(job: JobDefinition) {
+        job.disabled = false;
+        this.patchPipeline();
     }
 
     async addTaskGroup(job: JobDefinition) {
@@ -133,17 +151,22 @@ export class StageEditorComponent {
 
         job.taskGroups.push(taskGroup);
 
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
+        this.patchPipeline();
     }
 
     async deleteTaskGroup(job: JobDefinition, taskGroup: TaskGroupDefinition) {
         job.taskGroups = job.taskGroups.filter(tg => tg != taskGroup);
+        this.patchPipeline();
+    }
+    async disableTaskGroup(job: JobDefinition, taskGroup: TaskGroupDefinition) {
+        taskGroup.disabled = true;
 
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
+        this.patchPipeline();
+    }
+    async enableTaskGroup(job: JobDefinition, taskGroup: TaskGroupDefinition) {
+        taskGroup.disabled = true;
+
+        this.patchPipeline();
     }
 
     addTask(taskGroup: TaskGroupDefinition) {
@@ -158,17 +181,28 @@ export class StageEditorComponent {
 
         taskGroup.tasks.push(task);
 
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
+        this.patchPipeline();
     }
 
     async deleteTask(taskGroup: TaskGroupDefinition, task: TaskDefinition) {
         taskGroup.tasks = taskGroup.tasks.filter(t => t != task);
 
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
+        this.patchPipeline();
+    }
+    async disableTask(taskGroup: TaskGroupDefinition, task: TaskDefinition) {
+        task.disabled = true;
+
+        this.patchPipeline();
+    }
+    async enableTask(taskGroup: TaskGroupDefinition, task: TaskDefinition) {
+        task.disabled = false;
+
+        this.patchPipeline();
+    }
+    async cloneTask(taskGroup: TaskGroupDefinition, task: TaskDefinition) {
+        taskGroup.tasks.push(structuredClone(task));
+
+        this.patchPipeline();
     }
 
     async taskDrop(taskGroup: TaskGroupDefinition, event: CdkDragDrop<any, any, any>) {
@@ -228,11 +262,12 @@ export class StageEditorComponent {
 
             // this.items.map(i => ({ id: i.id, data: { order: i.order } }))
             // Update the order of all of the items
-            this.fetch.patch(`/api/odata`, [
-                { id: event.previousContainer.data, data: { [subKey]: oArr.map(t => t.id) } },
-                { id: event.container.data, data: { [subKey]: tArr.map(t => t.id) } }
-            ]);
+            // this.fetch.patch(`/api/odata`, [
+            //     { id: event.previousContainer.data, data: { [subKey]: oArr.map(t => t.id) } },
+            //     { id: event.container.data, data: { [subKey]: tArr.map(t => t.id) } }
+            // ]);
         }
+        this.patchPipeline();
     }
 
     selectJob(job: JobDefinition) {
@@ -246,6 +281,7 @@ export class StageEditorComponent {
     }
 
     selectTask(task: TaskDefinition) {
+        if (!task) return;
         // Ensure that the task has the proper argument object
         if (!task.taskScriptArguments) task.taskScriptArguments = {};
 

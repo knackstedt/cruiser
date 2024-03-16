@@ -39,6 +39,7 @@
                                     <ng-template mat-tab-label>
                                         <div
                                             class="tab_header"
+                                            [class.selected]="taskGroup == selectedTaskGroup && currentSelection == 'taskGroup'"
                                             (click)="selectTaskGroup(taskGroup)"
                                             [ngx-contextmenu]="taskGroupMenu"
                                             [ngx-menu-context]="{taskGroup, job}"
@@ -135,7 +136,6 @@
 
                             <p style="margin-top: 0;">Description</p>
                             <ngx-stackedit
-                                style="height: 400px"
                                 [(value)]="selectedJob.description"
                                 (valueChange)="dataChangeEmitter.next(0)"
                                 showPreview="off"
@@ -166,7 +166,6 @@
 
                                     <p style="margin-top: 0;">Description</p>
                                     <ngx-stackedit
-                                        style="height: 400px"
                                         [(value)]="selectedTaskGroup.description"
                                         (valueChange)="dataChangeEmitter.next(0)"
                                         showPreview="off"
@@ -219,7 +218,6 @@
 
                             <p style="margin-top: 0;">Description</p>
                             <ngx-stackedit
-                                style="height: 400px"
                                 [(value)]="selectedTask.description"
                                 (valueChange)="dataChangeEmitter.next(0)"
                                 showPreview="off"
