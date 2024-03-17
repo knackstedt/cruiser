@@ -94,7 +94,7 @@
                                             <app-job-instance-icon
                                                 [jobInstance]="stage['_latestJob']"
                                             />
-                                            @if (![null, "failed", "completed"].includes(stage['_latestJob'].status)) {
+                                            @if (![null, "failed", "completed"].includes(stage['_latestJob']?.status)) {
                                                 <mat-progress-bar
                                                     color="primary"
                                                     mode="indeterminate"

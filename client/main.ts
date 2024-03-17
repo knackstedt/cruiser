@@ -12,25 +12,31 @@ import { NotFoundComponent } from './app/components/@framework/not-found/not-fou
 import { Pages } from './app/component.registry';
 import { LazyLoaderModule, ComponentResolveStrategy } from '@dotglitch/ngx-common';
 import { MatDialogModule } from '@angular/material/dialog';
-import { NgIf } from '@angular/common';
 
 bootstrapApplication(RootComponent, {
     providers: [
-        importProvidersFrom(NgIf, MatDialogModule, LazyLoaderModule.forRoot({
-            // TODO: add additional registries
-            entries: [
-                ...Pages
-            ],
-            componentResolveStrategy: ComponentResolveStrategy.PickFirst,
-            notFoundComponent: NotFoundComponent,
-            loaderDistractorComponent: LazyProgressDistractorComponent,
-            errorComponent: WindowErrorComponent
-        }), ToastrModule.forRoot(), MatIconModule, BrowserModule, ServiceWorkerModule.register('ngsw-worker.js', {
-            enabled: !isDevMode(),
-            // Register the ServiceWorker as soon as the application is stable
-            // or after 30 seconds (whichever comes first).
-            registrationStrategy: 'registerWhenStable:30000'
-        })),
+        importProvidersFrom(
+            MatDialogModule,
+            LazyLoaderModule.forRoot({
+                // TODO: add additional registries
+                entries: [
+                    ...Pages
+                ],
+                componentResolveStrategy: ComponentResolveStrategy.PickFirst,
+                notFoundComponent: NotFoundComponent,
+                loaderDistractorComponent: LazyProgressDistractorComponent,
+                errorComponent: WindowErrorComponent
+            }),
+            ToastrModule.forRoot(),
+            MatIconModule,
+            BrowserModule,
+            ServiceWorkerModule.register('ngsw-worker.js', {
+                enabled: !isDevMode(),
+                // Register the ServiceWorker as soon as the application is stable
+                // or after 30 seconds (whichever comes first).
+                registrationStrategy: 'registerWhenStable:30000'
+            })
+        ),
         provideAnimations(),
         provideHttpClient(withInterceptorsFromDi())
     ]

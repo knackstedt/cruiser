@@ -1,5 +1,5 @@
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { Component, EventEmitter, Input } from '@angular/core';
+import { Component, EventEmitter, Inject, Input, Optional } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,6 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BehaviorSubject, Subject, debounceTime } from 'rxjs';
 import { PipelineEditorComponent } from 'client/app/pages/pipelines/editor/editor.component';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
     selector: 'app-stage-editor',
@@ -79,10 +80,12 @@ export class StageEditorComponent {
     ]
 
     constructor(
+        @Optional() @Inject(MAT_DIALOG_DATA) private readonly data,
         private readonly fetch: Fetch,
         private readonly editor: PipelineEditorComponent
     ) {
-
+        this.pipeline = data?.pipeline;
+        this.stage = data?.stage;
     }
 
     ngOnInit() {
@@ -111,7 +114,7 @@ export class StageEditorComponent {
             order: this.stage.jobs.length + 1,
             taskGroups: [
                 {
-                    id: `pipelineTaskGroup:${ulid()}`,
+                    id: `pipeline_task_group:${ulid()}`,
                     label: "Task Group 1",
                     order: 0,
                     tasks: []
@@ -124,6 +127,7 @@ export class StageEditorComponent {
         this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
             stages: this.pipeline.stages
         });
+        this.selectJob(job);
     }
 
     async deleteJob(job: JobDefinition) {
@@ -152,6 +156,7 @@ export class StageEditorComponent {
         job.taskGroups.push(taskGroup);
 
         this.patchPipeline();
+        this.selectTaskGroup(taskGroup);
     }
 
     async deleteTaskGroup(job: JobDefinition, taskGroup: TaskGroupDefinition) {
@@ -182,6 +187,7 @@ export class StageEditorComponent {
         taskGroup.tasks.push(task);
 
         this.patchPipeline();
+        this.selectTask(task);
     }
 
     async deleteTask(taskGroup: TaskGroupDefinition, task: TaskDefinition) {
@@ -237,13 +243,13 @@ export class StageEditorComponent {
             let subKey = '';
 
             // This will only run for things _below_ a pipeline. Do not worry about stages.
-            if (kind == "pipelineStage") {
+            if (kind == "pipeline_stage") {
                 subKey = 'jobs';
             }
-            else if (kind == "pipelineJob") {
+            else if (kind == "pipeline_job") {
                 subKey = 'taskGroups';
             }
-            else if (kind == "pipelineTaskGroup") {
+            else if (kind == "pipeline_task_group") {
                 subKey = 'tasks';
             }
 

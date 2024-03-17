@@ -11,11 +11,11 @@ import { JobInstance } from 'server/src/types/agent-task';
     ],
     standalone: true,
     host: {
-        "[attr.state]": "jobInstance.state"
+        "[attr.state]": "jobInstance?.state"
     }
 })
 export class JobInstanceIconComponent {
 
-    @Input() jobInstance: JobInstance
+    @Input() jobInstance: JobInstance;
 
 }

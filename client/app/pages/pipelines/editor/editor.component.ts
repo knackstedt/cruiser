@@ -18,6 +18,7 @@ import { BehaviorSubject } from 'rxjs';
 import { JobDefinition, PipelineDefinition, SourceConfiguration, StageDefinition, TaskDefinition, TaskGroupDefinition } from 'types/pipeline';
 import { ulid } from 'ulidx';
 import { UserService } from 'client/app/services/user.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
     selector: 'app-pipeline-editor',
@@ -46,6 +47,7 @@ export class PipelineEditorComponent {
 
     public pipeline: PipelineDefinition = {} as any;
 
+    @Input() pipeline_id: string;
     // Incoming pipeline
     @Input('pipeline') _pipeline: PipelineDefinition;
 
@@ -56,8 +58,8 @@ export class PipelineEditorComponent {
 
 
     constructor(
-        @Optional() @Inject(MAT_DIALOG_DATA) public data: any = {},
         @Optional() public dialogRef: MatDialogRef<any>,
+        private readonly toaster: ToastrService,
         private readonly fetch: Fetch,
         private readonly user: UserService
     ) { }
@@ -70,15 +72,15 @@ export class PipelineEditorComponent {
 
         if (p.stages.length == 0) {
             p.stages.push({
-                id: `pipelineStage:${ulid() }`,
+                id: `pipeline_stage:${ulid() }`,
                 label: "Stage 1",
                 order: 0,
                 jobs: [
                     {
-                        id: `pipelineJob:${ulid()}`,
+                        id: `pipeline_job:${ulid()}`,
                         taskGroups: [
                             {
-                                id: `pipelineTaskGroup:${ulid()}`,
+                                id: `pipeline_task_group:${ulid()}`,
                                 label: "Task Group 1",
                                 order: 0,
                                 tasks: []
@@ -96,6 +98,18 @@ export class PipelineEditorComponent {
     }
 
     async ngOnInit() {
+        if (this.pipeline_id && !this._pipeline) {
+            this.fetch.get(`/api/odata/${this.pipeline_id}`)
+                .then(res => {
+                    this._pipeline = res as any;
+                    this.ngOnInit();
+                })
+                .catch(err => {
+                    this.toaster.error(this.pipeline_id, "Failed to load pipeline")
+                });
+            return;
+        }
+
         if (!this._pipeline?.id) {
             this._pipeline = {
                 _isUserEditInstance: true
@@ -152,7 +166,8 @@ export class PipelineEditorComponent {
         const res = await this.fetch.put(`/api/odata/${this._pipeline.id}`, data) as any;
         await this.fetch.delete(`/api/odata/${this.pipeline.id}`);
 
-        this.dialogRef?.close(res);
+        location.href = "#/Pipelines";
+        // this.dialogRef?.close(res);
     }
 
     // Perform a save of the current clone
@@ -163,7 +178,8 @@ export class PipelineEditorComponent {
     // Delete the cloned pipeline
     async cancel() {
         await this.fetch.delete(`api/odata/${this.pipeline.id}`);
-        this.dialogRef.close();
+        // this.dialogRef.close();
+        location.href = "#/Pipelines";
     }
 
     async addSource() {

@@ -5,7 +5,21 @@ export const Pages: ComponentRegistration[] = [
     { id: 'Login', load: () => import('./pages/login/login.component'), hidden: true },
     // { id: 'Dashboard', load: () => import('./pages/dashboard/dashboard.component'), icon: "dashboard" },
 
-    { id: 'Pipelines', load: () => import('./pages/pipelines/pipelines.component'), icon: "line_axis" },
+    {
+        id: 'Pipelines',
+        load: () => import('./pages/pipelines/pipelines.component'),
+        icon: "line_axis"
+    },
+    {
+        matcher: /Pipelines\/(?<pipeline_id>[^/]+)/i,
+        load: () => import('./pages/pipelines/editor/editor.component'),
+        hidden: true
+    },
+    {
+        id: 'Test',
+        // matcher: /Pipelines\/(?<pipeline_id>[^/]+)/i,
+        load: () => import('./pages/pipelines/editor/stages/stages.component')
+    },
     // { id: 'Agents', load: () => import('./pages/agents/agents.component'), icon: "dns" },
     { id: 'Sources', load: () => import('./pages/sources/sources.component'), icon: "source" },
 

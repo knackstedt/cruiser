@@ -52,7 +52,7 @@ export class PipelinesComponent implements OnInit {
     readonly ctxMenu: MenuItem<PipelineDefinition>[] = [
         {
             label: "Edit",
-            action: pipeline => this.editPipeline(pipeline)
+            linkTemplate: pipeline => `#/Pipelines/${pipeline.id}`
         },
         {
             label: "Download JSON",
@@ -110,11 +110,11 @@ export class PipelinesComponent implements OnInit {
         private fetch: Fetch,
         private changeDetector: ChangeDetectorRef
     ) {
-        lazyLoader.registerComponent({
-            id: "pipeline-editor",
-            group: "dynamic",
-            load: () => import('./editor/editor.component')
-        });
+        // lazyLoader.registerComponent({
+        //     id: "pipeline-editor",
+        //     group: "dynamic",
+        //     load: () => import('./editor/editor.component')
+        // });
         lazyLoader.registerComponent({
             id: "history",
             group: "dynamic",
@@ -254,10 +254,11 @@ export class PipelinesComponent implements OnInit {
     }
 
     editPipeline(pipeline: Partial<PipelineDefinition> = {}) {
-        this.dialog.open("pipeline-editor", 'dynamic', { inputs: { pipeline }, autoFocus: false })
-            .then((pipeline: PipelineDefinition) => {
-                this.ngOnInit();
-            })
+        // this.dialog.open("pipeline-editor", 'dynamic', { inputs: { pipeline }, autoFocus: false })
+        //     .then((pipeline: PipelineDefinition) => {
+        //         this.ngOnInit();
+        //     })
+        location.hash = `#/Pipelines/${pipeline.id}`;
     }
 
     viewHistory(pipeline: PipelineDefinition) {
