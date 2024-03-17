@@ -25,7 +25,7 @@ const getRefs = async(remote: string) => {
 }
 
 router.get('/branches', (req, res, next) => {
-    getRefs(req.query.remote ?? req.body.remote)
+    getRefs(req.query['remote'] ?? req.body.remote)
         .then(refs =>
             refs
                 .filter(r => r.id[5] == "h") // Cheapest CPU check
@@ -36,7 +36,7 @@ router.get('/branches', (req, res, next) => {
 });
 
 router.get('/tags', (req, res, next) => {
-    getRefs(req.query.remote ?? req.body.remote)
+    getRefs(req.query['remote'] ?? req.body.remote)
         .then(refs =>
             refs
                 .filter(r => r.id[5] == "t") // Cheapest CPU check

@@ -134,7 +134,7 @@ export const DatabaseTableApi = () => {
         const table = req['_table'] as string;
 
         // Tables with a colon are specifying a record id.
-        if (req.params.table.includes(":"))
+        if (req.params['table'].includes(":"))
             return next();
 
         const apiPath = '/api/odata';
@@ -244,7 +244,7 @@ export const DatabaseTableApi = () => {
 
     router.put('/:id', route(async (req, res, next) => {
         db.update(req.params['id'], req.body)
-            .then(data => res.send(data))
+            .then(([data]) => res.send(data))
             .catch(err => next(err))
     }));
     // batch PUT
