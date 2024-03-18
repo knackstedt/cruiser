@@ -22,6 +22,7 @@ import { CheckJobToken } from './util/token-cache';
 import { SourcesApi } from './api/sources';
 import { Guest, User } from './guards/role-guards';
 import { CronScheduler } from './util/scheduler';
+import { BlobUploadApi } from './api/filestorage';
 
 const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
 
@@ -78,12 +79,13 @@ const bootstrapServer = async () => {
         }
     });
 
-    app.use("/api/user", UserApi);
-    app.use("/api/odata",    DatabaseTableApi());
+    app.use("/api/user",      UserApi);
+    app.use("/api/odata",     DatabaseTableApi());
     app.use("/api/pipelines", PipelineApi);
-    app.use("/api/sources",  SourcesApi);
-    app.use("/api/jobs",     JobActionsApi);
-    app.use("/api/pod",      TunnelApi);
+    app.use("/api/sources",   SourcesApi);
+    app.use("/api/jobs",      JobActionsApi);
+    app.use("/api/pod",       TunnelApi);
+    app.use("/api/blobstore", BlobUploadApi);
 
 
     app.use((req, res, next) => next(404));
