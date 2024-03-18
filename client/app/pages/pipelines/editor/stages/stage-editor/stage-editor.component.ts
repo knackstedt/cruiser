@@ -17,6 +17,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { BehaviorSubject, Subject, debounceTime } from 'rxjs';
 import { PipelineEditorComponent } from 'client/app/pages/pipelines/editor/editor.component';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { FileUploadService } from 'client/app/services/file-upload.service';
 
 @Component({
     selector: 'app-stage-editor',
@@ -82,7 +83,8 @@ export class StageEditorComponent {
     constructor(
         @Optional() @Inject(MAT_DIALOG_DATA) private readonly data,
         private readonly fetch: Fetch,
-        private readonly editor: PipelineEditorComponent
+        private readonly editor: PipelineEditorComponent,
+        public  readonly fs: FileUploadService
     ) {
         this.pipeline = data?.pipeline;
         this.stage = data?.stage;

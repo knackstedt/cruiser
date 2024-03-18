@@ -136,6 +136,7 @@
 
                             <p style="margin-top: 0;">Description</p>
                             <ngx-stackedit
+                                (onImageUpload)="fs.onImageUpload(pipeline, $event)"
                                 [(value)]="selectedJob.description"
                                 (valueChange)="dataChangeEmitter.next(0)"
                                 showPreview="off"
@@ -166,6 +167,7 @@
 
                                     <p style="margin-top: 0;">Description</p>
                                     <ngx-stackedit
+                                        (onImageUpload)="fs.onImageUpload(pipeline, $event)"
                                         [(value)]="selectedTaskGroup.description"
                                         (valueChange)="dataChangeEmitter.next(0)"
                                         showPreview="off"
@@ -218,6 +220,7 @@
 
                             <p style="margin-top: 0;">Description</p>
                             <ngx-stackedit
+                                (onImageUpload)="fs.onImageUpload(pipeline, $event)"
                                 [(value)]="selectedTask.description"
                                 (valueChange)="dataChangeEmitter.next(0)"
                                 showPreview="off"

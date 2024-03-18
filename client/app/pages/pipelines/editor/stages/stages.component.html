@@ -99,6 +99,7 @@
 
                                     <ngx-stackedit
                                         style="height: 200px"
+                                        (onImageUpload)="fs.onImageUpload(pipeline, $event)"
                                         [(value)]="action.description"
                                         (valueChange)="dataChangeEmitter.next(0)"
                                         showPreview="off"
@@ -165,6 +166,7 @@
 
                     <ngx-stackedit
                         style="height: 200px"
+                        (onImageUpload)="fs.onImageUpload(pipeline, $event)"
                         [(value)]="selectedStage.description"
                         (valueChange)="dataChangeEmitter.next(0)"
                         showPreview="off"
@@ -233,6 +235,7 @@
 
                                     <ngx-stackedit
                                         style="height: 200px"
+                                        (onImageUpload)="fs.onImageUpload(pipeline, $event)"
                                         [(value)]="source.description"
                                         (valueChange)="dataChangeEmitter.next(0)"
                                         showPreview="off"

@@ -20,6 +20,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { StackEditorComponent } from 'ngx-stackedit';
 import { Subject, debounceTime } from 'rxjs';
+import { FileUploadService } from 'client/app/services/file-upload.service';
 
 
 @Component({
@@ -106,7 +107,8 @@ export class StagesComponent {
     constructor(
         private readonly fetch: Fetch,
         private readonly injector: Injector,
-        private readonly appRef: ApplicationRef
+        private readonly appRef: ApplicationRef,
+        public readonly fs: FileUploadService
     ) {
 
     }

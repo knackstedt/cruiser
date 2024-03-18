@@ -37,9 +37,8 @@ import { ToastrService } from 'ngx-toastr';
         FormsModule,
         VscodeComponent,
         StackEditorComponent,
-        StagesComponent,
-        StageEditorComponent,
-
+        // StagesComponent,
+        StageEditorComponent
     ],
     standalone: true
 })
