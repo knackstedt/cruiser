@@ -121,6 +121,11 @@ mat-accordion {
         fill: var(--text-subtle-color);
     }
 
+    .react-flow__controls-button {
+        background-color: var(--panel-background-color);
+        fill: var(--text-color)
+    }
+
     .mat-mdc-form-field-subscript-wrapper {
         display: none;
     }

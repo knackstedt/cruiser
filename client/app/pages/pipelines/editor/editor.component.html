@@ -19,7 +19,7 @@
 </div>
 <mat-tab-group [mat-stretch-tabs]="false">
     <!-- Release pipelines will have various stages -->
-    @if (pipeline.isReleasePipeline) {
+    @if (false) {
         <mat-tab label="Stages">
             <ng-template matTabContent>
                 <app-stages [pipeline]="pipeline"/>
