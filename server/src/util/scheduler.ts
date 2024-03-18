@@ -1,61 +1,124 @@
-import * as k8s from '@kubernetes/client-node';
-import { db } from './db';
-import { JobInstance } from '../types/agent-task';
+import * as cron from 'node-cron';
 import { getLogger } from './logger';
+import { db } from './db';
+import { PipelineDefinition, StageDefinition } from '../types/pipeline';
+import { GetGitRefs } from '../api/sources';
+import { RunPipeline, RunStage } from './pipeline';
 
-const kc = new k8s.KubeConfig();
-kc.loadFromDefault();
-const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
+const logger = getLogger("job-scheduler");
+const pollInterval = parseInt(process.env['CRUISER_SCHEDULER_POLL_INTERVAL'] || (1 * 60).toString()) * 1000;
 
-const namespace = "cruiser";
-const workerImage = "cruiser-agent:latest";
-const maxAgentLifetimeSeconds = 1000;
+const scheduledCronTasks: { [key: string]: (
+    cron.ScheduledTask & {
+        _touched: number,
+        _stage: StageDefinition
+    }
+)} = {};
 
-const logger = getLogger("scheduler");
+export const CronScheduler = () => {
+    logger.info("Initializing Scheduler");
 
-// Check for new jobs every 5 seconds
-const jobExecutionPlanPollInterval = 5 * 1000;
+    const checkJobs = async () => {
+        const pipelines = await db.select<PipelineDefinition>(`pipelines`);
 
+        logger.info({
+            msg: "Updating schedules for pipelines",
+            count: pipelines.length
+        });
+        const t = Date.now();
 
+        for (const pipeline of pipelines) {
+            let setCronJob = false;
 
-export const Scheduler = async () => {
-    logger.info("Initializing");
+            for (const stage of pipeline.stages) {
 
-    setInterval(async () => {
-        logger.info("Loading queued jobs");
-        const jobs = await db.select("jobInstance") as JobInstance[];
-        const pendingJobs = jobs.filter(j => j.state == "pending");
+                // If the stage doesn't have a cron trigger, we don't schedule it.
+                if (stage.cronTrigger?.trim()?.length == 0)
+                    continue;
 
-        logger.info("Loaded execution plans", { count: jobs.length });
+                // If we previously had a cron task, detect if it's been changed
+                // since we last placed it.
+                if (scheduledCronTasks[stage.id]) {
+                    const oldStage = scheduledCronTasks[stage.id];
+                    oldStage._touched = t;
 
-
-        for (let i = 0; i < jobs.length; i++) {
-            const jobInstance = jobs[i];
-            const job = jobInstance.job;
-            const [elasticAgent] = await db.select(`elasticAgentPool:${job.elasticAgentId}`) as any[];
-
-            const environment: { key: string, value: string; }[] =
-                await db.query(`RETURN fn::job_get_environment(${job.id})`) as any;
-
-            const namespace = jobInstance.kubeNamespace || elasticAgent.kubeContainerImage || "cruiser";
-            k8sApi.createNamespacedPod(namespace, {
-                apiVersion: "v1",
-                kind: "pod",
-                metadata: {
-                    name: "cruiser-" + jobInstance.id.split(':')[1],
-                    labels: {
-
-                    }
-                },
-                spec: {
-                    containers: [{
-                        name: "cruiser-agent",
-                        image: elasticAgent.kubeContainerImage,
-                        env: environment.map(e => ({ name: e.key, value: e.value }))
-                    }]
+                    // If the cron timer needs to be updated, reschedule it.
+                    setCronJob = oldStage._stage.cronTrigger != stage.cronTrigger;
                 }
-            });
+                else {
+                    // The stage isn't recorded yet
+                    setCronJob = true;
+                }
+
+                // Attach the cron event
+                if (setCronJob) {
+                    if (!cron.validate(stage.cronTrigger)) {
+                        logger.warn(`Execution plan ${stage.id} has invalid CRONTAB. Skipping.`);
+                        continue;
+                    }
+
+                    logger.info(`Creating CRONTAB emitter for plan ${stage.id}`, { interval: stage.cronTrigger });
+
+                    // Cleanup any old cron watchers
+                    scheduledCronTasks[stage.id]?.stop();
+                    delete scheduledCronTasks[stage.id];
+
+                    // Add a new cron task to the listener
+                    const task = cron.schedule(stage.cronTrigger, () => {
+                        CheckAndTriggerStage(pipeline, stage, "$cruiser-stage-cron");
+                    });
+
+                    scheduledCronTasks[stage.id] = task as any;
+                    scheduledCronTasks[stage.id]._touched = t;
+                    scheduledCronTasks[stage.id]._stage = stage;
+
+                    task.start();
+                }
+            }
         }
 
-    }, jobExecutionPlanPollInterval);
+        // Remove anything that didn't get updated in the latest tick.
+        Object.entries(scheduledCronTasks).forEach(([k, v]) => {
+            if (v['_touched'] != t) {
+                v?.stop();
+                delete scheduledCronTasks[k];
+            }
+        })
+    }
+
+    // Start an interval and immediately trigger the check
+    setInterval(() => checkJobs(), pollInterval);
+    checkJobs();
 };
+
+/**
+ * Check if any of the sources for the stage have been updated
+ * If so, trigger a build.
+ */
+export const CheckAndTriggerStage = async (pipeline: PipelineDefinition, stage: StageDefinition, creatorName: string) => {
+    let needsToRun = false;
+    for (const source of stage.sources) {
+        // TODO: authorized repos
+        const refs = await GetGitRefs(source.url);
+
+        const {hash} = refs.find(r => r.id == source.branch || "main") ?? {};
+        if (!hash) {
+            // TODO: Handle in some manner
+            // The branch is deleted or the source is misconfigured
+            continue;
+        }
+
+        // If the hash is unmodified, do nothing
+        if (hash == source.lastHash)
+            continue;
+
+        // At this point, we know that the stage needs to run
+        needsToRun = true;
+        break;
+    }
+
+    if (needsToRun) {
+        RunPipeline(pipeline, creatorName, [stage]);
+        // RunStage(null, stage);
+    }
+}

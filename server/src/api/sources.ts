@@ -11,7 +11,7 @@ router.get('/', route(async (req, res, next) => {
         .catch(err => next(err));
 }));
 
-const getRefs = async(remote: string) => {
+export const GetGitRefs = async(remote: string) => {
     // TODO: investigate how costly this execution is.
     const { stdout } = await execa("git", ["ls-remote", remote]);
 
@@ -25,7 +25,7 @@ const getRefs = async(remote: string) => {
 }
 
 router.get('/branches', (req, res, next) => {
-    getRefs(req.query['remote'] ?? req.body.remote)
+    GetGitRefs(req.query['remote'] ?? req.body.remote)
         .then(refs =>
             refs
                 .filter(r => r.id[5] == "h") // Cheapest CPU check
@@ -36,7 +36,7 @@ router.get('/branches', (req, res, next) => {
 });
 
 router.get('/tags', (req, res, next) => {
-    getRefs(req.query['remote'] ?? req.body.remote)
+    GetGitRefs(req.query['remote'] ?? req.body.remote)
         .then(refs =>
             refs
                 .filter(r => r.id[5] == "t") // Cheapest CPU check
@@ -47,7 +47,7 @@ router.get('/tags', (req, res, next) => {
 });
 
 router.get('/remotes', (req, res, next) => {
-    getRefs(req.query.remote ?? req.body.remote)
+    GetGitRefs(req.query.remote ?? req.body.remote)
         .then(refs => res.send(refs))
         .catch(err => next(err));
 });

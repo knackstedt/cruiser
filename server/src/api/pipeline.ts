@@ -2,7 +2,8 @@ import * as express from "express";
 import { route } from '../util/util';
 import { db } from '../util/db';
 import { PipelineDefinition } from '../types/pipeline';
-import { GetAllRunningJobs, StartAgent } from '../util/kube';
+import { GetAllRunningJobs } from '../util/kube';
+import { RunPipeline } from '../util/pipeline';
 
 const router = express.Router();
 
@@ -35,40 +36,17 @@ router.use('/:id', route(async (req, res, next) => {
     next();
 }));
 
+// Endpoint for a user to manually trigger a pipeline
 router.get('/:id/start', route(async (req, res, next) => {
     const pipeline: PipelineDefinition = req['pipeline'];
 
-    const stage = pipeline.stages?.[0];
-    if (!stage) {
-        res.status(409);
-        res.send({ message: "Cannot start: pipeline doesn't have any stages to run." });
-        return;
-    }
-    if (stage.jobs?.length < 1) {
-        res.status(409);
-        res.send({ message: "Cannot start: pipeline stage doesn't have any jobs to run." });
-        return;
-    }
+    // Get an array of stage ids from query params
+    const stageIds = Array.isArray(req.query.stage) ? req.query.stage as string[] : [req.query.stage] as string[];
 
-    pipeline.stats = pipeline.stats || {
-        runCount: 0,
-        successCount: 0,
-        failCount: 0,
-        totalRuntime: 0
-    };
+    // Resolve the matching stages, ignore the others.
+    const stages = pipeline.stages.filter(s => stageIds.includes(s.id));
 
-    pipeline.stats.runCount += 1;
-
-    pipeline.lastScheduledEpoch = Date.now();
-    pipeline.lastScheduledBy = req.session.gh_user.login;
-
-    await db.merge(pipeline.id, {
-        stats: pipeline.stats,
-        lastScheduledEpoch: pipeline.lastScheduledEpoch,
-        lastScheduledBy: pipeline.lastScheduledBy
-    });
-
-    await StartAgent(pipeline, stage);
+    await RunPipeline(pipeline, req.session.gh_user.login, stages);
 
     res.send({
         message: "ok",

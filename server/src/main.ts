@@ -21,6 +21,7 @@ import { UserApi } from './api/user';
 import { CheckJobToken } from './util/token-cache';
 import { SourcesApi } from './api/sources';
 import { Guest, User } from './guards/role-guards';
+import { CronScheduler } from './util/scheduler';
 
 const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
 
@@ -101,12 +102,14 @@ const bootstrapServer = async () => {
 
 // If running as a dedicated socket instance, create
 // an otherwise empty server.
+// Also runs the schedulers in the same process.
 if (isDedicatedSocketService) {
     const server = http.createServer();
     const port = 6820;
     server.listen(port);
 
     new SocketTunnelService(server);
+    CronScheduler();
 }
 // Running as a clustered worker.
 else if (process.env['NODE_ENV'] == 'production') {
@@ -116,5 +119,6 @@ else if (process.env['NODE_ENV'] == 'production') {
 else {
     bootstrapServer().then(server => {
         new SocketTunnelService(server);
+        CronScheduler();
     })
 }

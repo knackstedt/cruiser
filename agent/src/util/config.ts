@@ -16,7 +16,7 @@ export const getConfig = async (taskId) => {
 
     const job = pipeline.stages.map(s => s.jobs).flat().find(j => j.id == kubeTask.job);
 
-    const { data: jobInstance } = await api.get<JobInstance>(`/api/odata/jobs:${environment.agentId}`)
+    const { data: jobInstance } = await api.get<JobInstance>(`/api/odata/job_instance:${environment.agentId}`)
 
     if (!pipeline || !job) {
         if (!pipeline)

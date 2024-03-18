@@ -13,7 +13,7 @@ const router = express.Router();
 router.use('/:id', route(async (req, res, next) => {
     const [table, id] = checkSurrealResource(req.params['id']).split(':');
 
-    const job = await db.query<any[]>(`SELECT * FROM jobs:${id}`);
+    const job = await db.query<any[]>(`SELECT * FROM job_instance:${id}`);
 
     if (!job) throw { message: "Job does not exist", status: 404 };
 

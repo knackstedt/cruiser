@@ -1,8 +1,10 @@
+import * as k8s from '@kubernetes/client-node';
 import { HistoryObject } from './history-object';
 import { EnvironmentVariable } from './environment';
+import { JobInstance } from './agent-task';
 
 export type BuildArtifact = {
-    id: `pipelineArtifact:${string}`
+    id: `artifact:${string}`
     label: string
     description?: string
     source: string
@@ -10,7 +12,7 @@ export type BuildArtifact = {
 }
 
 export type TaskDefinition = {
-    id: `pipelineTask:${string}`;
+    id: `pipeline_task:${string}`;
     disabled: boolean,
     commandTimeout: number
     label: string
@@ -30,7 +32,7 @@ export type TaskDefinition = {
 
     //taskOnSelfFailure: TaskDefinition
 
-    environment?: EnvironmentVariable[]
+    environment?: { name: string, value: string; }[]
 
     // Id of the agent container script the task will run
     // defaults to `command`
@@ -43,20 +45,25 @@ export type TaskDefinition = {
 }
 
 export type TaskGroupDefinition = {
-    id: `pipelineTaskGroup:${string}`
+    id: `pipeline_task_group:${string}`
     label: string
     description?: string
     order: number
-    environment?: EnvironmentVariable[]
+    disabled?: boolean
+
+
+    environment?: { name: string, value: string; }[]
     tasks?: TaskDefinition[]
 }
 
 export type JobDefinition = {
-    id: `pipelineJob:${string}`;
+    id: `pipeline_job:${string}`;
     label: string
     description?: string
-    elasticAgentId?: string
     order: number
+    disabled?: boolean
+
+    elasticAgentId?: string
     timeout?: string
     lastRun?: string
     lastTriggerReason?: "cron" | "changes" | "manual" | "webhook"
@@ -64,7 +71,19 @@ export type JobDefinition = {
 
     taskGroups: TaskGroupDefinition[]
     artifacts?: BuildArtifact[]
-    environment?: EnvironmentVariable[]
+    environment?: { name: string, value: string; }[]
+
+    kubeNamespace?: string,
+    kubeJobAnnotations?: { [key: string]: string },
+    kubeJobLabels?: { [key: string]: string },
+    kubeContainerTolerations?: k8s.V1Toleration[];
+    kubeContainerAnnotations?: { [key: string]: string },
+    kubeContainerLabels?: { [key: string]: string },
+    kubeContainerImage?: string,
+    kubeCpuLimit?: string;
+    kubeMemLimit?: string;
+    kubeCpuRequest?: string;
+    kubeMemRequest?: string;
 
     runCount?: number,
     invocationCount?: number
@@ -73,8 +92,19 @@ export type JobDefinition = {
     platform: `agent_${string}` | 'agentless' | `kube_${string}`
 }
 
+export type Webhook = {
+    id: `pipeline_stage_webhook:${string}`,
+    label: string,
+    description?: string,
+
+    url?: string,
+    method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
+    headers?: [string, string][],
+    body?: string
+}
+
 export type StageDefinition = {
-    id: `pipelineStage:${string}`
+    id: `pipeline_stage:${string}`
     label: string
     description?: string
     lastRunState?: string
@@ -84,12 +114,21 @@ export type StageDefinition = {
     cleanupArtifacts?: boolean
     cleanDirectory?: boolean
     autoTriggerOnPreviousStageCompletion?: boolean
-    environment?: EnvironmentVariable[]
-    jobs?: JobDefinition[]
+    environment?: { name: string, value: string; }[]
+    jobs?: JobDefinition[],
+
+    sources?: SourceConfiguration[];
+
+    stageTrigger?: string[]
+    cronTrigger?: string,
+    cronExcludeAuto?: boolean,
+    runApprovers?: string[],
+    approvalCount?: number,
+    webhooks?: Webhook[];
 }
 
 export type SourceConfiguration = Partial<{
-    id: `pipelineSource:${string}`
+    id: `pipeline_source:${string}`
     label: string
     description: string
     targetPath: string
@@ -99,6 +138,9 @@ export type SourceConfiguration = Partial<{
     username: string
     password: string
     cloneDepth: number
+
+    lastHash: string,
+
     pollingBehavior: string
     pollForUpdates: boolean,
 
@@ -120,8 +162,6 @@ export type PipelineDefinition = {
     group: string
     isTemplate: boolean
 
-    isReleasePipeline: boolean,
-
     // record id for the pipeline's template
     pipelineTemplate: string,
     // If the pipeline is a clone so a user can edit and save
@@ -137,7 +177,7 @@ export type PipelineDefinition = {
 
     order: number
     stages?: StageDefinition[]
-    environment?: EnvironmentVariable[]
+    environment?: { name: string, value: string }[]
     sources?: SourceConfiguration[],
     history?: HistoryObject[]
 
@@ -151,5 +191,22 @@ export type PipelineDefinition = {
 
         // ms
         totalRuntime: number
+    }
+}
+
+export type PipelineInstance = {
+    id: `pipeline_instance:${string}`,
+    spec: PipelineDefinition,
+    metadata: unknown,
+    status: {
+        phase: "started" | "running" | "stopped" | "waiting" | "failed",
+        startEpoch: number,
+        jobInstances: JobInstance[]
+        endEpoch?: number
+    },
+    stats: {
+        successfulTaskCount: number;
+        failedTaskCount: number;
+        totalRuntime: number;
     }
 }

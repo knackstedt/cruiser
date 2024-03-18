@@ -7,7 +7,7 @@ import environment from './util/environment';
 import { FilesystemApi } from './api/filesystem';
 
 const agentId = environment.agentId;
-const taskId  = `jobs:` + agentId.toUpperCase();
+const taskId  = `job_instance:` + agentId.toUpperCase();
 
 if (!agentId || !/^[0-7][0-9A-Z]{25}$/i.test(agentId)) {
     logger.fatal({ message: "Invalid agent identifier!"})
