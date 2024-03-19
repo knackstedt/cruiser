@@ -9,13 +9,17 @@ const router = express.Router();
 
 router.get('/', route(async (req, res, next) => {
 
+    const getReleases = !!req.query['release'] || !!req.query['releases'];
+
     const [
         kubeJobs,
         [pipelines],
         [jobs]
     ] = await Promise.all([
         GetAllRunningJobs(),
-        db.query("select * from pipelines where _isUserEditInstance != true"),
+        getReleases
+            ? db.query("select * from pipeline where _isUserEditInstance != true and kind = 'release'")
+            : db.query("select * from pipeline where _isUserEditInstance != true and kind = 'build'"),
         db.query("select * from jobs where latest = true")
     ]);
 
