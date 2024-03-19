@@ -8,6 +8,7 @@
     },
     "private": true,
     "dependencies": {
+        "@kubernetes/client-node": "^0.20.0",
         "@types/shelljs": "^0.8.15",
         "adm-zip": "^0.5.10",
         "axios": "^1.6.7",
