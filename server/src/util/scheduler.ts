@@ -19,7 +19,7 @@ export const CronScheduler = () => {
     logger.info("Initializing Scheduler");
 
     const checkJobs = async () => {
-        const pipelines = await db.select<PipelineDefinition>(`pipelines`);
+        const pipelines = await db.select<PipelineDefinition>(`pipeline`);
 
         logger.info({
             msg: "Updating schedules for pipelines",
@@ -88,7 +88,8 @@ export const CronScheduler = () => {
 
     // Start an interval and immediately trigger the check
     setInterval(() => checkJobs(), pollInterval);
-    checkJobs();
+    // setTimeout(() => checkJobs(), pollInterval)
+    // checkJobs();
 };
 
 /**

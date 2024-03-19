@@ -81,7 +81,7 @@ const bootstrapServer = async () => {
 
     app.use("/api/user",      UserApi);
     app.use("/api/odata",     DatabaseTableApi());
-    app.use("/api/pipelines", PipelineApi);
+    app.use("/api/pipeline", PipelineApi);
     app.use("/api/sources",   SourcesApi);
     app.use("/api/jobs",      JobActionsApi);
     app.use("/api/pod",       TunnelApi);

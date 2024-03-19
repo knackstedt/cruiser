@@ -153,7 +153,7 @@ export type SourceConfiguration = Partial<{
 
 
 export type PipelineDefinition = {
-    id: `pipelines:${string}`
+    id: `pipeline:${string}`
     label: string
     description: string
     labelTemplate: string
@@ -161,6 +161,7 @@ export type PipelineDefinition = {
     lockingBehavior: "singleton" | "singletonNoFail" | "multiple"
     group: string
     isTemplate: boolean
+    kind: "build" | "release"
 
     // record id for the pipeline's template
     pipelineTemplate: string,
