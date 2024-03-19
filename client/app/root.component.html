@@ -14,7 +14,7 @@
 }
 @else if (isAuthenticated) {
     @defer(when isAuthenticated) {
-        <div style="display: flex; flex: 1">
+        <div style="display: flex; flex: 1; overflow: hidden">
             <app-menu [isMobile]="isMobile"></app-menu>
 
             <div class="container">

@@ -3,6 +3,10 @@
     <mat-sidenav-content>
         <div style="height: 100%; display: flex; flex-direction: column;">
             <div class="toolbar">
+                <div style="display: flex; align-items: center;" (click)="mode = 'edit'; view = 'pipeline'">
+                    <mat-icon>edit</mat-icon>
+                    {{pipeline?.label}}
+                </div>
                 <button
                     mat-flat-button
                     (click)="addStage()"
@@ -157,7 +161,7 @@
                     <div class="panel_header">
                         <span>Stage</span>
                         <div style="flex: 1"></div>
-                        <button mat-flat-button>Edit</button>
+                        <button mat-flat-button (click)="editStage(selectedStage)">Edit</button>
                     </div>
                     <mat-form-field style="width: 100%; margin: 12px 0">
                         <mat-label>Label</mat-label>
@@ -254,6 +258,30 @@
                             <mat-icon>add</mat-icon> Add
                         </button>
                     </mat-accordion>
+
+                </ng-scrollbar>
+            }
+
+            @case ("pipeline") {
+                <ng-scrollbar>
+                    <div class="panel_header">
+                        <span>Pipeline</span>
+                        <div style="flex: 1"></div>
+                    </div>
+
+                    <mat-form-field style="width: 100%; margin: 12px 0">
+                        <mat-label>Label</mat-label>
+                        <input matInput type="text" [(ngModel)]="pipeline.label" (valueChange)="dataChangeEmitter.next(0)" />
+                    </mat-form-field>
+
+                    <ngx-stackedit
+                        style="height: 200px"
+                        (onImageUpload)="fs.onImageUpload(pipeline, $event)"
+                        [(value)]="pipeline.description"
+                        (valueChange)="dataChangeEmitter.next(0)"
+                        showPreview="off"
+                        showToc="off"
+                    />
 
                 </ng-scrollbar>
             }

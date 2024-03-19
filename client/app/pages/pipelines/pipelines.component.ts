@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, QueryList, ViewChild, ViewChildren, ViewContainerRef, Inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, QueryList, ViewChild, ViewChildren, ViewContainerRef, Inject, Input } from '@angular/core';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
@@ -12,7 +12,6 @@ import { orderSort } from '../../services/utils';
 import { DialogService, Fetch, MenuItem } from '@dotglitch/ngx-common';
 import { StagePopupComponent } from 'client/app/pages/pipelines/stage-popup/stage-popup.component';
 import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
-import { PipelineHistoryComponent } from 'client/app/pages/pipelines/pipeline-history/pipeline-history.component';
 import * as k8s from '@kubernetes/client-node';
 import { JobInstance } from 'server/src/types/agent-task';
 
@@ -59,7 +58,7 @@ export class PipelinesComponent implements OnInit {
             action: async pipeline => {
                 const link = document.createElement("a");
                 link.download = pipeline.label.replace(/[^a-z0-9A-Z_\-$ ]/g, '') + '.json';
-                link.href = `/api/pipelines/${pipeline.id}`;
+                link.href = `/api/pipeline/${pipeline.id}`;
                 link.click();
                 link.remove();
             }
@@ -135,7 +134,7 @@ export class PipelinesComponent implements OnInit {
             pipelines: PipelineDefinition[],
             kubeJobs: k8s.V1Job[],
             jobs: JobInstance[]
-        }>('/api/pipelines/'));
+        }>('/api/pipeline/'));
 
         const pipelineMap = {};
         pipelines.forEach(p => pipelineMap[p.id] = p);
@@ -254,11 +253,20 @@ export class PipelinesComponent implements OnInit {
     }
 
     editPipeline(pipeline: Partial<PipelineDefinition> = {}) {
-        // this.dialog.open("pipeline-editor", 'dynamic', { inputs: { pipeline }, autoFocus: false })
-        //     .then((pipeline: PipelineDefinition) => {
-        //         this.ngOnInit();
-        //     })
         location.hash = `#/Pipelines/${pipeline.id}`;
+    }
+
+    newPipeline(group: string) {
+        this.fetch.post<PipelineDefinition>(`/api/odata/pipeline`, {
+            label: 'My new Pipeline',
+            state: 'new',
+            order: -1,
+            group,
+            kind: "build"
+        })
+        .then(res => {
+            location.hash = `#/Pipelines/${res.id}`;
+        })
     }
 
     viewHistory(pipeline: PipelineDefinition) {
@@ -294,14 +302,14 @@ export class PipelinesComponent implements OnInit {
     }
 
     async triggerPipeline(targetPipeline: PipelineDefinition) {
-        await this.fetch.get(`/api/pipelines/${targetPipeline.id}/start`)
+        await this.fetch.get(`/api/pipeline/${targetPipeline.id}/start`)
             .then(({ pipeline }) => {
                 Object.assign(targetPipeline, pipeline);
             });
     }
 
     async triggerPipelineWithOptions(pipeline: PipelineDefinition) {
-        await this.fetch.get(`/api/pipelines/${pipeline.id}/start`);
+        await this.fetch.get(`/api/pipeline/${pipeline.id}/start`);
         pipeline.stats = pipeline.stats ?? { runCount: 0, successCount: 0, failCount: 0, totalRuntime: 0 };
         pipeline.stats.runCount += 1;
     }

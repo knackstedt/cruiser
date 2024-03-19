@@ -77,6 +77,7 @@ mat-icon.material-icons {
 .mat-mdc-tab-group {
     height: 100%;
     width: 100%;
+    overflow: hidden;
 
     .mat-mdc-tab-body-wrapper {
         height: 100%;

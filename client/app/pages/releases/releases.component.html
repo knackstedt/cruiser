@@ -1,0 +1,99 @@
+
+<div class="contents">
+    <div class="sidebar" style="width: 400px;">
+        <div style="padding: 12px; border-bottom: 1px solid #2b2b2b">
+            <mat-form-field style="width: 100%;">
+                <mat-label>Search</mat-label>
+                <input matInput type="text" [(ngModel)]="filter" />
+            </mat-form-field>
+            <div style="display: flex; align-items: center;">
+                <mat-icon>list</mat-icon>
+                <mat-icon>grid</mat-icon>
+                <div style="flex: 1"></div>
+                <button mat-flat-button (click)="newPipeline()">New</button>
+            </div>
+        </div>
+        <ng-scrollbar
+            class=""
+            style="height: 100%; width: 100%"
+            track="vertical"
+            pointerEventsMethod="scrollbar"
+        >
+            <cdk-virtual-scroll-viewport
+                itemSize="72"
+                scrollViewport
+            >
+                <div
+                    style="height: 72px"
+                    class="row"
+                    *cdkVirtualFor="let pipeline of pipelines"
+                    [class.selected]="pipeline == selectedPipeline"
+                    (click)="selectPipeline(pipeline)"
+                >
+                    <div>
+                        <div class="title">{{pipeline.label}}</div>
+                        <div class="active_stage">{{pipeline.id}}</div>
+                    </div>
+                    <div style="flex: 1"></div>
+                    <div (click)="1">
+                        @if (pipeline.isFavorite) {
+                            <mat-icon>star</mat-icon>
+                        }
+                        @else {
+                            <mat-icon>star</mat-icon>
+                        }
+                    </div>
+                </div>
+            </cdk-virtual-scroll-viewport>
+        </ng-scrollbar>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column;">
+        <div class="header">
+            <span class="title">
+                {{selectedPipeline?.label ?? 'Select a Pipeline'}}
+            </span>
+            <div style="flex: 1"></div>
+
+            <button mat-flat-button>
+                <mat-icon>edit</mat-icon>
+                Edit
+            </button>
+            <button mat-flat-button color="primary">
+                <mat-icon>rocket</mat-icon>
+                Run
+            </button>
+        </div>
+
+        <div>
+            <div>Release</div>
+            <div>Created</div>
+            <div>Stage</div>
+        </div>
+
+        <ng-scrollbar
+            style="height: 100%; width: 100%; flex: 1"
+            track="vertical"
+            pointerEventsMethod="scrollbar"
+        >
+            <cdk-virtual-scroll-viewport
+                itemSize="150"
+                scrollViewport
+            >
+                <div class="row" *cdkVirtualFor="let instance of pipelineInstances">
+                    <div>
+                        <div>{{instance.label}}</div>
+                        <div>{{instance.id}} - {{instance.branch}}</div>
+                    </div>
+                    <div>{{instance.createdOn}}</div>
+                    <div>
+                        @for (stage of instance.stages; track stage) {
+                            <div>
+                                {{stage.label}}
+                            </div>
+                        }
+                    </div>
+                </div>
+            </cdk-virtual-scroll-viewport>
+        </ng-scrollbar>
+    </div>
+</div>

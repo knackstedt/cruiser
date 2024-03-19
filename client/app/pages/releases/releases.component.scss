@@ -1,0 +1,55 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.header {
+    height: 64px;
+    flex: 0 0 64px;
+    display: flex;
+    align-items: center;
+    background-color: #181818;
+    border-bottom: 1px solid #2b2b2b;
+    padding: 0 24px;
+    gap: 12px;
+
+    .title {
+        font-weight: 600;
+        font-size: 20px;
+    }
+}
+
+.contents {
+    display: flex;
+    flex: 100%;
+    overflow: hidden;
+}
+
+.sidebar {
+    background-color: #181818;
+    border-right: 1px solid #2b2b2b;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 12px;
+    cursor: pointer;
+
+    &.selected {
+        background-color: #37373d;
+    }
+
+    &:focus.selected {
+        background-color: #04395e;
+    }
+    .title {
+        font-weight: 600;
+    }
+    .active_stage {
+        color: var(--text-subtle-color);
+    }
+}

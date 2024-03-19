@@ -16,9 +16,14 @@ export const Pages: ComponentRegistration[] = [
         hidden: true
     },
     {
-        id: 'Test',
-        // matcher: /Pipelines\/(?<pipeline_id>[^/]+)/i,
-        load: () => import('./pages/pipelines/editor/stages/stages.component')
+        id: 'Releases',
+        load: () => import('./pages/releases/releases.component'),
+        icon: "new_release"
+    },
+    {
+        hidden: true,
+        matcher: /Releases\/(?<pipeline_id>[^/]+)/i,
+        load: () => import('./pages/releases/release-editor/release-editor.component')
     },
     // { id: 'Agents', load: () => import('./pages/agents/agents.component'), icon: "dns" },
     { id: 'Sources', load: () => import('./pages/sources/sources.component'), icon: "source" },

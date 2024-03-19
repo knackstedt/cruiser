@@ -83,7 +83,6 @@ export class StageEditorComponent {
     constructor(
         @Optional() @Inject(MAT_DIALOG_DATA) private readonly data,
         private readonly fetch: Fetch,
-        private readonly editor: PipelineEditorComponent,
         public  readonly fs: FileUploadService
     ) {
         this.pipeline = data?.pipeline;

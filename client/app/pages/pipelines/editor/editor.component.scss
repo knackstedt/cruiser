@@ -18,6 +18,7 @@ mat-tab-group ::ng-deep {
     padding: 0 12px;
     gap: 12px;
     height: 48px;
+    flex: 0 0 48px;
 
     --mat-form-field-container-height: 32px;
     --mat-form-field-container-vertical-padding: 4px;
@@ -30,3 +31,4 @@ mat-tab-group ::ng-deep {
         }
     }
 }
+

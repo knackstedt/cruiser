@@ -1,6 +1,6 @@
 import { ApplicationRef, ElementRef, Input, ViewChild, Injector, Component } from '@angular/core';
 import { Fetch, ReactMagicWrapperComponent, VscodeComponent } from '@dotglitch/ngx-common';
-import { ReactFlowComponent } from './reactflow/reactflow-wrapper';
+import { ReactFlowComponent } from '../../pipelines/editor/stages/reactflow/reactflow-wrapper';
 import { PipelineDefinition, SourceConfiguration, StageDefinition, Webhook } from 'types/pipeline';
 import { ulid } from 'ulidx';
 import { Edge, Handle, MarkerType, Node, Position } from 'reactflow';
@@ -11,7 +11,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { NgScrollbarModule } from 'ngx-scrollbar';
-import { MatRadioModule } from '@angular/material/radio';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FormsModule } from '@angular/forms';
 import { MatSelectModule } from '@angular/material/select';
@@ -21,10 +20,15 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { StackEditorComponent } from 'ngx-stackedit';
 import { Subject, debounceTime } from 'rxjs';
 import { FileUploadService } from 'client/app/services/file-upload.service';
+import { MatDialog } from '@angular/material/dialog';
+import { StageEditorComponent } from 'client/app/pages/pipelines/editor/stages/stage-editor/stage-editor.component';
+import { ToastrService } from 'ngx-toastr';
+import { UserService } from 'client/app/services/user.service';
+import { PipelineEditorPartial } from 'client/app/utils/pipeline-editor.partial';
 
 
 @Component({
-    selector: 'app-stages',
+    selector: 'app-release-editor',
     standalone: true,
     imports: [
         ReactFlowComponent,
@@ -41,15 +45,14 @@ import { FileUploadService } from 'client/app/services/file-upload.service';
         VscodeComponent,
         FormsModule
     ],
-    templateUrl: './stages.component.html',
-    styleUrl: './stages.component.scss'
+    templateUrl: './release-editor.component.html',
+    styleUrl: './release-editor.component.scss'
 })
-export class StagesComponent {
+export class StagesComponent extends PipelineEditorPartial {
     @ViewChild("canvas") canvasRef: ElementRef<any>
 
     get container() { return this.canvasRef.nativeElement }
 
-    @Input() pipeline: PipelineDefinition;
 
     nodes: Node[] = [];
     edges: Edge[] = [];
@@ -105,12 +108,20 @@ export class StagesComponent {
     ]
 
     constructor(
-        private readonly fetch: Fetch,
         private readonly injector: Injector,
         private readonly appRef: ApplicationRef,
-        public readonly fs: FileUploadService
+        public readonly fs: FileUploadService,
+        private readonly dialog: MatDialog,
+        fetch: Fetch,
+        toaster: ToastrService,
+        user: UserService
     ) {
+        super(toaster, fetch, user);
+    }
 
+    async ngAfterViewInit() {
+        if (!this.pipeline.id) return;
+        this.renderGraph();
     }
 
     ngOnDestroy() {
@@ -187,13 +198,13 @@ export class StagesComponent {
         this.patchPipeline();
     }
 
-    async patchPipeline() {
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
-    }
-
     editStage(stage) {
+        this.dialog.open(StageEditorComponent, {
+            data: {
+                pipeline: this.pipeline,
+                stage
+            }
+        })
         this.renderGraph();
     }
 
@@ -205,12 +216,9 @@ export class StagesComponent {
         this.renderGraph();
     }
 
-    async ngAfterViewInit() {
-        this.pipeline = await this.fetch.get(`/api/odata/pipelines:01HRX9XJ2J7CNTBP29RKM6RBCK`)
-        this.renderGraph();
-    }
-
     renderGraph() {
+        if (!this.pipeline) return;
+
         const edges: Edge[] = [];
         const nodes: Node[] = this.pipeline.stages.map(stage => {
             for (const precedingStageId of (stage.stageTrigger ?? [])) {
