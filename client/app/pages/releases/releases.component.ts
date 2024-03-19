@@ -76,4 +76,11 @@ export class ReleasesComponent implements OnInit {
                 location.hash = `#/Releases/${res.id}`;
             });
     }
+
+    async triggerPipeline() {
+        await this.fetch.get(`/api/pipeline/${this.selectedPipeline.id}/start`)
+            .then(({ pipeline }) => {
+                Object.assign(this.selectedPipeline, pipeline);
+            });
+    }
 }

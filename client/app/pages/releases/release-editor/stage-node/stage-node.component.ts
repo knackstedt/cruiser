@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MenuDirective, MenuItem } from '@dotglitch/ngx-common';
 import { StageEditorComponent } from 'client/app/pages/pipelines/editor/stages/stage-editor/stage-editor.component';
 import { StageDefinition } from 'types/pipeline';
 
@@ -13,7 +14,8 @@ import { StageDefinition } from 'types/pipeline';
     imports: [
         MatButtonModule,
         MatIconModule,
-        MatTooltipModule
+        MatTooltipModule,
+        MenuDirective
     ],
     standalone: true
 })
@@ -21,6 +23,7 @@ export class StageNodeComponent {
 
     @Input('data') stage: StageDefinition;
     @Input() editing = true;
+    @Input() contextMenu: MenuItem[] = [];
 
     @Output() onPrerequisiteClick = new EventEmitter();
     @Output() onJobsClick = new EventEmitter();

@@ -1,11 +1,11 @@
 import { ApplicationRef, ElementRef, Input, ViewChild, Injector, Component } from '@angular/core';
-import { Fetch, ReactMagicWrapperComponent, VscodeComponent } from '@dotglitch/ngx-common';
-import { ReactFlowComponent } from '../../pipelines/editor/stages/reactflow/reactflow-wrapper';
+import { Fetch, MenuItem, ReactMagicWrapperComponent, VscodeComponent } from '@dotglitch/ngx-common';
+import { ReactFlowComponent } from './reactflow/reactflow-wrapper';
 import { PipelineDefinition, SourceConfiguration, StageDefinition, Webhook } from 'types/pipeline';
 import { ulid } from 'ulidx';
 import { Edge, Handle, MarkerType, Node, Position } from 'reactflow';
 import dagre from '@dagrejs/dagre';
-import { StageNodeComponent } from 'client/app/pages/pipelines/editor/stages/stage-node/stage-node.component';
+import { StageNodeComponent } from 'client/app/pages/releases/release-editor/stage-node/stage-node.component';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -61,7 +61,12 @@ export class StagesComponent extends PipelineEditorPartial {
             StageNodeComponent,
             this.appRef,
             this.injector,
-            {},
+            {
+                contextMenu: [
+                    { label: "Edit Stage", action: s => this.editStage(s) },
+                    { label: "Delete Stage", action: s => this.deleteStage(s) }
+                ] as MenuItem<StageDefinition>[]
+            },
             {
                 onJobsClick:         ({ stage }) => (this.mode = "view") && (this.view = 'jobs')           && this.selectStage(stage),
                 onNodeClick:         ({ stage }) => (this.mode = "view") && (this.view = 'stage')          && this.selectStage(stage),
@@ -124,6 +129,14 @@ export class StagesComponent extends PipelineEditorPartial {
         this.renderGraph();
     }
 
+    override async ngOnInit(): Promise<void> {
+        await super.ngOnInit();
+
+        if (this.pipeline.id) {
+            this.renderGraph();
+        }
+    }
+
     ngOnDestroy() {
         this.subscriptions.forEach(s => s.unsubscribe());
     }
@@ -149,9 +162,7 @@ export class StagesComponent extends PipelineEditorPartial {
 
         this.pipeline.stages.push(stage);
 
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
+        this.patchPipeline();
         this.renderGraph();
     }
 
@@ -162,9 +173,7 @@ export class StagesComponent extends PipelineEditorPartial {
 
         this.pipeline.stages.push(newStage);
 
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
+        this.patchPipeline();
         this.renderGraph();
     }
 
@@ -198,7 +207,7 @@ export class StagesComponent extends PipelineEditorPartial {
         this.patchPipeline();
     }
 
-    editStage(stage) {
+    editStage(stage: StageDefinition) {
         this.dialog.open(StageEditorComponent, {
             data: {
                 pipeline: this.pipeline,
@@ -210,9 +219,8 @@ export class StagesComponent extends PipelineEditorPartial {
 
     async deleteStage(stage) {
         this.pipeline.stages = this.pipeline.stages.filter(s => s != stage);
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
+
+        this.patchPipeline();
         this.renderGraph();
     }
 
@@ -220,7 +228,7 @@ export class StagesComponent extends PipelineEditorPartial {
         if (!this.pipeline) return;
 
         const edges: Edge[] = [];
-        const nodes: Node[] = this.pipeline.stages.map(stage => {
+        const nodes: Node[] = this.pipeline.stages?.map(stage => {
             for (const precedingStageId of (stage.stageTrigger ?? [])) {
                 edges.push({
                     source: precedingStageId.split(':')[1],

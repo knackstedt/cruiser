@@ -1,5 +1,9 @@
 
-<div class="container">
+<div
+    class="container"
+    [ngx-contextmenu]="contextMenu"
+    [ngx-menu-context]="stage"
+>
     <div class="predeployment">
         @if (editing) {
             <button
@@ -113,7 +117,8 @@
     >
         <div class="label" [matTooltip]="stage.label">{{stage.label}}</div>
         <div>
-            {{stage.jobs?.length ?? 0}}
+            <!-- {{stage.jobs?.length ?? 0}} -->
+            {{contextMenu.length}}
             @if (stage.jobs?.length == 1) {
                 Job,
             }

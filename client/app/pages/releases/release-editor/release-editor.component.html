@@ -271,7 +271,7 @@
 
                     <mat-form-field style="width: 100%; margin: 12px 0">
                         <mat-label>Label</mat-label>
-                        <input matInput type="text" [(ngModel)]="pipeline.label" (valueChange)="dataChangeEmitter.next(0)" />
+                        <input matInput type="text" [(ngModel)]="pipeline.label" (ngModelChange)="dataChangeEmitter.next(0)" />
                     </mat-form-field>
 
                     <ngx-stackedit

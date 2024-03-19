@@ -9,7 +9,7 @@ import { ReactFlowWrappableComponent } from './reactflow';
 @Component({
     selector: 'ngx-reactflow',
     template: ``,
-    styleUrls: ['../../../../../../../node_modules/reactflow/dist/style.css'],
+    styleUrls: ['../../../../../../node_modules/reactflow/dist/style.css'],
     standalone: true,
     encapsulation: ViewEncapsulation.None
 })

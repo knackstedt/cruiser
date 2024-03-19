@@ -54,11 +54,13 @@
             </span>
             <div style="flex: 1"></div>
 
-            <button mat-flat-button>
-                <mat-icon>edit</mat-icon>
-                Edit
-            </button>
-            <button mat-flat-button color="primary">
+            <a href="#/Releases/{{selectedPipeline.id}}">
+                <button mat-flat-button>
+                    <mat-icon>edit</mat-icon>
+                    Edit
+                </button>
+            </a>
+            <button mat-flat-button color="primary" (click)="triggerPipeline()">
                 <mat-icon>rocket</mat-icon>
                 Run
             </button>
