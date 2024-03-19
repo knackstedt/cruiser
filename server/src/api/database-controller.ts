@@ -157,7 +157,30 @@ export const DatabaseTableApi = () => {
 
         const hasFilter = queryString?.includes("$filter");
 
-        const query = hasFilter ? createQuery(decodeURIComponent(queryString), {
+        let finalQuery: string[] = [];
+        for (let i = 0; i < queryString.length; i++) {
+            const char = queryString[i];
+
+            if (char == '\'') {
+                const to = queryString.indexOf('\'', i);
+                if (to == -1) {
+                    throw { status: 400, message: "Malformed Odata" }
+                }
+
+                finalQuery.push(queryString.slice(i, to));
+
+                i = to;
+                continue;
+            }
+            if (char == '.') {
+                finalQuery.push('__DOT__');
+                continue;
+            }
+            finalQuery.push(char);
+        }
+        const finalQueryString = finalQuery.join('');
+
+        const query = hasFilter ? createQuery(decodeURIComponent(finalQueryString), {
             type: SQLLang.SurrealDB
         }) : {} as Visitor;
 
@@ -168,7 +191,15 @@ export const DatabaseTableApi = () => {
             skip,
             limit,
             orderby
-        } = query;
+        } = (() => {
+            let { select, where, parameters, skip, limit, orderby } = query;
+
+            select  = select.replace(/__DOT__/g, '.');
+            where   = where.replace(/__DOT__/g, '.');
+            orderby = orderby.replace(/__DOT__/g, '.');
+
+            return { select, where, parameters, skip, limit, orderby };
+        })()
 
         const props = {};
         parameters?.forEach((value, key) => props[key] = value);
