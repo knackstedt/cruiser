@@ -11,7 +11,7 @@ import { validateJobCanRun } from './util/job-validator';
 export const RunAgentProcess = async (taskId: string) => {
     const { job, pipeline, kubeTask, jobInstance } = await getConfig(taskId);
 
-    const socket = await getSocket(pipeline, job)
+    const socket = await getSocket(pipeline, job);
     const logger = await getSocketLogger(socket);
     const terminal = await getSocketTerminal(socket);
     await BindSocketBreakpoint(socket);

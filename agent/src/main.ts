@@ -65,5 +65,5 @@ RunAgentProcess(taskId)
         logger.error(ex)
     })
     .then(() => {
-        // process.exit(0)
+        process.exit(0)
     })
