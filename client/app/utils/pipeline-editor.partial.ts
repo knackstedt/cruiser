@@ -2,11 +2,13 @@ import { Component, Input } from '@angular/core';
 import { Fetch } from '@dotglitch/ngx-common';
 import { UserService } from 'client/app/services/user.service';
 import { ToastrService } from 'ngx-toastr';
-import { PipelineDefinition, SourceConfiguration } from 'types/pipeline';
+import { PipelineDefinition } from 'types/pipeline';
 import { ulid } from 'ulidx';
 
 @Component({ template: '' })
 export class PipelineEditorPartial {
+
+    readonly pipelineKind: "build" | "release" = "build";
 
     // Incoming pipeline
     @Input() pipeline_id: string;
@@ -93,7 +95,7 @@ export class PipelineEditorPartial {
                     ...this._pipeline,
                     _sourceId: this._pipeline.id,
                     id: undefined,
-                    kind: "build",
+                    kind: this.pipelineKind,
                     _isUserEditInstance: true,
                     _userEditing: this.user.value.login
                 });

@@ -4,9 +4,9 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Fetch, FilemanagerComponent, MenuDirective, NGX_WEB_COMPONENTS_CONFIG, NgxFileManagerConfiguration, TooltipDirective } from '@dotglitch/ngx-common';
 import { JobDefinition } from 'types/pipeline';
-import { XtermWrapperComponent } from 'client/app/pages/pipelines/job-details/xterm-wrapper/xterm-wrapper.component';
-import { JobLogsComponent } from 'client/app/pages/pipelines/job-details/job-logs/job-logs.component';
 import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
+import { XtermWrapperComponent } from 'client/app/pages/stage-popup/job-details/xterm-wrapper/xterm-wrapper.component';
+import { JobLogsComponent } from 'client/app/pages/stage-popup/job-details/job-logs/job-logs.component';
 
 @Component({
     selector: 'app-job-details',

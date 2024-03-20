@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { JobDefinition, PipelineDefinition, StageDefinition } from 'types/pipeline';
 import { TableModule } from 'primeng/table';
 import { MatDialog } from '@angular/material/dialog';
-import { JobDetailsComponent } from '../job-details/job-details.component';
+import { JobDetailsComponent } from './job-details/job-details.component';
 import { Fetch } from '@dotglitch/ngx-common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';

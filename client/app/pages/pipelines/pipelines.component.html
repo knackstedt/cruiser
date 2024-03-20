@@ -85,7 +85,7 @@
                                         <div
                                             class="stage-block {{stage['_latestJob']?.state}}"
                                             [class.empty]="stage.jobs?.length == 0"
-                                            [class.running]="!['frozen','complete','failed',null].includes(stage['_latestJob']?.state)"
+                                            [class.running]="!['frozen','finished','failed',null].includes(stage['_latestJob']?.state)"
 
                                             [ngx-tooltip]="tooltip"
                                             [ngx-tooltip-context]="stage"

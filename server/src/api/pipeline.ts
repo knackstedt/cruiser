@@ -45,10 +45,15 @@ router.get('/:id/start', route(async (req, res, next) => {
     const pipeline: PipelineDefinition = req['pipeline'];
 
     // Get an array of stage ids from query params
-    const stageIds = Array.isArray(req.query.stage) ? req.query.stage as string[] : [req.query.stage] as string[];
+    const stageIds = (Array.isArray(req.query['stage'])
+        ? req.query['stage'] as string[]
+        : [req.query['stage']] as string[])
+        .filter(r => !!r);
 
     // Resolve the matching stages, ignore the others.
-    const stages = pipeline.stages.filter(s => stageIds.includes(s.id));
+    const stages = stageIds.length == 0
+        ? pipeline.stages
+        : pipeline.stages?.filter(s => stageIds.includes(s.id));
 
     await RunPipeline(pipeline, req.session.gh_user.login, stages);
 

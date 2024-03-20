@@ -10,7 +10,7 @@ import { JobDefinition, PipelineDefinition } from 'types/pipeline';
 import Sortable from 'sortablejs';
 import { orderSort } from '../../services/utils';
 import { DialogService, Fetch, MenuItem } from '@dotglitch/ngx-common';
-import { StagePopupComponent } from 'client/app/pages/pipelines/stage-popup/stage-popup.component';
+import { StagePopupComponent } from 'client/app/pages/stage-popup/stage-popup.component';
 import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
 import * as k8s from '@kubernetes/client-node';
 import { JobInstance } from 'server/src/types/agent-task';
