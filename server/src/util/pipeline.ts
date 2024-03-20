@@ -37,14 +37,14 @@ export const RunPipeline = async (pipeline: PipelineDefinition, user: string, tr
 
     // TODO: Add custom logic for calculating release id
     const [ qResult ] = await db.query(`select count() from pipeline_instance where spec.id = '${pipeline.id}' group all`);
-    const { count } = qResult[0];
+    const { count } = qResult[0] ?? {};
 
     // Create a pipeline instance for this run
     // Load in a soft clone of the pipeline so we know what the current release
     // instance needs to run from
     const [ instance ] = await db.create<PipelineInstance>("pipeline_instance:ulid()", {
         spec: pipeline,
-        identifier: count.toString(),
+        identifier: (count || 1).toString(),
         metadata: {
             "$triggered_by": user,
             "$trigger_stages": triggeredStages?.map(ts => ts.id).join(',')
@@ -160,7 +160,8 @@ const createKubeJob = async (
                 "created-by": "$cruiser",
                 "pipeline-id": pipeline.id,
                 "stage-id": stage.id,
-                "job-id": jobInstance.id,
+                "job-id": jobDefinition.id,
+                "job-instance-id": jobInstance.id,
                 ...jobDefinition?.kubeJobAnnotations
             },
             labels: jobDefinition?.kubeJobLabels,
