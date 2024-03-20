@@ -158,7 +158,7 @@ export const DatabaseTableApi = () => {
         const hasFilter = queryString?.includes("$filter");
 
         let finalQuery: string[] = [];
-        for (let i = 0; i < queryString.length; i++) {
+        for (let i = 0; i < queryString?.length; i++) {
             const char = queryString[i];
 
             if (char == '\'') {
@@ -178,7 +178,7 @@ export const DatabaseTableApi = () => {
             }
             finalQuery.push(char);
         }
-        const finalQueryString = finalQuery.join('');
+        const finalQueryString = finalQuery.join('').replace(/[&?]\$fetch=[^&]+/, '');
 
         const query = hasFilter ? createQuery(decodeURIComponent(finalQueryString), {
             type: SQLLang.SurrealDB
@@ -194,12 +194,28 @@ export const DatabaseTableApi = () => {
         } = (() => {
             let { select, where, parameters, skip, limit, orderby } = query;
 
-            select  = select.replace(/__DOT__/g, '.');
-            where   = where.replace(/__DOT__/g, '.');
-            orderby = orderby.replace(/__DOT__/g, '.');
+            select  = select?.replace(/__DOT__/g, '.');
+            where   = where?.replace(/__DOT__/g, '.');
+            orderby = orderby?.replace(/__DOT__/g, '.')
+                              .replace(/\]/g, '')
+                              .replace(/\[/g, '');
 
             return { select, where, parameters, skip, limit, orderby };
         })()
+
+        const fetch = (() => {
+            const fetchPar = req.query['$fetch'];
+            if (!fetchPar) return '';
+
+            const fields = !Array.isArray(fetchPar) ? [fetchPar] : fetchPar;
+            const fetchStr = fields.join(", ");
+
+            // Validate that the format is generally safe to execute.
+            if (!/^(?:[a-zA-Z_\.]+?)(?:, [a-zA-Z_\.]+?)*$/.test(fetchStr))
+                throw { status: 400, message: "Malformed $fetch" };
+
+            return fetchStr;
+        })();
 
         const props = {};
         parameters?.forEach((value, key) => props[key] = value);
@@ -215,7 +231,8 @@ export const DatabaseTableApi = () => {
             `${where ? 'WHERE (' + where + ')' : ''}`,
             (typeof orderby == "string" && orderby != '1') ? `ORDER BY ${orderby}` : '',
             typeof limit == "number" ? `LIMIT ${limit}` : '',
-            typeof skip == "number" ? `START ${skip}` : ''
+            typeof skip == "number" ? `START ${skip}` : '',
+            `${fetch ? 'FETCH ' + fetch : ''}`
         ].join(' ');
         const [ data ] = await db.query(sql, props);
 
