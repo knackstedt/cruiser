@@ -1,6 +1,8 @@
 import fs, { stat } from 'fs-extra';
 import * as k8s from '@kubernetes/client-node';
 import { logger } from './logger';
+import { db } from './db';
+import { JobInstance } from '../types/agent-task';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
@@ -49,6 +51,7 @@ export const WatchAndFlushJobs = async () => {
                 logStore,
                 job.metadata.annotations['pipeline-id'],
                 job.metadata.annotations['stage-id'],
+                job.metadata.annotations['job-id'],
             ].join('/');
 
             // Create the target dir
@@ -56,18 +59,26 @@ export const WatchAndFlushJobs = async () => {
 
             // Write the file to disk.
             await fs.writeFile(
-                dir + '/' + job.metadata.annotations['job-id'] + ".log",
+                dir + '/' + job.metadata.annotations['job-instance-id'] + ".log",
                 log
             );
 
+            const [jobInstance] = await db.select<JobInstance>(job.metadata.annotations['job-instance-id']);
+
+            // If the jobinstance failed without ending up at a known
+            // ending state, we will infer the end state based on the
+            // pod exit code.
+            if (!["finished", "failed"].includes(jobInstance.state)) {
+                jobInstance.state =
+                    jobPod.status.phase == "Succeeded" ? "finished" :
+                    "failed";
+
+                await db.merge(jobInstance.id, jobInstance);
+            }
+
             // Cleanup the job now that the log has been persisted
             await k8sBatchApi.deleteNamespacedJob(job.metadata.name, job.metadata.namespace);
-
-            // const req = await k8sLog.log(namespace, jobPod.metadata.name, podName, {}, {
-            //     follow: true,
-            //     pretty: false,
-            //     timestamps: false,
-            // });
+            await k8sApi.deleteNamespacedPod(jobPod.metadata.name, jobPod.metadata.namespace);
         }
     }
 
