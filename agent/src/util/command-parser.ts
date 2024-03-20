@@ -14,10 +14,10 @@ const parserRx = /(?<env>(?:(?:[A-Z0-9_-]+)=(?:[A-Z0-9_-]+) )+)(?<cmd>[^ =]+) (?
 export const ParseCommand = (commandInput: string) => {
     commandInput = commandInput.replace(/[\n]/g, '');
 
-    const { env, cmd, args } = commandInput.match(parserRx).groups;
+    const { env, cmd, args } = commandInput.match(parserRx)?.groups ?? {};
 
     if (!cmd) {
-        throw new Error("No command specified.")
+        throw new Error("No command specified.");
     }
 
     const environment = env.split(/\s+/) // split whitespace
