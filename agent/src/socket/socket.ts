@@ -2,6 +2,7 @@ import { Socket, io } from "socket.io-client";
 import environment from '../util/environment';
 import { getLogger } from '../util/logger';
 import { JobDefinition, PipelineDefinition } from '../../types/pipeline';
+import { DefaultEventsMap } from '@socket.io/component-emitter';
 
 const logger = getLogger("agent");
 const showDebug = !!process.env['AGENT_WEBSOCKETS_VERBOSE'];
@@ -28,7 +29,7 @@ export const getSocket = async (pipeline: PipelineDefinition, job: JobDefinition
             })
         }
 
-        await new Promise((res, rej) => {
+        return new Promise<Socket<DefaultEventsMap, DefaultEventsMap>>((res, rej) => {
             socket.on("connect", () => {
                 logger.info("Socket connected");
                 res(socket);
