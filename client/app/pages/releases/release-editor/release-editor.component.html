@@ -13,6 +13,19 @@
                 >
                     add stage
                 </button>
+                <div style="flex: 1"></div>
+                <button
+                    mat-flat-button
+                    (click)="cancel()"
+                >
+                    Cancel
+                </button>
+                <button
+                    mat-flat-button
+                    (click)="save()"
+                >
+                    Save
+                </button>
             </div>
             <ngx-reactflow
                 [nodes]="nodes"
@@ -22,25 +35,23 @@
         </div>
     </mat-sidenav-content>
     <mat-sidenav mode="side" position="end" [opened]="true">
-        @switch (view) {
-            @case ("schedule") {
-                <ng-scrollbar>
+        <ng-scrollbar>
+            @switch (view) {
+                @case ("schedule") {
                     <div class="panel_header">Schedule</div>
                     <mat-form-field>
                         <mat-label>CRONTAB Schedule</mat-label>
                         <input matInput type="text" [(ngModel)]="selectedStage.cronTrigger" (valueChange)="dataChangeEmitter.next(0)"/>
                     </mat-form-field>
 
-                    <mat-form-field>
+                    <!-- <mat-form-field> -->
                         <mat-checkbox [(ngModel)]="selectedStage.cronExcludeAuto" (valueChange)="dataChangeEmitter.next(0)">
                             Only automatically trigger on CRONTAB execution
                         </mat-checkbox>
-                    </mat-form-field>
-                </ng-scrollbar>
-            }
+                    <!-- </mat-form-field> -->
+                }
 
-            @case ("approver") {
-                <ng-scrollbar>
+                @case ("approver") {
                     <div class="panel_header">Approvers</div>
 
                     <mat-form-field style="width: 100%;">
@@ -65,11 +76,9 @@
                         <mat-label>Minimum number of approvals to run</mat-label>
                         <input matInput type="number" min="0" [(ngModel)]="selectedStage.approvalCount" (valueChange)="dataChangeEmitter.next(0)" />
                     </mat-form-field>
-                </ng-scrollbar>
-            }
+                }
 
-            @case ("webhook") {
-                <ng-scrollbar>
+                @case ("webhook") {
                     <div class="panel_header">Webhooks</div>
                     <mat-accordion [multi]="true" displayMode="flat">
                         @for (action of selectedStage.webhooks; track action) {
@@ -153,11 +162,9 @@
                             <mat-icon>add</mat-icon> Add
                         </button>
                     </mat-accordion>
-                </ng-scrollbar>
-            }
+                }
 
-            @case ("stage") {
-                <ng-scrollbar>
+                @case ("stage") {
                     <div class="panel_header">
                         <span>Stage</span>
                         <div style="flex: 1"></div>
@@ -196,12 +203,9 @@
                             }
                         </mat-select>
                     </mat-form-field>
+                }
 
-                </ng-scrollbar>
-            }
-
-            @case ("source") {
-                <ng-scrollbar>
+                @case ("source") {
                     <div class="panel_header">
                         <span>Sources</span>
                         <div style="flex: 1"></div>
@@ -258,12 +262,9 @@
                             <mat-icon>add</mat-icon> Add
                         </button>
                     </mat-accordion>
+                }
 
-                </ng-scrollbar>
-            }
-
-            @case ("pipeline") {
-                <ng-scrollbar>
+                @case ("pipeline") {
                     <div class="panel_header">
                         <span>Pipeline</span>
                         <div style="flex: 1"></div>
@@ -283,11 +284,11 @@
                         showToc="off"
                     />
 
-                </ng-scrollbar>
+                }
+                @default {
+                    Select something.
+                }
             }
-            @default {
-                Select something.
-            }
-        }
+        </ng-scrollbar>
     </mat-sidenav>
 </mat-sidenav-container>

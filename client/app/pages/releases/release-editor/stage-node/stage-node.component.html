@@ -95,6 +95,7 @@
             <button
                 [class.active]="stage.webhooks?.length > 0"
                 (click)="onWebhookEditClick.emit({component: this, stage})"
+                matTooltip="Edit Webhooks"
             >
                 <mat-icon>webhook</mat-icon>
             </button>
@@ -104,6 +105,7 @@
                 <button
                     [class.active]="stage.webhooks?.length > 0"
                     (click)="onWebhookClick.emit({component: this, stage})"
+                    matTooltip="Edit Webhooks"
                 >
                     <mat-icon>webhook</mat-icon>
                 </button>
@@ -117,8 +119,7 @@
     >
         <div class="label" [matTooltip]="stage.label">{{stage.label}}</div>
         <div>
-            <!-- {{stage.jobs?.length ?? 0}} -->
-            {{contextMenu.length}}
+            {{stage.jobs?.length ?? 0}}
             @if (stage.jobs?.length == 1) {
                 Job,
             }
@@ -136,11 +137,11 @@
     </div>
 
     <div class="buttons">
-        <button (click)="onStageAddClick.emit({component: this, stage})">
+        <button (click)="onStageAddClick.emit({component: this, stage})" matTooltip="Add dependant stage">
             <mat-icon>add</mat-icon>
         </button>
-        <button (click)="onStageCloneClick.emit({component: this, stage})">
-            <mat-icon>copy</mat-icon>
+        <button (click)="onStageCloneClick.emit({component: this, stage})" matTooltip="Clone Stage">
+            <mat-icon style="width: 24px; height: 24px; font-size: 24px;">copy</mat-icon>
         </button>
     </div>
 </div>

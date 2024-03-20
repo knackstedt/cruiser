@@ -51,6 +51,9 @@ import { PipelineEditorPartial } from 'client/app/utils/pipeline-editor.partial'
 export class StagesComponent extends PipelineEditorPartial {
     @ViewChild("canvas") canvasRef: ElementRef<any>
 
+    override readonly pipelineKind = "release";
+
+
     get container() { return this.canvasRef.nativeElement }
 
 
@@ -152,6 +155,7 @@ export class StagesComponent extends PipelineEditorPartial {
     }
 
     async addStage(partial: Partial<StageDefinition> = {}) {
+        this.pipeline.stages = this.pipeline.stages ?? [];
         const stage = {
             id: "pipeline_stage:" + ulid(),
             label: 'Stage - ' + (this.pipeline.stages.length + 1),
@@ -271,7 +275,7 @@ export class StagesComponent extends PipelineEditorPartial {
                     y: 0
                 }
             }
-        });
+        }) ?? [];
         const dagreGraph = new dagre.graphlib.Graph();
 
         dagreGraph.setDefaultEdgeLabel(() => ({}));

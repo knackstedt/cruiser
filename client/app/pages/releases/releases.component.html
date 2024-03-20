@@ -54,7 +54,7 @@
             </span>
             <div style="flex: 1"></div>
 
-            <a href="#/Releases/{{selectedPipeline.id}}">
+            <a href="#/Releases/{{selectedPipeline?.id}}">
                 <button mat-flat-button>
                     <mat-icon>edit</mat-icon>
                     Edit
@@ -78,20 +78,59 @@
             pointerEventsMethod="scrollbar"
         >
             <cdk-virtual-scroll-viewport
-                itemSize="150"
+                itemSize="64"
                 scrollViewport
             >
-                <div class="row" *cdkVirtualFor="let instance of pipelineInstances">
+                <div class="row" style="height: 64px;" *cdkVirtualFor="let instance of pipelineInstances">
                     <div>
-                        <div>{{instance.label}}</div>
+                        <div>Release - {{instance.identifier}}</div>
                         <div>{{instance.id}} - {{instance.branch}}</div>
                     </div>
-                    <div>{{instance.createdOn}}</div>
+                    <div>{{instance.stats.startEpoch}}</div>
                     <div>
-                        @for (stage of instance.stages; track stage) {
-                            <div>
-                                {{stage.label}}
+                        @for (stage of instance.spec.stages; track stage) {
+                            <div
+                                class="stage-block"
+                                [class.running]="!['frozen','finished','failed',null].includes(stage['_latestJob']?.state)"
+                                [class.empty]="stage.jobs?.length == 0"
+                                [class.queued]="stage?.['_state'] == 'queued'"
+                                [class.initializing]="stage?.['_state'] == 'initializing'"
+                                [class.cloning]="stage?.['_state'] == 'cloning'"
+                                [class.building]="stage?.['_state'] == 'building'"
+                                [class.sealing]="stage?.['_state'] == 'sealing'"
+                                [class.frozen]="stage?.['_state'] == 'frozen'"
+                                [class.failed]="stage?.['_state'] == 'failed'"
+                                [class.finished]="stage?.['_state'] == 'finished'"
+                                [matTooltip]="stage?.['_state']"
+                                [ngx-tooltip]="tooltip"
+                                [ngx-tooltip-context]="stage"
+                                [ngx-tooltip-config]="{ position: 'bottom', alignment: 'start', triggers:['click'], stayOpen: true }"
+                            >
+                                @switch(stage?.['_state']) {
+                                    @case ("queued") { <mat-icon fontIcon="pending" /> }
+                                    @case ("initializing") { <mat-icon fontIcon="pending" /> }
+                                    @case ("cloning") { <mat-icon fontIcon="downloading" /> }
+                                    @case ("building") { <mat-icon class="rotate" fontIcon="change_circle" /> }
+                                    @case ("sealing") { <mat-icon fontIcon="archive" /> }
+                                    @case ("frozen") { <mat-icon fontIcon="pause" /> }
+                                    @case ("failed") { <mat-icon fontIcon="block" /> }
+                                    @case ("finished") { <mat-icon fontIcon="check_circle" /> }
+                                }
+                                <div class="label">{{stage.label}}</div>
+
+                                @if (![null, "failed", "finished"].includes(stage?.['_state'])) {
+                                    <mat-progress-bar
+                                        color="primary"
+                                        mode="indeterminate"
+                                    />
+                                }
                             </div>
+                            <ng-template #tooltip let-data>
+                                <app-stage-popup
+                                    [pipeline]="selectedPipeline"
+                                    [stage]="data"
+                                />
+                            </ng-template>
                         }
                     </div>
                 </div>

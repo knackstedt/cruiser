@@ -46,10 +46,56 @@
     &:focus.selected {
         background-color: #04395e;
     }
+
     .title {
         font-weight: 600;
     }
     .active_stage {
         color: var(--text-subtle-color);
+    }
+}
+
+.stage-block {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 36px;
+    width: 120px;
+    background-color: #4c4c4c;
+    border: 1px solid #2b2b2b;
+    border-radius: 6px;
+    overflow: hidden;
+
+    &.running {
+        padding-bottom: 4px;
+    }
+
+    mat-icon {
+        margin-left: 8px;
+        font-size: 20px;
+        height: 20px;
+        width: 80px;
+    }
+
+    .label {
+        white-space: pre;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-right: 8px;
+    }
+
+    mat-progress-bar {
+        position: absolute;
+        bottom: 0;
+        height: 2px;
+    }
+
+    &.failed {
+        background-color: #f08469;
+        color: #5e261b
+    }
+    &.finished {
+        background-color: #69f0ae;
+        color: #1b5e20
     }
 }
