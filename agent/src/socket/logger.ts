@@ -28,26 +28,39 @@ export const getSocketLogger = async(socket: Socket) => {
 
     // Create a wrapper for the logger
     // such that all log records can be replayed
+    // Also emit all entries to stdout so that when the pod
+    // terminates, we can write the log to disk then subsequently
+    // read it to rebuild the entire log result
     return {
         debug: (obj: Object) => {
+            obj['data'] = { time: Date.now(), level: "debug", ...obj };
+            obj['ev'] = "log:agent";
             logger.debug(obj);
-            socket.emit("log:agent", { time: Date.now(), level: "debug", ...obj });
+            socket.emit(obj['ev'], obj['data']);
         },
         info: (obj: Object) => {
+            obj['data'] = { time: Date.now(), level: "info", ...obj };
+            obj['ev'] = "log:agent";
             logger.info(obj);
-            socket.emit("log:agent", { time: Date.now(), level: "info", ...obj });
+            socket.emit(obj['ev'], obj['data']);
         },
         warn: (obj: Object) => {
+            obj['data'] = { time: Date.now(), level: "warn", ...obj };
+            obj['ev'] = "log:agent";
             logger.warn(obj);
-            socket.emit("log:agent", { time: Date.now(), level: "warn", ...obj });
+            socket.emit(obj['ev'], obj['data']);
         },
         error: (obj: Object) => {
+            obj['data'] = { time: Date.now(), level: "error", ...obj };
+            obj['ev'] = "log:agent";
             logger.error(obj);
-            socket.emit("log:agent", { time: Date.now(), level: "error", ...obj });
+            socket.emit(obj['ev'], obj['data']);
         },
         fatal: (obj: Object) => {
+            obj['data'] = { time: Date.now(), level: "fatal", ...obj };
+            obj['ev'] = "log:agent";
             logger.fatal(obj);
-            socket.emit("log:agent", { time: Date.now(), level: "fatal", ...obj });
+            socket.emit(obj['ev'], obj['data']);
         },
         socket: socket
     };
