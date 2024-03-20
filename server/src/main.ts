@@ -23,6 +23,7 @@ import { SourcesApi } from './api/sources';
 import { Guest, User } from './guards/role-guards';
 import { CronScheduler } from './util/scheduler';
 import { BlobUploadApi } from './api/filestorage';
+import { WatchAndFlushJobs } from './util/job-flusher';
 
 const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
 
@@ -112,6 +113,7 @@ if (isDedicatedSocketService) {
 
     new SocketTunnelService(server);
     CronScheduler();
+    WatchAndFlushJobs();
 }
 // Running as a clustered worker.
 else if (process.env['NODE_ENV'] == 'production') {
@@ -122,5 +124,6 @@ else {
     bootstrapServer().then(server => {
         new SocketTunnelService(server);
         CronScheduler();
+        WatchAndFlushJobs();
     })
 }
