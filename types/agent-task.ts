@@ -8,7 +8,7 @@ export type JobInstance = {
         "building"      | // Job is actively running build code
         "frozen"        | // Job (task group) is frozen
         "sealing"       | // Job is compressing
-        "completed"     | // Job is finished and acknowledged by scheduler
+        "finished"      | // Job is finished and acknowledged by scheduler
         "failed"
     pipeline: string,
     job: string,
