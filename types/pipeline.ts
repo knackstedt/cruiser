@@ -63,6 +63,8 @@ export type JobDefinition = {
     order: number
     disabled?: boolean
 
+    jobInstance?: string,
+
     elasticAgentId?: string
     timeout?: string
     lastRun?: string
@@ -197,12 +199,13 @@ export type PipelineDefinition = {
 
 export type PipelineInstance = {
     id: `pipeline_instance:${string}`,
+    identifier: string,
     spec: PipelineDefinition,
     metadata: unknown,
     status: {
         phase: "started" | "running" | "stopped" | "waiting" | "failed",
         startEpoch: number,
-        jobInstances: JobInstance[]
+        jobInstances: string[]
         endEpoch?: number
     },
     stats: {

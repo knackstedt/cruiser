@@ -19,7 +19,7 @@ export const CronScheduler = () => {
     logger.info("Initializing Scheduler");
 
     const checkJobs = async () => {
-        const pipelines = await db.select<PipelineDefinition>(`pipeline`);
+        const [pipelines] = await db.query<[PipelineDefinition[]]>(`select * from pipeline where _isUserEditInstance = true`);
 
         logger.info({
             msg: "Updating schedules for pipelines",
@@ -29,6 +29,14 @@ export const CronScheduler = () => {
 
         for (const pipeline of pipelines) {
             let setCronJob = false;
+
+            if (!Array.isArray(pipeline.stages)) {
+                logger.warn({
+                    msg: "Pipeline has bad stages",
+                    id: pipeline.id
+                })
+                continue;
+            }
 
             for (const stage of pipeline.stages) {
 
@@ -87,9 +95,7 @@ export const CronScheduler = () => {
     }
 
     // Start an interval and immediately trigger the check
-    setInterval(() => checkJobs(), pollInterval);
-    // setTimeout(() => checkJobs(), pollInterval)
-    // checkJobs();
+    setInterval(() => checkJobs().catch(err => logger.error(err)), pollInterval);
 };
 
 /**

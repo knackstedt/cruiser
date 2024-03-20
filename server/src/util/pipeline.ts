@@ -35,11 +35,16 @@ export const RunPipeline = async (pipeline: PipelineDefinition, user: string, tr
     // Update the pipeline definition stats
     await db.merge(pipeline.id, pipeline);
 
+    // TODO: Add custom logic for calculating release id
+    const [ qResult ] = await db.query(`select count() from pipeline_instance where spec.id = '${pipeline.id}' group all`);
+    const { count } = qResult[0];
+
     // Create a pipeline instance for this run
     // Load in a soft clone of the pipeline so we know what the current release
     // instance needs to run from
     const [ instance ] = await db.create<PipelineInstance>("pipeline_instance:ulid()", {
         spec: pipeline,
+        identifier: count.toString(),
         metadata: {
             "$triggered_by": user,
             "$trigger_stages": triggeredStages?.map(ts => ts.id).join(',')
@@ -112,7 +117,10 @@ export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => 
             kubeAuthnToken
         })) as any as JobInstance[];
 
-        instance.status.jobInstances.push(jobInstance);
+        job.jobInstance = jobInstance.id;
+
+        instance.status.jobInstances = instance.status.jobInstances ?? [];
+        instance.status.jobInstances.push(jobInstance.id);
         await db.merge(instance.id, instance);
 
         const kubeJob = await createKubeJob(
@@ -205,9 +213,9 @@ const createKubeJob = async (
                                 { name: "CRUISER_CLUSTER_URL", value: process.env['DOTGLITCH_DOTOPS_CLUSTER_URL'] },
                                 { name: "CRUISER_AGENT_ID", value: jobInstance.id.split(':')[1] },
                                 { name: "CRUISER_SERVER_TOKEN", value: kubeAuthnToken },
-                                ...jobDefinition.environment,
-                                ...stage.environment,
-                                ...pipeline.environment
+                                ...(jobDefinition.environment ?? []),
+                                ...(stage.environment ?? []),
+                                ...(pipeline.environment ?? [])
                             ]
                         }
                     ]
