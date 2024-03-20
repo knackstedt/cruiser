@@ -39,7 +39,7 @@ export class PipelineHistoryComponent {
             stageMap[s.id] = s;
         })
 
-        const jobs = (await this.fetch.get(`/api/odata/jobs?$filter=pipeline eq '${this.pipeline.id}'`))['value'];
+        const jobs = (await this.fetch.get(`/api/odata/job_instance?$filter=pipeline eq '${this.pipeline.id}'`))['value'];
 
         jobs.forEach(job => {
             const stage = stageMap[job.stage];

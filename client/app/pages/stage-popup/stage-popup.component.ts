@@ -42,7 +42,7 @@ export class StagePopupComponent {
     }
 
     async ngOnInit() {
-        const runningJobs = (await this.fetch.get(`/api/odata/jobs?$filter=stage eq '${this.stage.id}'`))['value'];
+        const runningJobs = (await this.fetch.get(`/api/odata/job_instance?$filter=stage eq '${this.stage.id}'`))['value'];
 
         const stageJobMap = {};
         const runningJobMap = {};
