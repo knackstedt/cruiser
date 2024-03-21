@@ -2,7 +2,6 @@ import * as express from "express";
 import { logger } from './logger';
 
 export const router = express.Router();
-const isProduction = process.env["NODE_ENV"]?.toLowerCase() == "production";
 
 // Catch-all error handler.
 export const ErrorHandler = (err, req, res, next) => {

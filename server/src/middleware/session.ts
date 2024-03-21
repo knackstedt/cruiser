@@ -2,25 +2,25 @@ import session from 'express-session';
 import express from 'express';
 import { SurrealDBStore } from 'connect-surreal';
 import { ulid } from 'ulidx';
-var uid = require('uid-safe').sync;
+import { environment } from '../util/environment';
 
 const router = express.Router();
 
 const store = new SurrealDBStore({
-    url: process.env['SURREAL_URL'],
+    url: environment.surreal_url,
     signinOpts: {
-        username: process.env['SURREAL_USER'],
-        password: process.env['SURREAL_PASSWORD'],
+        username: environment.surreal_user,
+        password: environment.surreal_pass,
     },
     connectionOpts: {
-        namespace: "dotglitch",
-        database: "cruiser",
+        namespace: environment.surreal_session_namespace,
+        database: environment.surreal_session_database,
     },
-    tableName: null
+    tableName: environment.surreal_session_table
 });
 
 router.use(session({
-    secret: process.env['SESSION_SECRET'],
+    secret: environment.express_session_secret,
     saveUninitialized: false,
     resave: false,
     cookie: {
