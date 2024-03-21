@@ -19,6 +19,7 @@ import { ulid } from 'ulidx';
 import { UserService } from 'client/app/services/user.service';
 import { ToastrService } from 'ngx-toastr';
 import { PipelineEditorPartial } from 'client/app/utils/pipeline-editor.partial';
+import { StagesComponent } from 'client/app/pages/releases/release-editor/release-editor.component';
 
 @Component({
     selector: 'app-pipeline-editor',
@@ -37,7 +38,6 @@ import { PipelineEditorPartial } from 'client/app/utils/pipeline-editor.partial'
         FormsModule,
         VscodeComponent,
         StackEditorComponent,
-        // StagesComponent,
         StageEditorComponent
     ],
     standalone: true

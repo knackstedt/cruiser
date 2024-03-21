@@ -253,7 +253,7 @@ export class StagesComponent extends PipelineEditorPartial {
 
             return {
                 id: stage.id.split(':')[1],
-                width: 200,
+                width: stage?.renderAsGateway ? 80 : 200,
                 height: 80,
                 type: "stage",
                 data: stage,

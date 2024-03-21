@@ -6,14 +6,18 @@ import { JobDefinition, TaskDefinition } from 'types/pipeline';
 import { io, Socket } from 'socket.io-client';
 import ansi, { ParsedSpan, parse } from 'ansicolor';
 import { darkTheme } from 'client/app/services/theme.service';
-import { TooltipDirective } from '@dotglitch/ngx-common';
+import { DialogService, Fetch, TooltipDirective } from '@dotglitch/ngx-common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
+import { JobInstance } from 'types/agent-task';
+import { ViewJsonInMonacoDialog } from 'client/app/services/utils';
+import { MatDialog } from '@angular/material/dialog';
 
 type Line = ({
     stream: "stdout" | "stderr" | "agent",
     fullTime: string;
     time: string;
+    level: "error" | "info" | "warn" | "fatal" | "debug"
     data?: ParsedSpan[],
     rendered: boolean;
     index: number,
@@ -44,7 +48,7 @@ type Line = ({
 export class JobLogsComponent {
     @ViewChild(NgScrollbar) scrollbar: NgScrollbar;
 
-    @Input() jobInstance;
+    @Input() jobInstance: JobInstance;
 
 
     readonly lineHeight = 19;
@@ -57,6 +61,7 @@ export class JobLogsComponent {
     query = '';
 
     connected = false;
+    isCompletedRun = false;
 
     lineCount = 0;
     lines: Line[] = [];
@@ -68,7 +73,9 @@ export class JobLogsComponent {
     private decoder = new TextDecoder();
 
     constructor(
-        private readonly changeDetector: ChangeDetectorRef
+        private readonly changeDetector: ChangeDetectorRef,
+        private readonly fetch: Fetch,
+        private readonly dialog: MatDialog
     ) {
 
         this.setColors();
@@ -81,48 +88,6 @@ export class JobLogsComponent {
 
 
     async ngOnInit() {
-        const socket = this.socket = io({
-            path: "/ws/socket-tunnel",
-            withCredentials: true
-        });
-
-        socket.on("connect", () => {
-            this.connected = true;
-            this.lines = [];
-            socket.emit("$connect", { job: this.jobInstance.job });
-
-            this.changeDetector.detectChanges();
-        });
-        socket.on("$connected", () => {
-            socket.emit("log:get-history");
-        });
-        socket.on("disconnect", () => {
-            this.connected = false;
-        });
-
-        socket.on("log:stdout", data => parseStdOut(data));
-        socket.on("log:stderr", data => parseStdErr(data));
-        socket.on("log:agent", data => parseAgent(data));
-
-        socket.on("log:history", (entries: { ev: string, data: object; }[]) => {
-            console.time("Parse log history");
-            const el = entries.length;
-
-            const notASwitch = {
-                "log:stdout": parseStdOut,
-                "log:stderr": parseStdErr,
-                "log:agent": parseAgent
-            }
-
-            for (let i = 0; i < el; i++) {
-                notASwitch[entries[i].ev]?.(entries[i].data, false);
-            }
-            console.timeEnd("Parse log history");
-
-            this.filterLines();
-        });
-
-
         const commitLine = (line: string, stream: "stdout" | "stderr", time = 0, doCommit = true) => {
             // TODO: save and restore selection...
 
@@ -131,6 +96,7 @@ export class JobLogsComponent {
             this.lines.push({
                 stream,
                 msg: line,
+                level: stream == "stderr" ? "error" : "info",
                 data: parse(line).spans,
                 fullTime: iso.replace('T', ' '),
                 time: iso.replace(/^[^T]+T/, ''),
@@ -174,21 +140,92 @@ export class JobLogsComponent {
             const iso = (new Date(data.time)).toISOString();
 
             this.lines.push({
+                ...data,
                 stream: "agent",
                 fullTime: iso.replace('T', ' '),
                 time: iso.replace(/^[^T]+T/, ''),
+                level: data.level as any,
                 rendered: false,
                 index: -1,
                 marker: !!data.block,
                 block: data.block as any,
                 msg: data.msg,
-                _expanded: true
+                _expanded: true,
             });
 
             if (doCommit) {
                 this.filterLines();
             }
         };
+
+        // If the pipeline is no longer running, attempt to load the logs from
+        // the disk
+        if (['finished', 'failed'].includes(this.jobInstance.state)) {
+            this.isCompletedRun = true;
+            const data = await this.fetch.get<string>(`/api/blobstore/log/${this.jobInstance.pipeline}/${this.jobInstance.stage}/${this.jobInstance.job}/${this.jobInstance.id}.log`, { responseType: "text" });
+            const entries = data.split('\n').map(line => {
+                // Try to parse the line, don't explode if a line is messed up.
+                try { return JSON.parse(line) } catch(err) { return {} }
+            });
+
+            console.time("Parse log history");
+            const el = entries.length;
+
+            const notASwitch = {
+                "log:stdout": parseStdOut,
+                "log:stderr": parseStdErr,
+                "log:agent": parseAgent
+            };
+
+            for (let i = 0; i < el; i++) {
+                notASwitch[entries[i].ev]?.(entries[i].data, false);
+            }
+            console.timeEnd("Parse log history");
+
+            this.filterLines();
+        }
+        else {
+            const socket = this.socket = io({
+                path: "/ws/socket-tunnel",
+                withCredentials: true
+            });
+
+            socket.on("connect", () => {
+                this.connected = true;
+                this.lines = [];
+                socket.emit("$connect", { job: this.jobInstance.job });
+
+                this.changeDetector.detectChanges();
+            });
+            socket.on("$connected", () => {
+                socket.emit("log:get-history");
+            });
+            socket.on("disconnect", () => {
+                this.connected = false;
+            });
+
+            socket.on("log:stdout", data => parseStdOut(data));
+            socket.on("log:stderr", data => parseStdErr(data));
+            socket.on("log:agent", data => parseAgent(data));
+
+            socket.on("log:history", (entries: { ev: string, data: object; }[]) => {
+                console.time("Parse log history");
+                const el = entries.length;
+
+                const notASwitch = {
+                    "log:stdout": parseStdOut,
+                    "log:stderr": parseStdErr,
+                    "log:agent": parseAgent
+                }
+
+                for (let i = 0; i < el; i++) {
+                    notASwitch[entries[i].ev]?.(entries[i].data, false);
+                }
+                console.timeEnd("Parse log history");
+
+                this.filterLines();
+            });
+        }
     }
 
     ngAfterViewInit() {
@@ -330,8 +367,12 @@ export class JobLogsComponent {
 
         this.renderedLines = rendered;
 
-        console.log(this.renderedLines, this.filteredLines)
+        // console.log(this.renderedLines, this.filteredLines)
 
         this.changeDetector.detectChanges();
+    }
+
+    onErrorClick(line: Line) {
+        ViewJsonInMonacoDialog(this.dialog, line);
     }
 }

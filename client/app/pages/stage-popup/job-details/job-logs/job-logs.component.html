@@ -2,6 +2,10 @@
     @if (connected) {
         <span>Ln {{lines.length}}</span>
     }
+    @else if (isCompletedRun) {
+        <mat-icon fontIcon="history" />
+        <span>Ln {{lines.length}}</span>
+    }
     @else {
         <mat-icon style="color: #ff5d5d" fontIcon="mobiledata_off" />
     }
@@ -103,6 +107,7 @@
             @if (line.rendered) {
                 <div
                     class="line"
+                    [class.error]="['error', 'fatal'].includes(line.level)"
                     [style.height]="lineHeight + 'px'"
                     [attr.index]="line.index"
                     [style.top]="(line.index*lineHeight)+'px'"
@@ -117,13 +122,26 @@
                                     />
                                 </span>
                             }
+                            @else if (["error", "fatal"].includes(line.level)) {
+                                <span class="expansion_toggle" (click)="onErrorClick(line)">
+                                    <mat-icon
+                                        fontIcon="loupe"
+                                    />
+                                </span>
+
+                            }
                             @else {
                                 <span class="blank"></span>
                             }
                             @if (showTimestamps) {
                                 <span class="time">{{line?.time}} </span>
                             }
-                            <span class="message">[agent] {{line.msg?.trim()}}</span>
+                            @if (["error", "fatal"].includes(line.level)) {
+                                <span class="message">[agent] {{line['error']?.trim() || line.msg?.trim()}}</span>
+                            }
+                            @else {
+                                <span class="message">[agent] {{line.msg?.trim()}}</span>
+                            }
                         </span>
                     }
                     @else if (line.stream == 'stdout') {

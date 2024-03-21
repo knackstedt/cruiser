@@ -203,6 +203,14 @@
                             }
                         </mat-select>
                     </mat-form-field>
+
+                    <mat-checkbox
+                        [(ngModel)]="selectedStage.renderAsGateway"
+                        (ngModelChange)="renderGraph()"
+                        (ngModelChange)="dataChangeEmitter.next(0)"
+                    >
+                        Render as Diamond
+                    </mat-checkbox>
                 }
 
                 @case ("source") {

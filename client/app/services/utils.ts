@@ -1,3 +1,5 @@
+import { MatDialog } from '@angular/material/dialog';
+
 /**
  * Wait for a speficied amount of time to pass
  * @param ms time in ms to sleep for
@@ -88,3 +90,17 @@ export const Logger = (context: string, contextColor: string, textColor: string 
         console.error(`%c[${context}] %c${message}`, 'color: ' + contextColor, 'color: ' + textColor, ...args);
     }
 });
+
+export const ViewJsonInMonacoDialog = async (matDialog: MatDialog, data: Object) => {
+    const VscodeComponent = await import("@dotglitch/ngx-common").then(m => m.VscodeComponent);
+
+    const d = matDialog.open(VscodeComponent, {
+        width: "90vw",
+        height: "90vh"
+    });
+    d.componentInstance.tabSize = 4;
+    d.componentInstance.language = "json";
+    d.componentInstance.code = JSON.stringify(data, null, 4);
+
+    return d;
+};

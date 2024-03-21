@@ -13,6 +13,13 @@
     transition: 200ms ease;
     transition-property: border-left-color, color, background-color;
 
+    &.error {
+        color: red;
+        &:hover {
+            color: red;
+        }
+    }
+
     &:hover {
         background-color: #ffffff22;
         border-left-color: #0288d1;
