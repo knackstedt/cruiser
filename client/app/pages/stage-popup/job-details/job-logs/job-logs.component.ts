@@ -372,7 +372,7 @@ export class JobLogsComponent {
         this.changeDetector.detectChanges();
     }
 
-    onErrorClick(line: Line) {
+    viewLineData(line: Line) {
         ViewJsonInMonacoDialog(this.dialog, line);
     }
 }

@@ -123,7 +123,7 @@
                                 </span>
                             }
                             @else if (["error", "fatal"].includes(line.level)) {
-                                <span class="expansion_toggle" (click)="onErrorClick(line)">
+                                <span class="expansion_toggle" (click)="viewLineData(line)">
                                     <mat-icon
                                         fontIcon="loupe"
                                     />
@@ -134,7 +134,7 @@
                                 <span class="blank"></span>
                             }
                             @if (showTimestamps) {
-                                <span class="time">{{line?.time}} </span>
+                                <span class="time" (dblclick)="viewLineData(line)">{{line?.time}} </span>
                             }
                             @if (["error", "fatal"].includes(line.level)) {
                                 <span class="message">[agent] {{line['error']?.trim() || line.msg?.trim()}}</span>
@@ -164,7 +164,7 @@
     <span class="blank"></span>
 
     @if (showTimestamps) {
-        <span class="time">{{line?.time}} </span>
+        <span class="time" (dblclick)="viewLineData(line)">{{line?.time}} </span>
     }
 
     <span class="message">
