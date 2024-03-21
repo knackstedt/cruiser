@@ -2,7 +2,7 @@
 
 // Parses out environment variables, the command, and the rest of the arguments
 // from the input string.
-const parserRx = /(?<env>(?:(?:[A-Z0-9_-]+)=(?:[A-Z0-9_-]+) )*)(?<cmd>[^ =]+) (?<args>.+)/i;
+const parserRx = /(?<env>(?:(?:[A-Z0-9_-]+)=(?:[A-Z0-9_-]+) )*)(?<cmd>[^ =]+) ?(?<args>.*)/i;
 
 /**
  * echo foo
