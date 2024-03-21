@@ -7,80 +7,108 @@ import { JobInstance } from '../types/agent-task';
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
 const k8sBatchApi = kc.makeApiClient(k8s.BatchV1Api);
-const k8sLog = new k8s.Log(kc);
 const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
+const k8sWatch = new k8s.Watch(kc);
 
-let logStore = process.env['CRUISER_BLOBSTORE_PATH'] ?? __dirname + "../../../../data/log";
+let logStore = process.env['CRUISER_BLOBSTORE_PATH'] ?? __dirname + "/../../../../data/log";
 if (!logStore.endsWith('/')) logStore += '/';
 fs.mkdirSync(logStore, { recursive: true });
 
-// Flush jobs every 30 seconds
-const flushInterval = parseInt(process.env['CRUISER_JOB_FLUSH_INTERVAL'] || "30000");
-export const WatchAndFlushJobs = async () => {
-
-    // TODO: jobs with custom namespaces won't be flushed
-    const namespace = process.env['CRUISER_AGENT_NAMESPACE'] || "cruiser";
-
-    const { body: result } = await k8sBatchApi.listNamespacedJob(namespace);
-    const { body: pods } = await k8sApi.listNamespacedPod(namespace);
-
-    const jobs = result.items;
-
-    for (const job of jobs) {
-        // Ensure we only perform operations on pods we expect to
-        if (job.metadata.annotations['created-by'] != "$cruiser")
-            continue;
-
-        const isRunning = job.status.active > 0;
-
-        // If the job isn't running, download the entire log
-        if (!isRunning) {
-            const jobPod = pods.items.find(p => p.metadata.annotations?.['job-id'] == job.metadata.annotations['job-id']);
-
-            if (!jobPod) {
-                logger.warn({
-                    msg: "Completed job pod has been removed prematurely.",
-                    job
-                });
-                continue;
+export const WatchAndFlushJobs = async() => {
+    const podMap: { [key: string]: k8s.V1Pod | 0 } = {};
+    const watchPods = () => k8sWatch.watch('/api/v1/namespaces/cruiser-dev/pods',
+        {},
+        (type, apiObj, watchObj) => {
+            if (type != 'MODIFIED') {
+                return;
             }
 
-            const { body: log } = await k8sApi.readNamespacedPodLog(jobPod.metadata.name, namespace);
+            const pod = watchObj.object as k8s.V1Pod;
 
-            const dir = [
-                logStore,
-                job.metadata.annotations['pipeline-id'],
-                job.metadata.annotations['stage-id'],
-                job.metadata.annotations['job-id'],
-            ].join('/');
+            // Ensure this is a cruiser-spawned job
+            if (pod.metadata.annotations['created-by'] != "$cruiser")
+                return;
 
-            // Create the target dir
-            await fs.mkdir(dir, { recursive: true });
-
-            // Write the file to disk.
-            await fs.writeFile(
-                dir + '/' + job.metadata.annotations['job-instance-id'] + ".log",
-                log
-            );
-
-            const [jobInstance] = await db.select<JobInstance>(job.metadata.annotations['job-instance-id']);
-
-            // If the jobinstance failed without ending up at a known
-            // ending state, we will infer the end state based on the
-            // pod exit code.
-            if (!["finished", "failed"].includes(jobInstance.state)) {
-                jobInstance.state =
-                    jobPod.status.phase == "Succeeded" ? "finished" :
-                    "failed";
-
-                await db.merge(jobInstance.id, jobInstance);
+            if (pod.status.phase == "Running") {
+                podMap[pod.metadata.annotations['job-instance-id']] = pod;
+            }
+        },
+        (err) => console.error(err)
+    )
+    const watchJobs = () => k8sWatch.watch('/apis/batch/v1/namespaces/cruiser-dev/jobs',
+        { },
+        async (type, apiObj, watchObj) => {
+            if (type != 'MODIFIED') {
+                return;
             }
 
-            // Cleanup the job now that the log has been persisted
-            await k8sBatchApi.deleteNamespacedJob(job.metadata.name, job.metadata.namespace);
-            await k8sApi.deleteNamespacedPod(jobPod.metadata.name, jobPod.metadata.namespace);
-        }
-    }
+            const job = watchObj.object as k8s.V1Job;
 
-    setTimeout(WatchAndFlushJobs.bind(this), flushInterval);
-}
+            // Ensure this is a cruiser-spawned job
+            if (job.metadata.annotations['created-by'] != "$cruiser")
+                return;
+
+
+            const isComplete = job.status.conditions?.find(c => c.type == "Complete" && c.status);
+            const isFailed = job.status.conditions?.find(c => c.type == "Failed" && c.status);
+            // const isSuspended = job.status.conditions?.find(c => c.type == "Suspended" && c.status);
+
+            // This tells us when the job is done.
+            if (isComplete || isFailed) {
+                const pod = podMap[job.metadata.annotations['job-instance-id']];
+                podMap[job.metadata.annotations['job-instance-id']] = 0;
+
+                // If the pod was consumed and we have a duplicate event, do nothing.
+                if (pod === 0) {
+                    return;
+                }
+                if (!pod) {
+                    logger.fatal({
+                        msg: "Somehow we don't have a pod recorded for a successful job",
+                        job
+                    })
+                    return;
+                }
+
+                const { body: log } = await k8sApi.readNamespacedPodLog(pod.metadata.name, pod.metadata.namespace);
+
+                const dir = [
+                    logStore,
+                    job.metadata.annotations['pipeline-id'],
+                    job.metadata.annotations['stage-id'],
+                    job.metadata.annotations['job-id'],
+                ].join('/');
+
+                // Create the target dir
+                await fs.mkdir(dir, { recursive: true });
+
+                // Write the file to disk.
+                await fs.writeFile(
+                    dir + '/' + job.metadata.annotations['job-instance-id'] + ".log",
+                    log
+                );
+
+                const [jobInstance] = await db.select<JobInstance>(job.metadata.annotations['job-instance-id']);
+
+                // If the jobinstance failed without ending up at a known
+                // ending state, we will infer the end state based on the
+                // pod exit code.
+                if (!["finished", "failed"].includes(jobInstance.state)) {
+                    jobInstance.state =
+                        pod.status.phase == "Succeeded" ? "finished" :
+                            "failed";
+
+                    await db.merge(jobInstance.id, jobInstance);
+                }
+
+                // Cleanup the job now that the log has been persisted
+                await k8sBatchApi.deleteNamespacedJob(job.metadata.name, job.metadata.namespace);
+                await k8sApi.deleteNamespacedPod(pod.metadata.name, pod.metadata.namespace);
+            }
+        },
+        (err) => console.error(err)
+    );
+
+    watchPods();
+    watchJobs();
+};
