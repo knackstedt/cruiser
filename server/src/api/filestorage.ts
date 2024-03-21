@@ -3,7 +3,7 @@ import formidable, { IncomingForm } from "formidable";
 import { route } from '../util/util';
 import fs, { stat } from 'fs-extra';
 
-let blobStore = process.env['CRUISER_BLOBSTORE_PATH'] ?? __dirname + "../../../../data";
+let blobStore = process.env['CRUISER_BLOBSTORE_PATH'] ?? __dirname + "/../../../../data";
 if (!blobStore.endsWith('/')) blobStore += '/';
 fs.mkdirSync(blobStore, { recursive: true });
 
@@ -51,11 +51,12 @@ router.use('/upload', route(async (req, res, next) => {
 
 /**
  * Stream download (support Chrome media stream chunking)
+ * TODO: Replace with nginx as it's more performant
  */
 router.use(route(async (req, res, next) => {
     if (req.method != "GET") return next();
 
-    const file: string = (blobStore + req.path).replace('//', '/');
+    const file: string = (blobStore + '/' + req.path).replace('//', '/');
     if (!file) return next(400);
 
     try {
