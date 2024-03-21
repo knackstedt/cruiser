@@ -28,64 +28,62 @@ export const RunProcess = async (
         if (!await exists(task.workingDirectory || environment.buildDir))
             await mkdir(task.workingDirectory || environment.buildDir, { recursive: true });
 
-        let process: ChildProcessWithoutNullStreams;
-        try {
-            process = await new Promise<ChildProcessWithoutNullStreams>((res, rej) => {
-                try {
-                    // TODO: join env separately.
-                    // const specifiedCommand = task.taskScriptArguments['command'];
-                    const {
-                        command,
-                        args,
-                        env
-                    } = ParseCommand(task.taskScriptArguments['command'] + ' ' + task.taskScriptArguments['arguments']);
+        const process: ChildProcessWithoutNullStreams = await new Promise<ChildProcessWithoutNullStreams>((res, rej) => {
+            try {
+                // TODO: join env separately.
+                // const specifiedCommand = task.taskScriptArguments['command'];
+                const {
+                    command,
+                    args,
+                    env
+                } = ParseCommand(task.taskScriptArguments['command'] + ' ' + task.taskScriptArguments['arguments']);
 
-                    logger.info({
-                        msg: `Spawning process`,
-                        command: command,
-                        args,
-                        task
+                logger.info({
+                    msg: `Spawning process`,
+                    command: command,
+                    args,
+                    task
+                });
+
+                const process = spawn(command, args, {
+                    env: env,
+                    cwd: task.workingDirectory || environment.buildDir,
+                    timeout: task.commandTimeout || 0,
+                    windowsHide: true
+                });
+
+                process.stdout.on('data', (data) => logger.socket.emit("log:stdout", { time: Date.now(), data }));
+                process.stderr.on('data', (data) => logger.socket.emit("log:stderr", { time: Date.now(), data }));
+
+                process.on('error', (err) => logger.error(err));
+
+                process.on('disconnect', (...args) => {
+                    logger.error({
+                        msg: `Process unexpectedly disconnected`,
+                        args
                     });
+                    res(process);
+                });
 
-                    const process = spawn(command, args, {
-                        env: env,
-                        cwd: task.workingDirectory || environment.buildDir,
-                        timeout: task.commandTimeout || 0,
-                        windowsHide: true
-                    });
-
-                    process.stdout.on('data', (data) => logger.socket.emit("log:stdout", { time: Date.now(), data }));
-                    process.stderr.on('data', (data) => logger.socket.emit("log:stderr", { time: Date.now(), data }));
-
-                    process.on('error', (err) => logger.error(err));
-
-                    process.on('disconnect', (...args) => {
-                        logger.error({
-                            msg: `Process unexpectedly disconnected`,
-                            args
-                        });
+                process.on('exit', (code) => {
+                    if (code == 0) {
+                        logger.info({ msg: `Process exited successfully` });
                         res(process);
-                    });
-
-                    process.on('exit', (code) => {
-                        if (code == 0) {
-                            logger.info({ msg: `Process exited successfully` });
-                            res(process);
-                        }
-                        else {
-                            logger.error({ msg: `Process exited with non-zero exit code`, code });
-                            res(process);
-                        }
-                    });
-                }
-                catch(err) {
-                    rej(err);
-                }
-            });
-        }
-        catch(err) {
-            logger.error(err);
-        }
+                    }
+                    else {
+                        logger.error({ msg: `Process exited with non-zero exit code`, code });
+                        res(process);
+                    }
+                });
+            }
+            catch(err) {
+                // Return the process and transmit the error object
+                res({
+                    exitCode: -1,
+                    err: err
+                } as any);
+            }
+        });
 
         if (process?.exitCode == 0) {
             logger.info({
@@ -100,6 +98,10 @@ export const RunProcess = async (
             }
         }
         else {
+            logger.error({
+                msg: process.exitCode == -1 ? "Failed to spawn process" : "Process exited with code " + process.exitCode,
+                ...(process.exitCode == -1 ? { err: process['err'] } : { process })
+            });
             if (task.disableErrorBreakpoint != true) {
                 logger.info({ msg: `Breaking on error`, breakpoint: true, error: true });
                 await TripBreakpoint(jobInstance);
