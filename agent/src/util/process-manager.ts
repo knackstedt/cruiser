@@ -52,8 +52,8 @@ export const RunProcess = async (
                     windowsHide: true
                 });
 
-                process.stdout.on('data', (data) => logger.socket.emit("log:stdout", { time: Date.now(), data }));
-                process.stderr.on('data', (data) => logger.socket.emit("log:stderr", { time: Date.now(), data }));
+                process.stdout.on('data', (data) => logger.stdout({ time: Date.now(), data }));
+                process.stderr.on('data', (data) => logger.stderr({ time: Date.now(), data }));
 
                 process.on('error', (err) => logger.error(err));
 
