@@ -25,17 +25,18 @@ export const ParseCommand = (commandInput: string) => {
         .map(set => ({ [set[0]]: set[1] })) // make it an object
         .reduce((a, b) => ({ ...a, ...b}), {}); // merge the objects into one
 
-    let word = '';
+    let chunk = '';
     let argList: string[] = [];
 
     for (let i = 0; i < args.length; i++) {
         const char = args[i];
+        // console.log({i, char, args, word: chunk});
 
         // If the char is a whitespace, commit the word
         if (char == ' ') {
-            if (word.length > 0)
-                argList.push(word);
-            word = '';
+            if (chunk.length > 0)
+                argList.push(chunk);
+            chunk = '';
         }
         else if (char == '"') {
             // read up to the next " char.
@@ -44,7 +45,7 @@ export const ParseCommand = (commandInput: string) => {
             if (tOff == -1)
                 throw new Error("Invalid command");
 
-            word += args.slice(i, tOff);
+            chunk += args.slice(i, tOff);
             i = tOff;
         }
         else if (char == '\'') {
@@ -54,18 +55,14 @@ export const ParseCommand = (commandInput: string) => {
             if (tOff == -1)
                 throw new Error("Invalid command");
 
-            word += args.slice(i, tOff);
+            chunk += args.slice(i, tOff);
             i = tOff;
         }
         else {
-            // This is a normal argument (at least we'll assume so.)
-            const tOff = args.indexOf(' ', i);
-
-            // This can terminate the command string, we don't care.
-            word += args.slice(i, tOff == -1 ? 0 : tOff);
-            i = tOff;
+            chunk += char;
         }
     }
+    if (chunk) argList.push(chunk);
 
     return {
         command: cmd,
@@ -73,3 +70,4 @@ export const ParseCommand = (commandInput: string) => {
         env: environment
     }
 }
+
