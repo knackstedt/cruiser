@@ -60,14 +60,15 @@ export const RunPipeline = async (pipeline: PipelineDefinition, user: string, tr
         }
     } as PipelineInstance);
 
+    const result = [];
 
     // If this was triggered by a git change, we only want
     // to run the specific stage flow that's required
     if (triggeredStages) {
         for (const stage of triggeredStages)
-            await RunStage(instance, stage);
+            result.push(await RunStage(instance, stage));
 
-        return;
+        return result;
     }
     // If the pipeline as a whole was triggered, run all of the
     // entrypoint stages.
@@ -78,14 +79,16 @@ export const RunPipeline = async (pipeline: PipelineDefinition, user: string, tr
             if (stage.stageTrigger?.length > 0) continue;
             startedStageNum++;
 
-            await RunStage(instance, stage);
+            result.push(await RunStage(instance, stage));
         }
     }
+
+    return result;
 }
 
 export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => {
     if (stage.jobs?.length < 1) {
-        throw {
+        return {
             status: 409,
             message: "Skipping: Stage doesn't have any jobs to run."
         };
@@ -112,6 +115,7 @@ export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => 
             instance_number: job.runCount,
             latest: true,
             pipeline: instance.spec.id,
+            pipeline_instance: instance.id,
             stage: stage.id,
             kubeNamespace: namespace,
             kubePodName: podName,
@@ -125,6 +129,7 @@ export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => 
         await db.merge(instance.id, instance);
 
         const kubeJob = await createKubeJob(
+            instance,
             instance.spec,
             stage,
             job,
@@ -140,10 +145,16 @@ export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => 
         await db.merge(jobInstance.id, {
             jobUid: kubeJobMetadata.uid,
         });
+
+        return {
+            status: 200,
+            message: "Started job"
+        }
     })
 }
 
 const createKubeJob = async (
+    pipelineInstance: PipelineInstance,
     pipeline: PipelineDefinition,
     stage: StageDefinition,
     jobDefinition: JobDefinition,
@@ -158,11 +169,15 @@ const createKubeJob = async (
         kind: "Job",
         metadata: {
             annotations: {
-                "created-by": "$cruiser",
-                "pipeline-id": pipeline.id,
-                "stage-id": stage.id,
-                "job-id": jobDefinition.id,
-                "job-instance-id": jobInstance.id,
+                "cruiser.dev/created-by": "$cruiser",
+                "cruiser.dev/pipeline-id": pipeline.id,
+                "cruiser.dev/pipeline-label": pipeline.label,
+                "cruiser.dev/pipeline-instance-id": pipelineInstance.id,
+                "cruiser.dev/stage-id": stage.id,
+                "cruiser.dev/stage-label": stage.label,
+                "cruiser.dev/job-id": jobDefinition.id,
+                "cruiser.dev/job-label": jobDefinition.label,
+                "cruiser.dev/job-instance-id": jobInstance.id,
                 ...jobDefinition?.kubeJobAnnotations
             },
             labels: jobDefinition?.kubeJobLabels,
@@ -173,12 +188,15 @@ const createKubeJob = async (
             template: {
                 metadata: {
                     annotations: {
-                        "created-by": "$cruiser",
-                        "pipeline-id": pipeline.id,
-                        "stage-id": stage.id,
-                        "job-id": jobDefinition.id,
-                        "job-instance-id": jobInstance.id,
-                        "pod-id": podId,
+                        "cruiser.dev/created-by": "$cruiser",
+                        "cruiser.dev/pipeline-id": pipeline.id,
+                        "cruiser.dev/pipeline-label": pipeline.label,
+                        "cruiser.dev/pipeline-instance-id": pipelineInstance.id,
+                        "cruiser.dev/stage-id": stage.id,
+                        "cruiser.dev/stage-label": stage.label,
+                        "cruiser.dev/job-id": jobDefinition.id,
+                        "cruiser.dev/job-label": jobDefinition.label,
+                        "cruiser.dev/job-instance-id": jobInstance.id,
                         ...jobDefinition?.kubeContainerAnnotations
                     },
                     labels: jobDefinition?.kubeContainerLabels,

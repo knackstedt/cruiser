@@ -2,6 +2,7 @@ import * as k8s from '@kubernetes/client-node';
 import { HistoryObject } from './history-object';
 import { EnvironmentVariable } from './environment';
 import { JobInstance } from './agent-task';
+import { AxiosProxyConfig } from 'axios';
 
 export type BuildArtifact = {
     id: `artifact:${string}`
@@ -102,11 +103,18 @@ export type Webhook = {
     url?: string,
     method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
     headers?: [string, string][],
-    body?: string
+    body?: string,
+    proxy?: AxiosProxyConfig;
+
+    // For the webhook instance, we will set state
+    state?: "success" | "fail";
+
+    executeOnFailure?: boolean
 }
 
 export type StageDefinition = {
     id: `pipeline_stage:${string}`
+    renderAsGateway?: boolean
     label: string
     description?: string
     lastRunState?: string
@@ -127,6 +135,8 @@ export type StageDefinition = {
     runApprovers?: string[],
     approvalCount?: number,
     webhooks?: Webhook[];
+
+    executeOnFailure?: boolean;
 }
 
 export type SourceConfiguration = Partial<{

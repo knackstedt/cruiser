@@ -22,7 +22,7 @@ const loadIntoCache = async (uid: string, jobId: string, job) => {
         const { body: pods } = await k8sApi.listNamespacedPod(job.kubeNamespace);
 
         const pod = pods.items.find(i =>
-            i.metadata?.annotations?.['job-id'] == jobId
+            i.metadata?.annotations?.['cruiser.dev/job-id'] == jobId
         );
         //
         if (pod.status.podIP) {

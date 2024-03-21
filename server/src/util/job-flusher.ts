@@ -4,13 +4,15 @@ import { logger } from './logger';
 import { db } from './db';
 import { JobInstance } from '../types/agent-task';
 import { environment } from './environment';
+import { JobDefinition, PipelineInstance } from '../types/pipeline';
+import { RunStage } from './pipeline';
+import axios from 'axios';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
 const k8sBatchApi = kc.makeApiClient(k8s.BatchV1Api);
 const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
 const k8sWatch = new k8s.Watch(kc);
-// const listWatch = new k8s.ListWatch(kc)
 
 if (!environment.cruiser_log_dir.endsWith('/')) environment.cruiser_log_dir += '/';
 fs.mkdirSync(environment.cruiser_log_dir, { recursive: true });
@@ -27,11 +29,11 @@ export const WatchAndFlushJobs = async() => {
             const pod = watchObj.object as k8s.V1Pod;
 
             // Ensure this is a cruiser-spawned job
-            if (pod.metadata.annotations['created-by'] != "$cruiser")
+            if (pod.metadata.annotations?.['cruiser.dev/created-by'] != "$cruiser")
                 return;
 
             if (pod.status.phase == "Running") {
-                podMap[pod.metadata.annotations['job-instance-id']] = pod;
+                podMap[pod.metadata.annotations?.['cruiser.dev/job-instance-id']] = pod;
             }
         },
         (err) => err?.message !== 'aborted' ? watchPods() : console.error(err)
@@ -46,7 +48,7 @@ export const WatchAndFlushJobs = async() => {
             const job = watchObj.object as k8s.V1Job;
 
             // Ensure this is a cruiser-spawned job
-            if (job.metadata.annotations['created-by'] != "$cruiser")
+            if (job.metadata.annotations?.['cruiser.dev/created-by'] != "$cruiser")
                 return;
 
 
@@ -56,8 +58,8 @@ export const WatchAndFlushJobs = async() => {
 
             // This tells us when the job is done.
             if (isComplete || isFailed) {
-                const pod = podMap[job.metadata.annotations['job-instance-id']];
-                podMap[job.metadata.annotations['job-instance-id']] = 0;
+                const pod = podMap[job.metadata.annotations['cruiser.dev/job-instance-id']];
+                podMap[job.metadata.annotations['cruiser.dev/job-instance-id']] = 0;
 
                 // If the pod was consumed and we have a duplicate event, do nothing.
                 if (pod === 0) {
@@ -87,9 +89,9 @@ const SaveLogAndCleanup = async (pod: k8s.V1Pod, job: k8s.V1Job) => {
 
     const dir = [
         environment.cruiser_log_dir,
-        job.metadata.annotations['pipeline-id'],
-        job.metadata.annotations['stage-id'],
-        job.metadata.annotations['job-id'],
+        job.metadata.annotations['cruiser.dev/pipeline-id'],
+        job.metadata.annotations['cruiser.dev/stage-id'],
+        job.metadata.annotations['cruiser.dev/job-id'],
     ].join('/');
 
     // Create the target dir
@@ -97,11 +99,11 @@ const SaveLogAndCleanup = async (pod: k8s.V1Pod, job: k8s.V1Job) => {
 
     // Write the file to disk.
     await fs.writeFile(
-        dir + '/' + job.metadata.annotations['job-instance-id'] + ".log",
+        dir + '/' + job.metadata.annotations['cruiser.dev/job-instance-id'] + ".log",
         log
     );
 
-    const [jobInstance] = await db.select<JobInstance>(job.metadata.annotations['job-instance-id']);
+    const [jobInstance] = await db.select<JobInstance>(job.metadata.annotations['cruiser.dev/job-instance-id']);
 
     // If the jobinstance failed without ending up at a known
     // ending state, we will infer the end state based on the
@@ -117,4 +119,83 @@ const SaveLogAndCleanup = async (pod: k8s.V1Pod, job: k8s.V1Job) => {
     // Cleanup the job now that the log has been persisted
     await k8sBatchApi.deleteNamespacedJob(job.metadata.name, job.metadata.namespace);
     await k8sApi.deleteNamespacedPod(pod.metadata.name, pod.metadata.namespace);
+
+    processJobTriggers(job, jobInstance);
+}
+
+const processJobTriggers = async (job: k8s.V1Job, jobInstance: JobInstance) => {
+    // TODO: Process triggers for the subsequent jobs
+
+    const isFailure = jobInstance.state == "failed";
+
+    const [pipelineInstance] = await db.select<PipelineInstance>(job.metadata.annotations['cruiser.dev/pipeline-instance-id']);
+
+    const stage = pipelineInstance.spec.stages.find(s => s.id == job.metadata.annotations['cruiser.dev/stage-id']);
+
+    const jobInstances = await db.query<JobInstance[]>(`select * from job_instance where pipeline_instance = '${pipelineInstance.id}'`);
+
+    // Project the job instances into the objects
+    jobInstances.forEach(ji => {
+        const stage = pipelineInstance.spec.stages.find(s => s.id == ji.stage);
+
+        if (!stage) return;
+        stage['_instances'] = stage['_instances'] ?? [];
+        stage['_instances'].push(ji);
+
+        const job = stage.jobs.find(j => j.id == jobInstance.job);
+        if (!job) return;
+
+        job['_instance'] = ji;
+    });
+
+    // Execute all of the webhooks.
+    for (const webhook of stage.webhooks) {
+        // If the job failed, only execute the webhooks that
+        // are configured tp run on failuire.
+        if (isFailure && !webhook.executeOnFailure)
+            continue;
+
+        const headers = webhook.headers
+            ?.map(([k, v]) => ({ [k]: v }))
+            .reduce((a, b) => ({ ...a, ...b }), {});
+
+        await axios({
+            method: webhook.method,
+            url: webhook.url,
+            data: webhook.body,
+            headers: headers,
+            proxy: webhook.proxy
+        })
+        .then(res => {
+            webhook.state = 'success';
+        })
+        .catch(err => {
+            logger.warn({
+                msg: "Executing webhook event for stage failed",
+                stage: stage.id,
+                webhook,
+                err
+            });
+
+            webhook.state = 'fail';
+        })
+    }
+
+    const stagesToTrigger = pipelineInstance.spec.stages
+        .filter(s => s.stageTrigger?.includes(stage.id));
+
+    // Trigger all of the stages that need to be run.
+    for (const stage of stagesToTrigger) {
+        // If the stage has approvals, don't automatically trigger it.
+        if (stage.approvalCount > 0)
+            continue;
+
+        // If the job failed, only execute the webhooks that
+        // are configured tp run on failuire.
+        if (isFailure && !stage.executeOnFailure)
+            continue;
+
+        // Run the stage
+        await RunStage(pipelineInstance, stage);
+    }
 }

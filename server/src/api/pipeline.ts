@@ -50,10 +50,17 @@ router.get('/:id/start', route(async (req, res, next) => {
         : [req.query['stage']] as string[])
         .filter(r => !!r);
 
+    if (!Array.isArray(pipeline.stages)) {
+        return next({
+            status: 422,
+            message: "Pipeline has no stages to run"
+        });
+    }
+
     // Resolve the matching stages, ignore the others.
     const stages = stageIds.length == 0
-        ? pipeline.stages
-        : pipeline.stages?.filter(s => stageIds.includes(s.id));
+        ? pipeline.stages.filter(s => !s.stageTrigger || s.stageTrigger.length == 0)
+        : pipeline.stages.filter(s => stageIds.includes(s.id));
 
     await RunPipeline(pipeline, req.session.gh_user.login, stages);
 
