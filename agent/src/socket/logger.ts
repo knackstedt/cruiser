@@ -26,6 +26,8 @@ export const getSocketLogger = async(socket: Socket) => {
         originalEmit("log:history", history)
     );
 
+    const decoder = new TextDecoder();
+
     // Create a wrapper for the logger
     // such that all log records can be replayed
     // Also emit all entries to stdout so that when the pod
@@ -63,12 +65,12 @@ export const getSocketLogger = async(socket: Socket) => {
             socket.emit(obj['ev'], obj['data']);
         },
         stdout: (obj: Object) => {
-            process.stdout.write(JSON.stringify({ ev: "log:stdout", data: obj }) + '\n');
-            socket.emit("log:stdout", { time: Date.now(), data: obj })
+            process.stdout.write(JSON.stringify({ ev: "log:stdout", data: decoder.decode(obj['data']) }) + '\n');
+            socket.emit("log:stdout", { time: Date.now(), data: obj['data'] })
         },
         stderr: (obj: Object) => {
-            process.stdout.write(JSON.stringify({ ev: "log:stderr", data: obj }) + '\n');
-            socket.emit("log:stderr", { time: Date.now(), data: obj })
+            process.stdout.write(JSON.stringify({ ev: "log:stderr", data: decoder.decode(obj['data']) }) + '\n');
+            socket.emit("log:stderr", { time: Date.now(), data: obj['data'] })
         }
     };
 }
