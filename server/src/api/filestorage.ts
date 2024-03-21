@@ -4,8 +4,8 @@ import { route } from '../util/util';
 import fs, { stat } from 'fs-extra';
 import { environment } from '../util/environment';
 
-if (!environment.blob_dir.endsWith('/')) environment.blob_dir += '/';
-fs.mkdirSync(environment.blob_dir, { recursive: true });
+if (!environment.cruiser_blob_dir.endsWith('/')) environment.cruiser_blob_dir += '/';
+fs.mkdirSync(environment.cruiser_blob_dir, { recursive: true });
 
 const router = express.Router();
 
@@ -38,7 +38,7 @@ router.use('/upload', route(async (req, res, next) => {
                         url: "/api/blobstore/" + keys[i],
                         name: keys[i]
                     })
-                    await fs.move(file.filepath, environment.blob_dir + keys[i])
+                    await fs.move(file.filepath, environment.cruiser_blob_dir + keys[i])
                 }
             }
 
@@ -56,7 +56,7 @@ router.use('/upload', route(async (req, res, next) => {
 router.use(route(async (req, res, next) => {
     if (req.method != "GET") return next();
 
-    const file: string = (environment.blob_dir + '/' + req.path).replace('//', '/');
+    const file: string = (environment.cruiser_blob_dir + '/' + req.path).replace('//', '/');
     if (!file) return next(400);
 
     try {

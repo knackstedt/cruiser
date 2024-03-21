@@ -20,7 +20,7 @@ const store = new SurrealDBStore({
 });
 
 router.use(session({
-    secret: environment.express_session_secret,
+    secret: environment.surreal_session_secret,
     saveUninitialized: false,
     resave: false,
     cookie: {

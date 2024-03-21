@@ -2,7 +2,7 @@ import * as express from "express";
 import { route } from '../util/util';
 import { db } from '../util/db';
 import { PipelineDefinition } from '../types/pipeline';
-import { GetAllRunningJobs } from '../util/kube';
+// import { GetAllRunningJobs } from '../util/kube';
 import { RunPipeline } from '../util/pipeline';
 
 const router = express.Router();
@@ -12,11 +12,11 @@ router.get('/', route(async (req, res, next) => {
     const getReleases = !!req.query['release'] || !!req.query['releases'];
 
     const [
-        kubeJobs,
+        // kubeJobs,
         [pipelines],
         [jobs]
     ] = await Promise.all([
-        GetAllRunningJobs(),
+        // GetAllRunningJobs(),
         getReleases
             ? db.query("select * from pipeline where _isUserEditInstance != true and kind = 'release'")
             : db.query("select * from pipeline where _isUserEditInstance != true and kind = 'build'"),
@@ -26,7 +26,7 @@ router.get('/', route(async (req, res, next) => {
     res.send({
         pipelines,
         jobs,
-        kubeJobs
+        // kubeJobs
     });
 }));
 

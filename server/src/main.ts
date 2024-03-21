@@ -24,6 +24,7 @@ import { Guest, User } from './guards/role-guards';
 import { CronScheduler } from './util/scheduler';
 import { BlobUploadApi } from './api/filestorage';
 import { WatchAndFlushJobs } from './util/job-flusher';
+import { environment } from './util/environment';
 
 const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
 
@@ -116,7 +117,7 @@ if (isDedicatedSocketService) {
     WatchAndFlushJobs();
 }
 // Running as a clustered worker.
-else if (process.env['NODE_ENV'] == 'production') {
+else if (environment.is_production) {
     bootstrapServer();
 }
 // Development mode, run both API server and socket server.

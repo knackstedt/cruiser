@@ -5,6 +5,7 @@ import { afterDatabaseConnected, db } from '../util/db';
 import { logger } from '../util/logger';
 import { CruiserUserProfile, CruiserUserRole } from '../types';
 import { GitHubUser } from '../types/user';
+import { environment } from '../util/environment';
 
 const router = express.Router();
 
@@ -24,7 +25,7 @@ const getProfile = async (userId: string, roles?: CruiserUserRole[]) => {
 
 afterDatabaseConnected(async () => {
     // Always ensure that the root administrator exists on startup.
-    getProfile(process.env['CRUISER_ADMINISTRATOR'] ?? 'root', ['administrator']).catch(err => {
+    getProfile(environment.cruiser_admin_id ?? 'root', ['administrator']).catch(err => {
             logger.fatal({
                 msg: "Failed to create administrator account!",
                 err
@@ -35,8 +36,8 @@ afterDatabaseConnected(async () => {
 
 const providers = {
     "gh": {
-        clientId: process.env['GITHUB_OAUTH_CLIENTID'],
-        clientSecret: process.env['GITHUB_OAUTH_SECRET'],
+        clientId: environment.github_client_id,
+        clientSecret: environment.github_client_secret,
     }
 }
 

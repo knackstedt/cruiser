@@ -6,6 +6,7 @@ import { db } from './db';
 import { randomString } from './util';
 import { JobInstance } from '../types/agent-task';
 import { SetJobToken } from './token-cache';
+import { environment } from './environment';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
@@ -91,7 +92,7 @@ export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => 
     }
 
     return stage.jobs.map(async job => {
-        const namespace = job?.kubeNamespace || process.env['CRUISER_AGENT_NAMESPACE'] || "cruiser";
+        const namespace = environment.cruiser_kube_namespace;
         const id = ulid();
         const podId = id.toLowerCase();
         const kubeAuthnToken = randomString(128);
@@ -211,7 +212,7 @@ const createKubeJob = async (
                                 { name: "CI_ENVIRONMENT", value: "cruiser" },
                                 // TODO: calculate this value by introspecting the server
                                 // hostname -i => ip address
-                                { name: "CRUISER_CLUSTER_URL", value: process.env['DOTGLITCH_DOTOPS_CLUSTER_URL'] },
+                                { name: "CRUISER_CLUSTER_URL", value: environment.cruiser_cluster_url },
                                 { name: "CRUISER_AGENT_ID", value: jobInstance.id.split(':')[1] },
                                 { name: "CRUISER_SERVER_TOKEN", value: kubeAuthnToken },
                                 ...(jobDefinition.environment ?? []),

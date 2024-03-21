@@ -4,9 +4,10 @@ import { db } from './db';
 import { PipelineDefinition, StageDefinition } from '../types/pipeline';
 import { GetGitRefs } from '../api/sources';
 import { RunPipeline, RunStage } from './pipeline';
+import { environment } from './environment';
 
 const logger = getLogger("job-scheduler");
-const pollInterval = parseInt(process.env['CRUISER_SCHEDULER_POLL_INTERVAL'] || (1 * 60).toString()) * 1000;
+const pollInterval = environment.cruiser_scheduler_poll_interval * 1000;
 
 const scheduledCronTasks: { [key: string]: (
     cron.ScheduledTask & {

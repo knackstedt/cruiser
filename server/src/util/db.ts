@@ -1,19 +1,18 @@
 import Surreal from 'surrealdb.js';
+import { environment } from './environment';
 
 const dbc = new Surreal();
 
 let hasConnected = false;
 const connected = new Promise(async (resolve) => {
-    await dbc.connect(process.env['SURREAL_URL'])
+    await dbc.connect(environment.surreal_url)
     await dbc.signin({
-        username: process.env['SURREAL_USER'],
-        password: process.env['SURREAL_PASSWORD'],
-        namespace: 'dotglitch',
-        database: 'cruiser'
+        username: environment.surreal_user,
+        password: environment.surreal_pass
     });
     await dbc.use({
-        namespace: 'dotglitch',
-        database: 'cruiser'
+        namespace: environment.surreal_cruiser_namespace,
+        database: environment.surreal_cruiser_database
     });
 
     hasConnected = true;
