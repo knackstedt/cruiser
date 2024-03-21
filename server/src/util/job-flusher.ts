@@ -3,6 +3,7 @@ import * as k8s from '@kubernetes/client-node';
 import { logger } from './logger';
 import { db } from './db';
 import { JobInstance } from '../types/agent-task';
+import { environment } from './environment';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
@@ -10,13 +11,12 @@ const k8sBatchApi = kc.makeApiClient(k8s.BatchV1Api);
 const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
 const k8sWatch = new k8s.Watch(kc);
 
-let logStore = process.env['CRUISER_BLOBSTORE_PATH'] ?? __dirname + "/../../../../data/log";
-if (!logStore.endsWith('/')) logStore += '/';
-fs.mkdirSync(logStore, { recursive: true });
+if (!environment.log_dir.endsWith('/')) environment.log_dir += '/';
+fs.mkdirSync(environment.log_dir, { recursive: true });
 
 export const WatchAndFlushJobs = async() => {
     const podMap: { [key: string]: k8s.V1Pod | 0 } = {};
-    const watchPods = () => k8sWatch.watch('/api/v1/namespaces/cruiser-dev/pods',
+    const watchPods = () => k8sWatch.watch(`/api/v1/namespaces/${environment.namespace}/pods`,
         {},
         (type, apiObj, watchObj) => {
             if (type != 'MODIFIED') {
@@ -35,7 +35,7 @@ export const WatchAndFlushJobs = async() => {
         },
         (err) => console.error(err)
     )
-    const watchJobs = () => k8sWatch.watch('/apis/batch/v1/namespaces/cruiser-dev/jobs',
+    const watchJobs = () => k8sWatch.watch(`/apis/batch/v1/namespaces/${environment.namespace}/jobs`,
         { },
         async (type, apiObj, watchObj) => {
             if (type != 'MODIFIED') {
@@ -73,7 +73,7 @@ export const WatchAndFlushJobs = async() => {
                 const { body: log } = await k8sApi.readNamespacedPodLog(pod.metadata.name, pod.metadata.namespace);
 
                 const dir = [
-                    logStore,
+                    environment.log_dir,
                     job.metadata.annotations['pipeline-id'],
                     job.metadata.annotations['stage-id'],
                     job.metadata.annotations['job-id'],
