@@ -82,17 +82,18 @@
                 scrollViewport
             >
                 <div class="row" style="height: 64px;" *cdkVirtualFor="let instance of pipelineInstances">
-                    <div>
+                    <div class="name">
                         <div>Release - {{instance.identifier}}</div>
                         <div>{{instance.id}} - {{instance.branch}}</div>
                     </div>
                     <div>{{instance.stats.startEpoch}}</div>
-                    <div>
+                    <div class="stages">
                         @for (stage of instance.spec.stages; track stage) {
                             <div
                                 class="stage-block"
                                 [class.running]="!['frozen','finished','failed',null].includes(stage['_latestJob']?.state)"
                                 [class.empty]="stage.jobs?.length == 0"
+                                [class.pending]="stage?.['_state'] == 'pending'"
                                 [class.queued]="stage?.['_state'] == 'queued'"
                                 [class.initializing]="stage?.['_state'] == 'initializing'"
                                 [class.cloning]="stage?.['_state'] == 'cloning'"
@@ -107,6 +108,7 @@
                                 [ngx-tooltip-config]="{ position: 'bottom', alignment: 'start', triggers:['click'], stayOpen: true }"
                             >
                                 @switch(stage?.['_state']) {
+                                    @case ("pending") { <mat-icon fontIcon="pending" /> }
                                     @case ("queued") { <mat-icon fontIcon="pending" /> }
                                     @case ("initializing") { <mat-icon fontIcon="pending" /> }
                                     @case ("cloning") { <mat-icon fontIcon="downloading" /> }
@@ -118,7 +120,7 @@
                                 }
                                 <div class="label">{{stage.label}}</div>
 
-                                @if (![null, "failed", "finished"].includes(stage?.['_state'])) {
+                                @if (![null, "pending", "failed", "finished"].includes(stage?.['_state'])) {
                                     <mat-progress-bar
                                         color="primary"
                                         mode="indeterminate"

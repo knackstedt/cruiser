@@ -44,6 +44,8 @@ export class ReleasesComponent implements OnInit {
 
     selectedPipeline: PipelineDefinition;
 
+    interval;
+    dispose = false
     constructor(
         private readonly fetch: Fetch
     ) { }
@@ -66,41 +68,62 @@ export class ReleasesComponent implements OnInit {
         this.selectPipeline(pipelines[0]);
     }
 
+    ngOnDestroy() {
+        this.dispose = true;
+        clearInterval(this.interval);
+    }
+
     selectPipeline(pipeline: PipelineDefinition) {
         this.selectedPipeline = pipeline;
         if (!pipeline) return;
 
-        this.fetch.get<{ value: PipelineInstance[] }>(`/api/odata/pipeline_instance?$filter=spec.id eq '${pipeline.id}'&$orderby=id desc&$fetch=status.jobInstances`)
-            .then(({ value: instances }) => {
-                instances.forEach(instance => {
-                    const jobInstanceList = (instance.status.jobInstances as any as JobInstance[]);
+        this.interval && clearTimeout(this.interval);
+        this.getInstances();
+    }
 
-                    instance.spec.stages?.forEach(stage => {
-                        const compositeState = {};
-                        const stateList = [];
-                        stage.jobs?.forEach(job => {
-                            const jobInstance = jobInstanceList?.find(j => j.job == job.id);
-                            if (!jobInstance) return;
+    async getInstances() {
+        if (this.dispose) return;
 
-                            job['_jobInstance'] = jobInstance;
+        const { value: instances } = await this.fetch.get<{ value: PipelineInstance[]; }>(`/api/odata/pipeline_instance?$filter=spec.id eq '${this.selectedPipeline.id}'&$orderby=id desc&$fetch=status.jobInstances&$top=20`)
+        this.parseInstances(instances);
 
-                            compositeState[jobInstance.state] = compositeState[jobInstance.state] ?? 0;
-                            compositeState[jobInstance.state]++;
-                            stateList.push(jobInstance.state);
-                        });
+        this.interval = setTimeout(() => {
+            this.getInstances();
+        }, 2000);
+    }
 
-                        const states = Object.keys(compositeState);
-                        stage['_state'] = states.length == 1
-                            ? states[0]
-                            : states.includes("failed")
-                            ? 'failed'
-                            : states.includes("frozen")
-                            ? 'frozen'
-                            : 'building';
-                    });
+    parseInstances(instances: PipelineInstance[]) {
+        instances.forEach(instance => {
+            const jobInstanceList = (instance.status.jobInstances as any as JobInstance[]);
+
+            instance.spec.stages?.forEach(stage => {
+                const compositeState = {};
+                const stateList = [];
+                stage.jobs?.forEach(job => {
+                    const jobInstance = jobInstanceList?.find(j => j.job == job.id);
+                    if (!jobInstance) return;
+
+                    job['_jobInstance'] = jobInstance;
+
+                    compositeState[jobInstance.state] = compositeState[jobInstance.state] ?? 0;
+                    compositeState[jobInstance.state]++;
+                    stateList.push(jobInstance.state);
                 });
-                this.pipelineInstances = instances;
-            })
+
+                const states = Object.keys(compositeState);
+                stage['_state'] =
+                    states.length == 0
+                    ? 'pending'
+                    : states.length == 1
+                    ? states[0]
+                    : states.includes("failed")
+                    ? 'failed'
+                    : states.includes("frozen")
+                    ? 'frozen'
+                    : 'building';
+            });
+        });
+        this.pipelineInstances = instances;
     }
 
     newPipeline() {

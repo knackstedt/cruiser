@@ -18,7 +18,7 @@ import * as React from 'react';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { StackEditorComponent } from 'ngx-stackedit';
-import { Subject, debounceTime } from 'rxjs';
+import { Subject, debounceTime, firstValueFrom } from 'rxjs';
 import { FileUploadService } from 'client/app/services/file-upload.service';
 import { MatDialog } from '@angular/material/dialog';
 import { StageEditorComponent } from 'client/app/pages/pipelines/editor/stages/stage-editor/stage-editor.component';
@@ -71,6 +71,8 @@ export class StagesComponent extends PipelineEditorPartial {
                 ] as MenuItem<StageDefinition>[]
             },
             {
+                onEditStage:         ({ stage }) => this.editStage(this.selectedStage),
+
                 onJobsClick:         ({ stage }) => (this.mode = "view") && (this.view = 'jobs')           && this.selectStage(stage),
                 onNodeClick:         ({ stage }) => (this.mode = "view") && (this.view = 'stage')          && this.selectStage(stage),
 
@@ -212,13 +214,18 @@ export class StagesComponent extends PipelineEditorPartial {
     }
 
     editStage(stage: StageDefinition) {
-        this.dialog.open(StageEditorComponent, {
+        firstValueFrom(this.dialog.open(StageEditorComponent, {
             data: {
                 pipeline: this.pipeline,
                 stage
-            }
-        })
-        this.renderGraph();
+            },
+            width: "90vw",
+            height: "90vh"
+        }).afterClosed())
+            .then(res => {
+                this.patchPipeline();
+                this.renderGraph();
+            })
     }
 
     async deleteStage(stage) {

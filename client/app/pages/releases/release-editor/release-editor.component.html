@@ -136,6 +136,7 @@
                                         </mat-form-field>
                                     </div>
 
+                                    <p>Headers</p>
                                     @for (header of action.headers; track header) {
                                         <div style="display: flex">
                                             <mat-form-field>
@@ -149,6 +150,9 @@
                                         </div>
                                     }
 
+                                    <button mat-flat-button (click)="(action.headers = action.headers ?? []).push(['', ''])">add</button>
+
+                                    <p>Body</p>
                                     <app-vscode
                                         style="height: 400px"
                                         [(code)]="action.body"

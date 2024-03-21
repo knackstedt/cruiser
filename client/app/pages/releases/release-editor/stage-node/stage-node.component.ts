@@ -25,6 +25,7 @@ export class StageNodeComponent {
     @Input() editing = true;
     @Input() contextMenu: MenuItem[] = [];
 
+    @Output() onEditStage = new EventEmitter();
     @Output() onPrerequisiteClick = new EventEmitter();
     @Output() onJobsClick = new EventEmitter();
     @Output() onNodeClick = new EventEmitter();
@@ -68,11 +69,14 @@ export class StageNodeComponent {
     }
 
     editStage() {
-        this.matDialog.open(StageEditorComponent, {
-            data: {
-                // pipeline: this.pipeline,
-                stage: this.stage
-            }
-        })
+        this.onEditStage.next(this.stage);
+        // this.matDialog.open(StageEditorComponent, {
+        //     data: {
+        //         // pipeline: this.pipeline,
+        //         stage: this.stage
+        //     },
+        //     width: "90vw",
+        //     height: "90vh"
+        // })
     }
 }

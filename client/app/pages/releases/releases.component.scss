@@ -53,6 +53,16 @@
     .active_stage {
         color: var(--text-subtle-color);
     }
+    .name {
+        width: 400px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: pre;
+    }
+    .stages {
+        display: flex;
+        gap: 12px;
+    }
 }
 
 .stage-block {
@@ -65,6 +75,7 @@
     border: 1px solid #2b2b2b;
     border-radius: 6px;
     overflow: hidden;
+    gap: 8px;
 
     &.running {
         padding-bottom: 4px;
@@ -74,7 +85,8 @@
         margin-left: 8px;
         font-size: 20px;
         height: 20px;
-        width: 80px;
+        width: 20px;
+        flex: 0 0 20px
     }
 
     .label {
@@ -99,3 +111,5 @@
         color: #1b5e20
     }
 }
+
+
