@@ -88,10 +88,6 @@ export type JobDefinition = {
     kubeCpuRequest?: string;
     kubeMemRequest?: string;
 
-    runCount?: number,
-    invocationCount?: number
-    failCount?: number
-
     platform: `agent_${string}` | 'agentless' | `kube_${string}`
 }
 
@@ -132,11 +128,16 @@ export type StageDefinition = {
     stageTrigger?: string[]
     cronTrigger?: string,
     cronExcludeAuto?: boolean,
-    runApprovers?: string[],
-    approvalCount?: number,
+    approvalUsers?: string[], // users who may approve the pipeline
+    requiredApprovals?: number, // number of approvals before it may be normally run
     webhooks?: Webhook[];
+    runCount?: number;
 
     executeOnFailure?: boolean;
+
+    /* Instance variables */
+    approvals?: number,
+    readyForApproval?: boolean,
 }
 
 export type SourceConfiguration = Partial<{

@@ -14,11 +14,13 @@ const k8sBatchApi = kc.makeApiClient(k8s.BatchV1Api);
 
 
 export const RunPipeline = async (pipeline: PipelineDefinition, user: string, triggeredStages?: StageDefinition[]) => {
+
+    // If the pipeline has no stages, we'll simply exit.
     if (!pipeline.stages?.[0]) {
-        throw {
+        return {
             status: 409,
             message: "Cannot start: pipeline doesn't have any stages to run."
-        }
+        };
     }
 
     // Default stats
@@ -60,6 +62,7 @@ export const RunPipeline = async (pipeline: PipelineDefinition, user: string, tr
         }
     } as PipelineInstance);
 
+
     const result = [];
 
     // If this was triggered by a git change, we only want
@@ -88,10 +91,28 @@ export const RunPipeline = async (pipeline: PipelineDefinition, user: string, tr
 
 export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => {
     if (stage.jobs?.length < 1) {
-        return {
-            status: 409,
-            message: "Skipping: Stage doesn't have any jobs to run."
-        };
+        return (async() => {
+            const [jobInstance] = (await db.create<Omit<JobInstance, "id">>(`job_instance:ulid()`, {
+                state: "finished",
+                queueEpoch: Date.now(),
+                endEpoch: Date.now(),
+                jobUid: null,
+                job: null,
+                pipeline: instance.spec.id,
+                pipeline_instance: instance.id,
+                stage: stage.id
+            })) as any as JobInstance[];
+
+            instance.status.jobInstances = instance.status.jobInstances ?? [];
+            instance.status.jobInstances.push(jobInstance.id);
+
+            await db.merge(instance.id, instance);
+
+            return {
+                status: 409,
+                message: "Skipping: Stage doesn't have any jobs to run."
+            };
+        })();
     }
 
     return stage.jobs.map(async job => {
@@ -103,17 +124,15 @@ export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => 
 
         SetJobToken(kubeAuthnToken);
 
-        await db.query(`UPDATE jobs SET latest = false WHERE job.id = '${job.id}'`);
+        // await db.query(`UPDATE job_instance SET latest = false WHERE job.id = '${job.id}'`);
 
-        const [jobInstance] = (await db.create(`job_instance:${id}`, {
+        const [jobInstance] = (await db.create<Omit<JobInstance, "id">>(`job_instance:${id}`, {
             state: "queued",
             queueEpoch: Date.now(),
             errorCount: 0,
             warnCount: 0,
             job: job.id,
-            is_instance: true,
-            instance_number: job.runCount,
-            latest: true,
+            jobUid: id,
             pipeline: instance.spec.id,
             pipeline_instance: instance.id,
             stage: stage.id,

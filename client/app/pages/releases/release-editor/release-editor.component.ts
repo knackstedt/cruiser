@@ -127,6 +127,9 @@ export class StagesComponent extends PipelineEditorPartial {
         user: UserService
     ) {
         super(toaster, fetch, user);
+        fetch.get<{value: any[]}>(`/api/odata/users`).then(data => {
+            this.users = data.value;
+        })
     }
 
     async ngAfterViewInit() {

@@ -1,9 +1,9 @@
 import * as express from "express";
 import { route } from '../util/util';
 import { db } from '../util/db';
-import { PipelineDefinition } from '../types/pipeline';
+import { PipelineDefinition, PipelineInstance } from '../types/pipeline';
 // import { GetAllRunningJobs } from '../util/kube';
-import { RunPipeline } from '../util/pipeline';
+import { RunPipeline, RunStage } from '../util/pipeline';
 
 const router = express.Router();
 
@@ -35,6 +35,13 @@ router.use('/:id', route(async (req, res, next) => {
 
     if (!pipeline) throw { message: "Pipeline does not exist", status: 404 };
 
+    if (!Array.isArray(pipeline.stages)) {
+        return next({
+            status: 422,
+            message: "Pipeline has no stages to run"
+        });
+    }
+
     req['pipeline'] = pipeline;
 
     next();
@@ -50,13 +57,6 @@ router.get('/:id/start', route(async (req, res, next) => {
         : [req.query['stage']] as string[])
         .filter(r => !!r);
 
-    if (!Array.isArray(pipeline.stages)) {
-        return next({
-            status: 422,
-            message: "Pipeline has no stages to run"
-        });
-    }
-
     // Resolve the matching stages, ignore the others.
     const stages = stageIds.length == 0
         ? pipeline.stages.filter(s => !s.stageTrigger || s.stageTrigger.length == 0)
@@ -70,11 +70,33 @@ router.get('/:id/start', route(async (req, res, next) => {
     });
 }));
 
-router.get('/:id/freeze', route(async (req, res, next) => {
+router.get('/:id/:instance/:stage/approve', route(async (req, res, next) => {
     const pipeline: PipelineDefinition = req['pipeline'];
 
+    const forceRun = !!req.query.forceRun;
+    const [instance] = await db.select<PipelineInstance>(req.params['instance']);
+    const stage = instance?.spec?.stages?.find(s => s.id == req.params['stage']);
 
-    res.send({ message: "ok" });
+    if (!stage) return next(404);
+
+    stage.approvals = stage.approvals ?? 0;
+    stage.approvals++;
+
+    // Update the approvals
+    await db.merge(instance.id, instance);
+
+    if (forceRun) {
+        // User is forcing the run, log it.
+    }
+    // Run the stage if we have sufficient approvals.
+    if (forceRun || stage.approvals >= stage.requiredApprovals) {
+        await RunStage(instance, stage);
+    }
+
+    res.send({
+        message: "ok",
+        pipeline
+    });
 }));
 
 export const PipelineApi = router;

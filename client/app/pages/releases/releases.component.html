@@ -83,7 +83,7 @@
             >
                 <div class="row" style="height: 64px;" *cdkVirtualFor="let instance of pipelineInstances">
                     <div class="name">
-                        <div>Release - {{instance.identifier}}</div>
+                        <div>Release - {{instance.status.phase}}</div>
                         <div>{{instance.id}} - {{instance.branch}}</div>
                     </div>
                     <div>{{instance.stats.startEpoch}}</div>
@@ -92,6 +92,7 @@
                             <div
                                 class="stage-block"
                                 [class.running]="!['frozen','finished','failed',null].includes(stage['_latestJob']?.state)"
+                                [class.requires_approval]="stage.readyForApproval && (stage.approvals ?? 0) < stage.requiredApprovals"
                                 [class.empty]="stage.jobs?.length == 0"
                                 [class.pending]="stage?.['_state'] == 'pending'"
                                 [class.queued]="stage?.['_state'] == 'queued'"
@@ -102,21 +103,28 @@
                                 [class.frozen]="stage?.['_state'] == 'frozen'"
                                 [class.failed]="stage?.['_state'] == 'failed'"
                                 [class.finished]="stage?.['_state'] == 'finished'"
-                                [matTooltip]="stage?.['_state']"
+                                [matTooltip]="(stage.readyForApproval && (stage.approvals ?? 0) < stage.requiredApprovals) ? 'Stage requires Approval' : stage?.['_state']"
                                 [ngx-tooltip]="tooltip"
                                 [ngx-tooltip-context]="stage"
                                 [ngx-tooltip-config]="{ position: 'bottom', alignment: 'start', triggers:['click'], stayOpen: true }"
+                                (click)="(stage.readyForApproval && (stage.approvals ?? 0) < stage.requiredApprovals) ? approveStage(instance, stage) : 1"
                             >
-                                @switch(stage?.['_state']) {
-                                    @case ("pending") { <mat-icon fontIcon="pending" /> }
-                                    @case ("queued") { <mat-icon fontIcon="pending" /> }
-                                    @case ("initializing") { <mat-icon fontIcon="pending" /> }
-                                    @case ("cloning") { <mat-icon fontIcon="downloading" /> }
-                                    @case ("building") { <mat-icon class="rotate" fontIcon="change_circle" /> }
-                                    @case ("sealing") { <mat-icon fontIcon="archive" /> }
-                                    @case ("frozen") { <mat-icon fontIcon="pause" /> }
-                                    @case ("failed") { <mat-icon fontIcon="block" /> }
-                                    @case ("finished") { <mat-icon fontIcon="check_circle" /> }
+                                @if ((stage.readyForApproval && (stage.approvals ?? 0) < stage.requiredApprovals)) {
+                                    <mat-icon fontIcon="rule"/>
+                                }
+
+                                @else {
+                                    @switch(stage?.['_state']) {
+                                        @case ("pending") { <mat-icon fontIcon="pending" /> }
+                                        @case ("queued") { <mat-icon fontIcon="pending" /> }
+                                        @case ("initializing") { <mat-icon fontIcon="pending" /> }
+                                        @case ("cloning") { <mat-icon fontIcon="downloading" /> }
+                                        @case ("building") { <mat-icon class="rotate" fontIcon="change_circle" /> }
+                                        @case ("sealing") { <mat-icon fontIcon="archive" /> }
+                                        @case ("frozen") { <mat-icon fontIcon="pause" /> }
+                                        @case ("failed") { <mat-icon fontIcon="block" /> }
+                                        @case ("finished") { <mat-icon fontIcon="check_circle" /> }
+                                    }
                                 }
                                 <div class="label">{{stage.label}}</div>
 

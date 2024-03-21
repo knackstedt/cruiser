@@ -7,7 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { Fetch, MenuDirective, TooltipDirective } from '@dotglitch/ngx-common';
 import { NgScrollbarModule } from 'ngx-scrollbar';
 import { JobInstance } from 'types/agent-task';
-import { PipelineDefinition, PipelineInstance } from 'types/pipeline';
+import { PipelineDefinition, PipelineInstance, StageDefinition } from 'types/pipeline';
 import * as k8s from '@kubernetes/client-node';
 import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
 import { StagePopupComponent } from 'client/app/pages/stage-popup/stage-popup.component';
@@ -99,16 +99,24 @@ export class ReleasesComponent implements OnInit {
             instance.spec.stages?.forEach(stage => {
                 const compositeState = {};
                 const stateList = [];
-                stage.jobs?.forEach(job => {
-                    const jobInstance = jobInstanceList?.find(j => j.job == job.id);
-                    if (!jobInstance) return;
+                if (stage.jobs?.length == 0) {
+                    const jobInstance = jobInstanceList?.find(j => j.stage == stage.id);
+                    if (jobInstance) {
+                        compositeState[jobInstance?.state] = 1;
+                    }
+                }
+                else {
+                    stage.jobs?.forEach(job => {
+                        const jobInstance = jobInstanceList?.find(j => j.job == job.id);
+                        if (!jobInstance) return;
 
-                    job['_jobInstance'] = jobInstance;
+                        job['_jobInstance'] = jobInstance;
 
-                    compositeState[jobInstance.state] = compositeState[jobInstance.state] ?? 0;
-                    compositeState[jobInstance.state]++;
-                    stateList.push(jobInstance.state);
-                });
+                        compositeState[jobInstance.state] = compositeState[jobInstance.state] ?? 0;
+                        compositeState[jobInstance.state]++;
+                        stateList.push(jobInstance.state);
+                    });
+                }
 
                 const states = Object.keys(compositeState);
                 stage['_state'] =
@@ -141,6 +149,14 @@ export class ReleasesComponent implements OnInit {
 
     async triggerPipeline() {
         await this.fetch.get(`/api/pipeline/${this.selectedPipeline.id}/start`)
+            .then(({ pipeline }) => {
+                Object.assign(this.selectedPipeline, pipeline);
+                this.selectPipeline(this.selectedPipeline);
+            });
+    }
+
+    async approveStage(instance: PipelineInstance, stage: StageDefinition) {
+        await this.fetch.get(`/api/pipeline/${this.selectedPipeline.id}/${instance.id}/${stage.id}/approve`)
             .then(({ pipeline }) => {
                 Object.assign(this.selectedPipeline, pipeline);
                 this.selectPipeline(this.selectedPipeline);

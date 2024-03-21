@@ -4,7 +4,7 @@ import { logger } from './logger';
 import { db } from './db';
 import { JobInstance } from '../types/agent-task';
 import { environment } from './environment';
-import { JobDefinition, PipelineInstance } from '../types/pipeline';
+import { PipelineInstance } from '../types/pipeline';
 import { RunStage } from './pipeline';
 import axios from 'axios';
 
@@ -81,8 +81,46 @@ export const WatchAndFlushJobs = async() => {
 
     watchPods();
     watchJobs();
+    SweepJobs();
 };
 
+
+// In addition to the watchers, we will check every 30 seconds
+// for jobs that may have fallen through the cracks.
+// This helps us handle server restarts without leaving jobs up in the air
+// in a few rare conditions.
+const flushInterval = 30000;
+const SweepJobs = async () => {
+
+    const { body: result } = await k8sBatchApi.listNamespacedJob(environment.cruiser_kube_namespace);
+    const { body: pods } = await k8sApi.listNamespacedPod(environment.cruiser_kube_namespace);
+
+    const jobs = result.items;
+
+    for (const job of jobs) {
+        // Ensure we only perform operations on pods we expect to
+        if (job.metadata.annotations['created-by'] != "$cruiser")
+            continue;
+
+        const isRunning = job.status.active > 0;
+
+        // If the job isn't running, download the entire log
+        if (!isRunning) {
+            const pod = pods.items.find(p => p.metadata.annotations?.['job-id'] == job.metadata.annotations['job-id']);
+
+            if (!pod) {
+                logger.warn({
+                    msg: "Completed job pod has been removed prematurely.",
+                    job
+                });
+                continue;
+            }
+
+            await SaveLogAndCleanup(pod, job);
+        }
+    }
+    setTimeout(SweepJobs.bind(this), flushInterval);
+}
 
 const SaveLogAndCleanup = async (pod: k8s.V1Pod, job: k8s.V1Job) => {
     const { body: log } = await k8sApi.readNamespacedPodLog(pod.metadata.name, pod.metadata.namespace);
@@ -184,18 +222,33 @@ const processJobTriggers = async (job: k8s.V1Job, jobInstance: JobInstance) => {
     const stagesToTrigger = pipelineInstance.spec.stages
         .filter(s => s.stageTrigger?.includes(stage.id));
 
-    // Trigger all of the stages that need to be run.
-    for (const stage of stagesToTrigger) {
-        // If the stage has approvals, don't automatically trigger it.
-        if (stage.approvalCount > 0)
-            continue;
+    // TODO: Handle approval triggers
+    if (stagesToTrigger.length > 0) {
+        // Trigger all of the stages that need to be run.
+        for (const stage of stagesToTrigger) {
+            // If the stage has approvals, don't automatically trigger it.
+            if (stage.requiredApprovals > 0) {
+                // Mark the stage as ready for approval
+                stage.readyForApproval = true;
+                await db.merge(pipelineInstance.id, pipelineInstance);
+                continue;
+            }
 
-        // If the job failed, only execute the webhooks that
-        // are configured tp run on failuire.
-        if (isFailure && !stage.executeOnFailure)
-            continue;
+            // If the job failed, only execute the webhooks that
+            // are configured tp run on failuire.
+            if (isFailure && !stage.executeOnFailure)
+                continue;
 
-        // Run the stage
-        await RunStage(pipelineInstance, stage);
+            // Run the stage
+            await RunStage(pipelineInstance, stage);
+        }
+    }
+    else {
+        // If there are no pipelines left to run, we'll close out the
+        // pipeline instance and collect stats for the run
+        pipelineInstance.status.phase = "stopped";
+        pipelineInstance.status.endEpoch = Date.now();
+        pipelineInstance.stats.totalRuntime = pipelineInstance.status.endEpoch - pipelineInstance.status.startEpoch;
+        await db.merge(pipelineInstance.id, pipelineInstance);
     }
 }

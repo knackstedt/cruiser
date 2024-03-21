@@ -58,7 +58,7 @@
                         <mat-label>Approvers</mat-label>
                         <mat-select
                             multiple
-                            [(value)]="selectedStage.runApprovers"
+                            [(value)]="selectedStage.approvalUsers"
                             (valueChange)="renderGraph()"
                             (valueChange)="dataChangeEmitter.next(0)"
                         >
@@ -66,7 +66,7 @@
                                 <mat-option
                                     [value]="user.id"
                                 >
-                                    {{user.label}}
+                                    {{user.label ?? user.login}}
                                 </mat-option>
                             }
                         </mat-select>
@@ -74,7 +74,7 @@
 
                     <mat-form-field style="width: 100%;">
                         <mat-label>Minimum number of approvals to run</mat-label>
-                        <input matInput type="number" min="0" [(ngModel)]="selectedStage.approvalCount" (valueChange)="dataChangeEmitter.next(0)" />
+                        <input matInput type="number" min="0" [(ngModel)]="selectedStage.requiredApprovals" (valueChange)="dataChangeEmitter.next(0)" />
                     </mat-form-field>
                 }
 

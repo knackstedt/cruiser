@@ -1,6 +1,5 @@
 export type JobInstance = {
     id: string
-    label: string
     state:
         "queued"        | // Pending provisioning of job container
         "initializing"  | // Job is just starting up
@@ -11,21 +10,22 @@ export type JobInstance = {
         "finished"      | // Job is finished and acknowledged by scheduler
         "failed"
     pipeline: string,
+    pipeline_instance: string,
     job: string,
     jobUid: string
     stage?: string,
-    kubeNamespace: string
-    kubePodName: string
+    kubeNamespace?: string
+    kubePodName?: string
     kubeAuthnToken?: string,
 
     queueEpoch: number
-    initEpoch: number
-    cloneEpoch: number
-    buildEpoch: number
-    uploadEpoch: number
-    endEpoch: number
+    initEpoch?: number
+    cloneEpoch?: number
+    buildEpoch?: number
+    uploadEpoch?: number
+    endEpoch?: number
 
-    errorCount: number
-    warnCount: number
+    errorCount?: number
+    warnCount?: number
 };
 
