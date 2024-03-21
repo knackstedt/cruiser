@@ -10,6 +10,7 @@ kc.loadFromDefault();
 const k8sBatchApi = kc.makeApiClient(k8s.BatchV1Api);
 const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
 const k8sWatch = new k8s.Watch(kc);
+// const listWatch = new k8s.ListWatch(kc)
 
 if (!environment.cruiser_log_dir.endsWith('/')) environment.cruiser_log_dir += '/';
 fs.mkdirSync(environment.cruiser_log_dir, { recursive: true });
@@ -33,7 +34,7 @@ export const WatchAndFlushJobs = async() => {
                 podMap[pod.metadata.annotations['job-instance-id']] = pod;
             }
         },
-        (err) => console.error(err)
+        (err) => err?.message !== 'aborted' ? watchPods() : console.error(err)
     )
     const watchJobs = () => k8sWatch.watch(`/apis/batch/v1/namespaces/${environment.cruiser_kube_namespace}/jobs`,
         { },
@@ -73,53 +74,13 @@ export const WatchAndFlushJobs = async() => {
                 SaveLogAndCleanup(pod, job);
             }
         },
-        (err) => console.error(err)
+        (err) => err?.message !== 'aborted' ? watchJobs() : console.error(err)
     );
 
     watchPods();
     watchJobs();
-    SweepJobs();
 };
 
-// In addition to the watchers, we will check every 30 seconds
-// for jobs that may have fallen through the cracks
-// This entire block shouldn't be necessary, but it is left
-// in until we know how stable the watchers are.
-const flushInterval = 30000;
-const SweepJobs = async () => {
-
-    // TODO: jobs with custom namespaces won't be flushed
-    const namespace = process.env['CRUISER_AGENT_NAMESPACE'] || "cruiser";
-
-    const { body: result } = await k8sBatchApi.listNamespacedJob(namespace);
-    const { body: pods } = await k8sApi.listNamespacedPod(namespace);
-
-    const jobs = result.items;
-
-    for (const job of jobs) {
-        // Ensure we only perform operations on pods we expect to
-        if (job.metadata.annotations['created-by'] != "$cruiser")
-            continue;
-
-        const isRunning = job.status.active > 0;
-
-        // If the job isn't running, download the entire log
-        if (!isRunning) {
-            const pod = pods.items.find(p => p.metadata.annotations?.['job-id'] == job.metadata.annotations['job-id']);
-
-            if (!pod) {
-                logger.warn({
-                    msg: "Completed job pod has been removed prematurely.",
-                    job
-                });
-                continue;
-            }
-
-            await SaveLogAndCleanup(pod, job);
-        }
-    }
-    setTimeout(SweepJobs.bind(this), flushInterval);
-}
 
 const SaveLogAndCleanup = async (pod: k8s.V1Pod, job: k8s.V1Job) => {
     const { body: log } = await k8sApi.readNamespacedPodLog(pod.metadata.name, pod.metadata.namespace);
