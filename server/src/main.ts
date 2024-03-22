@@ -25,6 +25,7 @@ import { CronScheduler } from './util/scheduler';
 import { BlobUploadApi } from './api/filestorage';
 import { WatchAndFlushJobs } from './util/job-flusher';
 import { environment } from './util/environment';
+import pack from '../../package.json';
 
 const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
 
@@ -81,6 +82,7 @@ const bootstrapServer = async () => {
         }
     });
 
+    app.use("/api/version",   (req, res) => res.send({ version: pack.version }));
     app.use("/api/user",      UserApi);
     app.use("/api/odata",     DatabaseTableApi());
     app.use("/api/pipeline", PipelineApi);

@@ -4,8 +4,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Pages } from '../../component.registry';
-import { MenuDirective, MenuItem, NavigationService, ThemeService } from '@dotglitch/ngx-common';
-
+import { Fetch, MenuDirective, MenuItem, NavigationService, ThemeService } from '@dotglitch/ngx-common';
+import pack from '../../../../package.json';
 
 @Component({
     selector: 'app-menu',
@@ -63,18 +63,36 @@ export class NavMenuComponent {
                     // label: "Dark",
                     labelTemplate: () => `${this.theme.value == "dark" ? '⏺' : '\u00A0\u00A0\u00A0\u00A0'} Dark`,
                     action: () => this.theme.setTheme("dark")
-                }
+                },
             ]
         },
+        {
+            label: `Client Version: ${pack.version}`
+        },
+        {
+            labelTemplate: () => `Server Version: ${this.serverVersion}`
+        }
         // "separator",
         // { label: "Log out", link: "/api/logout?ngsw-bypass=true" }
     ]
 
+    serverVersion = '';
+    interval;
+
     constructor(
-        public readonly sanitizer: DomSanitizer,
+        public  readonly sanitizer: DomSanitizer,
+        public  readonly navigator: NavigationService,
         private readonly theme: ThemeService,
-        public readonly navigator: NavigationService
+        private readonly fetch: Fetch
     ) {
 
+        fetch.get<any>(`/api/version`).then(v => this.serverVersion = v.version);
+        this.interval = setInterval(() => {
+            fetch.get<any>(`/api/version`).then(v => this.serverVersion = v.version);
+        }, 60*60*1000) // Check hourly for a new backend version
+    }
+
+    ngOnDestroy() {
+        clearInterval(this.interval);
     }
 }
