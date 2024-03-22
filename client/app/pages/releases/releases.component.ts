@@ -118,6 +118,12 @@ export class ReleasesComponent implements OnInit {
                     });
                 }
 
+                const approval = instance.status.stageApprovals
+                    ?.find(sa => sa.stageId == stage.id);
+
+                stage['_isReadyForApproval'] = approval?.readyForApproval;
+                stage['_isApproved'] = approval?.approvalCount >= stage.requiredApprovals;
+
                 const states = Object.keys(compositeState);
                 stage['_state'] =
                     states.length == 0
