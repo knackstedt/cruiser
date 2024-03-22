@@ -134,10 +134,6 @@ export type StageDefinition = {
     runCount?: number;
 
     executeOnFailure?: boolean;
-
-    /* Instance variables */
-    approvals?: number,
-    readyForApproval?: boolean,
 }
 
 export type SourceConfiguration = Partial<{
@@ -217,7 +213,14 @@ export type PipelineInstance = {
         phase: "started" | "running" | "stopped" | "waiting" | "failed",
         startEpoch: number,
         jobInstances: string[]
-        endEpoch?: number
+        endEpoch?: number,
+        stageApprovals?: {
+            stageId: string,
+            approvalCount: number,
+            readyForApproval: boolean,
+            approvers: string[],
+            hasRun: boolean
+        }[]
     },
     stats: {
         successfulTaskCount: number;

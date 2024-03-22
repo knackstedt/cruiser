@@ -229,7 +229,14 @@ const processJobTriggers = async (job: k8s.V1Job, jobInstance: JobInstance) => {
             // If the stage has approvals, don't automatically trigger it.
             if (stage.requiredApprovals > 0) {
                 // Mark the stage as ready for approval
-                stage.readyForApproval = true;
+                pipelineInstance.status.stageApprovals = pipelineInstance.status.stageApprovals ?? [];
+                pipelineInstance.status.stageApprovals.push({
+                    stageId: stage.id,
+                    readyForApproval: true,
+                    approvalCount: 0,
+                    approvers: [],
+                    hasRun: false
+                })
                 await db.merge(pipelineInstance.id, pipelineInstance);
                 continue;
             }

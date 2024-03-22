@@ -79,8 +79,18 @@ router.get('/:id/:instance/:stage/approve', route(async (req, res, next) => {
 
     if (!stage) return next(404);
 
-    stage.approvals = stage.approvals ?? 0;
-    stage.approvals++;
+    // Find the approval for this specific stage
+    // If one can't be found, the system is not in the right state
+    // to perform an approval.
+    const approval = instance.status.stageApprovals.find(sa => sa.stageId == stage.id);
+    if (!approval) return next(428);
+
+    // TODO: How do we want to handle this?
+    if (approval.hasRun) {
+        return next(425);
+    }
+    approval.approvalCount++;
+    approval.approvers.push(req.session.gh_user.login);
 
     // Update the approvals
     await db.merge(instance.id, instance);
@@ -89,7 +99,9 @@ router.get('/:id/:instance/:stage/approve', route(async (req, res, next) => {
         // User is forcing the run, log it.
     }
     // Run the stage if we have sufficient approvals.
-    if (forceRun || stage.approvals >= stage.requiredApprovals) {
+    if (forceRun || approval.approvalCount >= stage.requiredApprovals) {
+        approval.hasRun = true;
+        await db.merge(instance.id, instance);
         await RunStage(instance, stage);
     }
 
