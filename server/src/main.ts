@@ -2,6 +2,7 @@ import "./types";
 import express, { Express } from 'express';
 import http from 'http';
 import dotenv from 'dotenv';
+import fs from 'fs-extra';
 
 dotenv.config({
     path: process.cwd() + '/../.env'
@@ -81,7 +82,7 @@ const bootstrapServer = async () => {
         }
     });
 
-    const pack = require(environment.is_production ? './package.json' : '../../package.json')
+    const pack = await fs.readJson(environment.is_production ? '/app/package.json' : __dirname + '/../../package.json')
     app.use("/api/version",   (req, res) => res.send({ version: pack.version }));
     app.use("/api/user",      UserApi);
     app.use("/api/odata",     DatabaseTableApi());
