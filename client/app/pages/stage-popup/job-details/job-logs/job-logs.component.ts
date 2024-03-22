@@ -93,17 +93,21 @@ export class JobLogsComponent {
 
             const iso = (new Date(time)).toISOString();
 
-            this.lines.push({
-                stream,
-                msg: line,
-                level: stream == "stderr" ? "error" : "info",
-                data: parse(line).spans,
-                fullTime: iso.replace('T', ' '),
-                time: iso.replace(/^[^T]+T/, ''),
-                rendered: false,
-                index: -1,
-                marker: false
-            });
+            line.split('\n').forEach(line => {
+                if (line.trim().length == 0) return;
+
+                this.lines.push({
+                    stream,
+                    msg: line,
+                    level: stream == "stderr" ? "error" : "info",
+                    data: parse(line).spans,
+                    fullTime: iso.replace('T', ' '),
+                    time: iso.replace(/^[^T]+T/, ''),
+                    rendered: false,
+                    index: -1,
+                    marker: false
+                });
+            })
 
             if (doCommit) {
                 this.filterLines();
@@ -111,28 +115,25 @@ export class JobLogsComponent {
         };
 
         let stdout = '';
-        const parseStdOut = ({ data, time }: { data: ArrayBuffer, time: number; }, doCommit = true) => {
-            const text = this.decoder.decode(data);
+        const parseStdOut = ({ data, time }: { data: ArrayBuffer | string, time: number; }, doCommit = true) => {
+            const text = data instanceof ArrayBuffer ? this.decoder.decode(data) : data;
 
+            stdout += text;
             if (text.endsWith('\n')) {
-                commitLine(stdout + text, "stdout", time, doCommit);
+                commitLine(stdout, "stdout", time, doCommit);
                 stdout = '';
-            }
-            else {
-                stdout = text;
             }
         };
 
         let stderr = '';
-        const parseStdErr = ({ data, time }: { data: ArrayBuffer, time: number; }, doCommit = true) => {
-            const text = this.decoder.decode(data);
+        const parseStdErr = ({ data, time }: { data: ArrayBuffer | string, time: number; }, doCommit = true) => {
+            const text = data instanceof ArrayBuffer ? this.decoder.decode(data) : data;
+
+            stderr += text;
 
             if (text.endsWith('\n')) {
-                commitLine(stderr + text, "stderr", time, doCommit);
+                commitLine(stderr, "stderr", time, doCommit);
                 stderr = '';
-            }
-            else {
-                stderr = text;
             }
         };
 
@@ -164,21 +165,42 @@ export class JobLogsComponent {
             this.isCompletedRun = true;
             const data = await this.fetch.get<string>(`/api/blobstore/log/${this.jobInstance.pipeline}/${this.jobInstance.stage}/${this.jobInstance.job}/${this.jobInstance.id}.log`, { responseType: "text" });
             const entries = data.split('\n').map(line => {
-                // Try to parse the line, don't explode if a line is messed up.
-                try { return JSON.parse(line) } catch(err) { return {} }
-            });
+                if (!line || line.trim().length == 0) return null;
 
+                // We will assume all lines that don't start with a curlybrace are stdout/stderr
+                if (!line.startsWith("{")) {
+                    const ev = line.slice(0,10);
+                    const t = parseInt(line.slice(11,24));
+                    const msg = line.slice(25);
+
+                    return {
+                        ev,
+                        time: t,
+                        data: {
+                            data: msg + '\n',
+                            time: t
+                        }
+                    }
+                }
+                // Try to parse the line, don't explode if a line is messed up.
+                try { return JSON.parse(line) } catch(err) { return { level: 50, msg: "Failed to deserialize entry", err } }
+            }).filter(l => l);
+
+            entries.sort((a,b) => a.time > b.time ? 1 : -1);
+            console.log(entries);
             console.time("Parse log history");
             const el = entries.length;
 
             const notASwitch = {
                 "log:stdout": parseStdOut,
                 "log:stderr": parseStdErr,
-                "log:agent": parseAgent
+                "log:agent":  parseAgent
             };
 
             for (let i = 0; i < el; i++) {
-                notASwitch[entries[i].ev]?.(entries[i].data, false);
+                const fn = notASwitch[entries[i].ev];
+                // if (!fn) console.log(entries[i]);
+                fn?.(entries[i].data, false);
             }
             console.timeEnd("Parse log history");
 
@@ -236,7 +258,7 @@ export class JobLogsComponent {
     }
 
     ngOnDestroy() {
-        this.socket.disconnect();
+        this.socket?.disconnect();
     }
 
     filterLines() {

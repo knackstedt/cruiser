@@ -87,9 +87,9 @@ export class ReleasesComponent implements OnInit {
         const { value: instances } = await this.fetch.get<{ value: PipelineInstance[]; }>(`/api/odata/pipeline_instance?$filter=spec.id eq '${this.selectedPipeline.id}'&$orderby=id desc&$fetch=status.jobInstances&$top=20`)
         this.parseInstances(instances);
 
-        this.interval = setTimeout(() => {
-            this.getInstances();
-        }, 2000);
+        // this.interval = setTimeout(() => {
+        //     this.getInstances();
+        // }, 2000);
     }
 
     parseInstances(instances: PipelineInstance[]) {

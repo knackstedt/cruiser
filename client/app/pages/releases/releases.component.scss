@@ -71,11 +71,14 @@
     align-items: center;
     height: 36px;
     width: 120px;
-    background-color: #4c4c4c;
+    --background-color: #4c4c4c;
+    background-color: var(--background-color);
     border: 1px solid #2b2b2b;
     border-radius: 6px;
     overflow: hidden;
     gap: 8px;
+    font-weight: bolder;
+    transition: color 100ms ease, border-color 100ms ease, background-color 100ms ease;
 
     &.running {
         padding-bottom: 4px;
@@ -103,16 +106,36 @@
     }
 
     &.failed {
-        background-color: #f08469;
-        color: #5e261b
+        --background-color: #7a311e;
+        --border-color: #ff5722;
+        --color: #fff;
+
+        --filled-background-color: #f08469;
+        --filled-color: #5e261b;
     }
     &.finished {
-        background-color: #69f0ae;
-        color: #1b5e20
+        --background-color: #23796d;
+        --border-color: #28ff97;
+        --color: #fff;
+
+        --filled-color: #1b5e20;
+        --filled-background-color: #69f0ae;
     }
     &.requires_approval {
-        background-color: #69ccf0;
-        color: #1b435e
+        --background-color: #004174;
+        --border-color: #2196F3;
+        --color: #fff;
+
+        --filled-background-color: #69ccf0;
+        --filled-color: #1b435e;
+    }
+    &.filled {
+        background-color: var(--filled-background-color, var(--background-color));
+        color: var(--filled-color);
+    }
+    &.outlined {
+        color: var(--color);
+        border: 2px solid var(--border-color);
     }
 }
 

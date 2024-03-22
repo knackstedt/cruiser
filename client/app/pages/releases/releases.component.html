@@ -66,9 +66,9 @@
             </button>
         </div>
 
-        <div>
-            <div>Release</div>
-            <div>Created</div>
+        <div class="header" style="display: flex; align-items: center;">
+            <div style="width: 400px;">Release</div>
+            <!-- <div style="">Created</div> -->
             <div>Stage</div>
         </div>
 
@@ -93,7 +93,8 @@
                                 class="stage-block"
                                 [class.running]="!['frozen','finished','failed',null].includes(stage['_latestJob']?.state)"
                                 [class.requires_approval]="stage.readyForApproval && (stage.approvals ?? 0) < stage.requiredApprovals"
-                                [class.empty]="stage.jobs?.length == 0"
+                                [class.filled]="stage.jobs?.length > 0"
+                                [class.outlined]="!(stage.jobs?.length > 0)"
                                 [class.pending]="stage?.['_state'] == 'pending'"
                                 [class.queued]="stage?.['_state'] == 'queued'"
                                 [class.initializing]="stage?.['_state'] == 'initializing'"
@@ -104,7 +105,7 @@
                                 [class.failed]="stage?.['_state'] == 'failed'"
                                 [class.finished]="stage?.['_state'] == 'finished'"
                                 [matTooltip]="(stage.readyForApproval && (stage.approvals ?? 0) < stage.requiredApprovals) ? 'Stage requires Approval' : stage?.['_state']"
-                                [ngx-tooltip]="tooltip"
+                                [ngx-tooltip]="stage.jobs?.length > 0 ? tooltip : null"
                                 [ngx-tooltip-context]="stage"
                                 [ngx-tooltip-config]="{ position: 'bottom', alignment: 'start', triggers:['click'], stayOpen: true }"
                                 (click)="(stage.readyForApproval && (stage.approvals ?? 0) < stage.requiredApprovals) ? approveStage(instance, stage) : 1"
