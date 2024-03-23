@@ -26,7 +26,7 @@ export const RunProcess = async (
 
         if (task.preBreakpoint) {
             logger.info({ msg: `Tripping on Breakpoint`, breakpoint: true });
-            await TripBreakpoint(jobInstance, false);
+            await TripBreakpoint(jobInstance, false, taskGroup, task);
             logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false });
         }
 
@@ -130,7 +130,7 @@ export const RunProcess = async (
             });
             if (task.postBreakpoint) {
                 logger.info({ msg: `Tripping on Breakpoint`, breakpoint: true });
-                await TripBreakpoint(jobInstance);
+                await TripBreakpoint(jobInstance, true, taskGroup, task);
                 logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false });
             }
         }
@@ -141,7 +141,7 @@ export const RunProcess = async (
             });
             if (task.disableErrorBreakpoint != true) {
                 logger.info({ msg: `Breaking on error`, breakpoint: true, error: true });
-                await TripBreakpoint(jobInstance);
+                await TripBreakpoint(jobInstance, true, taskGroup, task);
                 logger.info({ msg: `Resuming from Breakpoint`, breakpoint: true, error: false });
             }
         }

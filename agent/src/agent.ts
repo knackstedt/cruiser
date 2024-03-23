@@ -8,8 +8,8 @@ import { RunTaskGroupsInParallel } from './run-tasks';
 import { BindSocketBreakpoint } from './socket/breakpoint';
 import { validateJobCanRun } from './util/job-validator';
 
-export const RunAgentProcess = async (taskId: string) => {
-    const { pipelineInstance, pipeline, stage, job, kubeTask, jobInstance } = await getConfig(taskId);
+export const RunAgentProcess = async (jobInstanceId: string) => {
+    const { pipelineInstance, pipeline, stage, job, kubeTask, jobInstance } = await getConfig(jobInstanceId);
 
     const socket = await getSocket(pipeline, job);
     const logger = await getSocketLogger(socket);
@@ -19,19 +19,19 @@ export const RunAgentProcess = async (taskId: string) => {
 
     // Perform preflight checks
     logger.info({ state: "Initializing", msg: "Begin initializing" });
-    await api.patch(`/api/odata/${taskId}`, { state: "initializing", initEpoch: Date.now() })
+    await api.patch(`/api/odata/${jobInstanceId}`, { state: "initializing", initEpoch: Date.now() })
     await validateJobCanRun(job, logger);
     logger.info({ state: "Initializing", msg: "Agent initialize completed" });
 
     // Download sources
     logger.info({ state: "Cloning", msg: "Agent source cloning", block: "start" });
-    await api.patch(`/api/odata/${taskId}`, { state: "cloning", cloneEpoch: Date.now() })
+    await api.patch(`/api/odata/${jobInstanceId}`, { state: "cloning", cloneEpoch: Date.now() })
     await ResolveSources(pipeline, jobInstance, logger);
     logger.info({ state: "Cloning", msg: "Agent source cloning completed", block: "end" });
 
     // Follow job steps to build code
     logger.info({ state: "Building", msg: "Agent building", block: "start" });
-    await api.patch(`/api/odata/${taskId}`, { state: "building", buildEpoch: Date.now() })
+    await api.patch(`/api/odata/${jobInstanceId}`, { state: "building", buildEpoch: Date.now() })
     await RunTaskGroupsInParallel(
         pipelineInstance,
         pipeline,
@@ -44,7 +44,7 @@ export const RunAgentProcess = async (taskId: string) => {
 
     // Seal (compress) artifacts
     logger.info({ state: "Sealing", msg: "Agent sealing", block: "start" });
-    await api.patch(`/api/odata/${taskId}`, { state: "sealing", uploadEpoch: Date.now() })
+    await api.patch(`/api/odata/${jobInstanceId}`, { state: "sealing", uploadEpoch: Date.now() })
     // TODO: compress and upload artifacts
     // (format? progress?)
     // await Promise.all(job.artifacts.map(async a => {
@@ -55,5 +55,5 @@ export const RunAgentProcess = async (taskId: string) => {
 
 
     logger.info({ state: "finished", msg: "Agent has completed it's work.", block: "end" });
-    await api.patch(`/api/odata/${taskId}`, { state: "finished", endEpoch: Date.now() });
+    await api.patch(`/api/odata/${jobInstanceId}`, { state: "finished", endEpoch: Date.now() });
 }
