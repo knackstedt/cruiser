@@ -99,14 +99,14 @@ const SweepJobs = async () => {
 
     for (const job of jobs) {
         // Ensure we only perform operations on pods we expect to
-        if (job.metadata.annotations['created-by'] != "$cruiser")
+        if (job.metadata.annotations['cruiser.dev/created-by'] != "$cruiser")
             continue;
 
         const isRunning = job.status.active > 0;
 
         // If the job isn't running, download the entire log
         if (!isRunning) {
-            const pod = pods.items.find(p => p.metadata.annotations?.['job-id'] == job.metadata.annotations['job-id']);
+            const pod = pods.items.find(p => p.metadata.annotations?.['cruiser.dev/job-id'] == job.metadata.annotations['cruiser.dev/job-id']);
 
             if (!pod) {
                 logger.warn({
