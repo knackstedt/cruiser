@@ -2,15 +2,21 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { exists, mkdir } from 'fs-extra';
 import environment from './environment';
 
-import { TaskDefinition } from '../../types/pipeline';
+import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition, TaskDefinition, TaskGroupDefinition } from '../../types/pipeline';
 import { getSocketLogger } from '../socket/logger';
 import { JobInstance } from '../../types/agent-task';
 import { TripBreakpoint } from '../socket/breakpoint';
 import { ParseCommand } from './command-parser';
+import { api } from './axios';
 
 export const RunProcess = async (
-    jobInstance: JobInstance,
+    pipelineInstance: PipelineInstance,
+    pipeline: PipelineDefinition,
+    stage: StageDefinition,
+    job: JobDefinition,
+    taskGroup: TaskGroupDefinition,
     task: TaskDefinition,
+    jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof getSocketLogger>>
 ) => {
     let retry = false;
@@ -28,25 +34,56 @@ export const RunProcess = async (
         if (!await exists(task.workingDirectory || environment.buildDir))
             await mkdir(task.workingDirectory || environment.buildDir, { recursive: true });
 
-        const process: ChildProcessWithoutNullStreams = await new Promise<ChildProcessWithoutNullStreams>((res, rej) => {
+        const process: ChildProcessWithoutNullStreams = await new Promise<ChildProcessWithoutNullStreams>(async(res, rej) => {
             try {
                 // TODO: join env separately.
                 // const specifiedCommand = task.taskScriptArguments['command'];
+
+
                 const {
                     command,
                     args,
                     env
                 } = ParseCommand(task.taskScriptArguments['command'] + ' ' + task.taskScriptArguments['arguments']);
 
+                const execEnv = {};
+                const roots = [ pipeline, stage, job, taskGroup, task ];
+
+                for (let i = 0; i < roots.length; i++) {
+                    const envList = roots[i].environment;
+
+                    for (let j = 0; j < envList.length; j++) {
+                        const envItem = envList[j];
+
+                        if (envItem.isSecret) {
+                            const { data: result } = await api.get(`/api/${roots[i].id}/${envItem.value}`)
+                                .catch(err => {
+                                    logger.error(err);
+                                    return { data: null, err };
+                                });
+
+                            if (!result) {
+                                continue;
+                            }
+                            execEnv[envItem.name] = result.value;
+                        }
+                        else {
+                            execEnv[envItem.name] = envItem.value;
+                        }
+                    }
+                }
+
+
                 logger.info({
                     msg: `Spawning process`,
-                    command: command,
+                    command,
                     args,
+                    execEnv,
                     task
                 });
 
                 const process = spawn(command, args, {
-                    env: env,
+                    env: execEnv,
                     cwd: task.workingDirectory || environment.buildDir,
                     timeout: task.commandTimeout || 0,
                     windowsHide: true

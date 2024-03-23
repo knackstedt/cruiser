@@ -9,7 +9,7 @@ import { BindSocketBreakpoint } from './socket/breakpoint';
 import { validateJobCanRun } from './util/job-validator';
 
 export const RunAgentProcess = async (taskId: string) => {
-    const { job, pipeline, kubeTask, jobInstance } = await getConfig(taskId);
+    const { pipelineInstance, pipeline, stage, job, kubeTask, jobInstance } = await getConfig(taskId);
 
     const socket = await getSocket(pipeline, job);
     const logger = await getSocketLogger(socket);
@@ -32,7 +32,14 @@ export const RunAgentProcess = async (taskId: string) => {
     // Follow job steps to build code
     logger.info({ state: "Building", msg: "Agent building", block: "start" });
     await api.patch(`/api/odata/${taskId}`, { state: "building", buildEpoch: Date.now() })
-    await RunTaskGroupsInParallel(job.taskGroups, kubeTask, logger);
+    await RunTaskGroupsInParallel(
+        pipelineInstance,
+        pipeline,
+        stage,
+        job,
+        kubeTask,
+        logger
+    );
     logger.info({ state: "Building", msg: "Agent build completed", block: "end" });
 
     // Seal (compress) artifacts

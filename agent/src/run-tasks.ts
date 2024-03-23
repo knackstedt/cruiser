@@ -1,20 +1,23 @@
 
 import { sleep } from './util/sleep';
 import { orderSort } from './util/order-sort';
-import { TaskGroupDefinition } from '../types/pipeline';
+import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition, TaskGroupDefinition } from '../types/pipeline';
 import { api } from './util/axios';
 import { getSocketLogger } from './socket/logger';
 import { RunProcess } from './util/process-manager';
 import { JobInstance } from '../types/agent-task';
 
 export const RunTaskGroupsInParallel = (
-    taskGroups: TaskGroupDefinition[],
+    pipelineInstance: PipelineInstance,
+    pipeline: PipelineDefinition,
+    stage: StageDefinition,
+    job: JobDefinition,
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof getSocketLogger>>
 ) => {
-    taskGroups?.sort(orderSort);
+    job.taskGroups?.sort(orderSort);
 
-    return Promise.all(taskGroups.map(taskGroup => new Promise(async (r) => {
+    return Promise.all(job.taskGroups.map(taskGroup => new Promise(async (r) => {
         try {
             logger.info({
                 msg: `Initiating TaskGroup ${taskGroup.label}`,
@@ -39,7 +42,16 @@ export const RunTaskGroupsInParallel = (
                 const env = {};
                 Object.assign(envVars, env);
 
-                await RunProcess(jobInstance, task, logger);
+                await RunProcess(
+                    pipelineInstance,
+                    pipeline,
+                    stage,
+                    job,
+                    taskGroup,
+                    task,
+                    jobInstance,
+                    logger
+                );
             }
 
             logger.info({
