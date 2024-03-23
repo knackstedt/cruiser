@@ -22,7 +22,7 @@ router.get('/:scope/:key', route(async (req, res, next) => {
         environment.vault_storage_path + "/" + secret.id
     );
 
-    res.send(Decrypt(secret.data, encryptionKey));
+    res.send({ value: Decrypt(secret.data, encryptionKey) });
 }));
 
 router.post('/:scope/:key', route(async (req, res, next) => {
