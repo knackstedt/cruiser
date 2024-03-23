@@ -33,7 +33,7 @@ export type TaskDefinition = {
 
     //taskOnSelfFailure: TaskDefinition
 
-    environment?: { name: string, value: string; }[]
+    environment?: EnvironmentVariable[]
 
     // Id of the agent container script the task will run
     // defaults to `command`
@@ -53,7 +53,7 @@ export type TaskGroupDefinition = {
     disabled?: boolean
 
 
-    environment?: { name: string, value: string; }[]
+    environment?: EnvironmentVariable[]
     tasks?: TaskDefinition[]
 }
 
@@ -74,7 +74,7 @@ export type JobDefinition = {
 
     taskGroups: TaskGroupDefinition[]
     artifacts?: BuildArtifact[]
-    environment?: { name: string, value: string; }[]
+    environment?: EnvironmentVariable[]
 
     kubeNamespace?: string,
     kubeJobAnnotations?: { [key: string]: string },
@@ -120,7 +120,7 @@ export type StageDefinition = {
     cleanupArtifacts?: boolean
     cleanDirectory?: boolean
     autoTriggerOnPreviousStageCompletion?: boolean
-    environment?: { name: string, value: string; }[]
+    environment?: EnvironmentVariable[]
     jobs?: JobDefinition[],
 
     sources?: SourceConfiguration[];
@@ -187,7 +187,7 @@ export type PipelineDefinition = {
 
     order: number
     stages?: StageDefinition[]
-    environment?: { name: string, value: string }[]
+    environment?: EnvironmentVariable[]
     sources?: SourceConfiguration[],
     history?: HistoryObject[]
 

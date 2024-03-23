@@ -215,6 +215,11 @@
                     >
                         Render as Diamond
                     </mat-checkbox>
+
+                    <app-variables-section
+                        [item]="selectedStage"
+                        (valueChange)="dataChangeEmitter.next(0)"
+                    />
                 }
 
                 @case ("source") {
@@ -296,7 +301,12 @@
                         showToc="off"
                     />
 
+                    <app-variables-section
+                        [item]="pipeline"
+                        (valueChange)="dataChangeEmitter.next(0)"
+                    />
                 }
+
                 @default {
                     Select something.
                 }

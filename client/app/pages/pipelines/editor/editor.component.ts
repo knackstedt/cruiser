@@ -13,13 +13,14 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Fetch, VscodeComponent } from '@dotglitch/ngx-common';
 import { StageEditorComponent } from './stages/stage-editor/stage-editor.component';
 import { StackEditorComponent } from 'ngx-stackedit';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject, debounceTime } from 'rxjs';
 import { SourceConfiguration } from 'types/pipeline';
 import { ulid } from 'ulidx';
 import { UserService } from 'client/app/services/user.service';
 import { ToastrService } from 'ngx-toastr';
 import { PipelineEditorPartial } from 'client/app/utils/pipeline-editor.partial';
 import { StagesComponent } from 'client/app/pages/releases/release-editor/release-editor.component';
+import { VariablesSectionComponent } from 'client/app/components/variables-section/variables-section.component';
 
 @Component({
     selector: 'app-pipeline-editor',
@@ -38,13 +39,23 @@ import { StagesComponent } from 'client/app/pages/releases/release-editor/releas
         FormsModule,
         VscodeComponent,
         StackEditorComponent,
-        StageEditorComponent
+        StageEditorComponent,
+        VariablesSectionComponent
     ],
     standalone: true
 })
 export class PipelineEditorComponent extends PipelineEditorPartial {
 
     ngxShowDistractor$ = new BehaviorSubject(false);
+
+
+    dataChangeEmitter = new Subject();
+    dataChange$ = this.dataChangeEmitter.pipe(debounceTime(500));
+
+    subscriptions = [
+        // Save partial changes every 3s
+        this.dataChange$.subscribe(() => this.patchPipeline())
+    ]
 
     constructor(
         @Optional() public dialogRef: MatDialogRef<any>,
@@ -55,6 +66,9 @@ export class PipelineEditorComponent extends PipelineEditorPartial {
         super(toaster, fetch, user);
     }
 
+    ngOnDestroy() {
+        this.subscriptions.forEach(s => s.unsubscribe())
+    }
 
     async addSource() {
         const source = {

@@ -1,6 +1,5 @@
 export type EnvironmentVariable = {
-    id: string
-    key: string,
+    name: string
     value: string,
     isSecret: boolean
 }

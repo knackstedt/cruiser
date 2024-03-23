@@ -1,10 +1,13 @@
 export const environment = Object.seal({
     cruiser_kube_namespace: process.env['CRUISER_KUBE_NAMESPACE'] || process.env['CRUISER_AGENT_NAMESPACE'] || "cruiser",
     cruiser_log_dir: (process.env['CRUISER_AGENT_LOG_PATH'] || (__dirname + "/../../../data")) + "/log",
-    cruiser_blob_dir: (process.env['CRUISER_BLOB_PATH'] || (__dirname + "/../../../data")) + "/",
+    cruiser_blob_dir: (process.env['CRUISER_BLOB_PATH'] || (__dirname + "/../../../data")) + "/blob",
     cruiser_cluster_url: process.env['DOTGLITCH_DOTOPS_CLUSTER_URL'],
     cruiser_admin_id: process.env['CRUISER_ADMINISTRATOR'],
     cruiser_scheduler_poll_interval: parseInt(process.env['CRUISER_SCHEDULER_POLL_INTERVAL'] || (1 * 60).toString()),
+
+    vault_secret: process.env['CRUISER_VAULT_SECRET'],
+    vault_storage_path: (process.env['CRUISER_VAULT_PATH'] || (__dirname + "/../../../data")) + "/vault",
 
     surreal_url: process.env['SURREAL_URL'],
     surreal_user: process.env['SURREAL_USER'],

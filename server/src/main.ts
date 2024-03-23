@@ -26,6 +26,7 @@ import { CronScheduler } from './util/scheduler';
 import { BlobUploadApi } from './api/filestorage';
 import { WatchAndFlushJobs } from './util/job-flusher';
 import { environment } from './util/environment';
+import { VaultApi } from './api/vault';
 
 const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
 
@@ -91,7 +92,7 @@ const bootstrapServer = async () => {
     app.use("/api/jobs",      JobActionsApi);
     app.use("/api/pod",       TunnelApi);
     app.use("/api/blobstore", BlobUploadApi);
-
+    app.use("/api/vault",     VaultApi);
 
     app.use((req, res, next) => next(404));
     app.use(ErrorHandler);

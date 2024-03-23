@@ -1,0 +1,26 @@
+
+.row {
+    display: flex;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+mat-form-field {
+    flex: 1;
+}
+
+.icon-btn {
+    border: 0;
+    background-color: #0000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    width: 48px;
+
+    mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+    }
+}

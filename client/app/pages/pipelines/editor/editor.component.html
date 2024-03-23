@@ -41,6 +41,10 @@
     }
     <mat-tab label="variables">
         <ng-template matTabContent>
+            <app-variables-section
+                [item]="pipeline"
+                (valueChange)="dataChangeEmitter.next(0)"
+            />
         </ng-template>
     </mat-tab>
     <mat-tab label="triggers">

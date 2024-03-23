@@ -1,0 +1,91 @@
+
+<p>Variables</p>
+@if (item?.environment) {
+    @for (env of item.environment; track env; let i = $index) {
+        <div class="row">
+            <mat-form-field style="margin-right: 8px;" (pointerdown)="env[$isEditing] = true">
+                <mat-label>Name</mat-label>
+                <input
+                    #_
+                    matInput
+                    type="text"
+                    [(ngModel)]="env.name"
+                    (keydown)="onNameChange(_)"
+                    (change)="onNameChange(_)"
+                />
+            </mat-form-field>
+
+            @if (env.isSecret) {
+                <mat-form-field (pointerdown)="env[$isEditing] = true">
+                    <mat-label>
+                        @if (document.activeElement != _) {
+                            {{env.value}}
+                        }
+                        @else {
+                            Value
+                        }
+                    </mat-label>
+                    <input
+                        #_
+                        matInput
+                        type="text"
+                        [(ngModel)]="secrets[i]"
+                        (keydown)="$event.code == 'Enter' ? saveVariable(env, i) : 1"
+                    />
+                </mat-form-field>
+            }
+            @else {
+                <mat-form-field (pointerdown)="env[$isEditing] = true">
+                    <mat-label>Value</mat-label>
+                    <input
+                        matInput
+                        type="text"
+                        [(ngModel)]="env.value"
+                        (keydown)="$event.code == 'Enter' ? saveVariable(env, i) : 1"
+                    />
+                </mat-form-field>
+            }
+
+            @if (env[$isEditing]) {
+                <button
+                    class="icon-btn"
+                    (click)="makeSecret(env, i)"
+                >
+                    @if (env.isSecret) {
+                        <mat-icon>encrypted</mat-icon>
+                    }
+                    @else {
+                        <mat-icon>public</mat-icon>
+                    }
+                </button>
+
+                <button
+                    class="icon-btn"
+                    (click)="saveVariable(env, i)"
+                >
+                    <mat-icon>check</mat-icon>
+                </button>
+            }
+            @else {
+                <button
+                    class="icon-btn"
+                    (click)="deleteVariable(env)"
+                >
+                    <mat-icon>delete</mat-icon>
+                </button>
+                <button
+                    class="icon-btn"
+                    style="width: 48px"
+                >
+                </button>
+            }
+        </div>
+    }
+
+    <div>
+        <button mat-flat-button (click)="addVariable()">
+            <mat-icon>add</mat-icon>Add
+        </button>
+    </div>
+}
+

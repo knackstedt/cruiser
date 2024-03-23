@@ -142,6 +142,10 @@
                                 showPreview="off"
                                 showToc="off"
                             />
+                            <app-variables-section
+                                [item]="selectJob"
+                                (valueChange)="dataChangeEmitter.next(0)"
+                            />
                         </div>
                     </ng-scrollbar>
                 }
@@ -172,6 +176,10 @@
                                         (valueChange)="dataChangeEmitter.next(0)"
                                         showPreview="off"
                                         showToc="off"
+                                    />
+                                    <app-variables-section
+                                        [item]="selectTaskGroup"
+                                        (valueChange)="dataChangeEmitter.next(0)"
                                     />
                                 </div>
                             </ng-scrollbar>
@@ -225,6 +233,11 @@
                                 (valueChange)="dataChangeEmitter.next(0)"
                                 showPreview="off"
                                 showToc="off"
+                            />
+
+                            <app-variables-section
+                                [item]="selectedTask"
+                                (valueChange)="dataChangeEmitter.next(0)"
                             />
 
                             <app-formio-wrapper

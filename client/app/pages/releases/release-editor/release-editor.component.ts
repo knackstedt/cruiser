@@ -1,9 +1,9 @@
 import { ApplicationRef, ElementRef, Input, ViewChild, Injector, Component } from '@angular/core';
 import { Fetch, MenuItem, ReactMagicWrapperComponent, VscodeComponent } from '@dotglitch/ngx-common';
 import { ReactFlowComponent } from './reactflow/reactflow-wrapper';
-import { PipelineDefinition, SourceConfiguration, StageDefinition, Webhook } from 'types/pipeline';
+import { SourceConfiguration, StageDefinition, Webhook } from 'types/pipeline';
 import { ulid } from 'ulidx';
-import { Edge, Handle, MarkerType, Node, Position } from 'reactflow';
+import { Edge, Handle, Node, Position } from 'reactflow';
 import dagre from '@dagrejs/dagre';
 import { StageNodeComponent } from 'client/app/pages/releases/release-editor/stage-node/stage-node.component';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -25,6 +25,7 @@ import { StageEditorComponent } from 'client/app/pages/pipelines/editor/stages/s
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from 'client/app/services/user.service';
 import { PipelineEditorPartial } from 'client/app/utils/pipeline-editor.partial';
+import { VariablesSectionComponent } from 'client/app/components/variables-section/variables-section.component';
 
 
 @Component({
@@ -43,6 +44,7 @@ import { PipelineEditorPartial } from 'client/app/utils/pipeline-editor.partial'
         NgScrollbarModule,
         StackEditorComponent,
         VscodeComponent,
+        VariablesSectionComponent,
         FormsModule
     ],
     templateUrl: './release-editor.component.html',
@@ -53,9 +55,7 @@ export class StagesComponent extends PipelineEditorPartial {
 
     override readonly pipelineKind = "release";
 
-
     get container() { return this.canvasRef.nativeElement }
-
 
     nodes: Node[] = [];
     edges: Edge[] = [];

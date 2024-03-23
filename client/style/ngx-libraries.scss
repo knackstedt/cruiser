@@ -73,3 +73,10 @@ ng-scrollbar.ng-scrollbar {
     padding: 0;
 }
 
+
+.ngx-toastr {
+    .toast-warning {
+        font-weight: bold;
+        background-color: #E65100;
+    }
+}

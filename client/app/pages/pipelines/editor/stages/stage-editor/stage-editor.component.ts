@@ -18,6 +18,7 @@ import { BehaviorSubject, Subject, debounceTime } from 'rxjs';
 import { PipelineEditorComponent } from 'client/app/pages/pipelines/editor/editor.component';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FileUploadService } from 'client/app/services/file-upload.service';
+import { VariablesSectionComponent } from 'client/app/components/variables-section/variables-section.component';
 
 @Component({
     selector: 'app-stage-editor',
@@ -34,7 +35,8 @@ import { FileUploadService } from 'client/app/services/file-upload.service';
         NgScrollbarModule,
         FormioWrapperComponent,
         StackEditorComponent,
-        MenuDirective
+        MenuDirective,
+        VariablesSectionComponent
     ],
     templateUrl: './stage-editor.component.html',
     styleUrl: './stage-editor.component.scss'
@@ -99,8 +101,9 @@ export class StageEditorComponent {
     }
 
     ngOnDestroy() {
-
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
+
     private patchPipeline() {
         this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
             stages: this.pipeline.stages
