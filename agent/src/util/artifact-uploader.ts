@@ -8,7 +8,7 @@ import { getSocketLogger } from '../socket/logger';
 import { JobInstance } from '../../types/agent-task';
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../../types/pipeline';
 import { api } from './axios';
-import environment from 'util/environment';
+import environment from './environment';
 
 const compressLrztar = async (
     dir: string,
