@@ -8,6 +8,7 @@ import { getSocketLogger } from '../socket/logger';
 import { JobInstance } from '../../types/agent-task';
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../../types/pipeline';
 import { api } from './axios';
+import environment from 'util/environment';
 
 const compressLrztar = async (
     dir: string,
@@ -81,7 +82,7 @@ const uploadBinary = async (path: string, logger: Awaited<ReturnType<typeof getS
     try {
 
         const formData = new FormData();
-        formData.append('file', fs.createReadStream(path));
+        formData.append('file', fs.createReadStream(environment.buildDir + path));
 
         let headers = formData.getHeaders();
 
