@@ -66,12 +66,12 @@ export const getSocketLogger = async(socket: Socket) => {
         },
         stdout: (obj: Object) => {
             const t = Date.now();
-            process.stdout.write(`log:stdout ${t};${decoder.decode(obj['data']).trim()}\n`);
+            process.stdout.write(`log:stdout ${t};${decoder.decode(obj['data']).trim().replace(/[\r\n]/g, '\\n')}\n`);
             socket.emit("log:stdout", { time: t, data: obj['data'] })
         },
         stderr: (obj: Object) => {
             const t = Date.now();
-            process.stdout.write(`log:stderr ${t};${decoder.decode(obj['data']).trim()}\n`);
+            process.stdout.write(`log:stderr ${t};${decoder.decode(obj['data']).trim().replace(/[\r\n]/g, '\\n')}\n`);
             socket.emit("log:stderr", { time: t, data: obj['data'] })
         }
     };
