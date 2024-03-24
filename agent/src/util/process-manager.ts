@@ -47,6 +47,15 @@ export const RunProcess = async (
                 } = ParseCommand(task.taskScriptArguments['command'] + ' ' + task.taskScriptArguments['arguments']);
 
                 const execEnv = {};
+
+                Object.entries(global.process.env)
+                    // Omit some variables that we don't want the underlying program to
+                    // have to deal with
+                    .filter(e => !e[0].startsWith("CI_"))
+                    .filter(e => !e[0].startsWith("CRUISER_"))
+                    .filter(e => !e[0].startsWith("KUBERNETES_"))
+                    .forEach(e => execEnv[e[0]] = e[1]);
+
                 const roots = [ pipeline, stage, job, taskGroup, task ];
 
                 for (let i = 0; i < roots.length; i++) {
