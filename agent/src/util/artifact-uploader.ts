@@ -87,7 +87,7 @@ const uploadBinary = async (path: string, logger: Awaited<ReturnType<typeof getS
         let headers = formData.getHeaders();
 
         const result = await api.post(
-            `/api/artifact/` + path.split('/').pop(),
+            `/api/blobstore/artifact/` + path.split('/').pop(),
             formData,
             { headers }
         )
