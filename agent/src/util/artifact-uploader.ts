@@ -67,13 +67,29 @@ const compressZip = async (
         .catch(err => ({ exitCode: -1, err }));
 }
 
-const uploadBinary = async (path: string) => {
-    const formData = new FormData();
-    formData.append('file', fs.createReadStream(path));
+const uploadBinary = async (path: string, logger: Awaited<ReturnType<typeof getSocketLogger>>) => {
+    try {
 
-    let headers = formData.getHeaders();
+        const formData = new FormData();
+        formData.append('file', fs.createReadStream(path));
 
-    return api.post(`/api/`, formData, { headers });
+        let headers = formData.getHeaders();
+
+        await api.post(`/api/artifact/` + path.split('/').pop(), formData, { headers });
+
+        logger.info({
+            msg: "Successfully uploaded artifact",
+            path
+        })
+        return 0;
+    }
+    catch(err) {
+        logger.warn({
+            msg: "Failed to upload artifact",
+            path
+        })
+        return -1;
+    }
 }
 
 export const UploadArtifacts = async (
@@ -93,11 +109,20 @@ export const UploadArtifacts = async (
     for (const artifact of job.artifacts) {
         const dir = artifact.source;
         const dest = artifact.destination;
+        logger.info({
+            msg: "Sealing artifact " + artifact.label,
+            artifact
+        })
         const result = await compressArtifact(dir, dest, logger);
+        logger.info({
+            msg: "Sealed artifact " + artifact.label,
+            artifact,
+            result
+        })
 
         // If it was successful in saving to disk, upload it
         if (result['path']) {
-            uploads.push(uploadBinary(result['path']))
+            uploads.push(uploadBinary(result['path'], logger))
         }
     }
 
