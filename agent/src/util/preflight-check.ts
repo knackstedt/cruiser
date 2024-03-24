@@ -61,10 +61,10 @@ export const PreflightCheck = async () => {
                 .forEach(line => {
                     let [key, value] = line.split('=');
 
-                    if (value.startsWith('"'))
+                    if (value?.startsWith('"'))
                         value = value.slice(1, -1);
 
-                    osRelease[key.toLowerCase()] = value;
+                    osRelease[key?.toLowerCase()] = value;
                 })
 
             // Attempt to resolve all of the missing dependencies.
