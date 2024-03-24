@@ -85,7 +85,11 @@ const uploadBinary = async (path: string, logger: Awaited<ReturnType<typeof getS
 
         let headers = formData.getHeaders();
 
-        const result = await api.post(`/api/artifact/` + path.split('/').pop(), formData, { headers })
+        const result = await api.post(
+            `/api/artifact/` + path.split('/').pop(),
+            formData,
+            { headers }
+        )
             .catch(err => err);
 
         if (result.stack)
@@ -100,7 +104,10 @@ const uploadBinary = async (path: string, logger: Awaited<ReturnType<typeof getS
     catch(err) {
         logger.warn({
             msg: "Failed to upload artifact",
-            path
+            path,
+            name: err.name,
+            message: err.message,
+            stack: err.stack
         })
         return -1;
     }
@@ -128,11 +135,20 @@ export const UploadArtifacts = async (
             artifact
         })
         const result = await compressArtifact(dir, dest, logger);
-        logger.info({
-            msg: "Sealed artifact " + artifact.label,
-            artifact,
-            result
-        })
+        if (result.exitCode == 0) {
+            logger.info({
+                msg: "Sealed artifact " + artifact.label,
+                artifact,
+                result
+            })
+        }
+        else {
+            logger.warn({
+                msg: "Failed to seal artifact " + artifact.label,
+                artifact,
+                result
+            })
+        }
 
         // If it was successful in saving to disk, upload it
         if (result['path']) {
