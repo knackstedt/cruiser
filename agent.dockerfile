@@ -18,8 +18,8 @@ COPY ./types /agent/types
 WORKDIR /agent
 
 # Install general agent deps
-RUN npm i
-RUN npm run build
+RUN bun i
+RUN bun run build
 
 EXPOSE 8080
 
