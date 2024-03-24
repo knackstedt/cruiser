@@ -16,7 +16,8 @@ const compressLrztar = async (
 ) => {
     return new Promise<ChildProcessWithoutNullStreams>(async (res, rej) => {
         try {
-            const process = spawn('lrztar', ['-z', '-o', targetFile + '.tar.lrz', dir], {
+            const path = targetFile + '.tar.lrz';
+            const process = spawn('lrztar', ['-z', '-o', path, dir], {
                 cwd: global.process.cwd() + "/build",
                 windowsHide: true
             });
@@ -37,11 +38,17 @@ const compressLrztar = async (
             process.on('exit', (code) => {
                 if (code == 0) {
                     logger.info({ msg: `Process exited successfully` });
-                    res(process);
+                    res({
+                        path: path,
+                        ...process
+                    } as any);
                 }
                 else {
                     logger.error({ msg: `Process exited with non-zero exit code`, code });
-                    res(process);
+                    res({
+                        path: path,
+                        ...process
+                    } as any);
                 }
             });
         }
