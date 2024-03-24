@@ -1,4 +1,5 @@
-FROM node:18-alpine
+# FROM node:18-alpine
+FROM oven/bun:alpine
 
 # Add required base dependencies
 RUN apk add --no-cache lrzip lrzip-extra-scripts
@@ -22,4 +23,4 @@ RUN npm run build
 
 EXPOSE 8080
 
-CMD ["node", "src/main.js"]
+CMD ["bun", "src/main.js"]
