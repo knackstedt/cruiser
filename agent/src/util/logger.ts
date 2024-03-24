@@ -59,7 +59,12 @@ process.on('unhandledRejection', (reason, p) => {
 
 process.on("uncaughtException", err => {
     err['kind'] = "Uncaught";
-    _logger.error(err);
+    _logger.error({
+        stack: err.stack,
+        name: err.name,
+        msg: err.message,
+        ...err
+    });
 });
 
 export const logger = _logger;
