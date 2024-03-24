@@ -1,8 +1,8 @@
 FROM node:18-alpine
 
 # Add required base dependencies
-RUN apk add lrzip lrzip-extra-scripts
-RUN apk add git
+RUN apk add --no-cache lrzip lrzip-extra-scripts
+RUN apk add --no-cache python3 make g++ git
 
 COPY ./agent /agent
 
