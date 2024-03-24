@@ -50,10 +50,10 @@ export const RunProcess = async (
                 const roots = [ pipeline, stage, job, taskGroup, task ];
 
                 for (let i = 0; i < roots.length; i++) {
-                    const envList = roots[i].environment;
+                    const envList = roots[i].environment ?? [];
 
                     for (let j = 0; j < envList.length; j++) {
-                        const envItem = envList[j];
+                        const envItem = envList[j] ?? {} as any;
 
                         if (envItem.isSecret) {
                             const { data: result } = await api.get(`/api/${roots[i].id}/${envItem.value}`)
