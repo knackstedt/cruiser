@@ -257,16 +257,7 @@ export class PipelinesComponent implements OnInit {
     }
 
     newPipeline(group: string) {
-        this.fetch.post<PipelineDefinition>(`/api/odata/pipeline`, {
-            label: 'My new Pipeline',
-            state: 'new',
-            order: -1,
-            group,
-            kind: "build"
-        })
-        .then(res => {
-            location.hash = `#/Pipelines/${res.id}`;
-        })
+        location.hash = `#/Pipelines/new`;
     }
 
     viewHistory(pipeline: PipelineDefinition) {

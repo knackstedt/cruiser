@@ -19,6 +19,7 @@ import { PipelineEditorComponent } from 'client/app/pages/pipelines/editor/edito
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FileUploadService } from 'client/app/services/file-upload.service';
 import { VariablesSectionComponent } from 'client/app/components/variables-section/variables-section.component';
+import { ArtifactsSectionComponent } from 'client/app/components/artifacts-section/artifacts-section.component';
 
 @Component({
     selector: 'app-stage-editor',
@@ -36,12 +37,15 @@ import { VariablesSectionComponent } from 'client/app/components/variables-secti
         FormioWrapperComponent,
         StackEditorComponent,
         MenuDirective,
-        VariablesSectionComponent
+        VariablesSectionComponent,
+        ArtifactsSectionComponent
     ],
     templateUrl: './stage-editor.component.html',
     styleUrl: './stage-editor.component.scss'
 })
 export class StageEditorComponent {
+
+    readonly defaultContainerImage = "ghcr.io/knackstedt/cruiser/cruiser-agent:latest";
 
     @Input() pipeline: PipelineDefinition = {} as any;
     @Input() stage: StageDefinition = {} as any;

@@ -12,17 +12,18 @@
                             [class.selected]="job == selectedJob && currentSelection == 'job'"
                             [ngx-contextmenu]="jobMenu"
                             [ngx-menu-context]="job"
-                            (click)="$event.stopPropagation(); selectJob(job); panel.toggle()"
+                            (click)="$event.stopPropagation(); selectJob(job)"
                         >
                             <div>
                                 <div class="label">{{job.label}}</div>
-                                <div class="platform">{{job.platform}}</div>
+                                <div class="platform">{{job.kubeContainerImage || defaultContainerImage}}</div>
                             </div>
 
                             <button
                                 mat-icon-button
                                 class="expand_button"
                                 [style.transform]="panel.expanded ? '' : 'rotate(-90deg)'"
+                                (click)="panel.toggle()"
                             >
                                 <mat-icon>expand_more</mat-icon>
                             </button>
@@ -142,9 +143,41 @@
                                 showPreview="off"
                                 showToc="off"
                             />
+
+                            <p>Kube settings</p>
+                            <div>
+                                <mat-form-field style="width: 100%">
+                                    <mat-label>Container Image</mat-label>
+                                    <input matInput type="text" [(ngModel)]="selectedJob.kubeContainerImage" [placeholder]="defaultContainerImage" />
+                                </mat-form-field>
+                                <div style="display: flex; gap: 12px">
+                                    <mat-form-field style="flex: 1">
+                                        <mat-label>CPU Request</mat-label>
+                                        <input matInput type="text" [(ngModel)]="selectedJob.kubeCpuRequest"/>
+                                    </mat-form-field>
+                                    <mat-form-field style="flex: 1">
+                                        <mat-label>CPU Limit</mat-label>
+                                        <input matInput type="text" [(ngModel)]="selectedJob.kubeCpuLimit"/>
+                                    </mat-form-field>
+                                </div>
+                                <div style="display: flex; gap: 12px">
+                                    <mat-form-field style="flex: 1">
+                                        <mat-label>Mem Request</mat-label>
+                                        <input matInput type="text" [(ngModel)]="selectedJob.kubeMemRequest"/>
+                                    </mat-form-field>
+                                    <mat-form-field style="flex: 1">
+                                        <mat-label>Mem Limit</mat-label>
+                                        <input matInput type="text" [(ngModel)]="selectedJob.kubeMemLimit"/>
+                                    </mat-form-field>
+                                </div>
+                            </div>
+
                             <app-variables-section
-                                [item]="selectJob"
+                                [item]="selectedJob"
                                 (valueChange)="dataChangeEmitter.next(0)"
+                            />
+                            <app-artifacts-section
+                                [job]="selectedJob"
                             />
                         </div>
                     </ng-scrollbar>
@@ -178,7 +211,7 @@
                                         showToc="off"
                                     />
                                     <app-variables-section
-                                        [item]="selectTaskGroup"
+                                        [item]="selectedTaskGroup"
                                         (valueChange)="dataChangeEmitter.next(0)"
                                     />
                                 </div>
