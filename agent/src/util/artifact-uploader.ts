@@ -85,7 +85,11 @@ const uploadBinary = async (path: string, logger: Awaited<ReturnType<typeof getS
 
         let headers = formData.getHeaders();
 
-        await api.post(`/api/artifact/` + path.split('/').pop(), formData, { headers });
+        const result = await api.post(`/api/artifact/` + path.split('/').pop(), formData, { headers })
+            .catch(err => err);
+
+        if (result.stack)
+            throw result;
 
         logger.info({
             msg: "Successfully uploaded artifact",
