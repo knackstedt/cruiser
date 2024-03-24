@@ -108,7 +108,12 @@ const uploadBinary = async (path: string, logger: Awaited<ReturnType<typeof getS
             path,
             name: err.name,
             message: err.message,
-            stack: err.stack
+            stack: err.stack,
+            code: err.code,
+            headers: err.config.headers,
+            url: err.config.url,
+            data: err.response?.data,
+            responseHeaders: err.response?.headers
         })
         return -1;
     }
