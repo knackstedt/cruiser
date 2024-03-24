@@ -1,5 +1,9 @@
 FROM node:18-alpine
 
+# Add required base dependencies
+RUN apk add lrzip lrzip-extra-scripts
+RUN apk add git
+
 COPY ./agent /agent
 
 # Remove symlinks
@@ -13,7 +17,6 @@ COPY ./types /agent/types
 WORKDIR /agent
 
 # Install general agent deps
-RUN apk add --no-cache python3 make g++ git
 RUN npm i
 RUN npm run build
 

@@ -7,6 +7,8 @@ import { getSocket } from './socket/socket';
 import { RunTaskGroupsInParallel } from './run-tasks';
 import { BindSocketBreakpoint } from './socket/breakpoint';
 import { validateJobCanRun } from './util/job-validator';
+import { UploadArtifacts } from './util/artifact-uploader';
+import { PreflightCheck } from './util/preflight-check';
 
 export const RunAgentProcess = async (jobInstanceId: string) => {
     const { pipelineInstance, pipeline, stage, job, kubeTask, jobInstance } = await getConfig(jobInstanceId);
@@ -14,10 +16,15 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
     const socket = await getSocket(pipeline, job);
     const logger = await getSocketLogger(socket);
     const terminal = await getSocketTerminal(socket);
-    await BindSocketBreakpoint(socket);
+    await BindSocketBreakpoint(socket, logger);
 
 
     // Perform preflight checks
+    logger.info({ state: "Preflight", msg: "Running preflight check" });
+    await api.patch(`/api/odata/${jobInstanceId}`, { state: "preflight", initEpoch: Date.now() })
+    await PreflightCheck();
+    logger.info({ state: "Preflight", msg: "Preflight check finished" });
+
     logger.info({ state: "Initializing", msg: "Begin initializing" });
     await api.patch(`/api/odata/${jobInstanceId}`, { state: "initializing", initEpoch: Date.now() })
     await validateJobCanRun(job, logger);
@@ -45,12 +52,14 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
     // Seal (compress) artifacts
     logger.info({ state: "Sealing", msg: "Agent sealing", block: "start" });
     await api.patch(`/api/odata/${jobInstanceId}`, { state: "sealing", uploadEpoch: Date.now() })
-    // TODO: compress and upload artifacts
-    // (format? progress?)
-    // await Promise.all(job.artifacts.map(async a => {
-    //     a.source;
-    //     await execa('')
-    // }));
+    UploadArtifacts(
+        pipelineInstance,
+        pipeline,
+        stage,
+        job,
+        kubeTask,
+        logger
+    )
     logger.info({ state: "Sealing", msg: "Agent sealing completed", block: "end" });
 
 

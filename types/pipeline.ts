@@ -1,7 +1,6 @@
 import * as k8s from '@kubernetes/client-node';
 import { HistoryObject } from './history-object';
 import { EnvironmentVariable } from './environment';
-import { JobInstance } from './agent-task';
 import { AxiosProxyConfig } from 'axios';
 
 export type BuildArtifact = {

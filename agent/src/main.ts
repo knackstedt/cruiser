@@ -6,10 +6,10 @@ import { RunAgentProcess } from './agent';
 import environment from './util/environment';
 import { FilesystemApi } from './api/filesystem';
 
-const agentId = environment.agentId;
-const jobInstanceId  = `job_instance:` + agentId.toUpperCase();
-
-if (!agentId || !/^[0-7][0-9A-Z]{25}$/i.test(agentId)) {
+if (
+    !process.env['CRUISER_AGENT_ID'] ||
+    !/^[0-7][0-9A-Z]{25}$/i.test(process.env['CRUISER_AGENT_ID'].toUpperCase())
+) {
     logger.fatal({ message: "Invalid agent identifier!"})
     process.exit(1);
 }
@@ -60,7 +60,7 @@ if (!agentId || !/^[0-7][0-9A-Z]{25}$/i.test(agentId)) {
     server.on("listening", () => logger.info(`Server listening on port ${port}`));
 })();
 
-RunAgentProcess(jobInstanceId)
+RunAgentProcess(environment.jobInstanceId)
     .catch(ex => {
         logger.error(ex)
     })
