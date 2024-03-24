@@ -26,7 +26,10 @@ export class VariablesSectionComponent {
     readonly $isEditing = $isEditing;
     readonly document = document;
 
-    @Input('item') input: any;
+    @Input('item') set input( data: any) {
+        this.item = data;
+        this.ngOnInit();
+    };
     item: {
         id: string,
         environment: EnvironmentVariable[]
@@ -46,7 +49,6 @@ export class VariablesSectionComponent {
     }
 
     ngOnInit() {
-        this.item = this.input;
         this.item.environment = this.item.environment ?? [];
     }
 
