@@ -5,7 +5,7 @@ import { getSocketLogger } from './socket/logger';
 import { getSocketTerminal } from './socket/terminal';
 import { getSocket } from './socket/socket';
 import { RunTaskGroupsInParallel } from './run-tasks';
-import { BindSocketBreakpoint } from './socket/breakpoint';
+import { BindSocketBreakpoint, TripBreakpoint } from './socket/breakpoint';
 import { validateJobCanRun } from './util/job-validator';
 import { UploadArtifacts } from './util/artifact-uploader';
 import { PreflightCheck } from './util/preflight-check';
@@ -52,14 +52,15 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
     // Seal (compress) artifacts
     logger.info({ state: "Sealing", msg: "Agent sealing", block: "start" });
     await api.patch(`/api/odata/${jobInstanceId}`, { state: "sealing", uploadEpoch: Date.now() })
-    UploadArtifacts(
+    await UploadArtifacts(
         pipelineInstance,
         pipeline,
         stage,
         job,
         kubeTask,
         logger
-    )
+    );
+    await TripBreakpoint(jobInstance, false);
     logger.info({ state: "Sealing", msg: "Agent sealing completed", block: "end" });
 
 
