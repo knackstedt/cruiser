@@ -56,8 +56,10 @@ router.use('/upload', route(async (req, res, next) => {
 router.use(route(async (req, res, next) => {
     if (req.method != "GET") return next();
 
-    const file: string = req.path.startsWith("/log/")
+    const file = req.path.startsWith("/log/")
         ? (environment.cruiser_log_dir + '/' + req.path.replace('/log', '')).replace('//', '/')
+        : req.path.startsWith("/artifact/")
+        ? (environment.cruiser_artifact_dir + '/' + req.path.replace('/artifact', '')).replace('//', '/')
         : (environment.cruiser_blob_dir + '/' + req.path).replace('//', '/');
     if (!file) return next(400);
 

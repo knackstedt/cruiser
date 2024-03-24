@@ -87,7 +87,7 @@ export type JobDefinition = {
     kubeCpuRequest?: string;
     kubeMemRequest?: string;
 
-    platform: `agent_${string}` | 'agentless' | `kube_${string}`
+    platform?: `agent_${string}` | 'agentless' | `kube_${string}`
 }
 
 export type Webhook = {

@@ -73,7 +73,7 @@ router.get('/:id/start', route(async (req, res, next) => {
 router.get('/:id/:instance/:stage/approve', route(async (req, res, next) => {
     const pipeline: PipelineDefinition = req['pipeline'];
 
-    const forceRun = !!req.query.forceRun;
+    const forceRun = !!req.query['forceRun'];
     const [instance] = await db.select<PipelineInstance>(req.params['instance']);
     const stage = instance?.spec?.stages?.find(s => s.id == req.params['stage']);
 
