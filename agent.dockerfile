@@ -1,5 +1,5 @@
-# FROM node:18-alpine
-FROM oven/bun:alpine
+FROM node:18-alpine
+# FROM oven/bun:alpine
 
 # Add required base dependencies
 RUN apk add --no-cache lrzip lrzip-extra-scripts
@@ -18,9 +18,9 @@ COPY ./types /agent/types
 WORKDIR /agent
 
 # Install general agent deps
-RUN bun i
-RUN bun run build
+RUN npm i
+RUN npm run build
 
 EXPOSE 8080
 
-CMD ["bun", "src/main.js"]
+CMD ["node", "src/main.js"]
