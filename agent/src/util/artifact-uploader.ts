@@ -16,7 +16,10 @@ const compressLrztar = async (
 ) => {
     return new Promise<ChildProcessWithoutNullStreams>(async (res, rej) => {
         try {
-            const process = spawn('lrztar', ['-z', '-o', targetFile + '.tar.lrz', dir], { windowsHide: true });
+            const process = spawn('lrztar', ['-z', '-o', targetFile + '.tar.lrz', dir], {
+                cwd: global.process.cwd() + "/build",
+                windowsHide: true
+            });
 
             process.stdout.on('data', (data) => logger.stdout({ time: Date.now(), data, scope: "sealing" }));
             process.stderr.on('data', (data) => logger.stderr({ time: Date.now(), data, scope: "sealing" }));
