@@ -25,7 +25,7 @@ const loadIntoCache = async (uid: string, jobId: string, job) => {
             i.metadata?.annotations?.['cruiser.dev/job-id'] == jobId
         );
         //
-        if (pod.status.podIP) {
+        if (pod?.status?.podIP) {
             podCache[uid] = pod;
         }
         else {
