@@ -80,11 +80,11 @@ const compressZip = async (
 
 const uploadBinary = async (path: string, logger: Awaited<ReturnType<typeof getSocketLogger>>) => {
     try {
-
+        const fileName = path.split('/').pop();
         const formData = new FormData();
-        formData.append('file', fs.createReadStream(environment.buildDir + path));
+        formData.append('file', fs.createReadStream(environment.buildDir + path), { filename: fileName });
         formData.append("data", JSON.stringify({
-            path: '/artifacts/' + path.split('/').pop(),
+            path: '/artifacts/' + fileName,
             autoRename: true,
             isArtifact: true
         }));
