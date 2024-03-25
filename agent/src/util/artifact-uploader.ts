@@ -78,15 +78,21 @@ const compressZip = async (
         .catch(err => ({ exitCode: -1, err }));
 }
 
-const uploadBinary = async (path: string, logger: Awaited<ReturnType<typeof getSocketLogger>>) => {
+const uploadBinary = async (
+    path: string,
+    jobInstance: JobInstance,
+    logger: Awaited<ReturnType<typeof getSocketLogger>>
+) => {
     try {
         const fileName = path.split('/').pop();
+
         const formData = new FormData();
-        formData.append('file', fs.createReadStream(environment.buildDir + path), { filename: fileName });
+        formData.append('file', fs.createReadStream(environment.buildDir + path));
         formData.append("data", JSON.stringify({
-            path: '/artifacts/' + fileName,
+            fileName: fileName,
             autoRename: true,
-            isArtifact: true
+            isArtifact: true,
+            jobInstance: jobInstance.id
         }));
 
         let headers = formData.getHeaders();
@@ -132,19 +138,22 @@ export const UploadArtifacts = async (
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof getSocketLogger>>
 ) => {
-    const compressArtifact = os.platform() == "win32"
-        ? compressZip
-        : compressLrztar;
+    // const compressArtifact = os.platform() == "win32"
+    //     ? compressZip
+    //     : compressLrztar;
+    const compressArtifact = compressZip;
 
     const uploads = [];
 
     for (const artifact of job.artifacts) {
         const dir = artifact.source;
         const dest = artifact.destination;
+
         logger.info({
             msg: "Sealing artifact " + artifact.label,
             artifact
         })
+
         const result = await compressArtifact(dir, dest, logger);
         if (result.exitCode == 0) {
             logger.info({
@@ -163,7 +172,13 @@ export const UploadArtifacts = async (
 
         // If it was successful in saving to disk, upload it
         if (result['path']) {
-            uploads.push(uploadBinary(result['path'], logger))
+            uploads.push(
+                uploadBinary(
+                    result['path'],
+                    jobInstance,
+                    logger
+                )
+            )
         }
     }
 
