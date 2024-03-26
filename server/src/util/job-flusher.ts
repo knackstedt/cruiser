@@ -128,6 +128,7 @@ const SaveLogAndCleanup = async (pod: k8s.V1Pod, job: k8s.V1Job) => {
     const dir = [
         environment.cruiser_log_dir,
         job.metadata.annotations['cruiser.dev/pipeline-id'],
+        job.metadata.annotations['cruiser.dev/pipeline-instance-id'],
         job.metadata.annotations['cruiser.dev/stage-id'],
         job.metadata.annotations['cruiser.dev/job-id'],
     ].join('/');
@@ -187,7 +188,7 @@ const processJobTriggers = async (job: k8s.V1Job, jobInstance: JobInstance) => {
     });
 
     // Execute all of the webhooks.
-    for (const webhook of stage.webhooks) {
+    for (const webhook of (stage.webhooks ?? [])) {
         // If the job failed, only execute the webhooks that
         // are configured tp run on failuire.
         if (isFailure && !webhook.executeOnFailure)

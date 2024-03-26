@@ -27,6 +27,8 @@ import { BlobUploadApi } from './api/filestorage';
 import { WatchAndFlushJobs } from './util/job-flusher';
 import { environment } from './util/environment';
 import { VaultApi } from './api/vault';
+import { AsciiBanner } from './util/motd';
+import { SocketLiveService } from './api/socket-live';
 
 const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
 
@@ -107,16 +109,19 @@ const bootstrapServer = async () => {
     return server;
 };
 
-
 // If running as a dedicated socket instance, create
 // an otherwise empty server.
 // Also runs the schedulers in the same process.
 if (isDedicatedSocketService) {
+    console.log(AsciiBanner);
+
     const server = http.createServer();
     const port = 6820;
     server.listen(port);
 
     new SocketTunnelService(server);
+    new SocketLiveService(server);
+
     CronScheduler();
     WatchAndFlushJobs();
 }
@@ -127,7 +132,11 @@ else if (environment.is_production) {
 // Development mode, run both API server and socket server.
 else {
     bootstrapServer().then(server => {
+        console.log(AsciiBanner);
+
         new SocketTunnelService(server);
+        new SocketLiveService(server);
+
         CronScheduler();
         WatchAndFlushJobs();
     })
