@@ -246,65 +246,75 @@ export const UploadArtifacts = async (
 
     const uploads = [];
 
-    for (const artifact of job.artifacts) {
-        const dir = artifact.source;
-        const dest = artifact.destination;
-        const contents = await getFilesInFolderFlat(artifact.source);
+    try {
+        for (const artifact of (job.artifacts ?? [])) {
+            const dir = artifact.source;
+            const dest = artifact.destination;
+            const contents = await getFilesInFolderFlat(artifact.source);
 
-        const algorithm: Function = (() => {
-            if (os.platform() == 'win32') {
-                // TODO
-                return null;
+            const algorithm: Function = (() => {
+                if (os.platform() == 'win32') {
+                    // TODO
+                    return null;
+                }
+                else {
+                    switch (artifact.compressionAlgorithm) {
+                        case "zstd": return compressTarZstd;
+                        case "zstd_max": return compressTarZstdMax;
+                        case "gzip": return compressTarGZip;
+                        case "bzip": return compressTarBZip;
+                        case "plzip": return compressTarXZ;
+                        case "plzip_max": return compressTarXZMax;
+                        case "xz": return compressTarPLZip;
+                        case "xz_max": return compressTarPLZipMax;
+                        case "lrzip":
+                        default: return compressTarLrz;
+                    }
+                }
+            }) ();
+
+            logger.info({
+                msg: "Sealing artifact " + artifact.label,
+                artifact
+            })
+
+            const result = await algorithm(dir, dest, logger);
+            if (result.exitCode == 0) {
+                logger.info({
+                    msg: "Sealed artifact " + artifact.label,
+                    artifact,
+                    result
+                })
             }
             else {
-                switch (artifact.compressionAlgorithm) {
-                    case "zstd": return compressTarZstd;
-                    case "zstd_max": return compressTarZstdMax;
-                    case "gzip": return compressTarGZip;
-                    case "bzip": return compressTarBZip;
-                    case "plzip": return compressTarXZ;
-                    case "plzip_max": return compressTarXZMax;
-                    case "xz": return compressTarPLZip;
-                    case "xz_max": return compressTarPLZipMax;
-                    case "lrzip":
-                    default: return compressTarLrz;
-                }
+                logger.warn({
+                    msg: "Failed to seal artifact " + artifact.label,
+                    artifact,
+                    result
+                })
             }
-        }) ();
 
-        logger.info({
-            msg: "Sealing artifact " + artifact.label,
-            artifact
-        })
-
-        const result = await algorithm(dir, dest, logger);
-        if (result.exitCode == 0) {
-            logger.info({
-                msg: "Sealed artifact " + artifact.label,
-                artifact,
-                result
-            })
-        }
-        else {
-            logger.warn({
-                msg: "Failed to seal artifact " + artifact.label,
-                artifact,
-                result
-            })
-        }
-
-        // If it was successful in saving to disk, upload it
-        if (result['path']) {
-            uploads.push(
-                uploadBinary(
-                    result['path'],
-                    contents,
-                    jobInstance,
-                    logger
+            // If it was successful in saving to disk, upload it
+            if (result['path']) {
+                uploads.push(
+                    uploadBinary(
+                        result['path'],
+                        contents,
+                        jobInstance,
+                        logger
+                    )
                 )
-            )
+            }
         }
-    }
 
-    return Promise.all(uploads);
+        return Promise.all(uploads);
+    }
+    catch(ex) {
+        logger.fatal({
+            msg: "Failed to seal artifacts",
+            message: ex.message,
+            stack: ex.stack
+        })
+        return null;
+    }
 }
