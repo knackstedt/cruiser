@@ -8,7 +8,8 @@ export type BuildArtifact = {
     label: string
     description?: string
     source: string
-    destination: string
+    destination: string,
+    compressionAlgorithm?: "lrzip" | "gzip" | "zip" | "zstd" | "zstd_max" | "bzip" | "plzip" | "plzip_max" | "xz" | "xz_max";
 }
 
 export type TaskDefinition = {
