@@ -13,7 +13,7 @@ Pipeline
 
 
 1. Agent boots
-2. Agent reads arguments (JSON)
+2. Agent reads environment variables and connects to cluster
 3. Agent downloads any sources, reports errors
 4. Agent begins to execute commands as specified in job
     - Agent advertises "task ${calculatedName} starting"
@@ -38,7 +38,4 @@ Provide:
 3. process list ?
 4. environment variables ?
 
-things we need to cache centrally
-things downloaded from filesystem access -- can be marked to survive past default expiration time
-    12h / 1d / 3d / 7d?
 
