@@ -7,7 +7,7 @@
     "dev:server": "nodemon server/src/main.ts --watch server",
     "dev:database": "",
     "build": "npm run build:client; npm run build:server",
-    "build:agent": "cd agent; npm run build; cd ..",
+    "build:agent": "tsc --project ./agent/tsconfig.json",
     "build:client": "ng build",
     "build:server": "tsc --project ./server/tsconfig.json"
   },
