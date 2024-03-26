@@ -60,7 +60,7 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
         kubeTask,
         logger
     );
-    await TripBreakpoint(jobInstance, false);
+    // await TripBreakpoint(jobInstance, false);
     logger.info({ state: "Sealing", msg: "Agent sealing completed", block: "end" });
 
 
