@@ -3,6 +3,9 @@ import formidable, { IncomingForm } from "formidable";
 import { route } from '../util/util';
 import fs, { stat } from 'fs-extra';
 import { environment } from '../util/environment';
+import { JobInstance } from '../types/agent-task';
+import { db } from '../util/db';
+import path from 'path';
 
 if (!environment.cruiser_blob_dir.endsWith('/')) environment.cruiser_blob_dir += '/';
 fs.mkdirSync(environment.cruiser_blob_dir, { recursive: true });
@@ -20,7 +23,39 @@ router.use('/upload', route(async (req, res, next) => {
 
             const data = JSON.parse(fields['data'][0]);
             const names = Object.keys(files);
-            const path = data.path == "/" ? "/" : data.path.substring(1);
+            const localPath = data.path as string;
+            const jobInstanceId = data.jobInstance as string;
+            const fileName = data.fileName as string;
+
+            let jobInstance: JobInstance;
+            if (jobInstanceId) {
+                [jobInstance] = await db.select<JobInstance>(jobInstanceId);
+
+                const contents = data.contents;
+
+                const rootPath = [
+                    environment.cruiser_artifact_dir,
+                    jobInstance.pipeline,
+                    jobInstance.pipeline_instance,
+                    jobInstance.stage,
+                    jobInstance.job,
+                    jobInstance.id
+                ].join('/');
+
+
+                await fs.mkdirp(rootPath).catch(e => null);
+                await fs.move(
+                    uploadFiles[0].filepath,
+                    rootPath + fileName
+                );
+                await fs.writeJSON(rootPath + fileName + '_contents.json', contents);
+
+                res.send({
+                    url: "/api/blobstore/artifacts/" + rootPath + '/' + fileName,
+                    name: fileName
+                });
+                return;
+            }
 
             if (/[<>{}\\]/.test(names.join()))
                 return next({ message: "Invalid upload name", status: 400 });
@@ -37,8 +72,25 @@ router.use('/upload', route(async (req, res, next) => {
                     filePaths.push({
                         url: "/api/blobstore/" + keys[i],
                         name: keys[i]
-                    })
-                    await fs.move(file.filepath, environment.cruiser_blob_dir + keys[i])
+                    });
+
+                    const target = (environment.cruiser_blob_dir + '/' + keys[i]);
+
+                    await fs.mkdirp(target.slice(0, target.lastIndexOf('/'))).catch(e => null);
+
+                    const resolvedPath = path.resolve(target);
+                    // Ensure the resolved path didn't somehow exit our safely exposed directories.
+                    if (
+                        !resolvedPath.startsWith(environment.cruiser_log_dir) &&
+                        !resolvedPath.startsWith(environment.cruiser_artifact_dir) &&
+                        !resolvedPath.startsWith(environment.cruiser_blob_dir)
+                    )
+                        return next(400);
+
+                    await fs.move(
+                        file.filepath,
+                        target
+                    )
                 }
             }
 
@@ -56,6 +108,9 @@ router.use('/upload', route(async (req, res, next) => {
 router.use(route(async (req, res, next) => {
     if (req.method != "GET") return next();
 
+    // Prevent reading files via backtracking
+    if (req.path.includes('..')) return next(400);
+
     const file = req.path.startsWith("/log/")
         ? (environment.cruiser_log_dir + '/' + req.path.replace('/log', '')).replace('//', '/')
         : req.path.startsWith("/artifact/")
@@ -64,6 +119,15 @@ router.use(route(async (req, res, next) => {
     if (!file) return next(400);
 
     try {
+        const resolvedPath = path.resolve(file);
+        // Ensure the resolved path didn't somehow exit our safely exposed directories.
+        if (
+            !resolvedPath.startsWith(environment.cruiser_log_dir) &&
+            !resolvedPath.startsWith(environment.cruiser_artifact_dir) &&
+            !resolvedPath.startsWith(environment.cruiser_blob_dir)
+        )
+            return next(400);
+
         let stats = await stat(file);
 
         if (req.headers.range) {
