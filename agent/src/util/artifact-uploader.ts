@@ -1,7 +1,6 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
-import os from 'os';
 import fs from 'fs-extra';
-import AdmZip from 'adm-zip';
+import os from 'os';
 import FormData from 'form-data';
 
 import { getSocketLogger } from '../socket/logger';
@@ -9,77 +8,180 @@ import { JobInstance } from '../../types/agent-task';
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../../types/pipeline';
 import { api } from './axios';
 import environment from './environment';
+import { getFilesInFolderFlat } from './fs';
 
-const compressLrztar = async (
-    dir: string,
-    targetFile: string,
-    logger: Awaited<ReturnType<typeof getSocketLogger>>
+const tarCompress = (
+    command: string,
+    args: string[],
+    metadata,
+    logger,
 ) => {
     return new Promise<ChildProcessWithoutNullStreams>(async (res, rej) => {
-        try {
-            const path = targetFile + '.tar.lrz';
-            const process = spawn('lrztar', ['-z', '-o', path, dir], {
-                cwd: global.process.cwd() + "/build",
-                windowsHide: true
+        const process = spawn(command, args, {
+            cwd: global.process.cwd() + "/build",
+            windowsHide: true
+        });
+        process.stdout.on('data', (data) => logger.stdout({ time: Date.now(), data, scope: "sealing" }));
+        process.stderr.on('data', (data) => logger.stderr({ time: Date.now(), data, scope: "sealing" }));
+
+        process.on('error', (err) => logger.error(err));
+
+        process.on('disconnect', (...args) => {
+            logger.error({
+                msg: `Process unexpectedly disconnected`,
+                args
             });
+            res(process);
+        });
 
-            process.stdout.on('data', (data) => logger.stdout({ time: Date.now(), data, scope: "sealing" }));
-            process.stderr.on('data', (data) => logger.stderr({ time: Date.now(), data, scope: "sealing" }));
-
-            process.on('error', (err) => logger.error(err));
-
-            process.on('disconnect', (...args) => {
-                logger.error({
-                    msg: `Process unexpectedly disconnected`,
-                    args
-                });
-                res(process);
-            });
-
-            process.on('exit', (code) => {
-                if (code == 0) {
-                    logger.info({ msg: `Process exited successfully` });
-                    res({
-                        path: path,
-                        ...process
-                    } as any);
-                }
-                else {
-                    logger.error({ msg: `Process exited with non-zero exit code`, code });
-                    res({
-                        path: path,
-                        ...process
-                    } as any);
-                }
-            });
-        }
-        catch (err) {
-            // Return the process and transmit the error object
-            res({
-                exitCode: -1,
-                err: err
-            } as any);
-        }
-    });
+        process.on('exit', (code) => {
+            if (code == 0) {
+                logger.info({ msg: `Process exited successfully` });
+                res({
+                    ...metadata,
+                    ...process
+                } as any);
+            }
+            else {
+                logger.error({ msg: `Process exited with non-zero exit code`, code });
+                res({
+                    ...metadata,
+                    ...process
+                } as any);
+            }
+        });
+    })
 }
 
-// Fallback mechanism.
-const compressZip = async (
+const compressTarLrz = (
     dir: string,
     targetFile: string,
     logger: Awaited<ReturnType<typeof getSocketLogger>>
 ) => {
-    const zip = new AdmZip();
+    const path = targetFile + '.tar.lrz';
+    return tarCompress(
+        'lrztar',
+        ['-z', '-o', path, dir],
+        { path, dir, algorithm: "lrzip" },
+        logger
+    );
+}
 
-    await zip.addLocalFolderPromise(dir, { });
+const compressTarGZip = (
+    dir: string,
+    targetFile: string,
+    logger: Awaited<ReturnType<typeof getSocketLogger>>
+) => {
+    const path = targetFile + '.tar.gz';
+    return tarCompress(
+        'tar',
+        ['-zcvf', path, dir],
+        { path, dir, algorithm: "gzip" },
+        logger
+    );
+}
 
-    return zip.writeZipPromise(targetFile + '.zip')
-        .then(res => ({ exitCode: res ? 0 : -1, path: targetFile + '.zip' }))
-        .catch(err => ({ exitCode: -1, err }));
+const compressTarBZip = (
+    dir: string,
+    targetFile: string,
+    logger: Awaited<ReturnType<typeof getSocketLogger>>
+) => {
+    const path = targetFile + '.tar.bz';
+    return tarCompress(
+        'tar',
+        ['c -Ipbzip2 -f', dir, '-o', path],
+        { path, dir, algorithm: "pbzip" },
+        logger
+    );
+}
+
+const compressTarZstd = (
+    dir: string,
+    targetFile: string,
+    logger: Awaited<ReturnType<typeof getSocketLogger>>
+) => {
+    const path = targetFile + '.tar.zstd';
+    return tarCompress(
+        'tar',
+        ['c -I"zstd" -f', dir, '-o', path],
+        { path, dir, algorithm: "zstd" },
+        logger
+    );
+}
+
+const compressTarZstdMax = (
+    dir: string,
+    targetFile: string,
+    logger: Awaited<ReturnType<typeof getSocketLogger>>
+) => {
+    const path = targetFile + '.tar.zstd';
+    return tarCompress(
+        'tar',
+        ['c -I"zstd -19 -T0" -f', dir, '-o', path],
+        { path, dir, algorithm: "zstd_max" },
+        logger
+    );
+}
+
+const compressTarPLZip = (
+    dir: string,
+    targetFile: string,
+    logger: Awaited<ReturnType<typeof getSocketLogger>>
+) => {
+    const path = targetFile + '.tar.plz';
+    return tarCompress(
+        'tar',
+        ['c -Iplzip -f', dir, '-o', path],
+        { path, dir, algorithm: "plzip" },
+        logger
+    );
+}
+
+const compressTarPLZipMax = (
+    dir: string,
+    targetFile: string,
+    logger: Awaited<ReturnType<typeof getSocketLogger>>
+) => {
+    const path = targetFile + '.tar.plz';
+    return tarCompress(
+        'tar',
+        ['c -I"plzip -9" -f', dir, '-o', path],
+        { path, dir, algorithm: "plzip_max" },
+        logger
+    );
+}
+
+const compressTarXZ = (
+    dir: string,
+    targetFile: string,
+    logger: Awaited<ReturnType<typeof getSocketLogger>>
+) => {
+    const path = targetFile + '.tar.xz';
+    return tarCompress(
+        'tar',
+        ['c -Ipxz -f', dir, '-o', path],
+        { path, dir, algorithm: "xz" },
+        logger
+    );
+}
+
+const compressTarXZMax = (
+    dir: string,
+    targetFile: string,
+    logger: Awaited<ReturnType<typeof getSocketLogger>>
+) => {
+    const path = targetFile + '.tar.xz';
+    return tarCompress(
+        'tar',
+        ['c -I"pxz -9" -f', dir, '-o', path],
+        { path, dir, algorithm: "xz_max" },
+        logger
+    );
 }
 
 const uploadBinary = async (
     path: string,
+    dirContents: Awaited<ReturnType<typeof getFilesInFolderFlat>>,
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof getSocketLogger>>
 ) => {
@@ -91,8 +193,8 @@ const uploadBinary = async (
         formData.append("data", JSON.stringify({
             fileName: fileName,
             autoRename: true,
-            isArtifact: true,
-            jobInstance: jobInstance.id
+            jobInstance: jobInstance.id,
+            contents: dirContents
         }));
 
         let headers = formData.getHeaders();
@@ -141,20 +243,41 @@ export const UploadArtifacts = async (
     // const compressArtifact = os.platform() == "win32"
     //     ? compressZip
     //     : compressLrztar;
-    const compressArtifact = compressZip;
 
     const uploads = [];
 
     for (const artifact of job.artifacts) {
         const dir = artifact.source;
         const dest = artifact.destination;
+        const contents = await getFilesInFolderFlat(artifact.source);
+
+        const algorithm: Function = (() => {
+            if (os.platform() == 'win32') {
+                // TODO
+                return null;
+            }
+            else {
+                switch (artifact.compressionAlgorithm) {
+                    case "zstd": return compressTarZstd;
+                    case "zstd_max": return compressTarZstdMax;
+                    case "gzip": return compressTarGZip;
+                    case "bzip": return compressTarBZip;
+                    case "plzip": return compressTarXZ;
+                    case "plzip_max": return compressTarXZMax;
+                    case "xz": return compressTarPLZip;
+                    case "xz_max": return compressTarPLZipMax;
+                    case "lrzip":
+                    default: return compressTarLrz;
+                }
+            }
+        }) ();
 
         logger.info({
             msg: "Sealing artifact " + artifact.label,
             artifact
         })
 
-        const result = await compressArtifact(dir, dest, logger);
+        const result = await algorithm(dir, dest, logger);
         if (result.exitCode == 0) {
             logger.info({
                 msg: "Sealed artifact " + artifact.label,
@@ -175,6 +298,7 @@ export const UploadArtifacts = async (
             uploads.push(
                 uploadBinary(
                     result['path'],
+                    contents,
                     jobInstance,
                     logger
                 )
@@ -182,5 +306,5 @@ export const UploadArtifacts = async (
         }
     }
 
-    for await (let upload of uploads) {}
+    return Promise.all(uploads);
 }
