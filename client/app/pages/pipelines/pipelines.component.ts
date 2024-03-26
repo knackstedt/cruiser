@@ -14,6 +14,7 @@ import { StagePopupComponent } from 'client/app/pages/stage-popup/stage-popup.co
 import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
 import * as k8s from '@kubernetes/client-node';
 import { JobInstance } from 'server/src/types/agent-task';
+import { LiveSocketService } from 'client/app/services/live-socket.service';
 
 @Component({
     selector: 'app-pipelines',
@@ -102,12 +103,19 @@ export class PipelinesComponent implements OnInit {
 
     cols = 4;
 
+    private subscriptions = [
+        this.liveSocket.subscribe(({ev, data}) => {
+            this.ngOnInit()
+        })
+    ]
+
     constructor(
-        private viewContainer: ViewContainerRef,
-        private dialog: DialogService,
-        private lazyLoader: LazyLoaderService,
-        private fetch: Fetch,
-        private changeDetector: ChangeDetectorRef
+        private readonly viewContainer: ViewContainerRef,
+        private readonly dialog: DialogService,
+        private readonly lazyLoader: LazyLoaderService,
+        private readonly fetch: Fetch,
+        private readonly changeDetector: ChangeDetectorRef,
+        private readonly liveSocket: LiveSocketService
     ) {
         // lazyLoader.registerComponent({
         //     id: "pipeline-editor",
@@ -250,6 +258,10 @@ export class PipelinesComponent implements OnInit {
                 (nativeElement as HTMLElement).dataset['sortable'] = i.toString();
             })
         }, 100)
+    }
+
+    ngOnDestroy() {
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     editPipeline(pipeline: Partial<PipelineDefinition> = {}) {

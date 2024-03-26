@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, Input, NgZone, ViewChild } from '@angular/core';
-import { DatePipe, NgTemplateOutlet } from '@angular/common';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, ViewChild } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { NgScrollbar, NgScrollbarModule } from 'ngx-scrollbar';
-import { JobDefinition, TaskDefinition } from 'types/pipeline';
+import { TaskDefinition } from 'types/pipeline';
 import { io, Socket } from 'socket.io-client';
 import ansi, { ParsedSpan, parse } from 'ansicolor';
 import { darkTheme } from 'client/app/services/theme.service';
-import { DialogService, Fetch, TooltipDirective } from '@dotglitch/ngx-common';
+import { Fetch, TooltipDirective } from '@dotglitch/ngx-common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
 import { JobInstance } from 'types/agent-task';
@@ -28,6 +28,7 @@ type Line = ({
     block?: "start" | "end",
 
     _expanded?: boolean;
+    _original?: any
 });
 
 @Component({
@@ -88,7 +89,7 @@ export class JobLogsComponent {
 
 
     async ngOnInit() {
-        const commitLine = (line: string, stream: "stdout" | "stderr", time = 0, doCommit = true) => {
+        const commitLine = (line: string, stream: "stdout" | "stderr", time = 0, doCommit = true, data) => {
             // TODO: save and restore selection...
 
             const iso = (new Date(time)).toISOString();
@@ -98,14 +99,15 @@ export class JobLogsComponent {
 
                 this.lines.push({
                     stream,
-                    msg: line,
-                    level: stream == "stderr" ? "error" : "info",
-                    data: parse(line).spans,
-                    fullTime: iso.replace('T', ' '),
+                    fullTime: iso.replace('T', ' x'),
                     time: iso.replace(/^[^T]+T/, ''),
+                    level: stream == "stderr" ? "error" : "info",
                     rendered: false,
                     index: -1,
-                    marker: false
+                    marker: false,
+                    msg: line,
+                    data: parse(line).spans,
+                    _original: data
                 });
             })
 
@@ -115,24 +117,26 @@ export class JobLogsComponent {
         };
 
         let stdout = '';
-        const parseStdOut = ({ data, time }: { data: ArrayBuffer | string, time: number; }, doCommit = true) => {
+        const parseStdOut = (args: { data: ArrayBuffer | string, time: number; }, doCommit = true) => {
+            const { data, time } = args;
             const text = data instanceof ArrayBuffer ? this.decoder.decode(data) : data;
 
             stdout += text;
             if (text.endsWith('\n')) {
-                commitLine(stdout, "stdout", time, doCommit);
+                commitLine(stdout, "stdout", time, doCommit, data);
                 stdout = '';
             }
         };
 
         let stderr = '';
-        const parseStdErr = ({ data, time }: { data: ArrayBuffer | string, time: number; }, doCommit = true) => {
+        const parseStdErr = (args: { data: ArrayBuffer | string, time: number; }, doCommit = true) => {
+            const { data, time } = args;
             const text = data instanceof ArrayBuffer ? this.decoder.decode(data) : data;
 
             stderr += text;
 
             if (text.endsWith('\n')) {
-                commitLine(stderr, "stderr", time, doCommit);
+                commitLine(stderr, "stderr", time, doCommit, data);
                 stderr = '';
             }
         };
@@ -152,6 +156,7 @@ export class JobLogsComponent {
                 block: data.block as any,
                 msg: data.msg,
                 _expanded: true,
+                _original: data
             });
 
             if (doCommit) {
@@ -163,22 +168,33 @@ export class JobLogsComponent {
         // the disk
         if (['finished', 'failed'].includes(this.jobInstance.state)) {
             this.isCompletedRun = true;
-            const data = await this.fetch.get<string>(`/api/blobstore/log/${this.jobInstance.pipeline}/${this.jobInstance.stage}/${this.jobInstance.job}/${this.jobInstance.id}.log`, { responseType: "text" });
-            const entries = data.split('\n').map(line => {
+            const data = await this.fetch.get<string>(`/api/blobstore/log/${this.jobInstance.pipeline}/${this.jobInstance.pipeline_instance}/${this.jobInstance.stage}/${this.jobInstance.job}/${this.jobInstance.id}.log`, { responseType: "text" });
+            const entries = data.split('\n').map((line, i) => {
                 if (!line || line.trim().length == 0) return null;
 
                 // We will assume all lines that don't start with a curlybrace are stdout/stderr
                 if (!line.startsWith("{")) {
-                    const ev = line.slice(0,10);
-                    const t = parseInt(line.slice(11,24));
-                    const msg = line.slice(25);
+                    if (line.startsWith("log:")) {
+                        const ev = line.slice(0,10);
+                        const t = parseInt(line.slice(11,24));
+                        const msg = line.slice(25);
 
+                        return {
+                            ev,
+                            time: t,
+                            data: {
+                                data: msg + '\n',
+                                time: t
+                            }
+                        }
+                    }
+                    // We will assume anything outside of the expected format is an error.
                     return {
-                        ev,
-                        time: t,
+                        ev: 'log:stderr',
+                        time: i,
                         data: {
-                            data: msg + '\n',
-                            time: t
+                            data: line + '\n',
+                            time: i
                         }
                     }
                 }
@@ -213,13 +229,13 @@ export class JobLogsComponent {
             });
 
             socket.on("connect", () => {
-                this.connected = true;
                 this.lines = [];
                 socket.emit("$connect", { job: this.jobInstance.job });
 
                 this.changeDetector.detectChanges();
             });
             socket.on("$connected", () => {
+                this.connected = true;
                 socket.emit("log:get-history");
             });
             socket.on("disconnect", () => {
@@ -395,6 +411,6 @@ export class JobLogsComponent {
     }
 
     viewLineData(line: Line) {
-        ViewJsonInMonacoDialog(this.dialog, line);
+        ViewJsonInMonacoDialog(this.dialog, line._original || line);
     }
 }

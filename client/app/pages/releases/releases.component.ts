@@ -13,6 +13,7 @@ import { JobInstanceIconComponent } from 'client/app/components/job-instance-ico
 import { StagePopupComponent } from 'client/app/pages/stage-popup/stage-popup.component';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { LiveSocketService } from 'client/app/services/live-socket.service';
 
 @Component({
     selector: 'app-releases',
@@ -46,9 +47,20 @@ export class ReleasesComponent implements OnInit {
 
     interval;
     dispose = false
+
+
+    private subscriptions = [
+        this.liveSocket.subscribe(({ ev, data }) => {
+            this.getInstances();
+        })
+    ]
+
     constructor(
-        private readonly fetch: Fetch
-    ) { }
+        private readonly fetch: Fetch,
+        private readonly liveSocket: LiveSocketService
+    ) {
+
+    }
 
     async ngOnInit() {
         const {
@@ -71,6 +83,7 @@ export class ReleasesComponent implements OnInit {
     ngOnDestroy() {
         this.dispose = true;
         clearInterval(this.interval);
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     selectPipeline(pipeline: PipelineDefinition) {
@@ -86,10 +99,6 @@ export class ReleasesComponent implements OnInit {
 
         const { value: instances } = await this.fetch.get<{ value: PipelineInstance[]; }>(`/api/odata/pipeline_instance?$filter=spec.id eq '${this.selectedPipeline.id}'&$orderby=id desc&$fetch=status.jobInstances&$top=20`)
         this.parseInstances(instances);
-
-        // this.interval = setTimeout(() => {
-        //     this.getInstances();
-        // }, 2000);
     }
 
     parseInstances(instances: PipelineInstance[]) {

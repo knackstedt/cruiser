@@ -2,7 +2,6 @@ import { Component, HostListener, ViewChild, isDevMode } from '@angular/core';
 import { MatDrawer } from '@angular/material/sidenav';
 import { MatDialog } from '@angular/material/dialog';
 import { CommandPaletteService, MenuItem, ThemeService } from '@dotglitch/ngx-common';
-import { NgIf } from '@angular/common';
 import { NavMenuComponent } from './components/navmenu/menu.component';
 import { Fetch, LazyLoaderComponent, KeyboardService, NavigationService } from '@dotglitch/ngx-common';
 import { UserService } from 'client/app/services/user.service';

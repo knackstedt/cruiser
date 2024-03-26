@@ -2,8 +2,9 @@ import { Component, Inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { io, Socket } from 'socket.io-client';
 import { Fetch, FilemanagerComponent, MenuDirective, NGX_WEB_COMPONENTS_CONFIG, NgxFileManagerConfiguration, TooltipDirective } from '@dotglitch/ngx-common';
-import { JobDefinition } from 'types/pipeline';
+import { JobDefinition, TaskDefinition } from 'types/pipeline';
 import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
 import { XtermWrapperComponent } from 'client/app/pages/stage-popup/job-details/xterm-wrapper/xterm-wrapper.component';
 import { JobLogsComponent } from 'client/app/pages/stage-popup/job-details/job-logs/job-logs.component';
@@ -39,16 +40,23 @@ export class JobDetailsComponent {
     code = '';
 
     config: NgxFileManagerConfiguration;
+    connected = false;
+    socket: Socket;
 
     constructor(
         @Inject(MAT_DIALOG_DATA) private readonly data: any,
         private readonly fetch: Fetch
     ) {
-        this.jobInstance = data.jobInstance
+        // this.jobInstance = data.jobInstance
         this.job = data.job;
     }
 
     ngOnInit() {
+        if (!this.jobInstance) {
+            this.fetch.get(`/api/odata/${this.data.jobInstance.id}`)
+                .then(ji => this.jobInstance = ji);
+            return;
+        }
         this.config = {
             apiSettings: {
                 listEntriesUrl: `/api/pod/${this.jobInstance.id}/fs/`,
@@ -60,5 +68,43 @@ export class JobDetailsComponent {
             },
             path: "/agent",
         }
+
+        if ([].includes(this.jobInstance.status)) {
+            const socket = this.socket = io({
+                path: "/ws/socket-tunnel",
+                withCredentials: true
+            });
+
+            socket.on("connect", () => {
+                socket.emit("$connect", { job: this.jobInstance.job });
+            });
+            socket.on("$connected", () => {
+                this.connected = true;
+                // Tell the socket to give us a list of any active breakpoints.
+                socket.emit("breakpoint:get-list");
+            });
+            socket.on("disconnect", () => {
+                this.connected = false;
+            });
+
+
+            socket.on("breakpoint:trip", ({id, task, job}: {id: string, task: TaskDefinition, job: string}) => {
+                if (job != this.jobInstance.id) return;
+
+                // This pipeline just tripped a breakpoint
+            });
+        }
+    }
+
+    resumeJob() {
+        this.socket.emit("breakpoint:resume", {
+            // id,
+            // job,
+            // retry
+        })
+    }
+
+    killJob() {
+        this.socket.emit("breakpoint:halt")
     }
 }

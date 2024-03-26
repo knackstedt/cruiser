@@ -137,10 +137,10 @@
                                 <span class="time" (dblclick)="viewLineData(line)">{{line?.time}} </span>
                             }
                             @if (["error", "fatal"].includes(line.level)) {
-                                <span class="message">[agent] {{line['error']?.trim() || line.msg?.trim()}}</span>
+                                <span class="message">[agent] {{line['error']?.trim() || line.msg?.trim()}} {{line._original?.['message']?.trim()}}</span>
                             }
                             @else {
-                                <span class="message">[agent] {{line.msg?.trim()}}</span>
+                                <span class="message">[agent] {{line.msg?.trim()}} {{line._original?.['message']?.trim()}}</span>
                             }
                         </span>
                     }

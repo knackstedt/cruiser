@@ -1,42 +1,56 @@
+@if (jobInstance) {
+    <div class="controls">
+        <app-job-instance-icon [jobInstance]="jobInstance"/>
 
-<div class="controls">
-    <app-job-instance-icon [jobInstance]="jobInstance"/>
+        <div>
+            <span>{{job.label}}</span>
+        </div>
 
-    <div>
-        <span>{{job.label}}</span>
+        <div style="flex: 1"></div>
+
+        <div>
+            @if (jobInstance.state == "frozen") {
+                <mat-icon (click)="resumeJob()">play_circle</mat-icon>
+            }
+            @else {
+                <!-- <mat-icon (click)="pauseJob()">pause_circle</mat-icon> -->
+            }
+
+            @if (!['finished', 'failed'].includes(jobInstance.state)) {
+                <mat-icon (click)="killJob()">stop_circle</mat-icon>
+            }
+        </div>
     </div>
 
-    <div style="flex: 1"></div>
-</div>
-
-<mat-tab-group [mat-stretch-tabs]="false">
-    <mat-tab label="Output">
-        <ng-template matTabContent>
-            <app-job-logs
-                [jobInstance]="jobInstance"
-            />
-        </ng-template>
-    </mat-tab>
-    <mat-tab label="Shell" [disabled]="['failed','finished'].includes(jobInstance.state)">
-        <ng-template matTabContent>
-            <app-xterm-wrapper
-                [jobInstance]="jobInstance"
-            />
-        </ng-template>
-    </mat-tab>
-    <mat-tab label="File Explorer" [disabled]="['failed','finished'].includes(jobInstance.state)">
-        <ng-template matTabContent>
-            @if (config) {
-                <app-filemanager
-                    gridSize="small"
-                    [config]="config"
+    <mat-tab-group [mat-stretch-tabs]="false">
+        <mat-tab label="Output">
+            <ng-template matTabContent>
+                <app-job-logs
+                    [jobInstance]="jobInstance"
                 />
-            }
-        </ng-template>
-    </mat-tab>
-    <!-- <mat-tab label="Tests">???</mat-tab> -->
-    <!-- <mat-tab label="Artifacts"></mat-tab> -->
-    <!-- <mat-tab label="Sources">???</mat-tab> -->
-</mat-tab-group>
+            </ng-template>
+        </mat-tab>
+        <mat-tab label="Shell" [disabled]="['failed','finished'].includes(jobInstance.state)">
+            <ng-template matTabContent>
+                <app-xterm-wrapper
+                    [jobInstance]="jobInstance"
+                />
+            </ng-template>
+        </mat-tab>
+        <mat-tab label="File Explorer" [disabled]="['failed','finished'].includes(jobInstance.state)">
+            <ng-template matTabContent>
+                @if (config) {
+                    <app-filemanager
+                        gridSize="small"
+                        [config]="config"
+                    />
+                }
+            </ng-template>
+        </mat-tab>
+        <!-- <mat-tab label="Tests">???</mat-tab> -->
+        <!-- <mat-tab label="Artifacts"></mat-tab> -->
+        <!-- <mat-tab label="Sources">???</mat-tab> -->
+    </mat-tab-group>
+}
 
 

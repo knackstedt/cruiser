@@ -64,7 +64,6 @@ export class XtermWrapperComponent implements OnInit {
         });
 
         socket.on("connect", () => {
-            this.loadingState = 'connected';
             socket.emit("$connect", { job: this.jobInstance.job });
         });
 
