@@ -21,7 +21,7 @@ import { StackEditorComponent } from 'ngx-stackedit';
 import { Subject, debounceTime, firstValueFrom } from 'rxjs';
 import { FileUploadService } from 'client/app/services/file-upload.service';
 import { MatDialog } from '@angular/material/dialog';
-import { StageEditorComponent } from 'client/app/pages/pipelines/editor/stages/stage-editor/stage-editor.component';
+import { StageEditorComponent } from 'client/app/components/stage-editor/stage-editor.component';
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from 'client/app/services/user.service';
 import { PipelineEditorPartial } from 'client/app/utils/pipeline-editor.partial';

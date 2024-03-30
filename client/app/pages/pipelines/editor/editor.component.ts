@@ -11,7 +11,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Fetch, VscodeComponent } from '@dotglitch/ngx-common';
-import { StageEditorComponent } from './stages/stage-editor/stage-editor.component';
+import { StageEditorComponent } from '../../../components/stage-editor/stage-editor.component';
 import { StackEditorComponent } from 'ngx-stackedit';
 import { BehaviorSubject, Subject, debounceTime } from 'rxjs';
 import { SourceConfiguration } from 'types/pipeline';

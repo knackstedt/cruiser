@@ -17,8 +17,9 @@ export const Pages: ComponentRegistration[] = [
     },
     {
         id: 'Releases',
+        label: "Past Releases",
         load: () => import('./pages/releases/releases.component'),
-        icon: "new_release"
+        icon: "new_releases"
     },
     {
         hidden: true,
