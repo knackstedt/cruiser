@@ -1,7 +1,7 @@
 import { ApplicationRef, ElementRef, Input, ViewChild, Injector, Component } from '@angular/core';
 import { Fetch, MenuItem, ReactMagicWrapperComponent, VscodeComponent } from '@dotglitch/ngx-common';
 import { ReactFlowComponent } from './reactflow/reactflow-wrapper';
-import { SourceConfiguration, StageDefinition, Webhook } from 'types/pipeline';
+import { PipelineDefinition, SourceConfiguration, StageDefinition, Webhook } from 'types/pipeline';
 import { ulid } from 'ulidx';
 import { Edge, Handle, Node, Position } from 'reactflow';
 import dagre from '@dagrejs/dagre';
@@ -24,7 +24,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { StageEditorComponent } from 'client/app/components/stage-editor/stage-editor.component';
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from 'client/app/services/user.service';
-import { PipelineEditorPartial } from 'client/app/utils/pipeline-editor.partial';
 import { VariablesSectionComponent } from 'client/app/components/variables-section/variables-section.component';
 
 
@@ -50,12 +49,22 @@ import { VariablesSectionComponent } from 'client/app/components/variables-secti
     templateUrl: './release-editor.component.html',
     styleUrl: './release-editor.component.scss'
 })
-export class StagesComponent extends PipelineEditorPartial {
+export class StagesComponent {
     @ViewChild("canvas") canvasRef: ElementRef<any>
 
-    override readonly pipelineKind = "release";
-
     get container() { return this.canvasRef.nativeElement }
+
+    // Incoming pipeline
+    @Input() pipeline_id: string;
+    @Input('pipeline') _pipeline: PipelineDefinition;
+    @Input('new') isNewPipeline: any;
+
+    /**
+     * Cloned instance of the pipeline.
+     */
+    public pipeline: PipelineDefinition = {} as any;
+    isUnsavedState = false;
+    isRestoredSave = false;
 
     nodes: Node[] = [];
     edges: Edge[] = [];
@@ -122,11 +131,10 @@ export class StagesComponent extends PipelineEditorPartial {
         private readonly appRef: ApplicationRef,
         public readonly fs: FileUploadService,
         private readonly dialog: MatDialog,
-        fetch: Fetch,
-        toaster: ToastrService,
-        user: UserService
+        private readonly fetch: Fetch,
+        private readonly toaster: ToastrService,
+        private readonly user: UserService
     ) {
-        super(toaster, fetch, user);
         fetch.get<{value: any[]}>(`/api/odata/users`).then(data => {
             this.users = data.value;
         })
@@ -137,16 +145,118 @@ export class StagesComponent extends PipelineEditorPartial {
         this.renderGraph();
     }
 
-    override async ngOnInit(): Promise<void> {
-        await super.ngOnInit();
+    async ngOnInit() {
+        // If we have a pipeline id, load it and select it.
+        if (typeof this.pipeline_id != "string") {
+            return;
+        }
+
+        const url = `/api/odata/pipeline?$filter=_isUserEditInstance eq true and _sourceId eq '${this.pipeline_id}' and _userEditing eq '${this.user.value.login}'`;
+        const previouslyEdited = await this.fetch.get<any>(url);
+
+        if (previouslyEdited.value.length > 0) {
+            this.initPipelineObject(previouslyEdited.value[0]);
+
+            this.isUnsavedState = true;
+            this.isRestoredSave = true;
+        }
+        else {
+            const pipeline = await this.fetch.get<PipelineDefinition>(`/api/odata/${this.pipeline_id}`);
+            const p = await this.fetch.put<PipelineDefinition>(`/api/odata/pipeline:${ulid()}`, {
+                ...pipeline,
+                _sourceId: this.pipeline_id,
+                id: undefined,
+                _isUserEditInstance: true,
+                _userEditing: this.user.value.login
+            });
+            this.initPipelineObject(p);
+        }
 
         if (this.pipeline.id) {
             this.renderGraph();
         }
     }
 
+
     ngOnDestroy() {
         this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
+
+    private initPipelineObject(p: PipelineDefinition) {
+
+        p.sources = p.sources ?? [];
+        p.stages = p.stages ?? [];
+
+        if (p.stages.length == 0) {
+            p.stages.push({
+                id: `pipeline_stage:${ulid()}`,
+                label: "Stage 1",
+                renderMode: "normal",
+                order: 0,
+                jobs: [
+                    {
+                        id: `pipeline_job:${ulid()}`,
+                        taskGroups: [
+                            {
+                                id: `pipeline_task_group:${ulid()}`,
+                                label: "Task Group 1",
+                                order: 0,
+                                tasks: []
+                            }
+                        ],
+                        label: "Job 1",
+                        order: 0
+                    }
+                ]
+            });
+        }
+
+        this.pipeline = p;
+    }
+
+    // Save changes to the edit instance
+    async patchPipeline() {
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+            stages: this.pipeline.stages
+        });
+    }
+
+    // Apply the changes of the cloned pipeline
+    async save() {
+        let data = {
+            ...this.pipeline,
+            id: this._pipeline.id,
+            _isUserEditInstance: undefined,
+            _sourceId: undefined,
+            "@odata.editLink": undefined,
+            "@odata.id": undefined
+        };
+
+        if (this.pipeline.state == "new")
+            this.pipeline.state = "paused";
+
+        await this.fetch.put(`/api/odata/${this._pipeline.id}`, data) as any;
+        await this.fetch.delete(`/api/odata/${this.pipeline.id}`);
+
+        location.href = "#/Releases";
+    }
+
+    // Perform a save of the current clone
+    async saveClone() {
+        this.fetch.patch(`/api/odata/${this.pipeline.id}`, this.pipeline) as any;
+    }
+
+    async cancel() {
+        // Delete the edit copy
+        this.fetch.delete(`api/odata/${this.pipeline.id}`);
+
+        // If we're editing the first draft of a pipeline and we choose to cancel
+        // we need to delete the "original" that was created
+        if (this.pipeline.state == "new")
+            this.fetch.delete(`api/odata/${this.pipeline['_sourceId']}`);
+
+        location.href = "#/Releases";
     }
 
     selectStage(stage: StageDefinition) {

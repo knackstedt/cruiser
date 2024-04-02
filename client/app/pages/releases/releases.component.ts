@@ -8,6 +8,7 @@ import { ListViewComponent } from 'client/app/pages/releases/list-view/list-view
 import { GridViewComponent } from 'client/app/pages/releases/grid-view/grid-view.component';
 import { MatIconModule } from '@angular/material/icon';
 import { orderSort } from 'shared/order-sort';
+import { UserService } from 'client/app/services/user.service';
 
 @Component({
     selector: 'app-releases',
@@ -87,7 +88,8 @@ export class ReleasesComponent implements OnInit {
     constructor(
         private readonly dialog: DialogService,
         private readonly fetch: Fetch,
-        private readonly liveSocket: LiveSocketService
+        private readonly liveSocket: LiveSocketService,
+        private readonly user: UserService
     ) {
 
     }
@@ -206,12 +208,13 @@ export class ReleasesComponent implements OnInit {
     }
 
     newPipeline(partial: Omit<Partial<PipelineDefinition>, 'id'> = {}) {
-        this.fetch.post<PipelineDefinition>(`/api/odata/pipeline`, {
-            label: 'My new Release',
+         this.fetch.post<PipelineDefinition>(`/api/odata/pipeline/`, {
+            label: 'My new Pipeline',
             state: 'new',
             order: -1,
-            group: "default",
-            kind: "release",
+            group: 'default',
+            stages: [],
+            sources: [],
             ...partial
         })
             .then(res => {
