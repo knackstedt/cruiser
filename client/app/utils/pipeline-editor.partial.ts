@@ -39,6 +39,7 @@ export class PipelineEditorPartial {
             p.stages.push({
                 id: `pipeline_stage:${ulid()}`,
                 label: "Stage 1",
+                renderMode: "normal",
                 order: 0,
                 jobs: [
                     {

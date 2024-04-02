@@ -1,5 +1,6 @@
-<div #scroller class="scroller" (scroll)="onScroll(scroller)" cdkDropListGroup style="height: 100%; overflow: auto">
-    @for (group of pipelineGroups; track group) {
+
+<div #scroller class="scroller" cdkDropListGroup style="height: 100%; overflow: auto">
+    @for (group of parent.pipelineGroups; track group) {
         <mat-accordion
             displayMode="flat"
             [multi]="true"
@@ -19,10 +20,10 @@
                     @for (pipeline of group.items; track pipeline) {
                         <div
                             class="grid-item"
-                            [ngx-contextmenu]="ctxMenu"
+                            [ngx-contextmenu]="parent.ctxMenu"
                             [ngx-menu-context]="pipeline"
                             [attr.pipeline-id]="pipeline.id"
-                            (dblclick)="editPipeline(pipeline)"
+                            (dblclick)="parent.editPipeline(pipeline)"
                         >
                             <div class="content">
                                 <h4 class="label"
@@ -40,7 +41,7 @@
                                                 ? 'No stages to run'
                                                 : 'Run pipeline'
                                         "
-                                        (click)="triggerPipeline(pipeline)"
+                                        (click)="parent.triggerPipeline(pipeline)"
                                     >
                                         <mat-icon>play_arrow</mat-icon>
                                     </button>
@@ -52,7 +53,7 @@
                                                 ? 'No stages to run'
                                                 : 'Run pipeline with Options'
                                         "
-                                        (click)="triggerPipelineWithOptions(pipeline)"
+                                        (click)="parent.triggerPipelineWithOptions(pipeline)"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="24" fill="var(--text-color)">
                                             <path
@@ -61,12 +62,12 @@
                                     </button>
                                     <button
                                         [class.active]="pipeline.state == 'active'"
-                                        (click)="pipeline.state == 'active' ? pausePipeline(pipeline) : resumePipeline(pipeline)"
+                                        (click)="pipeline.state == 'active' ? parent.pausePipeline(pipeline) : parent.resumePipeline(pipeline)"
                                     >
                                         <mat-icon>pause</mat-icon>
                                     </button>
 
-                                    <a (click)="viewHistory(pipeline)">History</a>
+                                    <a (click)="parent.viewHistory(pipeline)">History</a>
                                 </div>
                                 <hr/>
                                 <div>
@@ -116,7 +117,7 @@
                                 <button
                                     class="options"
                                     mat-icon-button
-                                    [ngx-menu]="ctxMenu"
+                                    [ngx-menu]="parent.ctxMenu"
                                     [ngx-menu-context]="pipeline"
                                     [ngx-menu-config]="{ alignment: 'start' }"
                                 >
@@ -126,18 +127,18 @@
                         </div>
                     }
 
-                    <div class="grid-item new-placeholder" (click)="newPipeline(group.label)">
+                    <div class="grid-item new-placeholder" (click)="parent.newPipeline({ group: group.label})">
                         <svg viewBox="0 0 24 24">
                             <path d="M 12 2 L 12 22 M 2 12 L 22 12" stroke="currentcolor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.25" />
                         </svg>
                     </div>
                 </div>
 
-                @if (!group.items || group.items.length == 0) {
+                <!-- @if (!group.items || group.items.length == 0) {
                     <div class="empty-placeholder">
                         <span>No Pipelines</span>
                     </div>
-                }
+                } -->
             </mat-expansion-panel>
         </mat-accordion>
     }

@@ -1,41 +1,28 @@
-import { ScrollingModule } from '@angular/cdk/scrolling';
 import { Component, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { Fetch, MenuDirective, TooltipDirective } from '@dotglitch/ngx-common';
-import { NgScrollbarModule } from 'ngx-scrollbar';
+import { DialogService, Fetch, MenuDirective, MenuItem, TooltipDirective } from '@dotglitch/ngx-common';
 import { JobInstance } from 'types/agent-task';
 import { PipelineDefinition, PipelineInstance, StageDefinition } from 'types/pipeline';
 import * as k8s from '@kubernetes/client-node';
-import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
-import { StagePopupComponent } from 'client/app/pages/stage-popup/stage-popup.component';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { LiveSocketService } from 'client/app/services/live-socket.service';
+import { ListViewComponent } from 'client/app/pages/releases/list-view/list-view.component';
+import { GridViewComponent } from 'client/app/pages/releases/grid-view/grid-view.component';
+import { MatIconModule } from '@angular/material/icon';
+import { orderSort } from 'shared/order-sort';
 
 @Component({
     selector: 'app-releases',
     templateUrl: './releases.component.html',
     styleUrls: ['./releases.component.scss'],
     imports: [
-        MatButtonModule,
         MatIconModule,
-        MatInputModule,
-        MatTooltipModule,
-        MatProgressBarModule,
-        NgScrollbarModule,
-        MenuDirective,
-        TooltipDirective,
-        FormsModule,
-        ScrollingModule,
-        JobInstanceIconComponent,
-        StagePopupComponent
+        ListViewComponent,
+        GridViewComponent
     ],
     standalone: true
 })
 export class ReleasesComponent implements OnInit {
+
+    view = "list"
 
     filter = '';
     pipelineInstances: PipelineInstance[] = [];
@@ -44,10 +31,52 @@ export class ReleasesComponent implements OnInit {
     jobs: JobInstance[] = [];
 
     selectedPipeline: PipelineDefinition;
+    pipelineGroups: { label: string, items: PipelineDefinition[]; }[] = [
+        { label: "default", items: [] },
+    ]
 
     interval;
     dispose = false
 
+    readonly ctxMenu: MenuItem<PipelineDefinition>[] = [
+        {
+            label: "Edit",
+            linkTemplate: pipeline => `#/Pipelines/${pipeline.id}`
+        },
+        {
+            label: "Download JSON",
+            action: async pipeline => {
+                const link = document.createElement("a");
+                link.download = pipeline.label.replace(/[^a-z0-9A-Z_\-$ ]/g, '') + '.json';
+                link.href = `/api/pipeline/${pipeline.id}`;
+                link.click();
+                link.remove();
+            }
+        },
+        {
+            label: "Delete",
+            action: async (pipeline) => {
+                let res = await true;//this.dialog.confirmAction(`Are you sure you want to delete pipeline '${pipeline.label}'?`);
+                if (!res) return;
+            }
+        },
+        {
+            label: "View History",
+            linkTemplate: pipeline => `#/CommitGraph?pipeline=${pipeline.id}`
+        },
+        {
+            label: "Compare",
+            linkTemplate: pipeline => `#/Compare?pipeline=${pipeline.id}`
+        },
+        {
+            label: "Changes",
+            linkTemplate: pipeline => `#/Changes?pipeline=${pipeline.id}`
+        },
+        {
+            label: "Deployment Map",
+            linkTemplate: pipeline => `#/VSM?pipeline=${pipeline.id}`
+        }
+    ];
 
     private subscriptions = [
         this.liveSocket.subscribe(({ ev, data }) => {
@@ -56,6 +85,7 @@ export class ReleasesComponent implements OnInit {
     ]
 
     constructor(
+        private readonly dialog: DialogService,
         private readonly fetch: Fetch,
         private readonly liveSocket: LiveSocketService
     ) {
@@ -63,6 +93,10 @@ export class ReleasesComponent implements OnInit {
     }
 
     async ngOnInit() {
+        this.pipelineGroups = [
+            { label: "default", items: [] },
+        ];
+
         const {
             pipelines,
             kubeJobs,
@@ -76,6 +110,22 @@ export class ReleasesComponent implements OnInit {
         this.pipelines = pipelines;
         this.kubeJobs = kubeJobs;
         this.jobs = jobs;
+
+        this.pipelineGroups.forEach(g => g.items.splice(0));
+
+        this.pipelines?.forEach(pipeline => {
+            const group = pipeline.group;
+
+            let g = this.pipelineGroups.find(g => g.label == group);
+            if (!g) {
+                g = { label: group, items: [] };
+                this.pipelineGroups.push(g);
+            }
+
+            g.items.push(pipeline);
+        });
+
+        this.pipelineGroups.forEach(g => g.items.sort(orderSort));
 
         this.selectPipeline(pipelines[0]);
     }
@@ -97,7 +147,13 @@ export class ReleasesComponent implements OnInit {
     async getInstances() {
         if (this.dispose) return;
 
-        const { value: instances } = await this.fetch.get<{ value: PipelineInstance[]; }>(`/api/odata/pipeline_instance?$filter=spec.id eq '${this.selectedPipeline.id}'&$orderby=id desc&$fetch=status.jobInstances&$top=20`)
+        const { value: instances } = await this.fetch.get<{ value: PipelineInstance[]; }>(
+            `/api/odata/pipeline_instance` +
+            `?$filter=spec.id eq '${this.selectedPipeline.id}'` +
+            `&$orderby=id desc` +
+            `&$fetch=status.jobInstances` +
+            `&$top=20`
+        )
         this.parseInstances(instances);
     }
 
@@ -149,25 +205,50 @@ export class ReleasesComponent implements OnInit {
         this.pipelineInstances = instances;
     }
 
-    newPipeline() {
+    newPipeline(partial: Omit<Partial<PipelineDefinition>, 'id'> = {}) {
         this.fetch.post<PipelineDefinition>(`/api/odata/pipeline`, {
             label: 'My new Release',
             state: 'new',
             order: -1,
             group: "default",
-            kind: "release"
+            kind: "release",
+            ...partial
         })
             .then(res => {
                 location.hash = `#/Releases/${res.id}`;
             });
     }
 
-    async triggerPipeline() {
-        await this.fetch.get(`/api/pipeline/${this.selectedPipeline.id}/start`)
-            .then(({ pipeline }) => {
-                Object.assign(this.selectedPipeline, pipeline);
-                this.selectPipeline(this.selectedPipeline);
+    editPipeline(triggeredPipeline = this.selectedPipeline) {
+
+    }
+
+    deletePipeline(pipeline = this.selectedPipeline) {
+        this.fetch.delete(`/api/odata/${pipeline.id}`);
+
+        // const el = (this.viewContainer.element.nativeElement as HTMLElement).querySelector(`[pipeline-id="${pipeline.id}"]`);
+        // el.classList.add("destroy-animation");
+
+        // setTimeout(() => {
+        //     const group = this.pipelineGroups.find(g => g.label == pipeline.group);
+        //     group.items.splice(group.items.findIndex(i => i.id == pipeline.id), 1);
+
+        //     this.changeDetector.detectChanges();
+        // }, 200);
+    }
+
+    async triggerPipeline(pipeline = this.selectedPipeline) {
+        await this.fetch.get(`/api/pipeline/${pipeline.id}/start`)
+            .then(({ pipeline: newPipeline }) => {
+                Object.assign(pipeline, newPipeline);
+                this.selectPipeline(pipeline);
             });
+    }
+
+    async triggerPipelineWithOptions(pipeline: PipelineDefinition) {
+        await this.fetch.get(`/api/pipeline/${pipeline.id}/start`);
+        pipeline.stats = pipeline.stats ?? { runCount: 0, successCount: 0, failCount: 0, totalRuntime: 0 };
+        pipeline.stats.runCount += 1;
     }
 
     async approveStage(instance: PipelineInstance, stage: StageDefinition) {
@@ -176,5 +257,21 @@ export class ReleasesComponent implements OnInit {
                 Object.assign(this.selectedPipeline, pipeline);
                 this.selectPipeline(this.selectedPipeline);
             });
+    }
+
+    viewHistory(pipeline: PipelineDefinition) {
+        this.dialog.open('history', 'dynamic', {
+            width: "90vw",
+            height: "90vh",
+            inputs: {
+                pipeline
+            }
+        });
+    }
+
+    pausePipeline(pipeline: PipelineDefinition) {
+    }
+
+    resumePipeline(pipeline: PipelineDefinition) {
     }
 }

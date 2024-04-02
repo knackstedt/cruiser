@@ -15,6 +15,7 @@ import { JobInstanceIconComponent } from 'client/app/components/job-instance-ico
 import * as k8s from '@kubernetes/client-node';
 import { JobInstance } from 'server/src/types/agent-task';
 import { LiveSocketService } from 'client/app/services/live-socket.service';
+import { StageSvgDiagramComponent } from 'client/app/components/stage-svg-diagram/stage-svg-diagram.component';
 
 @Component({
     selector: 'app-pipelines',
@@ -31,7 +32,8 @@ import { LiveSocketService } from 'client/app/services/live-socket.service';
         MenuDirective,
         TabulatorComponent,
         StagePopupComponent,
-        JobInstanceIconComponent
+        JobInstanceIconComponent,
+        StageSvgDiagramComponent
     ],
     standalone: true
 })
@@ -49,57 +51,7 @@ export class PipelinesComponent implements OnInit {
 
     sortableSectors: Sortable[] = [];
 
-    readonly ctxMenu: MenuItem<PipelineDefinition>[] = [
-        {
-            label: "Edit",
-            linkTemplate: pipeline => `#/Pipelines/${pipeline.id}`
-        },
-        {
-            label: "Download JSON",
-            action: async pipeline => {
-                const link = document.createElement("a");
-                link.download = pipeline.label.replace(/[^a-z0-9A-Z_\-$ ]/g, '') + '.json';
-                link.href = `/api/pipeline/${pipeline.id}`;
-                link.click();
-                link.remove();
-            }
-        },
-        {
-            label: "Delete",
-            action: async (pipeline) => {
-                let res = await true;//this.dialog.confirmAction(`Are you sure you want to delete pipeline '${pipeline.label}'?`);
-                if (!res) return;
 
-                this.fetch.delete(`/api/odata/${pipeline.id}`);
-
-                const el = (this.viewContainer.element.nativeElement as HTMLElement).querySelector(`[pipeline-id="${pipeline.id}"]`);
-                el.classList.add("destroy-animation");
-
-                setTimeout(() => {
-                    const group = this.pipelineGroups.find(g => g.label == pipeline.group);
-                    group.items.splice(group.items.findIndex(i => i.id == pipeline.id), 1);
-
-                    this.changeDetector.detectChanges();
-                }, 200);
-            }
-        },
-        {
-            label: "View History",
-            linkTemplate: pipeline => `#/CommitGraph?pipeline=${pipeline.id}`
-        },
-        {
-            label: "Compare",
-            linkTemplate: pipeline => `#/Compare?pipeline=${pipeline.id}`
-        },
-        {
-            label: "Changes",
-            linkTemplate: pipeline => `#/Changes?pipeline=${pipeline.id}`
-        },
-        {
-            label: "Deployment Map",
-            linkTemplate: pipeline => `#/VSM?pipeline=${pipeline.id}`
-        }
-    ];
 
     cols = 4;
 
@@ -181,83 +133,7 @@ export class PipelinesComponent implements OnInit {
         this.changeDetector.detectChanges();
 
 
-        setTimeout(() => {
-            this.gridRef.toArray().forEach(({nativeElement}) => {
-                if ((nativeElement as HTMLElement).dataset['sortable']) {
-                    return;
-                }
 
-                const s = new Sortable(nativeElement, {
-                    animation: 300,
-                    easing: "cubic-bezier(0, 0.55, 0.45, 1)",
-                    ghostClass: "sortable-ghost",
-                    group: "pipelines",
-                    filter(event, target, sortable) {
-                        // Make buttons and links not draggable targets on the tile
-                        return ['A', 'BUTTON', 'MAT-ICON', 'IMG', 'svg', 'path'].includes((event.target as HTMLElement).nodeName) ||
-                            event.target['classList']?.contains("mat-mdc-button-touch-target") ||
-                            event.target['classList']?.contains("new-placeholder");
-                    },
-                    forceFallback: true,
-                    fallbackOffset: {
-                        x: -200,
-                        y: 0
-                    },
-
-                    onEnd: async (evt) => {
-                        // TODO: handle updating entry after drag update
-
-                        const group = evt.to.getAttribute('pipeline-group');
-                        const id = evt.item.getAttribute('pipeline-id');
-                        const order = evt.newIndex;
-                        const pipeline = this.pipelines?.find(p => p.id == id);
-
-                        console.log(evt, pipeline)
-
-                        if (!pipeline)
-                            return;
-
-                        if (group != pipeline.group || order != pipeline.order) {
-                            const groupItems = this.pipelineGroups.find(g => g.label == group)?.items;
-
-                            const beforeItems = groupItems.slice(0, order).filter(i => i.id != pipeline.id);
-                            const afterItems = groupItems.slice(order).filter(i => i.id != pipeline.id);
-
-                            const items = [];
-                            let pointer = 0;
-                            beforeItems.forEach(i => {
-                                i.order = pointer++;
-                                items.push(i);
-                            });
-
-                            if (group != pipeline.group)
-                                pipeline.group = group;
-
-                            pipeline.order = pointer++;
-                            items.push(pipeline);
-
-                            afterItems.forEach(i => {
-                                i.order = pointer++;
-                                items.push(i);
-                            });
-
-
-                            this.fetch.patch(`/api/odata`, items.map(i => ({ id: i.id, data: { order: i.order }})));
-                        }
-                        else
-                            return;
-
-                        const oldIndex = this.pipelines.findIndex(i => i.id == pipeline.id);
-                        this.pipelines.splice(oldIndex, 1, pipeline);
-
-                        this.ngAfterViewInit();
-                    }
-                });
-                const i = this.sortableSectors.push(s);
-
-                (nativeElement as HTMLElement).dataset['sortable'] = i.toString();
-            })
-        }, 100)
     }
 
     ngOnDestroy() {

@@ -1,0 +1,151 @@
+
+<div class="contents">
+    <div class="sidebar" style="width: 400px;">
+        <div style="padding: 12px; border-bottom: 1px solid #2b2b2b">
+            <mat-form-field style="width: 100%;">
+                <mat-label>Search</mat-label>
+                <input matInput type="text" [(ngModel)]="parent.filter" />
+            </mat-form-field>
+            <div style="display: flex; align-items: center;">
+                <div style="flex: 1"></div>
+                <button mat-flat-button (click)="parent.newPipeline()">New</button>
+            </div>
+        </div>
+        <ng-scrollbar
+            class=""
+            style="height: 100%; width: 100%"
+            track="vertical"
+            pointerEventsMethod="scrollbar"
+        >
+            <cdk-virtual-scroll-viewport
+                itemSize="72"
+                scrollViewport
+            >
+                <div
+                    style="height: 72px"
+                    class="row"
+                    *cdkVirtualFor="let pipeline of parent.pipelines"
+                    [class.selected]="pipeline == parent.selectedPipeline"
+                    (click)="parent.selectPipeline(pipeline)"
+                >
+                    <div>
+                        <div class="title">{{pipeline.label}}</div>
+                        <div class="active_stage">{{pipeline.id}}</div>
+                    </div>
+                    <div style="flex: 1"></div>
+                    <div (click)="1">
+                        @if (pipeline.isFavorite) {
+                            <mat-icon>star</mat-icon>
+                        }
+                        @else {
+                            <mat-icon>star</mat-icon>
+                        }
+                    </div>
+                </div>
+            </cdk-virtual-scroll-viewport>
+        </ng-scrollbar>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column;">
+        <div class="header">
+            <span class="title">
+                {{parent.selectedPipeline?.label ?? 'Select a Pipeline'}}
+            </span>
+            <div style="flex: 1"></div>
+
+            @if (parent.selectedPipeline) {
+                <a href="#/Releases/{{parent.selectedPipeline?.id}}">
+                    <button mat-flat-button>
+                        <mat-icon>edit</mat-icon>
+                        Edit
+                    </button>
+                </a>
+                <button mat-flat-button color="primary" (click)="parent.triggerPipeline()">
+                    <mat-icon>rocket</mat-icon>
+                    Run
+                </button>
+            }
+        </div>
+
+        <div class="header" style="display: flex; align-items: center;">
+            <div style="width: 400px;">Release</div>
+            <!-- <div style="">Created</div> -->
+            <div>Stage</div>
+        </div>
+
+        <ng-scrollbar
+            style="height: 100%; width: 100%; flex: 1"
+            track="vertical"
+            pointerEventsMethod="scrollbar"
+        >
+            <cdk-virtual-scroll-viewport
+                itemSize="64"
+                scrollViewport
+            >
+                <div class="row" style="height: 64px;" *cdkVirtualFor="let instance of parent.pipelineInstances">
+                    <div class="name">
+                        <div>Release - {{instance.status.phase}}</div>
+                        <div>{{instance.id}} - {{instance.branch}}</div>
+                    </div>
+                    <div>{{instance.stats.startEpoch}}</div>
+                    <div class="stages">
+                        @for (stage of instance.spec.stages; track stage) {
+                            <div
+                                class="stage-block"
+                                [class.running]="!['frozen','finished','failed',null].includes(stage['_latestJob']?.state)"
+                                [class.requires_approval]="stage['_isReadyForApproval']"
+                                [class.filled]="stage.jobs?.length > 0"
+                                [class.outlined]="!(stage.jobs?.length > 0)"
+                                [class.pending]="stage?.['_state'] == 'pending'"
+                                [class.queued]="stage?.['_state'] == 'queued'"
+                                [class.initializing]="stage?.['_state'] == 'initializing'"
+                                [class.cloning]="stage?.['_state'] == 'cloning'"
+                                [class.building]="stage?.['_state'] == 'building'"
+                                [class.sealing]="stage?.['_state'] == 'sealing'"
+                                [class.frozen]="stage?.['_state'] == 'frozen'"
+                                [class.failed]="stage?.['_state'] == 'failed'"
+                                [class.finished]="stage?.['_state'] == 'finished'"
+                                [matTooltip]="stage['_isReadyForApproval'] ? 'Stage requires Approval' : stage?.['_state']"
+                                [ngx-tooltip]="stage.jobs?.length > 0 ? tooltip : null"
+                                [ngx-tooltip-context]="stage"
+                                [ngx-tooltip-config]="{ position: 'bottom', alignment: 'start', triggers:['click'], stayOpen: true }"
+                                (click)="(stage['_isReadyForApproval']) ? parent.approveStage(instance, stage) : 1"
+                            >
+                                @if (stage['_isReadyForApproval']) {
+                                    <mat-icon fontIcon="rule"/>
+                                }
+
+                                @else {
+                                    @switch(stage?.['_state']) {
+                                        @case ("pending") { <mat-icon fontIcon="pending" /> }
+                                        @case ("queued") { <mat-icon fontIcon="pending" /> }
+                                        @case ("initializing") { <mat-icon fontIcon="pending" /> }
+                                        @case ("cloning") { <mat-icon fontIcon="downloading" /> }
+                                        @case ("building") { <mat-icon class="rotate" fontIcon="change_circle" /> }
+                                        @case ("sealing") { <mat-icon fontIcon="archive" /> }
+                                        @case ("frozen") { <mat-icon fontIcon="pause" /> }
+                                        @case ("failed") { <mat-icon fontIcon="block" /> }
+                                        @case ("finished") { <mat-icon fontIcon="check_circle" /> }
+                                    }
+                                }
+                                <div class="label">{{stage.label}}</div>
+
+                                @if (![null, "pending", "failed", "finished"].includes(stage?.['_state'])) {
+                                    <mat-progress-bar
+                                        color="primary"
+                                        mode="indeterminate"
+                                    />
+                                }
+                            </div>
+                            <ng-template #tooltip let-data>
+                                <app-stage-popup
+                                    [pipeline]="parent.selectedPipeline"
+                                    [stage]="data"
+                                />
+                            </ng-template>
+                        }
+                    </div>
+                </div>
+            </cdk-virtual-scroll-viewport>
+        </ng-scrollbar>
+    </div>
+</div>

@@ -1,0 +1,21 @@
+
+
+@if (stages) {
+    <!-- <svg>
+    </svg> -->
+    <div class="diagram">
+        @for (stage of stages; track stage) {
+            <!-- <div
+                class="box"
+                [style.left]="stage.position.x + 'px'"
+                [style.top]="stage.position.y + 'px'"
+            >
+            </div> -->
+            <app-job-instance-icon
+                [jobInstance]="stage['_latestJob']"
+                [style.left]="stage.position.x + 'px'"
+                [style.top]="stage.position.y + 'px'"
+            />
+        }
+    </div>
+}

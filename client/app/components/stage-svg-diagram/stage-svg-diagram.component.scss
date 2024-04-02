@@ -1,0 +1,43 @@
+
+
+:host {
+    display: flex;
+    height: 100%;
+}
+
+.diagram {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.box {
+    position: absolute;
+    display: block;
+    background-color: #23796d;
+    border: 1px solid #28ff97;
+    border-radius: 4px;
+    height: 20px;
+    width: 40px;
+}
+
+app-job-instance-icon {
+    justify-content: center;
+    position: absolute;
+    display: flex;
+    height: 20px;
+    width: 40px;
+    background-color: #23796d;
+    border: 1px solid #28ff97;
+    border-radius: 4px;
+
+    ::ng-deep {
+        mat-icon {
+            font-size: 18px;
+            height: 18px;
+            width: 18px;
+        }
+    }
+}

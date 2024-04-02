@@ -268,6 +268,33 @@
                                 showToc="off"
                             />
 
+                            <div>
+                                <p>Control Flow</p>
+
+                                <mat-checkbox
+                                    [(ngModel)]="selectedTask.preBreakpoint"
+                                >
+                                    Break before Task
+                                </mat-checkbox>
+                                <mat-checkbox
+                                    [(ngModel)]="selectedTask.postBreakpoint"
+                                >
+                                    Break after Task
+                                </mat-checkbox>
+
+                                <!-- <mat-checkbox
+                                    [(ngModel)]="selectedTask.postBreakpoint"
+                                >
+                                    Run only on successful flow
+                                </mat-checkbox>
+
+                                <mat-checkbox
+                                    [(ngModel)]="selectedTask.postBreakpoint"
+                                >
+                                    Run only on
+                                </mat-checkbox> -->
+                            </div>
+
                             <app-variables-section
                                 [item]="selectedTask"
                                 (valueChange)="dataChangeEmitter.next(0)"

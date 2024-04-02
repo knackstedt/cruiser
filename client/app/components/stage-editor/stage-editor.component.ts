@@ -15,11 +15,11 @@ import { StackEditorComponent } from 'ngx-stackedit';
 import { FormsModule } from '@angular/forms';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BehaviorSubject, Subject, debounceTime } from 'rxjs';
-import { PipelineEditorComponent } from 'client/app/pages/pipelines/editor/editor.component';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FileUploadService } from 'client/app/services/file-upload.service';
 import { VariablesSectionComponent } from 'client/app/components/variables-section/variables-section.component';
 import { ArtifactsSectionComponent } from 'client/app/components/artifacts-section/artifacts-section.component';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @Component({
     selector: 'app-stage-editor',
@@ -31,6 +31,7 @@ import { ArtifactsSectionComponent } from 'client/app/components/artifacts-secti
         MatInputModule,
         MatTabsModule,
         MatTooltipModule,
+        MatCheckboxModule,
         FormsModule,
         DragDropModule,
         NgScrollbarModule,

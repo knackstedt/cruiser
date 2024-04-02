@@ -2,9 +2,12 @@
     position: relative;
     z-index: 1;
     &:hover {
-
         .node {
             background-color: var(--background-hover);
+
+            &.multi {
+                background-color: #1d1f20;
+            }
         }
     }
 }
@@ -43,6 +46,9 @@ button {
     &.small {
         width: 80px;
     }
+    &.job-container {
+        width: 240px;
+    }
 }
 
 .node {
@@ -57,6 +63,19 @@ button {
     overflow: hidden;
     box-shadow: 0 4px 6px -1px #00000026,
                 0 2px 4px -1px #00000014;
+
+    &.multi {
+        gap: 10px;
+        padding: 12px;
+        width: 240px;
+        background-color: #181818;
+    }
+    .job-node {
+        height: 90px;
+        background-color: #2d2d2d;
+        border-radius: 9px;
+        padding: 12px;
+    }
 }
 
 .node_container {
@@ -116,6 +135,10 @@ button {
     width: 36px;
     height: 36px;
     border-radius: 50%;
+}
+
+.job-container {
+
 }
 
 .flex-container {
