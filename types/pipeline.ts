@@ -110,7 +110,7 @@ export type Webhook = {
 
 export type StageDefinition = {
     id: `pipeline_stage:${string}`
-    renderAsGateway?: boolean
+    renderMode: "normal" | "gateway" | "job_container"
     label: string
     description?: string
     lastRunState?: string

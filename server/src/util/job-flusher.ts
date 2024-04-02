@@ -36,8 +36,12 @@ export const WatchAndFlushJobs = async() => {
                 podMap[pod.metadata.annotations?.['cruiser.dev/job-instance-id']] = pod;
             }
         },
-        (err) => err?.message !== 'aborted' ? watchPods() : console.error(err)
+        (err) => {
+            console.error(err);
+            watchPods();
+        }
     )
+
     const watchJobs = () => k8sWatch.watch(`/apis/batch/v1/namespaces/${environment.cruiser_kube_namespace}/jobs`,
         { },
         async (type, apiObj, watchObj) => {
@@ -76,7 +80,10 @@ export const WatchAndFlushJobs = async() => {
                 SaveLogAndCleanup(pod, job);
             }
         },
-        (err) => err?.message !== 'aborted' ? watchJobs() : console.error(err)
+        (err) => {
+            console.error(err);
+            watchJobs();
+        }
     );
 
     watchPods();
@@ -92,33 +99,44 @@ export const WatchAndFlushJobs = async() => {
 const flushInterval = 30000;
 const SweepJobs = async () => {
 
-    const { body: result } = await k8sBatchApi.listNamespacedJob(environment.cruiser_kube_namespace);
-    const { body: pods } = await k8sApi.listNamespacedPod(environment.cruiser_kube_namespace);
+    try {
+        const { body: result } = await k8sBatchApi.listNamespacedJob(environment.cruiser_kube_namespace);
+        const { body: pods } = await k8sApi.listNamespacedPod(environment.cruiser_kube_namespace);
 
-    const jobs = result.items;
+        const jobs = result.items;
 
-    for (const job of jobs) {
-        // Ensure we only perform operations on pods we expect to
-        if (job.metadata.annotations['cruiser.dev/created-by'] != "$cruiser")
-            continue;
-
-        const isRunning = job.status.active > 0;
-
-        // If the job isn't running, download the entire log
-        if (!isRunning) {
-            const pod = pods.items.find(p => p.metadata.annotations?.['cruiser.dev/job-id'] == job.metadata.annotations['cruiser.dev/job-id']);
-
-            if (!pod) {
-                logger.warn({
-                    msg: "Completed job pod has been removed prematurely.",
-                    job
-                });
+        for (const job of jobs) {
+            // Ensure we only perform operations on pods we expect to
+            if (job.metadata.annotations['cruiser.dev/created-by'] != "$cruiser")
                 continue;
-            }
 
-            await SaveLogAndCleanup(pod, job);
+            const isRunning = job.status.active > 0;
+
+            // If the job isn't running, download the entire log
+            if (!isRunning) {
+                const pod = pods.items.find(p => p.metadata.annotations?.['cruiser.dev/job-id'] == job.metadata.annotations['cruiser.dev/job-id']);
+
+                if (!pod) {
+                    logger.warn({
+                        msg: "Completed job pod has been removed prematurely.",
+                        job
+                    });
+                    continue;
+                }
+
+                await SaveLogAndCleanup(pod, job);
+            }
         }
     }
+    catch(ex) {
+        logger.error({
+            msg: "Error flushing out jobs",
+            name: ex.name,
+            message: ex.message,
+            stack: ex.stack
+        })
+    }
+
     setTimeout(SweepJobs.bind(this), flushInterval);
 }
 

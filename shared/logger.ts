@@ -2,6 +2,7 @@ import pino from 'pino';
 import { getHeapStatistics } from 'v8';
 import express from 'express';
 import onFinished from 'on-finished';
+import { environment } from './environment';
 
 export const getLogger = (file: string) => pino({
     mixin: (_context, level) => {
@@ -49,22 +50,31 @@ _logger.info({
 
 
 process.on('unhandledRejection', (reason, p) => {
-    _logger.error({
+    const error = {
         kind: "unhandledPromise",
         reason,
         p,
         stack: reason['stack']
-    });
+    };
+    if (!environment.is_production) {
+        console.log("\x1b[1;31m", error, "\x1b[1;0m");
+    }
+    _logger.error(error);
 });
 
 process.on("uncaughtException", err => {
     err['kind'] = "Uncaught";
-    _logger.error({
+    const error = {
         stack: err.stack,
         name: err.name,
         msg: err.message,
         ...err
-    });
+    }
+
+    if (!environment.is_production) {
+        console.log("\x1b[1;31m", error, "\x1b[1;0m");
+    }
+    _logger.error(error);
 });
 
 export const logger = _logger;

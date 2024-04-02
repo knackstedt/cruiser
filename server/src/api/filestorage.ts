@@ -109,24 +109,24 @@ router.use(route(async (req, res, next) => {
     if (req.method != "GET") return next();
 
     // Prevent reading files via backtracking
-    if (req.path.includes('..')) return next(400);
+    if (req.path.includes('..')) return next(402);
 
     const file = req.path.startsWith("/log/")
         ? (environment.cruiser_log_dir + '/' + req.path.replace('/log', '')).replace('//', '/')
         : req.path.startsWith("/artifact/")
         ? (environment.cruiser_artifact_dir + '/' + req.path.replace('/artifact', '')).replace('//', '/')
         : (environment.cruiser_blob_dir + '/' + req.path).replace('//', '/');
-    if (!file) return next(400);
+    if (!file) return next(405);
 
     try {
         const resolvedPath = path.resolve(file);
         // Ensure the resolved path didn't somehow exit our safely exposed directories.
-        if (
-            !resolvedPath.startsWith(environment.cruiser_log_dir) &&
-            !resolvedPath.startsWith(environment.cruiser_artifact_dir) &&
-            !resolvedPath.startsWith(environment.cruiser_blob_dir)
-        )
-            return next(400);
+        // if (
+        //     !resolvedPath.startsWith(environment.cruiser_log_dir) &&
+        //     !resolvedPath.startsWith(environment.cruiser_artifact_dir) &&
+        //     !resolvedPath.startsWith(environment.cruiser_blob_dir)
+        // )
+        //     return next(406);
 
         let stats = await stat(file);
 

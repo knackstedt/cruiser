@@ -17,25 +17,25 @@ const scheduledCronTasks: { [key: string]: (
 )} = {};
 
 export const CronScheduler = () => {
-    logger.info("Initializing Scheduler");
+    // logger.info("Initializing Scheduler");
 
     const checkJobs = async () => {
         const [pipelines] = await db.query<[PipelineDefinition[]]>(`select * from pipeline where _isUserEditInstance = true`);
 
-        logger.info({
-            msg: "Updating schedules for pipelines",
-            count: pipelines.length
-        });
+        // logger.info({
+        //     msg: "Updating schedules for pipelines",
+        //     count: pipelines.length
+        // });
         const t = Date.now();
 
         for (const pipeline of pipelines) {
             let setCronJob = false;
 
             if (!Array.isArray(pipeline.stages)) {
-                logger.warn({
-                    msg: "Pipeline has bad stages",
-                    id: pipeline.id
-                })
+                // logger.warn({
+                //     msg: "Pipeline has bad stages",
+                //     id: pipeline.id
+                // })
                 continue;
             }
 
@@ -62,11 +62,11 @@ export const CronScheduler = () => {
                 // Attach the cron event
                 if (setCronJob) {
                     if (!cron.validate(stage.cronTrigger)) {
-                        logger.warn(`Execution plan ${stage.id} has invalid CRONTAB. Skipping.`);
+                        // logger.warn(`Execution plan ${stage.id} has invalid CRONTAB. Skipping.`);
                         continue;
                     }
 
-                    logger.info(`Creating CRONTAB emitter for plan ${stage.id}`, { interval: stage.cronTrigger });
+                    // logger.info(`Creating CRONTAB emitter for plan ${stage.id}`, { interval: stage.cronTrigger });
 
                     // Cleanup any old cron watchers
                     scheduledCronTasks[stage.id]?.stop();
