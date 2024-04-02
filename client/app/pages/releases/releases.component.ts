@@ -61,22 +61,22 @@ export class ReleasesComponent implements OnInit {
                 if (!res) return;
             }
         },
-        {
-            label: "View History",
-            linkTemplate: pipeline => `#/CommitGraph?pipeline=${pipeline.id}`
-        },
-        {
-            label: "Compare",
-            linkTemplate: pipeline => `#/Compare?pipeline=${pipeline.id}`
-        },
-        {
-            label: "Changes",
-            linkTemplate: pipeline => `#/Changes?pipeline=${pipeline.id}`
-        },
-        {
-            label: "Deployment Map",
-            linkTemplate: pipeline => `#/VSM?pipeline=${pipeline.id}`
-        }
+        // {
+        //     label: "View History",
+        //     linkTemplate: pipeline => `#/CommitGraph?pipeline=${pipeline.id}`
+        // },
+        // {
+        //     label: "Compare",
+        //     linkTemplate: pipeline => `#/Compare?pipeline=${pipeline.id}`
+        // },
+        // {
+        //     label: "Changes",
+        //     linkTemplate: pipeline => `#/Changes?pipeline=${pipeline.id}`
+        // },
+        // {
+        //     label: "Deployment Map",
+        //     linkTemplate: pipeline => `#/VSM?pipeline=${pipeline.id}`
+        // }
     ];
 
     private subscriptions = [
@@ -149,14 +149,16 @@ export class ReleasesComponent implements OnInit {
     async getInstances() {
         if (this.dispose) return;
 
-        const { value: instances } = await this.fetch.get<{ value: PipelineInstance[]; }>(
-            `/api/odata/pipeline_instance` +
-            `?$filter=spec.id eq '${this.selectedPipeline.id}'` +
-            `&$orderby=id desc` +
-            `&$fetch=status.jobInstances` +
-            `&$top=20`
-        )
-        this.parseInstances(instances);
+        if (this.selectedPipeline) {
+            const { value: instances } = await this.fetch.get<{ value: PipelineInstance[]; }>(
+                `/api/odata/pipeline_instance` +
+                `?$filter=spec.id eq '${this.selectedPipeline.id}'` +
+                `&$orderby=id desc` +
+                `&$fetch=status.jobInstances` +
+                `&$top=20`
+            )
+            this.parseInstances(instances);
+        }
     }
 
     parseInstances(instances: PipelineInstance[]) {

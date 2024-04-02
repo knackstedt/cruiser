@@ -3,7 +3,7 @@
     <mat-sidenav-content>
         <div style="height: 100%; display: flex; flex-direction: column;">
             <div class="toolbar">
-                <div style="display: flex; align-items: center;" (click)="mode = 'edit'; view = 'pipeline'">
+                <div class="pipeline_name" (click)="mode = 'edit'; view = 'pipeline'">
                     <mat-icon>edit</mat-icon>
                     {{pipeline?.label}}
                 </div>

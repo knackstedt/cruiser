@@ -56,7 +56,6 @@ export class StagesComponent {
 
     // Incoming pipeline
     @Input() pipeline_id: string;
-    @Input('pipeline') _pipeline: PipelineDefinition;
     @Input('new') isNewPipeline: any;
 
     /**
@@ -226,7 +225,7 @@ export class StagesComponent {
     async save() {
         let data = {
             ...this.pipeline,
-            id: this._pipeline.id,
+            id: this.pipeline['_sourceId'],
             _isUserEditInstance: undefined,
             _sourceId: undefined,
             "@odata.editLink": undefined,
@@ -236,7 +235,7 @@ export class StagesComponent {
         if (this.pipeline.state == "new")
             this.pipeline.state = "paused";
 
-        await this.fetch.put(`/api/odata/${this._pipeline.id}`, data) as any;
+        await this.fetch.put(`/api/odata/${this.pipeline['_sourceId']}`, data) as any;
         await this.fetch.delete(`/api/odata/${this.pipeline.id}`);
 
         location.href = "#/Releases";

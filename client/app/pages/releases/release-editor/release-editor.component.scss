@@ -49,6 +49,13 @@ ng-scrollbar {
     padding: 0 12px;
     gap: 12px;
     background-color: #211f1f;
+    user-select: none;
+
+    .pipeline_name {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
 }
 
 mat-accordion {
