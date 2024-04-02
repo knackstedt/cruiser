@@ -166,7 +166,7 @@ export type PipelineDefinition = {
     label: string
     description: string
     labelTemplate: string
-    state: "locked" | "paused" | "active"
+    state: "new" | "locked" | "paused" | "active"
     lockingBehavior: "singleton" | "singletonNoFail" | "multiple"
     group: string
     isTemplate: boolean

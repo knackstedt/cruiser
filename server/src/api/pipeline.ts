@@ -18,8 +18,10 @@ router.get('/', route(async (req, res, next) => {
     ] = await Promise.all([
         // GetAllRunningJobs(),
         getReleases
-            ? db.query("select * from pipeline where _isUserEditInstance != true and kind = 'release'")
-            : db.query("select * from pipeline where _isUserEditInstance != true and kind = 'build'"),
+            // ? db.query("select * from pipeline where _isUserEditInstance != true and kind = 'release'")
+            ? db.query("select * from pipeline where _isUserEditInstance != true")
+            // : db.query("select * from pipeline where _isUserEditInstance != true and kind = 'build'"),
+            : db.query("select * from pipeline where _isUserEditInstance != true"),
         db.query("select * from jobs where latest = true")
     ]);
 
