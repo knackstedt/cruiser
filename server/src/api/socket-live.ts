@@ -14,28 +14,34 @@ export class SocketLiveService {
         const activeSockets: Socket[] = [];
 
         afterDatabaseConnected(() => {
-            const liveQueries = [
-                db.live(
-                    "pipeline",
-                    data => {
-                        activeSockets.forEach(s =>
-                            s.emit("live:pipeline", data)
-                        )
-                    }
-                ),
-                db.live(
-                    "pipeline_instance",
-                    data => activeSockets.forEach(s =>
-                        s.emit("live:pipeline_instance", data)
+
+            const watchPipelines = () =>
+                db.live("pipeline", data =>
+                    data.action == "CLOSE"
+                        ? watchPipelines()
+                        : activeSockets.forEach(s => s.emit("live:pipeline", data)
                     )
-                ),
-                db.live(
-                    "job_instance",
-                    data => activeSockets.forEach(s =>
-                        s.emit("live:job_instance", data)
+                );
+
+            const watchPipelineInstances = () =>
+                db.live("pipeline_instance", data =>
+                    data.action == "CLOSE"
+                        ? watchPipelineInstances()
+                        : activeSockets.forEach(s => s.emit("live:pipeline_instance", data))
+                );
+
+            const watchJobInstances = () =>
+                db.live("job_instance", data =>
+                    data.action == "CLOSE"
+                        ? watchJobInstances()
+                        : activeSockets.forEach(s => s.emit("live:job_instance", data)
                     )
-                )
-            ]
+                );
+
+            watchPipelines();
+            watchPipelineInstances();
+            watchJobInstances();
+
 
             io.on("connection", socket => {
                 const req = socket.request;
