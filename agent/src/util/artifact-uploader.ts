@@ -57,6 +57,7 @@ const tarCompress = (
                 res({
                     ...metadata,
                     ...process,
+                    exitCode: process.exitCode == 0 ? -1 : process.exitCode,
                     stdout,
                     stderr
                 } as any);
