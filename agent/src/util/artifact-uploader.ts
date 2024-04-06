@@ -9,7 +9,7 @@ import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } 
 import { api } from './axios';
 import environment from './environment';
 import { getFilesInFolderFlat } from './fs';
-import { TripBreakpoint } from 'socket/breakpoint';
+import { TripBreakpoint } from '../socket/breakpoint';
 
 const tarCompress = (
     command: string,
