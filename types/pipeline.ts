@@ -171,6 +171,7 @@ export type PipelineDefinition = {
     group: string
     isTemplate: boolean
     kind: "build" | "release"
+    deleted?: boolean
 
     // record id for the pipeline's template
     pipelineTemplate: string,
