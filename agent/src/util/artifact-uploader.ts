@@ -9,6 +9,7 @@ import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } 
 import { api } from './axios';
 import environment from './environment';
 import { getFilesInFolderFlat } from './fs';
+import { TripBreakpoint } from 'socket/breakpoint';
 
 const tarCompress = (
     command: string,
@@ -21,8 +22,11 @@ const tarCompress = (
             cwd: global.process.cwd() + "/build",
             windowsHide: true
         });
-        process.stdout.on('data', (data) => logger.stdout({ time: Date.now(), data, scope: "sealing" }));
-        process.stderr.on('data', (data) => logger.stderr({ time: Date.now(), data, scope: "sealing" }));
+
+        let stdout = '';
+        let stderr = '';
+        process.stdout.on('data', (data) => (stdout += data) && logger.stdout({ time: Date.now(), data, scope: "sealing" }));
+        process.stderr.on('data', (data) => (stderr += data) && logger.stderr({ time: Date.now(), data, scope: "sealing" }));
 
         process.on('error', (err) => logger.error(err));
 
@@ -31,22 +35,30 @@ const tarCompress = (
                 msg: `Process unexpectedly disconnected`,
                 args
             });
-            res(process);
+            res({
+                ...process,
+                exitCode: -1
+            } as any);
         });
 
         process.on('exit', (code) => {
-            if (code == 0) {
+            // If the process exits with 0 and DOESN'T print this error.
+            if (code == 0 && !stderr.includes("dist: No such file or directory")) {
                 logger.info({ msg: `Process exited successfully` });
                 res({
                     ...metadata,
-                    ...process
+                    ...process,
+                    stdout,
+                    stderr
                 } as any);
             }
             else {
                 logger.error({ msg: `Process exited with non-zero exit code`, code });
                 res({
                     ...metadata,
-                    ...process
+                    ...process,
+                    stdout,
+                    stderr
                 } as any);
             }
         });
@@ -249,13 +261,13 @@ export const UploadArtifacts = async (
     try {
         for (const artifact of (job.artifacts ?? [])) {
             const dir = artifact.source;
-            const dest = artifact.destination;
+            const dest = artifact.destination || artifact.label;
             const contents = await getFilesInFolderFlat(artifact.source);
 
-            const algorithm: Function = (() => {
+            const algorithm = (() => {
                 if (os.platform() == 'win32') {
                     // TODO
-                    return null;
+                    throw new Error("Not implemented!");
                 }
                 else {
                     switch (artifact.compressionAlgorithm) {
@@ -271,39 +283,39 @@ export const UploadArtifacts = async (
                         default: return compressTarLrz;
                     }
                 }
-            }) ();
+            })();
 
             logger.info({
-                msg: "Sealing artifact " + artifact.label,
+                msg: `Sealing artifact '${artifact.label}'`,
                 artifact
-            })
+            });
 
             const result = await algorithm(dir, dest, logger);
             if (result.exitCode == 0) {
                 logger.info({
-                    msg: "Sealed artifact " + artifact.label,
+                    msg: `Sealed artifact '${artifact.label}'`,
                     artifact,
                     result
-                })
+                });
+                // If it was successful in saving to disk, upload it
+                if (result['path']) {
+                    uploads.push(
+                        uploadBinary(
+                            result['path'],
+                            contents,
+                            jobInstance,
+                            logger
+                        )
+                    );
+                }
             }
             else {
                 logger.warn({
-                    msg: "Failed to seal artifact " + artifact.label,
+                    msg: `Failed to seal artifact '${artifact.label}'`,
                     artifact,
                     result
-                })
-            }
-
-            // If it was successful in saving to disk, upload it
-            if (result['path']) {
-                uploads.push(
-                    uploadBinary(
-                        result['path'],
-                        contents,
-                        jobInstance,
-                        logger
-                    )
-                )
+                });
+                await TripBreakpoint(jobInstance, false);
             }
         }
 
