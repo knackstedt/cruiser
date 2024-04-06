@@ -3,8 +3,7 @@
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
-    "sourceRoot": "./client",
-    "outDir": "./dist/",
+    "outDir": "../dist/",
     "forceConsistentCasingInFileNames": true,
     "strict": false,
     "noImplicitOverride": true,
@@ -28,9 +27,8 @@
       "dom"
     ],
     "paths": {
-        "path": [
-            "./node_modules/path-browserify"
-        ]
+        "path": [ "./node_modules/path-browserify" ],
+        "@dotglitch/ngx-common": [ "./node_modules/@dotglitch/ngx-common" ]
     },
     "useDefineForClassFields": false
   },

@@ -21,14 +21,14 @@
           "builder": "@angular-devkit/build-angular:application",
           "options": {
             "outputPath": "dist/cruiser",
-            "index": "client/index.html",
-            "browser": "client/main.ts",
+            "index": "src/index.html",
+            "browser": "src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
-              "client/favicon.ico",
-              "client/assets",
+              "src/favicon.ico",
+              "src/assets",
               {
                 "glob": "**/*",
                 "input": "node_modules/@dotglitch/ngx-common/assets",
@@ -44,10 +44,10 @@
                   "input": "node_modules/formiojs/dist/",
                   "output": "./lib/formio/"
               },
-              "client/manifest.webmanifest"
+              "src/manifest.webmanifest"
             ],
             "styles": [
-              "client/style/main.scss"
+              "src/style/main.scss"
             ],
             "scripts": [],
             "preserveSymlinks": true,
@@ -83,10 +83,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "cruiser:build:production"
+              "buildTarget": "cruiser:build:production"
             },
             "development": {
-              "browserTarget": "cruiser:build:development"
+              "buildTarget": "cruiser:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -94,7 +94,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "cruiser:build"
+            "buildTarget": "cruiser:build"
           }
         }
       }

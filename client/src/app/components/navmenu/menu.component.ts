@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Pages } from '../../component.registry';
 import { Fetch, MenuDirective, MenuItem, NavigationService, ThemeService } from '@dotglitch/ngx-common';
-import pack from '../../../../package.json';
+import pack from '../../../../../package.json';
 
 @Component({
     selector: 'app-menu',
