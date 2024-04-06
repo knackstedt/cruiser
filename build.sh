@@ -4,12 +4,13 @@
 git config user.name "GoCD Automation"
 git config user.email "no-reply@dotglitch.dev"
 
-npm version patch
+# npm version patch
 version=$(npm version --json | jq '.["cruiser"]' | tr -d '"')
 
 # Run the build
+cd client
 npm i
-npm run build:client
+npm run build
 
 # Install server build deps
 cd server
@@ -21,7 +22,7 @@ docker build -f server.dockerfile . -t harbor.dotglitch.dev/library/cruiser:$ver
 
 # Once built, push the new build number
 git add package.json
-git commit -m "Bump version"
+git commit -m "⚛ [automation] increment version number"
 git push
 
 # Push the new docker image
