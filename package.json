@@ -70,12 +70,15 @@
         "@angular-devkit/build-angular": "^17.2.0",
         "@angular/cli": "^17.2.0",
         "@angular/compiler-cli": "^17.2.1",
+        "@kubernetes/client-node": "^0.20.0",
         "@types/dom-webcodecs": "^0.1.11",
         "@types/node": "^18.19.23",
         "@types/react": "^18.2.64",
         "@types/react-dom": "^18.2.21",
         "@types/sortablejs": "^1.15.8",
-        "@types/tabulator-tables": "^5.6.0"
+        "@types/tabulator-tables": "^5.6.0",
+        "axios": "^1.6.8",
+        "express-session": "^1.18.0"
     },
     "browser": {
         "path": "path-browserify"
