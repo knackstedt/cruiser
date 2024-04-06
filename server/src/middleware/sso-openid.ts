@@ -3,7 +3,7 @@ import axios from 'axios';
 import { randomString, route } from '../util/util';
 import { afterDatabaseConnected, db } from '../util/db';
 import { logger } from '../util/logger';
-import { CruiserUserProfile, CruiserUserRole } from '../types';
+import { CruiserUserProfile, CruiserUserRole } from '../types/cruiser-types';
 import { GitHubUser } from '../types/user';
 import { environment } from '../util/environment';
 

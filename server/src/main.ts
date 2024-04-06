@@ -1,4 +1,4 @@
-import "./types";
+import "./types/cruiser-types";
 import express, { Express } from 'express';
 import http from 'http';
 import dotenv from 'dotenv';

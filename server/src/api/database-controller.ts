@@ -4,7 +4,7 @@ import { SQLLang, createQuery } from '@dotglitch/odatav4';
 import { Visitor } from '@dotglitch/odatav4/dist/visitor';
 
 import { db } from '../util/db';
-import { CruiserUserRole } from '../types';
+import { CruiserUserRole } from '../types/cruiser-types';
 
 // List of tables that cannot be accessed through this endpoint.
 const tableBlackList = [
