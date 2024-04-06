@@ -7,6 +7,8 @@ git config user.email "no-reply@dotglitch.dev"
 # npm version patch
 version=$(npm version --json | jq '.["cruiser"]' | tr -d '"')
 
+npm i
+
 # Run the build
 cd client
 npm i

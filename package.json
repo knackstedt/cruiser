@@ -10,5 +10,9 @@
         "build:client": "cd client; ng build; cd ..",
         "build:server": "tsc --project ./server/tsconfig.json"
     },
+    "dependencies": {
+        "tslib": "^2.6.2",
+        "typescript": "~5.2.2"
+    },
     "private": true
 }
