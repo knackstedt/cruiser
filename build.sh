@@ -10,6 +10,12 @@ version=$(npm version --json | jq '.["cruiser"]' | tr -d '"')
 # Run the build
 npm i
 npm run build:client
+
+# Install server build deps
+cd server
+npm i
+cd ..
+
 npm run build:server
 docker build -f server.dockerfile . -t harbor.dotglitch.dev/library/cruiser:$version
 

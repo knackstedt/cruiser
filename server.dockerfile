@@ -15,7 +15,7 @@ COPY ./nginx.conf /etc/nginx/nginx.conf
 
 ADD ./dist/cruiser/browser/ /app/client/
 ADD ./dist/server/ /app/server/
-COPY ./package.json /app/package.json
+COPY ./server/package.json /app/package.json
 
 # Install server deps
 RUN npm i --omit=dev
