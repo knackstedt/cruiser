@@ -32,7 +32,7 @@ export class LiveSocketService<T = any> extends Subject<LiveRecordChange<T>> {
         socket.on("disconnect", () => {
             this.connected = false;
         });
-        socket.onAny(evt => console.log("live_socket", evt))
+        // socket.onAny(evt => console.log("live_socket", evt))
         socket.on("live:pipeline",          (data) => this.next({ ev: "pipeline", data }));
         socket.on("live:pipeline_instance", (data) => this.next({ ev: "pipeline_instance", data }));
         socket.on("live:job_instance",      (data) => this.next({ ev: "job_instance", data }));

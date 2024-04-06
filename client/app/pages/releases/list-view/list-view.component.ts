@@ -1,5 +1,5 @@
 import { ScrollingModule } from '@angular/cdk/scrolling';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,12 +28,15 @@ import { NgScrollbarModule } from 'ngx-scrollbar';
         FormsModule,
         ScrollingModule,
         JobInstanceIconComponent,
-        StagePopupComponent
+        StagePopupComponent,
+        MenuDirective
     ],
     standalone: true,
+    // changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ListViewComponent {
     constructor(
-        public readonly parent: ReleasesComponent
+        public readonly parent: ReleasesComponent,
+        public readonly changeDetector: ChangeDetectorRef
     ) { }
 }

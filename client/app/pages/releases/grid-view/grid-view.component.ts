@@ -1,5 +1,5 @@
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { Component, HostListener, QueryList, ViewChildren, ViewContainerRef } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, QueryList, ViewChildren, ViewContainerRef } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
@@ -46,7 +46,8 @@ export class GridViewComponent {
     constructor(
         public readonly parent: ReleasesComponent,
         private readonly viewContainer: ViewContainerRef,
-        private readonly fetch: Fetch
+        private readonly fetch: Fetch,
+        public readonly changeDetector: ChangeDetectorRef
     ) { }
 
     ngAfterViewInit() {

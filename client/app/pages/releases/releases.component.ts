@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { DialogService, Fetch, MenuDirective, MenuItem, TooltipDirective } from '@dotglitch/ngx-common';
 import { JobInstance } from 'types/agent-task';
 import { PipelineDefinition, PipelineInstance, StageDefinition } from 'types/pipeline';
@@ -9,6 +9,7 @@ import { GridViewComponent } from 'client/app/pages/releases/grid-view/grid-view
 import { MatIconModule } from '@angular/material/icon';
 import { orderSort } from 'shared/order-sort';
 import { UserService } from 'client/app/services/user.service';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
     selector: 'app-releases',
@@ -16,6 +17,7 @@ import { UserService } from 'client/app/services/user.service';
     styleUrls: ['./releases.component.scss'],
     imports: [
         MatIconModule,
+        MatButtonModule,
         ListViewComponent,
         GridViewComponent
     ],
@@ -23,11 +25,16 @@ import { UserService } from 'client/app/services/user.service';
 })
 export class ReleasesComponent implements OnInit {
 
+    @ViewChild(ListViewComponent) listView: ListViewComponent;
+    @ViewChild(GridViewComponent) gridView: GridViewComponent;
+
     view = "list"
 
     filter = '';
+    _pipelineInstances: PipelineInstance[] = [];
     pipelineInstances: PipelineInstance[] = [];
     pipelines: PipelineDefinition[] = [];
+    filteredPipelines: PipelineDefinition[] = [];
     kubeJobs: k8s.V1Job[] = [];
     jobs: JobInstance[] = [];
 
@@ -47,10 +54,19 @@ export class ReleasesComponent implements OnInit {
         {
             label: "Download JSON",
             action: async pipeline => {
+                const blob = new Blob([JSON.stringify(pipeline)], { type: "application/json" });
+
                 const link = document.createElement("a");
                 link.download = pipeline.label.replace(/[^a-z0-9A-Z_\-$ ]/g, '') + '.json';
-                link.href = `/api/pipeline/${pipeline.id}`;
-                link.click();
+                link.href = URL.createObjectURL(blob);
+                link.dataset['downloadurl'] = ["application/json", link.download, link.href].join(":");
+                const evt = new MouseEvent("click", {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                });
+
+                link.dispatchEvent(evt);
                 link.remove();
             }
         },
@@ -81,7 +97,64 @@ export class ReleasesComponent implements OnInit {
 
     private subscriptions = [
         this.liveSocket.subscribe(({ ev, data }) => {
-            this.getInstances();
+            // switch(data.action) {
+            //     case "CREATE": {
+            //         switch (ev) {
+            //             case "pipeline":          { this.pipelines.unshift(data.result); break }
+            //             case "pipeline_instance": { this._pipelineInstances.unshift(data.result); break }
+            //             case "job_instance":      { this.jobs.unshift(data.result); break }
+            //         }
+            //         break;
+            //     }
+            //     case "UPDATE": {
+            //         switch (ev) {
+            //             case "pipeline": {
+            //                 this.pipelines.splice(
+            //                     this.pipelines.findIndex(p => p.id == data.result.id),
+            //                     1,
+            //                     data.result
+            //                 );
+            //                 break;
+            //             }
+            //             case "pipeline_instance": {
+            //                 // this._pipelineInstances = [data.result];
+            //                 // this._pipelineInstances[this._pipelineInstances.findIndex(p => p.id == data.result.id)] = data.result
+            //                 // this._pipelineInstances.splice(
+            //                 //     1,
+            //                 //     data.result
+            //                 //     );
+            //                 const old = this._pipelineInstances.findIndex(p => p.id == data.result.id);
+            //                 Object.assign(old, data.result);
+            //                 break;
+            //             }
+            //             case "job_instance": {
+            //                 this.jobs.splice(
+            //                     this.jobs.findIndex(p => p.id == data.result.id),
+            //                     1,
+            //                     data.result
+            //                 );
+            //                 break;
+            //             }
+            //         }
+            //         break;
+            //     }
+            //     case "DELETE": {
+            //         switch (ev) {
+            //             case "pipeline": {
+            //                 (this.pipelines.find(p => p.id == data.result.id) ?? {} as any).deleted = true;
+            //                 break;
+            //             }
+            //             case "pipeline_instance": { /* invalid? */ break; }
+            //             case "job_instance": { /* invalid? */ break; }
+            //         }
+            //         break;
+            //     }
+            // }
+
+            // debugger;
+            this.ngOnInit();
+            // this.parseData();
+            // this.parseInstances(this._pipelineInstances);
         })
     ]
 
@@ -89,16 +162,13 @@ export class ReleasesComponent implements OnInit {
         private readonly dialog: DialogService,
         private readonly fetch: Fetch,
         private readonly liveSocket: LiveSocketService,
-        private readonly user: UserService
+        private readonly user: UserService,
+        private readonly changeDetector: ChangeDetectorRef
     ) {
 
     }
 
     async ngOnInit() {
-        this.pipelineGroups = [
-            { label: "default", items: [] },
-        ];
-
         const {
             pipelines,
             kubeJobs,
@@ -109,10 +179,25 @@ export class ReleasesComponent implements OnInit {
             jobs: JobInstance[];
         }>('/api/pipeline/?release=true'));
 
-        this.pipelines = pipelines;
-        this.kubeJobs = kubeJobs;
+        this.pipelines = this.filteredPipelines = pipelines;
+        this.kubeJobs = kubeJobs ?? [];
         this.jobs = jobs;
 
+        this.parseData();
+
+        this.selectPipeline(this.selectedPipeline ?? pipelines[0]);
+    }
+
+    ngOnDestroy() {
+        this.dispose = true;
+        clearInterval(this.interval);
+        this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
+    parseData() {
+        this.pipelineGroups = [
+            { label: "default", items: [] },
+        ];
         this.pipelineGroups.forEach(g => g.items.splice(0));
 
         this.pipelines?.forEach(pipeline => {
@@ -128,14 +213,9 @@ export class ReleasesComponent implements OnInit {
         });
 
         this.pipelineGroups.forEach(g => g.items.sort(orderSort));
-
-        this.selectPipeline(pipelines[0]);
-    }
-
-    ngOnDestroy() {
-        this.dispose = true;
-        clearInterval(this.interval);
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.pipelines = [...this.pipelines];
+        this.kubeJobs = [...this.kubeJobs];
+        this.jobs = [...this.jobs];
     }
 
     selectPipeline(pipeline: PipelineDefinition) {
@@ -156,7 +236,8 @@ export class ReleasesComponent implements OnInit {
                 `&$orderby=id desc` +
                 `&$fetch=status.jobInstances` +
                 `&$top=20`
-            )
+            );
+            this._pipelineInstances = instances;
             this.parseInstances(instances);
         }
     }
@@ -206,7 +287,8 @@ export class ReleasesComponent implements OnInit {
                     : 'building';
             });
         });
-        this.pipelineInstances = instances;
+        this.pipelineInstances = [...instances];
+        this.listView.changeDetector.markForCheck();
     }
 
     newPipeline(partial: Omit<Partial<PipelineDefinition>, 'id'> = {}) {
@@ -246,7 +328,7 @@ export class ReleasesComponent implements OnInit {
         await this.fetch.get(`/api/pipeline/${pipeline.id}/start`)
             .then(({ pipeline: newPipeline }) => {
                 Object.assign(pipeline, newPipeline);
-                this.selectPipeline(pipeline);
+                // this.selectPipeline(pipeline);
             });
     }
 
@@ -260,7 +342,7 @@ export class ReleasesComponent implements OnInit {
         await this.fetch.get(`/api/pipeline/${this.selectedPipeline.id}/${instance.id}/${stage.id}/approve`)
             .then(({ pipeline }) => {
                 Object.assign(this.selectedPipeline, pipeline);
-                this.selectPipeline(this.selectedPipeline);
+                // this.selectPipeline(this.selectedPipeline);
             });
     }
 
@@ -278,5 +360,37 @@ export class ReleasesComponent implements OnInit {
     }
 
     resumePipeline(pipeline: PipelineDefinition) {
+    }
+
+    filterPipelines() {
+        // Convert the string into a regex
+        const wordRx = this.filter
+            .trim()
+            .split(' ')
+            .map(word => word
+                .split('')
+                // Transform text into unicode escape sequences
+                .map(char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`)
+                .join('')
+            );
+
+        const matchPaths: string[][] = [];
+        const wordRxSource = wordRx.concat(wordRx);
+        // Create a merged regex containing all words in any order/combination
+        wordRx.forEach((rx, i) => {
+            matchPaths.push(wordRxSource.slice(i, i + wordRx.length));
+        });
+
+        // Build a regex that arbitrarily matches order
+        const rx = new RegExp('(' +
+            matchPaths
+                .map(words => words.join('.*'))
+                .join(")|(") +
+            ')'
+        );
+
+
+        this.filteredPipelines = this.pipelines
+            .filter(p => rx.test(p.label));
     }
 }

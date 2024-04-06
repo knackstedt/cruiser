@@ -15,7 +15,7 @@ import { StackEditorComponent } from 'ngx-stackedit';
 import { FormsModule } from '@angular/forms';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BehaviorSubject, Subject, debounceTime } from 'rxjs';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FileUploadService } from 'client/app/services/file-upload.service';
 import { VariablesSectionComponent } from 'client/app/components/variables-section/variables-section.component';
 import { ArtifactsSectionComponent } from 'client/app/components/artifacts-section/artifacts-section.component';
@@ -90,7 +90,8 @@ export class StageEditorComponent {
     constructor(
         @Optional() @Inject(MAT_DIALOG_DATA) private readonly data,
         private readonly fetch: Fetch,
-        public  readonly fs: FileUploadService
+        public  readonly fs: FileUploadService,
+        public readonly dialog: MatDialogRef<any>
     ) {
         this.pipeline = data?.pipeline;
         this.stage = data?.stage;

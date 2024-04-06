@@ -119,12 +119,19 @@
     </ng-scrollbar>
 
     <div class="content">
+        <button
+            class="exit_button"
+            mat-mini-fab
+            (click)="dialog.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
 
         @switch (currentSelection) {
             @case("job") {
                 @if (selectedJob) {
                     <ng-scrollbar>
-                        <div style="padding: 16px;">
+                        <div class="content_area">
                             <mat-form-field style="width: 100%">
                                 <mat-label>Label</mat-label>
                                 <input
@@ -178,6 +185,7 @@
                             />
                             <app-artifacts-section
                                 [job]="selectedJob"
+                                (valueChange)="dataChangeEmitter.next(0)"
                             />
                         </div>
                     </ng-scrollbar>
@@ -191,7 +199,7 @@
                     <mat-tab-group [mat-stretch-tabs]="false">
                         <mat-tab label="Properties">
                             <ng-scrollbar>
-                                <div style="padding: 16px;">
+                                <div class="content_area">
                                     <mat-form-field style="width: 100%">
                                         <mat-label>Task Group Label</mat-label>
                                         <input
@@ -248,16 +256,18 @@
             @case("task") {
                 @if (selectedTask) {
                     <ng-scrollbar>
-                        <div style="padding: 16px;">
-                            <mat-form-field style="width: 100%">
-                                <mat-label>Task Label</mat-label>
-                                <input
-                                    matInput
-                                    type="text"
-                                    [(ngModel)]="selectedTask.label"
-                                    (change)="dataChangeEmitter.next(0)"
-                                />
-                            </mat-form-field>
+                        <div class="content_area">
+                            <div>
+                                <mat-form-field style="width: 100%">
+                                    <mat-label>Task Label</mat-label>
+                                    <input
+                                        matInput
+                                        type="text"
+                                        [(ngModel)]="selectedTask.label"
+                                        (change)="dataChangeEmitter.next(0)"
+                                    />
+                                </mat-form-field>
+                            </div>
 
                             <p style="margin-top: 0;">Description</p>
                             <ngx-stackedit

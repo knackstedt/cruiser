@@ -331,6 +331,7 @@ export class StagesComponent {
                 pipeline: this.pipeline,
                 stage
             },
+            disableClose: true,
             width: "90vw",
             height: "90vh"
         }).afterClosed())
