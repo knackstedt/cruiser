@@ -7,6 +7,8 @@
 /agent/log
 /server/log
 /log
+/agent/node_modules
+/server/node_modules
 
 # Compiled output
 /dist
