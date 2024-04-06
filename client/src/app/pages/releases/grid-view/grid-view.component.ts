@@ -8,10 +8,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Fetch, MenuDirective, TabulatorComponent, TooltipDirective } from '@dotglitch/ngx-common';
 import Sortable from 'sortablejs';
 
-import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
-import { StageSvgDiagramComponent } from 'client/app/components/stage-svg-diagram/stage-svg-diagram.component';
-import { ReleasesComponent } from 'client/app/pages/releases/releases.component';
-import { StagePopupComponent } from 'client/app/pages/stage-popup/stage-popup.component';
+import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/job-instance-icon.component';
+import { StageSvgDiagramComponent } from 'src/app/components/stage-svg-diagram/stage-svg-diagram.component';
+import { ReleasesComponent } from 'src/app/pages/releases/releases.component';
+import { StagePopupComponent } from 'src/app/pages/stage-popup/stage-popup.component';
 
 @Component({
     selector: 'app-grid-view',

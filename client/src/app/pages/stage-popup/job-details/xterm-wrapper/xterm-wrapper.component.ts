@@ -6,7 +6,7 @@ import { WebglAddon } from 'xterm-addon-webgl';
 import { WebLinksAddon } from 'xterm-addon-web-links';
 import { Unicode11Addon } from 'xterm-addon-unicode11';
 import io, { Socket } from "socket.io-client";
-import { AnsiToXTermTheme, darkTheme } from 'client/app/services/theme.service';
+import { AnsiToXTermTheme, darkTheme } from 'src/app/services/theme.service';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';

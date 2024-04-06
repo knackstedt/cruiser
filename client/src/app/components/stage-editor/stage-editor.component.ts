@@ -7,18 +7,18 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTabsModule } from '@angular/material/tabs';
 import { Fetch, MenuDirective, MenuItem } from '@dotglitch/ngx-common';
 import { ulid } from 'ulidx';
-import { JobDefinition, PipelineDefinition, StageDefinition, TaskDefinition, TaskGroupDefinition } from 'types/pipeline';
+import { JobDefinition, PipelineDefinition, StageDefinition, TaskDefinition, TaskGroupDefinition } from 'src/types/pipeline';
 import { NgScrollbarModule } from 'ngx-scrollbar';
-import { FormioWrapperComponent } from 'client/app/components/formio-wrapper/formio-wrapper.component';
+import { FormioWrapperComponent } from 'src/app/components/formio-wrapper/formio-wrapper.component';
 import { Schemas, DefaultSchema } from './task-schemas';
 import { StackEditorComponent } from 'ngx-stackedit';
 import { FormsModule } from '@angular/forms';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BehaviorSubject, Subject, debounceTime } from 'rxjs';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { FileUploadService } from 'client/app/services/file-upload.service';
-import { VariablesSectionComponent } from 'client/app/components/variables-section/variables-section.component';
-import { ArtifactsSectionComponent } from 'client/app/components/artifacts-section/artifacts-section.component';
+import { FileUploadService } from 'src/app/services/file-upload.service';
+import { VariablesSectionComponent } from 'src/app/components/variables-section/variables-section.component';
+import { ArtifactsSectionComponent } from 'src/app/components/artifacts-section/artifacts-section.component';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @Component({

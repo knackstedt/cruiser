@@ -3,10 +3,10 @@ import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Fetch } from '@dotglitch/ngx-common';
-import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
+import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/job-instance-icon.component';
 import { TableModule } from 'primeng/table';
-import { JobInstance } from 'server/src/types/agent-task';
-import { PipelineDefinition, StageDefinition } from 'types/pipeline';
+import { JobInstance } from 'src/types/agent-task';
+import { PipelineDefinition, StageDefinition } from 'src/types/pipeline';
 
 @Component({
     selector: 'app-pipeline-history',

@@ -4,10 +4,10 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { io, Socket } from 'socket.io-client';
 import { Fetch, FilemanagerComponent, MenuDirective, NGX_WEB_COMPONENTS_CONFIG, NgxFileManagerConfiguration, TooltipDirective } from '@dotglitch/ngx-common';
-import { JobDefinition, TaskDefinition } from 'types/pipeline';
-import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
-import { XtermWrapperComponent } from 'client/app/pages/stage-popup/job-details/xterm-wrapper/xterm-wrapper.component';
-import { JobLogsComponent } from 'client/app/pages/stage-popup/job-details/job-logs/job-logs.component';
+import { JobDefinition, TaskDefinition } from 'src/types/pipeline';
+import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/job-instance-icon.component';
+import { XtermWrapperComponent } from 'src/app/pages/stage-popup/job-details/xterm-wrapper/xterm-wrapper.component';
+import { JobLogsComponent } from 'src/app/pages/stage-popup/job-details/job-logs/job-logs.component';
 
 @Component({
     selector: 'app-job-details',

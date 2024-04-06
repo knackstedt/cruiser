@@ -4,9 +4,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Fetch, MenuDirective, MenuItem } from '@dotglitch/ngx-common';
-import { EditSourceComponent } from 'client/app/pages/sources/edit-source/edit-source.component';
+import { EditSourceComponent } from 'src/app/pages/sources/edit-source/edit-source.component';
 import { TableModule } from 'primeng/table';
-import { SourceConfiguration } from 'types/pipeline';
+import { SourceConfiguration } from 'src/types/pipeline';
 
 @Component({
     selector: 'app-sources',

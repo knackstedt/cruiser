@@ -2,7 +2,7 @@ import { AsyncPipe } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MenuDirective, MenuItem } from '@dotglitch/ngx-common';
-import { UserService } from 'client/app/services/user.service';
+import { UserService } from 'src/app/services/user.service';
 
 @Component({
     selector: 'app-headerbar',

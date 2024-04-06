@@ -14,7 +14,7 @@
         }
       },
       "root": "",
-      "sourceRoot": "client",
+      "sourceRoot": "src",
       "prefix": "app",
       "architect": {
         "build": {
@@ -27,7 +27,6 @@
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
-              "src/favicon.ico",
               "src/assets",
               {
                 "glob": "**/*",

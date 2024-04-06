@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observer, Subject, Subscription } from 'rxjs';
 import { Fetch } from '@dotglitch/ngx-common';
-import { CruiserUserProfile } from 'server/src/types';
+import { CruiserUserProfile } from 'src/types/cruiser-types';
 
 @Injectable({
     providedIn: 'root'

@@ -1,4 +1,4 @@
-import { GitHubUser } from './types/user';
+import { GitHubUser } from './user';
 export { };
 
 export const CruiserUserRoles = Object.seal([

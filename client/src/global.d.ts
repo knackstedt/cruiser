@@ -1,5 +1,5 @@
-import { RootComponent } from 'client/app/root.component';
-import { UserService } from 'client/app/services/user.service';
+import { RootComponent } from 'src/app/root.component';
+import { UserService } from 'src/app/services/user.service';
 
 
 declare global {

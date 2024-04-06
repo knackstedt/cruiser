@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Fetch } from '@dotglitch/ngx-common';
-import { PipelineDefinition } from 'types/pipeline';
+import { PipelineDefinition } from 'src/types/pipeline';
 import { ulid } from 'ulidx';
 
 @Injectable({

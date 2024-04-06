@@ -2,15 +2,15 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, ViewChild
 import { NgTemplateOutlet } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { NgScrollbar, NgScrollbarModule } from 'ngx-scrollbar';
-import { TaskDefinition } from 'types/pipeline';
+import { TaskDefinition } from 'src/types/pipeline';
 import { io, Socket } from 'socket.io-client';
 import ansi, { ParsedSpan, parse } from 'ansicolor';
-import { darkTheme } from 'client/app/services/theme.service';
+import { darkTheme } from 'src/app/services/theme.service';
 import { Fetch, TooltipDirective } from '@dotglitch/ngx-common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
-import { JobInstance } from 'types/agent-task';
-import { ViewJsonInMonacoDialog } from 'client/app/services/utils';
+import { JobInstance } from 'src/types/agent-task';
+import { ViewJsonInMonacoDialog } from 'src/app/services/utils';
 import { MatDialog } from '@angular/material/dialog';
 
 type Line = ({

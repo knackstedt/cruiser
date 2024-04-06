@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Fetch } from '@dotglitch/ngx-common';
 import { ActiveToast, ToastrService } from 'ngx-toastr';
-import { EnvironmentVariable } from 'types/environment';
+import { EnvironmentVariable } from 'src/types/environment';
 import { ulid } from 'ulidx';
 
 const $isEditing = Symbol("editing");

@@ -13,7 +13,6 @@ import { Fetch, DialogService } from '@dotglitch/ngx-common';
 import { VscodeComponent } from '@dotglitch/ngx-common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
-import { PipelineDefinition } from 'types/pipeline';
 import { StackEditorComponent } from 'ngx-stackedit';
 
 @Component({

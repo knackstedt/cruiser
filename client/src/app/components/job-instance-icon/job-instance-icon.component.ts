@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { JobInstance } from 'server/src/types/agent-task';
+import { JobInstance } from 'src/types/agent-task';
 
 @Component({
     selector: 'app-job-instance-icon',

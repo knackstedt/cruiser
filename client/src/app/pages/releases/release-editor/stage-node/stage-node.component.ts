@@ -4,8 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MenuDirective, MenuItem } from '@dotglitch/ngx-common';
-import { StageEditorComponent } from 'client/app/components/stage-editor/stage-editor.component';
-import { StageDefinition } from 'types/pipeline';
+import { StageDefinition } from 'src/types/pipeline';
 
 @Component({
     selector: 'app-stage-node',

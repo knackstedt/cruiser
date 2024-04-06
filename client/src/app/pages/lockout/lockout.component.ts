@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { UserService } from 'client/app/services/user.service';
+import { UserService } from 'src/app/services/user.service';
 import gsap from 'gsap';
 
 @Component({

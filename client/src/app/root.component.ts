@@ -4,11 +4,11 @@ import { MatDialog } from '@angular/material/dialog';
 import { CommandPaletteService, MenuItem, ThemeService } from '@dotglitch/ngx-common';
 import { NavMenuComponent } from './components/navmenu/menu.component';
 import { Fetch, LazyLoaderComponent, KeyboardService, NavigationService } from '@dotglitch/ngx-common';
-import { UserService } from 'client/app/services/user.service';
-import { LoginComponent } from 'client/app/pages/login/login.component';
-import { HeaderbarComponent } from 'client/app/components/headerbar/headerbar.component';
-import { LazyProgressDistractorComponent } from 'client/app/components/@framework/lazy-progress-distractor/lazy-progress-distractor.component';
-import { LockoutComponent } from 'client/app/pages/lockout/lockout.component';
+import { UserService } from 'src/app/services/user.service';
+import { LoginComponent } from 'src/app/pages/login/login.component';
+import { HeaderbarComponent } from 'src/app/components/headerbar/headerbar.component';
+import { LazyProgressDistractorComponent } from 'src/app/components/@framework/lazy-progress-distractor/lazy-progress-distractor.component';
+import { LockoutComponent } from 'src/app/pages/lockout/lockout.component';
 
 const desktopWidth = 1126;
 

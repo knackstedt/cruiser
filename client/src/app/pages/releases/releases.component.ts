@@ -1,14 +1,14 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { DialogService, Fetch, MenuDirective, MenuItem, TooltipDirective } from '@dotglitch/ngx-common';
-import { JobInstance } from 'types/agent-task';
-import { PipelineDefinition, PipelineInstance, StageDefinition } from 'types/pipeline';
+import { JobInstance } from 'src/types/agent-task';
+import { PipelineDefinition, PipelineInstance, StageDefinition } from 'src/types/pipeline';
 import * as k8s from '@kubernetes/client-node';
-import { LiveSocketService } from 'client/app/services/live-socket.service';
-import { ListViewComponent } from 'client/app/pages/releases/list-view/list-view.component';
-import { GridViewComponent } from 'client/app/pages/releases/grid-view/grid-view.component';
+import { LiveSocketService } from 'src/app/services/live-socket.service';
+import { ListViewComponent } from 'src/app/pages/releases/list-view/list-view.component';
+import { GridViewComponent } from 'src/app/pages/releases/grid-view/grid-view.component';
 import { MatIconModule } from '@angular/material/icon';
-import { orderSort } from 'shared/order-sort';
-import { UserService } from 'client/app/services/user.service';
+import { orderSort } from 'src/shared/order-sort';
+import { UserService } from 'src/app/services/user.service';
 import { MatButtonModule } from '@angular/material/button';
 
 @Component({

@@ -1,6 +1,11 @@
 import cluster, { Worker } from 'cluster';
 import os from 'os';
+// import { Server } from "socket.io";
+// import { setupMaster, setupWorker } from "@socket.io/sticky";
+// import { createAdapter, setupPrimary } from "@socket.io/cluster-adapter";
+
 import { logger } from './util/logger';
+import { AsciiBanner } from './util/motd';
 
 const cpus = os.cpus().length;
 
@@ -41,6 +46,15 @@ const spawnSocketWorker = () => {
 
 if (cluster.isPrimary) {
     let i = 0;
+    console.log(AsciiBanner);
+
+    // const httpServer = http.createServer();
+    // setupMaster(httpServer, {
+    //     loadBalancingMethod: "least-connection",
+    // });
+    // cluster.setupPrimary({
+    //     serialization: "advanced",
+    // });
 
     const spawn = () => {
         setTimeout(() => {
@@ -55,6 +69,16 @@ if (cluster.isPrimary) {
     spawnSocketWorker();
 }
 else {
+
+    // const httpServer = http.createServer();
+    // const io = new Server(httpServer);
+
+    // // use the cluster adapter
+    // io.adapter(createAdapter());
+
+    // // setup connection with the primary process
+    // setupWorker(io);
+
     // Workers will run the normal webserver service.
     require('./main');
 }

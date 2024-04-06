@@ -1,11 +1,11 @@
 import { ApplicationRef, ElementRef, Input, ViewChild, Injector, Component } from '@angular/core';
 import { Fetch, MenuItem, ReactMagicWrapperComponent, VscodeComponent } from '@dotglitch/ngx-common';
 import { ReactFlowComponent } from './reactflow/reactflow-wrapper';
-import { PipelineDefinition, SourceConfiguration, StageDefinition, Webhook } from 'types/pipeline';
+import { PipelineDefinition, SourceConfiguration, StageDefinition, Webhook } from 'src/types/pipeline';
 import { ulid } from 'ulidx';
 import { Edge, Handle, Node, Position } from 'reactflow';
 import dagre from '@dagrejs/dagre';
-import { StageNodeComponent } from 'client/app/pages/releases/release-editor/stage-node/stage-node.component';
+import { StageNodeComponent } from 'src/app/pages/releases/release-editor/stage-node/stage-node.component';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,12 +19,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { StackEditorComponent } from 'ngx-stackedit';
 import { Subject, debounceTime, firstValueFrom } from 'rxjs';
-import { FileUploadService } from 'client/app/services/file-upload.service';
+import { FileUploadService } from 'src/app/services/file-upload.service';
 import { MatDialog } from '@angular/material/dialog';
-import { StageEditorComponent } from 'client/app/components/stage-editor/stage-editor.component';
+import { StageEditorComponent } from 'src/app/components/stage-editor/stage-editor.component';
 import { ToastrService } from 'ngx-toastr';
-import { UserService } from 'client/app/services/user.service';
-import { VariablesSectionComponent } from 'client/app/components/variables-section/variables-section.component';
+import { UserService } from 'src/app/services/user.service';
+import { VariablesSectionComponent } from 'src/app/components/variables-section/variables-section.component';
 
 
 @Component({

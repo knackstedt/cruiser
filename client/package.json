@@ -1,6 +1,6 @@
 {
     "name": "cruiser",
-    "version": "0.0.157",
+    "version": "0.0.0",
     "scripts": {
         "dev": "ng serve --port 4600 --ssl --proxy-config ./proxy.config.json",
         "build": "ng build"

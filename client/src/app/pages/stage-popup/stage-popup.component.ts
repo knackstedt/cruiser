@@ -1,14 +1,14 @@
 import { Component, Input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { JobDefinition, PipelineDefinition, StageDefinition } from 'types/pipeline';
+import { JobDefinition, PipelineDefinition, StageDefinition } from 'src/types/pipeline';
 import { TableModule } from 'primeng/table';
 import { MatDialog } from '@angular/material/dialog';
 import { JobDetailsComponent } from './job-details/job-details.component';
 import { Fetch } from '@dotglitch/ngx-common';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
-import { DurationViewerComponent } from 'client/app/components/duration-viewer/duration-viewer.component';
+import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/job-instance-icon.component';
+import { DurationViewerComponent } from 'src/app/components/duration-viewer/duration-viewer.component';
 
 @Component({
     selector: 'app-stage-popup',

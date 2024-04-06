@@ -8,7 +8,10 @@
 /server/log
 /log
 /agent/node_modules
+/client/node_modules
 /server/node_modules
+
+/client/.angular
 
 # Compiled output
 /dist

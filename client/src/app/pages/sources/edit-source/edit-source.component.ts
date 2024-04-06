@@ -8,7 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Fetch } from '@dotglitch/ngx-common';
 import { Subject, debounceTime } from 'rxjs';
-import { SourceConfiguration } from 'types/pipeline';
+import { SourceConfiguration } from 'src/types/pipeline';
 
 @Component({
     selector: 'app-edit-source',

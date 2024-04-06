@@ -6,16 +6,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { LazyLoaderService, MenuDirective, TabulatorComponent, TooltipDirective } from '@dotglitch/ngx-common';
-import { JobDefinition, PipelineDefinition } from 'types/pipeline';
+import { JobDefinition, PipelineDefinition } from 'src/types/pipeline';
 import Sortable from 'sortablejs';
 import { orderSort } from '../../services/utils';
 import { DialogService, Fetch, MenuItem } from '@dotglitch/ngx-common';
-import { StagePopupComponent } from 'client/app/pages/stage-popup/stage-popup.component';
-import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
+import { StagePopupComponent } from 'src/app/pages/stage-popup/stage-popup.component';
+import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/job-instance-icon.component';
 import * as k8s from '@kubernetes/client-node';
-import { JobInstance } from 'server/src/types/agent-task';
-import { LiveSocketService } from 'client/app/services/live-socket.service';
-import { StageSvgDiagramComponent } from 'client/app/components/stage-svg-diagram/stage-svg-diagram.component';
+import { JobInstance } from 'src/types/agent-task';
+import { LiveSocketService } from 'src/app/services/live-socket.service';
+import { StageSvgDiagramComponent } from 'src/app/components/stage-svg-diagram/stage-svg-diagram.component';
 
 @Component({
     selector: 'app-pipelines',

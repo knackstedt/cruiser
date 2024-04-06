@@ -1,9 +1,9 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { PipelineDefinition, StageDefinition } from 'types/pipeline';
+import { PipelineDefinition, StageDefinition } from 'src/types/pipeline';
 import dagre from '@dagrejs/dagre';
-import { JobInstanceIconComponent } from 'client/app/components/job-instance-icon/job-instance-icon.component';
+import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/job-instance-icon.component';
 import { Fetch } from '@dotglitch/ngx-common';
-import { JobInstance } from 'types/agent-task';
+import { JobInstance } from 'src/types/agent-task';
 
 const NODE_HEIGHT = 20;
 const NODE_WIDTH = 40;

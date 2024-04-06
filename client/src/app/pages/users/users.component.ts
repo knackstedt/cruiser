@@ -4,10 +4,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Fetch, MenuDirective, MenuItem } from '@dotglitch/ngx-common';
-import { AddUserComponent } from 'client/app/pages/users/add-user/add-user.component';
+import { AddUserComponent } from 'src/app/pages/users/add-user/add-user.component';
 import { TableModule } from 'primeng/table';
 import { firstValueFrom } from 'rxjs';
-import { CruiserUserProfile, CruiserUserRole } from 'server/src/types';
+import { CruiserUserProfile, CruiserUserRole } from 'src/types/cruiser-types';
 
 @Component({
     selector: 'app-users',
