@@ -1,4 +1,4 @@
-const defaultStoragePath = process.env['CRUISER_GLOBAL_STORAGE_PATH'] || (__dirname + "/../../../data");
+const defaultStoragePath = process.env['CRUISER_GLOBAL_STORAGE_PATH'] || (process.cwd() + "/data");
 
 export const environment = Object.seal({
     cruiser_kube_namespace: process.env['CRUISER_KUBE_NAMESPACE'] || process.env['CRUISER_AGENT_NAMESPACE'] || "cruiser",
