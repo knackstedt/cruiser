@@ -54,9 +54,13 @@ export class JobDetailsComponent {
     ngOnInit() {
         if (!this.jobInstance) {
             this.fetch.get(`/api/odata/${this.data.jobInstance.id}`)
-                .then(ji => this.jobInstance = ji);
+                .then(ji => {
+                    this.jobInstance = ji;
+                    this.ngOnInit();
+                });
             return;
         }
+
         this.config = {
             apiSettings: {
                 listEntriesUrl: `/api/pod/${this.jobInstance.id}/fs/`,
