@@ -48,8 +48,9 @@ const bootstrapServer = async () => {
         const cruiserToken = req.get("X-Cruiser-Token");
         if (cruiserToken) {
             req['_agentToken'] = cruiserToken;
-            return CheckJobToken(cruiserToken)
+            CheckJobToken(cruiserToken)
                 .then(hasToken => hasToken ? next() : next(401));
+            return;
         }
         if (req.get("authorization")) {
             req['_api'] = true;

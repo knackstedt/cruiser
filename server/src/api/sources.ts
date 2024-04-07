@@ -47,7 +47,7 @@ router.get('/tags', (req, res, next) => {
 });
 
 router.get('/remotes', (req, res, next) => {
-    GetGitRefs(req.query.remote ?? req.body.remote)
+    GetGitRefs(req.query['remote'] ?? req.body.remote)
         .then(refs => res.send(refs))
         .catch(err => next(err));
 });

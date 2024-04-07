@@ -33,7 +33,7 @@ router.get('/', route(async (req, res, next) => {
 }));
 
 router.use('/:id', route(async (req, res, next) => {
-    const [ pipeline ] = await db.select(req.params['id']);
+    const [ pipeline ] = await db.select<PipelineDefinition>(req.params['id']);
 
     if (!pipeline) throw { message: "Pipeline does not exist", status: 404 };
 
