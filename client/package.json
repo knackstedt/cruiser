@@ -38,7 +38,7 @@
         "ngx-echarts": "^17.1.0",
         "ngx-reactflow": "^1.0.23",
         "ngx-scrollbar": "^13.0.3",
-        "ngx-stackedit": "^1.1.60",
+        "ngx-stackedit": "^1.1.61",
         "ngx-toastr": "^16.1.0",
         "path-browserify": "^1.0.1",
         "primeng": "^17.10.0",
