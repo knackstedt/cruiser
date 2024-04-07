@@ -10,6 +10,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { orderSort } from 'src/shared/order-sort';
 import { UserService } from 'src/app/services/user.service';
 import { MatButtonModule } from '@angular/material/button';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 
 @Component({
     selector: 'app-releases',
@@ -19,7 +21,11 @@ import { MatButtonModule } from '@angular/material/button';
         MatIconModule,
         MatButtonModule,
         ListViewComponent,
-        GridViewComponent
+        GridViewComponent,
+        ConfirmDialogModule
+    ],
+    providers: [
+        ConfirmationService
     ],
     standalone: true
 })
@@ -72,9 +78,16 @@ export class ReleasesComponent implements OnInit {
         },
         {
             label: "Delete",
-            action: async (pipeline) => {
-                let res = await true;//this.dialog.confirmAction(`Are you sure you want to delete pipeline '${pipeline.label}'?`);
-                if (!res) return;
+            action: (pipeline) => {
+                this.confirmationService.confirm({
+                    header: `Are you sure you want to delete pipeline '${pipeline.label}'?`,
+                    accept: () => {
+                        this.fetch.delete(`/api/odata/${pipeline.id}`).then(res => {
+                            // TODO: delete the one pipeline.
+                            this.ngOnInit();
+                        });
+                    }
+                });
             }
         },
         // {
@@ -163,7 +176,8 @@ export class ReleasesComponent implements OnInit {
         private readonly fetch: Fetch,
         private readonly liveSocket: LiveSocketService,
         private readonly user: UserService,
-        private readonly changeDetector: ChangeDetectorRef
+        private readonly changeDetector: ChangeDetectorRef,
+        private readonly confirmationService: ConfirmationService
     ) {
 
     }
