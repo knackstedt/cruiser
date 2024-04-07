@@ -2,6 +2,8 @@
 # FROM node:20-alpine
 FROM nginxinc/nginx-unprivileged:stable-alpine3.18
 
+USER 0
+
 ENV NODE_VERSION v20.12.1
 ENV NODE_ENV production
 
