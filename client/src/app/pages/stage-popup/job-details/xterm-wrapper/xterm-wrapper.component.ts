@@ -162,8 +162,8 @@ export class XtermWrapperComponent implements OnInit {
         this.socket?.close();
         this.resizeObserver.disconnect();
 
-        this.webglAddon = null;
-        this.terminal = null;
+        // this.webglAddon = null;
+        // this.terminal = null;
         this.socket = null;
         this.resizeObserver = null;
         this.showTerminal = false;
