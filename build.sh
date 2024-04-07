@@ -4,7 +4,7 @@
 git config user.name "GoCD Automation"
 git config user.email "no-reply@dotglitch.dev"
 
-# npm version patch
+npm version patch
 version=$(npm version --json | jq '.["cruiser"]' | tr -d '"')
 
 npm i
