@@ -30,4 +30,4 @@ RUN npm i --omit=dev
 
 EXPOSE 8080
 
-CMD ["/bin/sh", "-c", "nginx \"-g daemon off;\" &; node server/primary.js"]
+CMD ["/bin/sh", "-c", "nginx \"-g daemon off;\" & node server/primary.js"]
