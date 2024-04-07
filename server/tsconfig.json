@@ -1,17 +1,31 @@
 {
+    "compileOnSave": false,
     "compilerOptions": {
-        "declaration": false,
-        "module": "commonjs",
-        "resolveJsonModule": true,
-        "esModuleInterop": true,
-        "target": "es2020",
         "rootDir": "./src",
         "outDir": "../dist/server",
+        "forceConsistentCasingInFileNames": true,
         "strict": false,
+        "noImplicitOverride": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "sourceMap": true,
+        "declaration": false,
+        "downlevelIteration": false,
+        "experimentalDecorators": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "moduleResolution": "node",
+        "importHelpers": true,
+        "target": "ES2022",
+        "module": "commonjs",
+        "lib": [
+            "es2020"
+        ],
         "typeRoots": [
             "./src/types", // this is where you define your types
             "./node_modules/@types" //this where npm packages containing types are located
-        ],
-        "sourceMap": true
+        ]
     }
 }
