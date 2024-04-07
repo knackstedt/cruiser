@@ -13,6 +13,7 @@ npm i
 cd client
 npm i
 npm run build
+gzip -9kr ./dist/cruiser/
 
 # Install server build deps
 cd server
