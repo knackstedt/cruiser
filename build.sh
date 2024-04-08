@@ -22,7 +22,7 @@ npm i
 npm run build
 cd ..
 
-docker build -f server.dockerfile . -t temp #harbor.dotglitch.dev/library/cruiser:$version
+docker build -f server.dockerfile . -t harbor.dotglitch.dev/library/cruiser:$version
 
 # Once built, push the new build number
 git add package.json
