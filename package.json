@@ -1,6 +1,6 @@
 {
     "name": "cruiser",
-    "version": "0.0.174",
+    "version": "0.0.175",
     "scripts": {
         "dev:web": "cd client; ng serve --port 4600 --ssl --proxy-config ./proxy.config.json; cd ..",
         "dev:server": "nodemon server/src/main.ts --watch server",
