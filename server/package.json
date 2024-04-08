@@ -2,6 +2,9 @@
     "name": "cruiser",
     "version": "0.0.0",
     "private": true,
+    "scripts": {
+        "build": "tsc"
+    },
     "dependencies": {
         "@dotglitch/odatav4": "^0.0.8",
         "@kubernetes/client-node": "^0.20.0",

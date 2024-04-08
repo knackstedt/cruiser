@@ -18,9 +18,9 @@ gzip -9kr ./dist/cruiser/
 # Install server build deps
 cd server
 npm i
+npm run build
 cd ..
 
-npm run build:server
 docker build -f server.dockerfile . -t harbor.dotglitch.dev/library/cruiser:$version
 
 # Once built, push the new build number
