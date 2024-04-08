@@ -13,6 +13,10 @@
     [id]="taskGroup.id"
     [cdkDropListData]="taskGroup.id"
     (pointerdown)="$event.stopPropagation()"
+    (mousedown)="$event.stopPropagation()"
+    (click)="$event.stopPropagation()"
+    (pointerup)="$event.stopPropagation()"
+    (mouseup)="$event.stopPropagation()"
 >
 
     @for (task of taskGroup.tasks; track task) {

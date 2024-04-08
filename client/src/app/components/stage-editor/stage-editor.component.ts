@@ -205,6 +205,7 @@ export class StageEditorComponent {
 
         this.patchPipeline();
         this.selectTaskGroup(taskGroup);
+        this.renderJobs();
     }
 
     async deleteTaskGroup(job: JobDefinition, taskGroup: TaskGroupDefinition) {
@@ -343,7 +344,7 @@ export class StageEditorComponent {
             return {
                 id: taskGroup.id.split(':')[1],
                 width: 320,
-                height: 32 * (taskGroup.tasks?.length ?? 0) + 40 + 24,
+                height: 32 * (taskGroup.tasks?.length || 1) + 40 + 24,
                 type: "taskGroup",
                 data: { job, taskGroup },
                 targetPosition: null,
