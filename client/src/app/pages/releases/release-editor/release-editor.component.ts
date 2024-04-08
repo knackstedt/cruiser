@@ -1,6 +1,6 @@
 import { ApplicationRef, ElementRef, Input, ViewChild, Injector, Component } from '@angular/core';
 import { Fetch, MenuItem, ReactMagicWrapperComponent, VscodeComponent } from '@dotglitch/ngx-common';
-import { ReactFlowComponent } from './reactflow/reactflow-wrapper';
+import { ReactFlowComponent } from '../../../components/reactflow/reactflow-wrapper';
 import { PipelineDefinition, SourceConfiguration, StageDefinition, Webhook } from 'src/types/pipeline';
 import { ulid } from 'ulidx';
 import { Edge, Handle, Node, Position } from 'reactflow';
@@ -79,7 +79,7 @@ export class StagesComponent {
                 ] as MenuItem<StageDefinition>[]
             },
             {
-                onEditStage:         ({ stage }) => this.editStage(this.selectedStage),
+                onEditStage:         ({ stage }) => this.editStage(stage),
 
                 onJobsClick:         ({ stage }) => (this.mode = "view") && (this.view = 'jobs')           && this.selectStage(stage),
                 onNodeClick:         ({ stage }) => (this.mode = "view") && (this.view = 'stage')          && this.selectStage(stage),
@@ -232,8 +232,8 @@ export class StagesComponent {
             "@odata.id": undefined
         };
 
-        if (this.pipeline.state == "new")
-            this.pipeline.state = "paused";
+        if (data.state == "new")
+            data.state = "paused";
 
         await this.fetch.put(`/api/odata/${this.pipeline['_sourceId']}`, data) as any;
         await this.fetch.delete(`/api/odata/${this.pipeline.id}`);
@@ -293,6 +293,11 @@ export class StagesComponent {
 
         this.patchPipeline();
         this.renderGraph();
+    }
+
+    filterPrecedingStages(stage: StageDefinition) {
+        return this.pipeline.stages
+            .filter(s => s.id != stage.id);
     }
 
     addWebhook(stage: StageDefinition) {

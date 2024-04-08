@@ -1,5 +1,5 @@
 @if (stage) {
-    <ng-scrollbar class="sidebar">
+    <!-- <ng-scrollbar class="sidebar">
         <mat-accordion [multi]="true" displayMode="flat">
             @for (job of stage?.jobs; track job) {
                 <mat-expansion-panel #panel [expanded]="true">
@@ -116,13 +116,49 @@
                 <mat-icon>add</mat-icon>
             </button>
         </div>
-    </ng-scrollbar>
+    </ng-scrollbar> -->
+
+
+    <div class="sidebar" cdkDropListGroup>
+        <mat-tab-group
+            [mat-stretch-tabs]="false"
+            [(selectedIndex)]="selectedJobIndex"
+            (selectedIndexChange)="selectJob(stage.jobs[$event])"
+        >
+            @for (job of stage.jobs; track job; let i = $index) {
+                <mat-tab [label]="job.label"/>
+            }
+            <mat-tab>
+                <ng-template mat-tab-label>
+                    <div>
+                        <button (click)="addJob(); $event.stopPropagation()" matTooltip="Add Job">
+                            <mat-icon>add</mat-icon>
+                        </button>
+                    </div>
+                </ng-template>
+            </mat-tab>
+        </mat-tab-group>
+
+        <div class="floating_toolbar">
+            <button mat-flat-button (click)="addTaskGroup(selectedJob)">
+                <mat-icon>add</mat-icon> Task Group
+            </button>
+        </div>
+
+        <ngx-reactflow
+            [id]="selectedJob.id"
+            [nodes]="diagramList[selectedJobIndex]?.nodes ?? []"
+            [edges]="diagramList[selectedJobIndex]?.edges ?? []"
+            [nodeTypes]="nodeTypes"
+            (onNodeContextMenu)="onNodeCtxMenu($event)"
+        />
+    </div>
 
     <div class="content">
         <button
             class="exit_button"
             mat-mini-fab
-            (click)="dialog.close()"
+            (click)="dialogRef.close()"
         >
             <mat-icon>close</mat-icon>
         </button>
@@ -218,6 +254,24 @@
                                         showPreview="off"
                                         showToc="off"
                                     />
+
+                                    <mat-form-field style="width: 100%; margin-top: 12px">
+                                        <mat-label>Preceding task groups</mat-label>
+                                        <mat-select
+                                            multiple
+                                            [(value)]="selectedTaskGroup.preTaskGroups"
+                                            (valueChange)="renderGraph(selectedJob, selectedJobIndex)"
+                                            (valueChange)="dataChangeEmitter.next(0)"
+                                        >
+                                            @for (stage of filterPrecedingTaskGroups(selectedTaskGroup); track stage) {
+                                                <mat-option
+                                                    [value]="stage.id"
+                                                >
+                                                    {{stage.label}}
+                                                </mat-option>
+                                            }
+                                        </mat-select>
+                                    </mat-form-field>
                                     <app-variables-section
                                         [item]="selectedTaskGroup"
                                         (valueChange)="dataChangeEmitter.next(0)"

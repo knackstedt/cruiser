@@ -1,0 +1,50 @@
+<div
+    class="label"
+    [class.disabled]="taskGroup.disabled"
+>
+    <div>{{taskGroup.label}}</div>
+</div>
+
+<div
+    class="task-list"
+    [class.empty]="taskGroup.tasks?.length == 0"
+    cdkDropList
+    [cdkDropListConnectedTo]="peers"
+    [id]="taskGroup.id"
+    [cdkDropListData]="taskGroup.id"
+    (pointerdown)="$event.stopPropagation()"
+>
+
+    @for (task of taskGroup.tasks; track task) {
+        <div
+            class="task draggable-task"
+            [class.disabled]="task.disabled"
+            cdkDrag
+            [cdkDragData]="task"
+            cdkDragBoundary=".react-flow__pane"
+            [ngx-contextmenu]="taskMenu"
+            [ngx-menu-context]="{task, taskGroup}"
+            (cdkDragDropped)="onTaskDrop.emit({job, taskGroup, event: $event})"
+            (click)="onTaskClick.emit({job, taskGroup, task})"
+        >
+            <div class="placeholder" *cdkDragPlaceholder></div>
+
+            <img />
+            <div>
+                <div>{{task.label}}</div>
+                <div>{{task.taskScriptId}}</div>
+            </div>
+
+            <div style="flex: 1"></div>
+
+            <div class="drag_handle">
+                <mat-icon>drag_indicator</mat-icon>
+            </div>
+        </div>
+    }
+</div>
+
+<button mat-flat-button (click)="onAddTask.emit({job, taskGroup})">
+    <mat-icon>add</mat-icon>
+    Task
+</button>

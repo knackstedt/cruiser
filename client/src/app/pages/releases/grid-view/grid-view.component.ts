@@ -1,4 +1,3 @@
-import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { ChangeDetectorRef, Component, HostListener, QueryList, ViewChildren, ViewContainerRef } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -24,7 +23,6 @@ import { StagePopupComponent } from 'src/app/pages/stage-popup/stage-popup.compo
         MatTooltipModule,
         MatIconModule,
         MatProgressBarModule,
-        DragDropModule,
         MenuDirective,
         TabulatorComponent,
         StagePopupComponent,
@@ -128,20 +126,6 @@ export class GridViewComponent {
                 (nativeElement as HTMLElement).dataset['sortable'] = i.toString();
             });
         }, 100)
-    }
-
-    drop(event: CdkDragDrop<any, any, any>) {
-        if (event.previousContainer === event.container) {
-            moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-        }
-        else {
-            transferArrayItem(
-                event.previousContainer.data,
-                event.container.data,
-                event.previousIndex,
-                event.currentIndex,
-            );
-        }
     }
 
     @HostListener("window:resize")

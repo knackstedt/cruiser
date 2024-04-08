@@ -302,9 +302,11 @@
     <div
         class="node"
         [matTooltip]="stage.label"
+        [matTooltipPosition]="'above'"
         (click)="onNodeClick.emit({component: this, stage})"
-        (dblclick)="editStage()"
+        (dblclick)="editStage(stage)"
     >
+        <mat-icon (click)="editStage(stage)">edit</mat-icon>
         <div class="label">{{stage.label}}</div>
         <div>
             {{stage.jobs?.length ?? 0}}

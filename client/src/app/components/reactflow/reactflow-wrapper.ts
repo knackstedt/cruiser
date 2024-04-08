@@ -9,7 +9,10 @@ import { ReactFlowWrappableComponent } from './reactflow';
 @Component({
     selector: 'ngx-reactflow',
     template: ``,
-    styleUrls: ['../../../../../../node_modules/reactflow/dist/style.css'],
+    styleUrls: [
+        '../../../../node_modules/reactflow/dist/style.css',
+        './reactflow.scss'
+    ],
     standalone: true,
     encapsulation: ViewEncapsulation.None
 })
@@ -69,6 +72,7 @@ export class ReactFlowComponent extends ReactMagicWrapperComponent {
     @Output() onPaneMouseLeave = new EventEmitter<[MouseEvent]>();
     @Output() onError = new EventEmitter<OnError>();
 
+    @Input() id?: string | undefined;
     @Input() nodeTypes?: NodeTypes | undefined;
     @Input() edgeTypes?: EdgeTypes | undefined;
     @Input() connectionLineType?: ConnectionLineType | undefined;

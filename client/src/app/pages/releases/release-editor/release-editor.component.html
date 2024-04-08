@@ -3,7 +3,15 @@
     <mat-sidenav-content>
         <div style="height: 100%; display: flex; flex-direction: column;">
             <div class="toolbar">
-                <div class="pipeline_name" (click)="mode = 'edit'; view = 'pipeline'">
+                <div
+                    class="pipeline_name"
+                    (click)="
+                        mode = 'edit';
+                        view = 'pipeline';
+                        selectedStage = null;
+                        renderGraph()
+                    "
+                >
                     <mat-icon>edit</mat-icon>
                     {{pipeline?.label}}
                 </div>
@@ -198,7 +206,7 @@
                             (valueChange)="renderGraph()"
                             (valueChange)="dataChangeEmitter.next(0)"
                         >
-                            @for (stage of pipeline.stages; track stage) {
+                            @for (stage of filterPrecedingStages(selectedStage); track stage) {
                                 <mat-option
                                     [value]="stage.id"
                                 >
@@ -216,9 +224,9 @@
                             (valueChange)="renderGraph()"
                             (valueChange)="dataChangeEmitter.next(0)"
                         >
-                            <mat-option value="normal">Default</mat-option>
+                            <mat-option value="normal">Simple</mat-option>
                             <mat-option value="gateway">Gateway</mat-option>
-                            <mat-option value="job_container">Job Container</mat-option>
+                            <mat-option value="job_container">Jobs</mat-option>
                         </mat-select>
                     </mat-form-field>
 

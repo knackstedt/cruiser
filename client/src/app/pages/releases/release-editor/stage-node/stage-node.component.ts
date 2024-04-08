@@ -67,15 +67,7 @@ export class StageNodeComponent {
 
     }
 
-    editStage() {
-        this.onEditStage.next(this.stage);
-        // this.matDialog.open(StageEditorComponent, {
-        //     data: {
-        //         // pipeline: this.pipeline,
-        //         stage: this.stage
-        //     },
-        //     width: "90vw",
-        //     height: "90vh"
-        // })
+    editStage(stage?) {
+        this.onEditStage.next({stage: this.stage});
     }
 }

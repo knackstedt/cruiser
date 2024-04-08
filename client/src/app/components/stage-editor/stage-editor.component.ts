@@ -1,11 +1,11 @@
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { Component, EventEmitter, Inject, Input, Optional } from '@angular/core';
+import { ApplicationRef, Component, EventEmitter, Inject, Injector, Input, Optional } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTabsModule } from '@angular/material/tabs';
-import { Fetch, MenuDirective, MenuItem } from '@dotglitch/ngx-common';
+import dagre from '@dagrejs/dagre';
+import { Fetch, MenuDirective, MenuItem, ReactMagicWrapperComponent, openMenu } from '@dotglitch/ngx-common';
 import { ulid } from 'ulidx';
 import { JobDefinition, PipelineDefinition, StageDefinition, TaskDefinition, TaskGroupDefinition } from 'src/types/pipeline';
 import { NgScrollbarModule } from 'ngx-scrollbar';
@@ -15,31 +15,36 @@ import { StackEditorComponent } from 'ngx-stackedit';
 import { FormsModule } from '@angular/forms';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BehaviorSubject, Subject, debounceTime } from 'rxjs';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { FileUploadService } from 'src/app/services/file-upload.service';
 import { VariablesSectionComponent } from 'src/app/components/variables-section/variables-section.component';
 import { ArtifactsSectionComponent } from 'src/app/components/artifacts-section/artifacts-section.component';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { ReactFlowComponent } from 'src/app/components/reactflow/reactflow-wrapper';
+import { Edge, Handle, Node, Position } from 'reactflow';
+import { TaskGroupNodeComponent } from 'src/app/components/stage-editor/task-group-node/task-group-node.component';
+import React from 'react';
+import { MatSelectModule } from '@angular/material/select';
 
 @Component({
     selector: 'app-stage-editor',
     standalone: true,
     imports: [
-        MatExpansionModule,
         MatButtonModule,
         MatIconModule,
         MatInputModule,
         MatTabsModule,
         MatTooltipModule,
         MatCheckboxModule,
+        MatSelectModule,
         FormsModule,
-        DragDropModule,
         NgScrollbarModule,
         FormioWrapperComponent,
         StackEditorComponent,
         MenuDirective,
         VariablesSectionComponent,
-        ArtifactsSectionComponent
+        ArtifactsSectionComponent,
+        ReactFlowComponent
     ],
     templateUrl: './stage-editor.component.html',
     styleUrl: './stage-editor.component.scss'
@@ -55,6 +60,8 @@ export class StageEditorComponent {
     selectedTaskGroup: TaskGroupDefinition;
     selectedTask: TaskDefinition;
     selectedTaskSchema: Object;
+
+    selectedJobIndex = 0;
 
     currentSelection: "pipeline" | "stage" | "job" | "taskGroup" | "task" = 'task';
 
@@ -87,11 +94,41 @@ export class StageEditorComponent {
         })
     ]
 
+    diagramList: {
+        nodes: Node[]
+        edges: Edge[]
+    }[] = [];
+
+    nodeTypes = {
+        taskGroup: ReactMagicWrapperComponent.WrapAngularComponent(
+            TaskGroupNodeComponent,
+            this.appRef,
+            this.injector,
+            {
+                taskMenu: this.taskMenu,
+                dropListGroup: []
+            },
+            {
+                onTaskGroupSelect: ({ job, taskGroup }) => { this.selectTaskGroup(taskGroup); this.renderJobs();},
+                onTaskClick: ({ job, taskGroup, task }) => { this.selectTask(task); this.renderJobs();},
+                onAddTask: ({ job, taskGroup }) => { this.addTask(taskGroup); this.renderJobs();},
+                onTaskDrop: ({ job, taskGroup, event }) => { this.taskDrop(job, taskGroup, event); this.renderJobs();; },
+            },
+            [
+                React.createElement(Handle, { type: "target", position: Position.Left }),
+                React.createElement(Handle, { type: "source", position: Position.Right })
+            ]
+        )
+    }
+
     constructor(
         @Optional() @Inject(MAT_DIALOG_DATA) private readonly data,
         private readonly fetch: Fetch,
         public  readonly fs: FileUploadService,
-        public readonly dialog: MatDialogRef<any>
+        public  readonly dialog: MatDialog,
+        public  readonly dialogRef: MatDialogRef<any>,
+        private readonly injector: Injector,
+        private readonly appRef: ApplicationRef
     ) {
         this.pipeline = data?.pipeline;
         this.stage = data?.stage;
@@ -103,7 +140,8 @@ export class StageEditorComponent {
         this.stage.jobs = this.stage.jobs ?? [];
 
         // Attempt to auto pick the first task.
-        this.selectTask(this.stage.jobs?.[0]?.taskGroups?.[0]?.tasks?.[0])
+        this.selectJob(this.stage.jobs?.[0]);
+        this.selectTask(this.stage.jobs?.[0]?.taskGroups?.[0]?.tasks?.[0]);
     }
 
     ngOnDestroy() {
@@ -179,7 +217,7 @@ export class StageEditorComponent {
         this.patchPipeline();
     }
     async enableTaskGroup(job: JobDefinition, taskGroup: TaskGroupDefinition) {
-        taskGroup.disabled = true;
+        taskGroup.disabled = false;
 
         this.patchPipeline();
     }
@@ -221,7 +259,7 @@ export class StageEditorComponent {
         this.patchPipeline();
     }
 
-    async taskDrop(taskGroup: TaskGroupDefinition, event: CdkDragDrop<any, any, any>) {
+    async taskDrop(job: JobDefinition, taskGroup: TaskGroupDefinition, event: CdkDragDrop<any, any, any>) {
         // Simple reordering
         if (event.previousContainer === event.container) {
             if (event.previousIndex == event.currentIndex) return;
@@ -236,59 +274,29 @@ export class StageEditorComponent {
             // Update the order of all of the items
             // this.fetch.patch(`/api/odata`, taskGroup.tasks.map(i => ({ id: i.id, data: { order: i.order } })));
         }
-        // Item moved to a new parent
+        // task moved to a new task group
         else {
-            // This is equally terrible and amazing. Please arrest me.
-            const objects = [
-                this.pipeline,
-                ...this.pipeline.stages,
-                ...this.pipeline.stages.map(s => s.jobs),
-                ...this.pipeline.stages.map(s => s.jobs.map(j => j.taskGroups).flat()),
-                ...this.pipeline.stages.map(s => s.jobs.map(j => j.taskGroups.map(g => g.tasks).flat()).flat()),
-            ].flat();
+            const fromId = event.previousContainer.data as string;
+            const toId = event.container.data as string;
 
-
-            const [kind, id] = event.previousContainer.data.split(':');
-
-            let subKey = '';
-
-            // This will only run for things _below_ a pipeline. Do not worry about stages.
-            if (kind == "pipeline_stage") {
-                subKey = 'jobs';
-            }
-            else if (kind == "pipeline_job") {
-                subKey = 'taskGroups';
-            }
-            else if (kind == "pipeline_task_group") {
-                subKey = 'tasks';
-            }
-
-            const originalParent = objects.find(o => o.id == event.previousContainer.data);
-            const targetParent = objects.find(o => o.id == event.container.data);
-
-            const oArr = originalParent[subKey];
-            const tArr = targetParent[subKey];
+            const originalParent = job.taskGroups.find(o => o.id == fromId);
+            const targetParent = job.taskGroups.find(o => o.id == toId);
 
             transferArrayItem(
-                oArr,
-                tArr,
+                originalParent.tasks,
+                targetParent.tasks,
                 event.previousIndex,
                 event.currentIndex,
             );
-
-            // this.items.map(i => ({ id: i.id, data: { order: i.order } }))
-            // Update the order of all of the items
-            // this.fetch.patch(`/api/odata`, [
-            //     { id: event.previousContainer.data, data: { [subKey]: oArr.map(t => t.id) } },
-            //     { id: event.container.data, data: { [subKey]: tArr.map(t => t.id) } }
-            // ]);
         }
+
         this.patchPipeline();
     }
 
     selectJob(job: JobDefinition) {
         this.selectedJob = job;
         this.currentSelection = 'job';
+        this.renderJobs();
     }
 
     selectTaskGroup(taskGroup: TaskGroupDefinition) {
@@ -304,5 +312,90 @@ export class StageEditorComponent {
         this.selectedTask = task;
         this.selectedTaskSchema = Schemas.find(s => s.kind == task.taskScriptId) || DefaultSchema;
         this.currentSelection = 'task';
+    }
+
+    renderJobs() {
+        this.diagramList = [];
+        this.stage.jobs.forEach((job, i) => this.renderGraph(job, i))
+    }
+
+    renderGraph(job: JobDefinition, i: number) {
+        const edges: Edge[] = [];
+        const nodes: Node[] = job.taskGroups?.map(taskGroup => {
+            for (const preTaskGroupId of (taskGroup.preTaskGroups ?? [])) {
+                edges.push({
+                    source: preTaskGroupId.split(':')[1],
+                    target: taskGroup.id.split(':')[1],
+                    id: preTaskGroupId.split(':')[1] + "_" + taskGroup.id.split(':')[1],
+                    sourceHandle: "source",
+                    type: "bezier",
+                    style: {
+                        strokeWidth: 2,
+                        stroke: '#00c7ff',
+                    },
+                    data: {
+                        source: job.taskGroups.find(s => s.id == preTaskGroupId),
+                        target: taskGroup
+                    }
+                });
+            }
+
+            return {
+                id: taskGroup.id.split(':')[1],
+                width: 320,
+                height: 32 * (taskGroup.tasks?.length ?? 0) + 40 + 24,
+                type: "taskGroup",
+                data: { job, taskGroup },
+                targetPosition: null,
+                sourcePosition: null,
+                style: {
+                    "--background": true
+                        ? "#6d6d6d"
+                        : "#4b4b4b",
+                    "--border-color": this.selectedTaskGroup?.id == taskGroup?.id
+                        ? "#6d6d6d"
+                        : "#0000",
+                } as any, // react doesn't have typing for CSS variables.
+                position: {
+                    x: 0,
+                    y: 0
+                }
+            }
+        }) ?? [];
+        const dagreGraph = new dagre.graphlib.Graph();
+
+        dagreGraph.setDefaultEdgeLabel(() => ({}));
+        dagreGraph.setGraph({ rankdir: 'LR' });
+
+        nodes.forEach(node => dagreGraph.setNode(node.id, { height: node.height, width: node.width + 50 }));
+        edges.forEach(edge => dagreGraph.setEdge(edge.source, edge.target));
+
+        dagre.layout(dagreGraph);
+
+        nodes.forEach((node) => {
+            const nodeWithPosition = dagreGraph.node(node.id);
+
+            const newX = nodeWithPosition.x - node.width / 2;
+            const newY = nodeWithPosition.y - node.height / 2;
+
+            // Offset the entire grid so we don't need to pan the view initially.
+            node.position = {
+                x: newX + 20,
+                y: newY + 20,
+            };
+        });
+
+        this.diagramList[i] = {
+            edges,
+            nodes
+        }
+    }
+
+    filterPrecedingTaskGroups(taskGroup: TaskGroupDefinition) {
+        return this.selectedJob.taskGroups.filter(tg => tg != taskGroup);
+    }
+
+    onNodeCtxMenu([evt, { data }]) {
+        openMenu(this.dialog, this.taskGroupMenu, data, evt);
     }
 }

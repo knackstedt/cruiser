@@ -9,6 +9,8 @@ import { LoginComponent } from 'src/app/pages/login/login.component';
 import { HeaderbarComponent } from 'src/app/components/headerbar/headerbar.component';
 import { LazyProgressDistractorComponent } from 'src/app/components/@framework/lazy-progress-distractor/lazy-progress-distractor.component';
 import { LockoutComponent } from 'src/app/pages/lockout/lockout.component';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 
 const desktopWidth = 1126;
 
@@ -22,7 +24,11 @@ const desktopWidth = 1126;
         LoginComponent,
         LockoutComponent,
         HeaderbarComponent,
-        LazyProgressDistractorComponent
+        LazyProgressDistractorComponent,
+        ConfirmDialogModule
+    ],
+    providers: [
+        ConfirmationService
     ],
     standalone: true
 })

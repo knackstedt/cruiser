@@ -21,11 +21,7 @@ import { ConfirmationService } from 'primeng/api';
         MatIconModule,
         MatButtonModule,
         ListViewComponent,
-        GridViewComponent,
-        ConfirmDialogModule
-    ],
-    providers: [
-        ConfirmationService
+        GridViewComponent
     ],
     standalone: true
 })
@@ -35,8 +31,8 @@ export class ReleasesComponent implements OnInit {
     @ViewChild(GridViewComponent) gridView: GridViewComponent;
 
     view = "list"
-
     filter = '';
+
     _pipelineInstances: PipelineInstance[] = [];
     pipelineInstances: PipelineInstance[] = [];
     pipelines: PipelineDefinition[] = [];
