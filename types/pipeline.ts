@@ -54,7 +54,8 @@ export type TaskGroupDefinition = {
 
 
     environment?: EnvironmentVariable[]
-    tasks?: TaskDefinition[]
+    tasks?: TaskDefinition[],
+    preTaskGroups?: string[],
 }
 
 export type JobDefinition = {
