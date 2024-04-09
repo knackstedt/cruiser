@@ -1,6 +1,6 @@
 import * as express from "express";
 import { route } from './util';
-import environment from '../util/environment';
+import {environment} from '../util/environment';
 import { api } from '../util/axios';
 
 const router = express.Router();

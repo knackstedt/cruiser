@@ -1,6 +1,6 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { exists, mkdir } from 'fs-extra';
-import environment from './environment';
+import {environment} from './environment';
 
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition, TaskDefinition, TaskGroupDefinition } from '../types/pipeline';
 import { getSocketLogger } from '../socket/logger';

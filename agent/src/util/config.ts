@@ -1,7 +1,7 @@
 import { api } from '../util/axios';
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
 import { logger } from '../util/logger';
-import environment from '../util/environment';
+import {environment} from '../util/environment';
 import { JobInstance } from '../types/agent-task';
 
 export const getConfig = async (taskId) => {

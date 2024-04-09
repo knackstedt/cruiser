@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 import si from 'systeminformation';
-import environment from '../util/environment';
+import {environment} from '../util/environment';
 import { getLogger } from '../util/logger';
 
 const logger = getLogger("metrics");

@@ -4,7 +4,7 @@ import { JobInstance } from '../types/agent-task';
 import { api } from '../util/axios';
 import { TaskDefinition, TaskGroupDefinition } from '../types/pipeline';
 import { getSocketLogger } from './logger';
-import environment from '../util/environment';
+import {environment} from '../util/environment';
 
 const breakpoints: {
     [key: string]: {

@@ -1,7 +1,7 @@
 import { exists, mkdir, readdir } from 'fs-extra';
 import { simpleGit, SimpleGitProgressEvent, SimpleGitOptions, SimpleGit } from 'simple-git';
 import { JobDefinition, PipelineDefinition } from '../types/pipeline';
-import environment from '../util/environment';
+import {environment} from '../util/environment';
 import { JobInstance } from '../types/agent-task';
 import { getSocketLogger } from '../socket/logger';
 import { TripBreakpoint } from '../socket/breakpoint';

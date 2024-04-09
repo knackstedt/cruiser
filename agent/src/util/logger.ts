@@ -2,7 +2,7 @@ import pino from 'pino';
 import { getHeapStatistics } from 'v8';
 import express from 'express';
 import onFinished from 'on-finished';
-import environment from './environment';
+import {environment} from './environment';
 
 export const getLogger = (file: string) => pino({
     mixin: (_context, level) => {

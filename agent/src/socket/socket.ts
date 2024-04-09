@@ -1,5 +1,5 @@
 import { Socket, io } from "socket.io-client";
-import environment from '../util/environment';
+import {environment} from '../util/environment';
 import { getLogger } from '../util/logger';
 import { JobDefinition, PipelineDefinition } from '../types/pipeline';
 import { DefaultEventsMap } from '@socket.io/component-emitter';

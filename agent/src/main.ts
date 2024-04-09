@@ -4,7 +4,7 @@ import http from 'http';
 
 import { HTTPLogger, logger } from './util/logger';
 import { RunAgentProcess } from './agent';
-import environment from './util/environment';
+import {environment} from './util/environment';
 import { FilesystemApi } from './api/filesystem';
 import { AgentApi } from './api/agent';
 

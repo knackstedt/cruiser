@@ -1,6 +1,6 @@
 import os from 'os';
 
-export default {
+export const environment = {
     cruiserUrl: process.env['CRUISER_CLUSTER_URL'],
     surrealNamespace: process.env['DOTGLITCH_DOTOPS_CLUSTER_NAMESPACE']?.trim() || 'dotglitch',
     cruiserToken: process.env['CRUISER_SERVER_TOKEN'],

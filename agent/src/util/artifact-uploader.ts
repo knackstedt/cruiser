@@ -7,7 +7,7 @@ import { getSocketLogger } from '../socket/logger';
 import { JobInstance } from '../types/agent-task';
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
 import { api } from './axios';
-import environment from './environment';
+import {environment} from './environment';
 import { getFilesInFolderFlat } from './fs';
 import { TripBreakpoint } from '../socket/breakpoint';
 
