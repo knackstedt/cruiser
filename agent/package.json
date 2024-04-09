@@ -3,7 +3,8 @@
     "version": "0.0.0",
     "scripts": {
         "dev": "nodemon main.ts",
-        "build": "tsc"
+        "build": "tsc",
+        "build:docker": "tsc --outDir dist"
     },
     "private": true,
     "dependencies": {

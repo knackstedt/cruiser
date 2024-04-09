@@ -17,8 +17,8 @@ WORKDIR /agent
 
 # Install general agent deps
 RUN npm i
-RUN npm run build
+RUN npm run build:docker
 
 EXPOSE 8080
 
-CMD ["node", "src/main.js"]
+CMD ["node", "dist/main.js"]
