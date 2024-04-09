@@ -2,9 +2,9 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { exists, mkdir } from 'fs-extra';
 import environment from './environment';
 
-import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition, TaskDefinition, TaskGroupDefinition } from '../../types/pipeline';
+import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition, TaskDefinition, TaskGroupDefinition } from '../types/pipeline';
 import { getSocketLogger } from '../socket/logger';
-import { JobInstance } from '../../types/agent-task';
+import { JobInstance } from '../types/agent-task';
 import { TripBreakpoint } from '../socket/breakpoint';
 import { ParseCommand } from './command-parser';
 import { api } from './axios';

@@ -1,9 +1,9 @@
 import { orderSort } from './util/order-sort';
-import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition, TaskGroupDefinition } from '../types/pipeline';
+import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition, TaskGroupDefinition } from './types/pipeline';
 import { api } from './util/axios';
 import { getSocketLogger } from './socket/logger';
 import { RunProcess } from './util/process-manager';
-import { JobInstance } from '../types/agent-task';
+import { JobInstance } from './types/agent-task';
 
 const executeTaskGroup = async (
     pipelineInstance: PipelineInstance,
@@ -28,6 +28,9 @@ const executeTaskGroup = async (
 
         for (let i = 0; i < tasks.length; i++) {
             const task = tasks[i];
+
+            // Skip disabled tasks
+            if (task.disabled) continue;
 
             logger.info({
                 msg: `Initiating task ${task.label}`,
@@ -110,7 +113,9 @@ export const RunTaskGroups = (
     const runTaskGroups = (taskGroups: TaskGroupDefinition[]) => Promise.all(
         taskGroups.map(taskGroup => new Promise(async (r) => {
 
-            await executeTaskGroup(pipelineInstance, pipeline, stage, job, jobInstance, taskGroup, logger);
+            if (!taskGroup.disabled) {
+                await executeTaskGroup(pipelineInstance, pipeline, stage, job, jobInstance, taskGroup, logger);
+            }
 
             completedMap[taskGroup.id] = taskGroup;
 

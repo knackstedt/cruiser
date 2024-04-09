@@ -7,5 +7,6 @@ export default {
     freezePollInterval: parseInt(process.env['DOTOPS_FREEZE_POLL_INTERVAL'] || '5000'),
     buildDir: process.cwd() + '/build/',
     jobInstanceId: `job_instance:` + process.env['CRUISER_AGENT_ID'].toUpperCase(),
-    agentIsWindowsHost: os.platform() == "win32"
+    agentIsWindowsHost: os.platform() == "win32",
+    is_production: process.env['NODE_ENV'] == "production"
 }

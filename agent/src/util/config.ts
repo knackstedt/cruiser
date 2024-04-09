@@ -1,8 +1,8 @@
 import { api } from '../util/axios';
-import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../../types/pipeline';
+import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
 import { logger } from '../util/logger';
 import environment from '../util/environment';
-import { JobInstance } from '../../types/agent-task';
+import { JobInstance } from '../types/agent-task';
 
 export const getConfig = async (taskId) => {
     const { data: kubeTask } = await api.get(`/api/odata/${taskId}`);

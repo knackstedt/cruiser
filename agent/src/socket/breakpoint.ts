@@ -1,8 +1,8 @@
 import { Socket, io } from "socket.io-client";
 import { ulid } from 'ulidx';
-import { JobInstance } from '../../types/agent-task';
+import { JobInstance } from '../types/agent-task';
 import { api } from '../util/axios';
-import { TaskDefinition, TaskGroupDefinition } from '../../types/pipeline';
+import { TaskDefinition, TaskGroupDefinition } from '../types/pipeline';
 import { getSocketLogger } from './logger';
 import environment from '../util/environment';
 

@@ -3,7 +3,7 @@
     "version": "0.0.0",
     "scripts": {
         "dev": "nodemon main.ts",
-        "build": "tsc src/main.ts -t es2020 -m CommonJS --lib es2020,dom --esModuleInterop true --moduleResolution node --importHelpers true --types node --skipLibCheck true"
+        "build": "tsc"
     },
     "private": true,
     "dependencies": {

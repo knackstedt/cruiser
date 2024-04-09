@@ -4,8 +4,8 @@ import os from 'os';
 import FormData from 'form-data';
 
 import { getSocketLogger } from '../socket/logger';
-import { JobInstance } from '../../types/agent-task';
-import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../../types/pipeline';
+import { JobInstance } from '../types/agent-task';
+import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
 import { api } from './axios';
 import environment from './environment';
 import { getFilesInFolderFlat } from './fs';

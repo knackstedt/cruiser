@@ -1,5 +1,5 @@
 import { getSocketLogger } from '../socket/logger';
-import { JobDefinition } from '../../types/pipeline';
+import { JobDefinition } from '../types/pipeline';
 
 export const validateJobCanRun = async (
     job: JobDefinition,

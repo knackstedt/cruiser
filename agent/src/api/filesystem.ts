@@ -7,7 +7,6 @@ import crypto from 'crypto';
 import formidable, { IncomingForm } from "formidable";
 
 import { readZipFolder } from './zip';
-import { secureWipe } from './fs-wipe';
 import { getFilesInFolder, route } from './util';
 import { logger } from '../util/logger';
 
@@ -121,11 +120,10 @@ router.post('/file', route(async (req, res, next) => {
 router.post('/delete', route(async (req, res, next) => {
     // TODO: save file
     const { files } = req.body;
-    const wipe = !!req.query['wipe'];
 
     if (!files || !Array.isArray(files)) return next(400);
 
-    Promise.all(files.map(file => wipe ? secureWipe(file) : fs.unlink(file)))
+    Promise.all(files.map(file => fs.unlink(file)))
         .then(result => res.send(result))
         .catch(err => next(err));
 }));
