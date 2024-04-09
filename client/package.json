@@ -19,7 +19,7 @@
         "@angular/service-worker": "^17.2.1",
         "@dagrejs/dagre": "^1.1.1",
         "@dagrejs/graphlib": "^2.2.1",
-        "@dotglitch/ngx-common": "^1.1.43",
+        "@dotglitch/ngx-common": "^1.1.44",
         "@dotglitch/odatav4": "^0.0.8",
         "@fontsource/fira-mono": "^5.0.12",
         "@fontsource/fira-sans": "^5.0.19",
