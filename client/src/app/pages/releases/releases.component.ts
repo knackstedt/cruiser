@@ -12,6 +12,7 @@ import { UserService } from 'src/app/services/user.service';
 import { MatButtonModule } from '@angular/material/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
     selector: 'app-releases',
@@ -85,23 +86,24 @@ export class ReleasesComponent implements OnInit {
                     }
                 });
             }
+        }
+    ];
+
+    readonly instanceCtxMenu: MenuItem<{ pipeline: PipelineDefinition, instance: PipelineInstance}>[] = [
+        {
+            labelTemplate: data => "Instance " + data.instance.identifier
         },
-        // {
-        //     label: "View History",
-        //     linkTemplate: pipeline => `#/CommitGraph?pipeline=${pipeline.id}`
-        // },
-        // {
-        //     label: "Compare",
-        //     linkTemplate: pipeline => `#/Compare?pipeline=${pipeline.id}`
-        // },
-        // {
-        //     label: "Changes",
-        //     linkTemplate: pipeline => `#/Changes?pipeline=${pipeline.id}`
-        // },
-        // {
-        //     label: "Deployment Map",
-        //     linkTemplate: pipeline => `#/VSM?pipeline=${pipeline.id}`
-        // }
+        {
+            label: "Cancel",
+            isVisible: ({ pipeline, instance }) => ['started', 'running', 'waiting'].includes(instance.status.phase),
+            action: ({pipeline, instance}) => {
+                this.fetch.post(`/api/pipeline/${pipeline.id}/${instance.id}/cancel`, {})
+                    .then(res => {
+                        // ???
+                    })
+                    .catch(err => this.toastr.warning("Failed to cancel pipeline"))
+            }
+        },
     ];
 
     private subscriptions = [
@@ -173,7 +175,8 @@ export class ReleasesComponent implements OnInit {
         private readonly liveSocket: LiveSocketService,
         private readonly user: UserService,
         private readonly changeDetector: ChangeDetectorRef,
-        private readonly confirmationService: ConfirmationService
+        private readonly confirmationService: ConfirmationService,
+        private readonly toastr: ToastrService
     ) {
 
     }

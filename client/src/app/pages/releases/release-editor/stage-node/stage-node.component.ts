@@ -58,7 +58,7 @@ export class StageNodeComponent {
     ngOnInit() {
         this.stage.jobs.forEach(j =>
             j.taskGroups.forEach(tg =>
-                this.taskCount += tg.tasks.length
+                this.taskCount += tg.tasks?.length ?? 0
             )
         )
     }

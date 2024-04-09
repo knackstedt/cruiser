@@ -12,7 +12,6 @@
             </div>
         </div>
         <ng-scrollbar
-            class=""
             style="height: 100%; width: 100%"
             track="vertical"
             pointerEventsMethod="scrollbar"
@@ -84,7 +83,13 @@
                     itemSize="64"
                     scrollViewport
                 >
-                    <div class="row" style="height: 64px;" *cdkVirtualFor="let instance of parent.pipelineInstances">
+                    <div
+                        class="row"
+                        style="height: 64px;"
+                        *cdkVirtualFor="let instance of parent.pipelineInstances"
+                        [ngx-contextmenu]="parent.instanceCtxMenu"
+                        [ngx-menu-context]="{ pipeline: parent.selectedPipeline, instance }"
+                    >
                         <div class="name">
                             <div>Release {{instance.identifier}} - {{instance.status.phase}}</div>
                             <div>{{instance.group}}</div>
