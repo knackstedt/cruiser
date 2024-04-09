@@ -88,7 +88,7 @@ export const RunTaskGroups = (
         .filter(tg => !tg.preTaskGroups || tg.preTaskGroups.length == 0);
     const triggeredTaskGroups = job.taskGroups
         .filter(tg =>
-            tg.preTaskGroups.length > 0 &&
+            tg.preTaskGroups?.length > 0 &&
             tg.preTaskGroups.every(tgi => taskGroupIdList.includes(tgi as any))
         );
 
