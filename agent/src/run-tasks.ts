@@ -21,7 +21,7 @@ const executeTaskGroup = async (
             block: "start"
         });
 
-        const tasks = taskGroup.tasks.sort(orderSort);
+        const tasks = taskGroup.tasks.sort(orderSort) ?? [];
 
         const envVars: { key: string, value: string; }[] =
             await api.get(`/api/jobs/${jobInstance.id}/environment`);
