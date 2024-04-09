@@ -146,9 +146,23 @@ export class StageEditorComponent {
 
         this.stage.jobs = this.stage.jobs ?? [];
 
+        if (this.stage.jobs.length == 0) {
+            this.stage.jobs.push({
+                id: `pipeline_job:${ulid()}`,
+                label: "Job 1",
+                order: 0,
+                taskGroups: [{
+                    id: `pipeline_task_group:${ulid()}`,
+                    label: "Task Group 1",
+                    order: 0,
+                    tasks: []
+                }]
+            })
+        }
+
         // Attempt to auto pick the first task.
-        this.selectJob(this.stage.jobs?.[0]);
-        this.selectTask(this.stage.jobs?.[0]?.taskGroups?.[0]?.tasks?.[0]);
+        this.selectJob(this.stage.jobs[0]);
+        this.selectTask(this.stage.jobs[0]?.taskGroups?.[0]?.tasks?.[0]);
     }
 
     ngOnDestroy() {
