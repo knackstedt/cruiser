@@ -7,6 +7,7 @@ import { db } from '../util/db';
 import { JobInstance } from '../types/agent-task';
 import axios from 'axios';
 import { logger } from '../util/logger';
+import { environment } from '../util/environment';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
@@ -17,9 +18,9 @@ const router = express.Router();
 
 const podCache: { [key: string]: k8s.V1Pod } = {};
 
-const loadIntoCache = async (uid: string, jobId: string, job) => {
+const loadIntoCache = async (uid: string, jobId: string, namespace: string) => {
     if (!podCache[uid]) {
-        const { body: pods } = await k8sApi.listNamespacedPod(job.kubeNamespace);
+        const { body: pods } = await k8sApi.listNamespacedPod(namespace);
 
         const pod = pods.items.find(i =>
             i.metadata?.annotations?.['cruiser.dev/job-id'] == jobId
@@ -42,12 +43,12 @@ const loadIntoCache = async (uid: string, jobId: string, job) => {
     return ip;
 }
 
-const tryLoadCache = async (uid: string, jobId: string, job) => {
+export const getPodEndpointUrl = async (jobKubeUid: string, jobId: string, namespace: string) => {
     // Caching mechanism so that we can persist the IP addresses without constant
     // lookups
-    let ip = await loadIntoCache(uid, jobId, job);
+    let ip = await loadIntoCache(jobKubeUid, jobId, namespace);
 
-    let url = `http://${ip.replace(/\./g, '-')}.${job.kubeNamespace}.pod.cluster.local:8080`;
+    let url = `http://${ip.replace(/\./g, '-')}.${namespace}.pod.cluster.local:8080`;
 
     let isOk = await axios.get(url + '/ping')
         .then(r => true)
@@ -60,10 +61,10 @@ const tryLoadCache = async (uid: string, jobId: string, job) => {
         return url;
     }
 
-    delete podCache[uid];
+    delete podCache[jobKubeUid];
 
-    ip = await loadIntoCache(uid, jobId, job);
-    url = `http://${ip.replace(/\./g, '-')}.${job.kubeNamespace}.pod.cluster.local:8080`;
+    ip = await loadIntoCache(jobKubeUid, jobId, namespace);
+    url = `http://${ip.replace(/\./g, '-')}.${namespace}.pod.cluster.local:8080`;
 
     // Test if we got a new one
     isOk = await axios.get(url + '/ping')
@@ -95,7 +96,7 @@ router.use('/:id', route(async (req, res, next) => {
     const uid = job['jobUid'];
     const jobId = job.id.split(':')[1];
 
-    const url = await tryLoadCache(uid, jobId, job);
+    const url = await getPodEndpointUrl(uid, jobId, job.kubeNamespace ?? environment.cruiser_kube_namespace);
 
     const prox = proxy(url, {
         reqAsBuffer: true,

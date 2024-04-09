@@ -26,4 +26,4 @@ export const environment = Object.seal({
     github_client_secret: process.env['GITHUB_OAUTH_SECRET'],
 
     is_production: process.env["NODE_ENV"]?.toLowerCase() == "production",
-})
+});

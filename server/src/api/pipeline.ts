@@ -4,6 +4,10 @@ import { db } from '../util/db';
 import { PipelineDefinition, PipelineInstance } from '../types/pipeline';
 // import { GetAllRunningJobs } from '../util/kube';
 import { RunPipeline, RunStage } from '../util/pipeline';
+import axios from 'axios';
+import { JobInstance } from '../types/agent-task';
+import { getPodEndpointUrl } from './api-tunnel';
+import { environment } from '../util/environment';
 
 const router = express.Router();
 
@@ -69,6 +73,39 @@ router.get('/:id/start', route(async (req, res, next) => {
     res.send({
         message: "ok",
         pipeline
+    });
+}));
+
+// Endpoint to stop and kill an entire pipeline.
+router.get('/:id/:instance/stop', route(async (req, res, next) => {
+    const pipeline: PipelineDefinition = req['pipeline'];
+
+    const [instance] = await db.query<PipelineInstance[]>(`select * from ${req.params['instance']} fetch status.jobInstances`);
+    const jobs = (instance.status.jobInstances as any as JobInstance[]);
+
+    for (const job of jobs) {
+        const uid = job['jobUid'];
+        const jobId = job.id.split(':')[1];
+
+        const url = await getPodEndpointUrl(uid, jobId, job.kubeNamespace ?? environment.cruiser_kube_namespace);
+
+        // Tell the agent to stop.
+        await axios.post(
+            url + `/api/agent/stop`,
+            {},
+            {
+                headers: {
+                    'X-Cruiser-Token': job['kubeAuthnToken']
+                }
+            }
+        );
+    }
+
+    instance.status.phase = "stopped";
+    await db.merge(instance.id, instance);
+
+    res.send({
+        message: "ok"
     });
 }));
 

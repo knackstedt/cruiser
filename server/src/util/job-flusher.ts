@@ -162,10 +162,9 @@ const SaveLogAndCleanup = async (pod: k8s.V1Pod, job: k8s.V1Job) => {
 
     const [jobInstance] = await db.select<JobInstance>(job.metadata.annotations['cruiser.dev/job-instance-id']);
 
-    // If the jobinstance failed without ending up at a known
-    // ending state, we will infer the end state based on the
-    // pod exit code.
-    if (!["finished", "failed"].includes(jobInstance.state)) {
+    // If the pod has terminated with any other state than this list, we
+    // will infer the correct state to coerce the job into.
+    if (!["finished", "failed", "cancelled"].includes(jobInstance.state)) {
         jobInstance.state =
             pod.status.phase == "Succeeded" ? "finished" :
                 "failed";
