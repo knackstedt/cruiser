@@ -8,12 +8,10 @@ RUN apk add --no-cache python3 make g++ git
 COPY ./agent /agent
 
 # Remove symlinks
-RUN rm /agent/types
+RUN rm /agent/src/types
 
 # Restore symlinks with actual contents
-# COPY ./server/src/api /agent/src/api
-# COPY ./server/src/util /agent/src/util
-COPY ./types /agent/types
+COPY ./types /agent/src/types
 
 WORKDIR /agent
 
