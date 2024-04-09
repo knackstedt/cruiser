@@ -4,7 +4,7 @@ import { getConfig } from './util/config';
 import { getSocketLogger } from './socket/logger';
 import { getSocketTerminal } from './socket/terminal';
 import { getSocket } from './socket/socket';
-import { RunTaskGroupsInParallel } from './run-tasks';
+import { RunTaskGroups } from './run-tasks';
 import { BindSocketBreakpoint, TripBreakpoint } from './socket/breakpoint';
 import { validateJobCanRun } from './util/job-validator';
 import { UploadArtifacts } from './util/artifact-uploader';
@@ -39,7 +39,7 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
     // Follow job steps to build code
     logger.info({ state: "Building", msg: "Agent building", block: "start" });
     await api.patch(`/api/odata/${jobInstanceId}`, { state: "building", buildEpoch: Date.now() })
-    await RunTaskGroupsInParallel(
+    await RunTaskGroups(
         pipelineInstance,
         pipeline,
         stage,
