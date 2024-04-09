@@ -20,6 +20,7 @@ export type TaskDefinition = {
     description?: string
     workingDirectory?: string
     order: number
+    kind?: string // default 'command'
 
     runIfPreviousTaskPassed: boolean
     runIfPreviousTaskFailed: boolean
@@ -96,6 +97,7 @@ export type Webhook = {
     id: `pipeline_stage_webhook:${string}`,
     label: string,
     description?: string,
+    disabled?: boolean
 
     url?: string,
     method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
@@ -123,6 +125,7 @@ export type StageDefinition = {
     autoTriggerOnPreviousStageCompletion?: boolean
     environment?: EnvironmentVariable[]
     jobs?: JobDefinition[],
+    disabled?: boolean
 
     sources?: SourceConfiguration[];
 

@@ -211,6 +211,8 @@ const processJobTriggers = async (job: k8s.V1Job, jobInstance: JobInstance) => {
         // are configured tp run on failuire.
         if (isFailure && !webhook.executeOnFailure)
             continue;
+        if (webhook.disabled)
+            continue;
 
         const headers = webhook.headers
             ?.map(([k, v]) => ({ [k]: v }))
@@ -245,6 +247,9 @@ const processJobTriggers = async (job: k8s.V1Job, jobInstance: JobInstance) => {
     if (stagesToTrigger.length > 0) {
         // Trigger all of the stages that need to be run.
         for (const stage of stagesToTrigger) {
+            if (stage.disabled)
+                continue;
+
             // If the stage has approvals, don't automatically trigger it.
             if (stage.requiredApprovals > 0) {
                 // Mark the stage as ready for approval
