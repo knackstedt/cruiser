@@ -12,15 +12,12 @@
     [cdkDropListConnectedTo]="peers"
     [id]="taskGroup.id"
     [cdkDropListData]="taskGroup.id"
-    (pointerdown)="$event.stopPropagation()"
-    (mousedown)="$event.stopPropagation()"
     (click)="$event.stopPropagation()"
-    (pointerup)="$event.stopPropagation()"
-    (mouseup)="$event.stopPropagation()"
 >
 
     @for (task of taskGroup.tasks; track task) {
         <div
+            #_
             class="task draggable-task"
             [class.disabled]="task.disabled"
             cdkDrag
@@ -29,7 +26,7 @@
             [ngx-contextmenu]="taskMenu"
             [ngx-menu-context]="{task, taskGroup}"
             (cdkDragDropped)="onTaskDrop.emit({job, taskGroup, event: $event})"
-            (click)="onTaskClick.emit({job, taskGroup, task})"
+            (click)="onTaskClick.emit({job, taskGroup, task}); onTaskSelect(_)"
         >
             <div class="placeholder" *cdkDragPlaceholder></div>
 

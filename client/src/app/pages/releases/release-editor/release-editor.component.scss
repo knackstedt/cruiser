@@ -2,6 +2,8 @@
     display: flex;
     height: 100%;
     flex-direction: column;
+
+    --mat-sidenav-container-background-color: #363636;
 }
 
 .canvas {
@@ -31,6 +33,7 @@ mat-sidenav {
         }
     }
 }
+
 
 ng-scrollbar {
     .panel_header {

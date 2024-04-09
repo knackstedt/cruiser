@@ -8,8 +8,14 @@
                     "components": [
                         {
                             "label": "Command",
-                            "applyMaskOn": "change",
+                            "tabindex": "1",
                             "tableView": true,
+                            "validate": {
+                                "required": true,
+                                "pattern": "^[a-zA-Z0-9_\\-\\.]+$",
+                                "customMessage": "Command must only include basic characters",
+                                "minLength": 1
+                            },
                             "key": "command",
                             "type": "textfield",
                             "input": true
@@ -26,13 +32,17 @@
                     "components": [
                         {
                             "label": "Timeout",
-                            "applyMaskOn": "change",
+                            "placeholder": "0",
+                            "description": "How long can this task run. \nSet to 0 for no timeout.",
+                            "tabindex": "3",
                             "mask": false,
                             "tableView": false,
-                            "delimiter": false,
                             "requireDecimal": false,
                             "inputFormat": "plain",
                             "truncateMultipleSpaces": false,
+                            "validate": {
+                                "min": 0
+                            },
                             "key": "timeout",
                             "type": "number",
                             "input": true
@@ -53,10 +63,12 @@
         },
         {
             "label": "Arguments",
-            "applyMaskOn": "change",
+            "description": "Enter arguments as you would on the command line",
+            "autoExpand": true,
+            "tabindex": "2",
             "tableView": true,
             "key": "arguments",
-            "type": "textfield",
+            "type": "textarea",
             "input": true
         }
     ]

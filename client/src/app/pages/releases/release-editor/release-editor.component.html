@@ -1,330 +1,343 @@
-
-<mat-sidenav-container>
-    <mat-sidenav-content>
-        <div style="height: 100%; display: flex; flex-direction: column;">
-            <div class="toolbar">
-                <div
-                    class="pipeline_name"
-                    (click)="
-                        mode = 'edit';
-                        view = 'pipeline';
-                        selectedStage = null;
-                        renderGraph()
-                    "
-                >
-                    <mat-icon>edit</mat-icon>
-                    {{pipeline?.label}}
+@if (editingStage) {
+    <app-stage-editor
+        [pipeline]="pipeline"
+        [stage]="selectedStage"
+        (close)="
+            patchPipeline();
+            renderGraph();
+            editingStage = false;
+        "
+    />
+}
+@else {
+    <mat-sidenav-container>
+        <mat-sidenav-content>
+            <div style="height: 100%; display: flex; flex-direction: column;">
+                <div class="toolbar">
+                    <div
+                        class="pipeline_name"
+                        (click)="
+                            mode = 'edit';
+                            view = 'pipeline';
+                            selectedStage = null;
+                            renderGraph()
+                        "
+                    >
+                        <mat-icon>edit</mat-icon>
+                        {{pipeline?.label}}
+                    </div>
+                    <button
+                        mat-flat-button
+                        (click)="addStage()"
+                    >
+                        add stage
+                    </button>
+                    <div style="flex: 1"></div>
+                    <button
+                        mat-flat-button
+                        (click)="cancel()"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        mat-flat-button
+                        (click)="save()"
+                    >
+                        Save
+                    </button>
                 </div>
-                <button
-                    mat-flat-button
-                    (click)="addStage()"
-                >
-                    add stage
-                </button>
-                <div style="flex: 1"></div>
-                <button
-                    mat-flat-button
-                    (click)="cancel()"
-                >
-                    Cancel
-                </button>
-                <button
-                    mat-flat-button
-                    (click)="save()"
-                >
-                    Save
-                </button>
+                <ngx-reactflow
+                    [nodes]="nodes"
+                    [edges]="edges"
+                    [nodeTypes]="nodeTypes"
+                />
             </div>
-            <ngx-reactflow
-                [nodes]="nodes"
-                [edges]="edges"
-                [nodeTypes]="nodeTypes"
-            />
-        </div>
-    </mat-sidenav-content>
-    <mat-sidenav mode="side" position="end" [opened]="true">
-        <ng-scrollbar>
-            @switch (view) {
-                @case ("schedule") {
-                    <div class="panel_header">Schedule</div>
-                    <mat-form-field>
-                        <mat-label>CRONTAB Schedule</mat-label>
-                        <input matInput type="text" [(ngModel)]="selectedStage.cronTrigger" (valueChange)="dataChangeEmitter.next(0)"/>
-                    </mat-form-field>
+            <div class="shadow-right"></div>
+        </mat-sidenav-content>
+        <mat-sidenav mode="side" position="end" [opened]="true">
+            <ng-scrollbar>
+                @switch (view) {
+                    @case ("schedule") {
+                        <div class="panel_header">Schedule</div>
+                        <mat-form-field>
+                            <mat-label>CRONTAB Schedule</mat-label>
+                            <input matInput type="text" [(ngModel)]="selectedStage.cronTrigger" (valueChange)="dataChangeEmitter.next(0)"/>
+                        </mat-form-field>
 
-                    <!-- <mat-form-field> -->
-                        <mat-checkbox [(ngModel)]="selectedStage.cronExcludeAuto" (valueChange)="dataChangeEmitter.next(0)">
-                            Only automatically trigger on CRONTAB execution
-                        </mat-checkbox>
-                    <!-- </mat-form-field> -->
-                }
+                        <!-- <mat-form-field> -->
+                            <mat-checkbox [(ngModel)]="selectedStage.cronExcludeAuto" (valueChange)="dataChangeEmitter.next(0)">
+                                Only automatically trigger on CRONTAB execution
+                            </mat-checkbox>
+                        <!-- </mat-form-field> -->
+                    }
 
-                @case ("approver") {
-                    <div class="panel_header">Approvers</div>
+                    @case ("approver") {
+                        <div class="panel_header">Approvers</div>
 
-                    <mat-form-field style="width: 100%;">
-                        <mat-label>Approvers</mat-label>
-                        <mat-select
-                            multiple
-                            [(value)]="selectedStage.approvalUsers"
-                            (valueChange)="renderGraph()"
-                            (valueChange)="dataChangeEmitter.next(0)"
-                        >
-                            @for (user of users; track user) {
-                                <mat-option
-                                    [value]="user.id"
-                                >
-                                    {{user.label ?? user.login}}
-                                </mat-option>
-                            }
-                        </mat-select>
-                    </mat-form-field>
-
-                    <mat-form-field style="width: 100%;">
-                        <mat-label>Minimum number of approvals to run</mat-label>
-                        <input matInput type="number" min="0" [(ngModel)]="selectedStage.requiredApprovals" (valueChange)="dataChangeEmitter.next(0)" />
-                    </mat-form-field>
-                }
-
-                @case ("webhook") {
-                    <div class="panel_header">Webhooks</div>
-                    <mat-accordion [multi]="true" displayMode="flat">
-                        @for (action of selectedStage.webhooks; track action) {
-                            <mat-expansion-panel
-                                #panel
-                                [expanded]="true"
+                        <mat-form-field style="width: 100%;">
+                            <mat-label>Approvers</mat-label>
+                            <mat-select
+                                multiple
+                                [(value)]="selectedStage.approvalUsers"
+                                (valueChange)="renderGraph()"
+                                (valueChange)="dataChangeEmitter.next(0)"
                             >
-                                <mat-expansion-panel-header>
-                                    <div
-                                        class="header"
-                                        (click)="$event.stopPropagation(); panel.toggle()"
+                                @for (user of users; track user) {
+                                    <mat-option
+                                        [value]="user.id"
                                     >
-                                        <div>
-                                            {{action.label}}
+                                        {{user.label ?? user.login}}
+                                    </mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+
+                        <mat-form-field style="width: 100%;">
+                            <mat-label>Minimum number of approvals to run</mat-label>
+                            <input matInput type="number" min="0" [(ngModel)]="selectedStage.requiredApprovals" (valueChange)="dataChangeEmitter.next(0)" />
+                        </mat-form-field>
+                    }
+
+                    @case ("webhook") {
+                        <div class="panel_header">Webhooks</div>
+                        <mat-accordion [multi]="true" displayMode="flat">
+                            @for (action of selectedStage.webhooks; track action) {
+                                <mat-expansion-panel
+                                    #panel
+                                    [expanded]="true"
+                                >
+                                    <mat-expansion-panel-header>
+                                        <div
+                                            class="header"
+                                            (click)="$event.stopPropagation(); panel.toggle()"
+                                        >
+                                            <div>
+                                                {{action.label}}
+                                            </div>
+
+                                            <button
+                                                mat-icon-button
+                                                class="expand_button"
+                                                [style.transform]="panel.expanded ? '' : 'rotate(-90deg)'"
+                                            >
+                                                <mat-icon>expand_more</mat-icon>
+                                            </button>
+                                        </div>
+                                    </mat-expansion-panel-header>
+                                    <div>
+                                        <mat-form-field style="width: 100%; margin: 12px 0">
+                                            <mat-label>Label</mat-label>
+                                            <input matInput type="text" [(ngModel)]="action.label" (valueChange)="dataChangeEmitter.next(0)" />
+                                        </mat-form-field>
+
+                                        <ngx-stackedit
+                                            style="height: 200px"
+                                            (onImageUpload)="fs.onImageUpload(pipeline, $event)"
+                                            [(value)]="action.description"
+                                            (valueChange)="dataChangeEmitter.next(0)"
+                                            showPreview="off"
+                                            showToc="off"
+                                        />
+
+                                        <div style="display: flex; gap: 8px; margin: 8px 0">
+                                            <mat-form-field style="width: 110px">
+                                                <mat-label>Method</mat-label>
+                                                <mat-select [(value)]="action.method" (valueChange)="dataChangeEmitter.next(0)">
+                                                    <mat-option value="GET">get</mat-option>
+                                                    <mat-option value="POST">post</mat-option>
+                                                    <mat-option value="PUT">put</mat-option>
+                                                    <mat-option value="PATCH">patch</mat-option>
+                                                    <mat-option value="DELETE">delete</mat-option>
+                                                </mat-select>
+                                            </mat-form-field>
+                                            <mat-form-field style="width: 100%; flex: 1">
+                                                <mat-label>URL</mat-label>
+                                                <input matInput type="text" [(ngModel)]="action.url" (valueChange)="dataChangeEmitter.next(0)" />
+                                            </mat-form-field>
                                         </div>
 
-                                        <button
-                                            mat-icon-button
-                                            class="expand_button"
-                                            [style.transform]="panel.expanded ? '' : 'rotate(-90deg)'"
-                                        >
-                                            <mat-icon>expand_more</mat-icon>
-                                        </button>
+                                        <p>Headers</p>
+                                        @for (header of action.headers; track header) {
+                                            <div style="display: flex">
+                                                <mat-form-field>
+                                                    <mat-label>Name</mat-label>
+                                                    <input matInput type="text" [(ngModel)]="header[0]" (valueChange)="dataChangeEmitter.next(0)"/>
+                                                </mat-form-field>
+                                                <mat-form-field>
+                                                    <mat-label>Value</mat-label>
+                                                    <input matInput type="text" [(ngModel)]="header[1]" (valueChange)="dataChangeEmitter.next(0)"/>
+                                                </mat-form-field>
+                                            </div>
+                                        }
+
+                                        <button mat-flat-button (click)="(action.headers = action.headers ?? []).push(['', ''])">add</button>
+
+                                        <p>Body</p>
+                                        <app-vscode
+                                            style="height: 400px"
+                                            [(code)]="action.body"
+                                            [language]="'auto'"
+                                            (codeChange)="dataChangeEmitter.next(0)"
+                                        />
                                     </div>
-                                </mat-expansion-panel-header>
-                                <div>
-                                    <mat-form-field style="width: 100%; margin: 12px 0">
-                                        <mat-label>Label</mat-label>
-                                        <input matInput type="text" [(ngModel)]="action.label" (valueChange)="dataChangeEmitter.next(0)" />
-                                    </mat-form-field>
+                                </mat-expansion-panel>
+                            }
+                            <button mat-flat-button (click)="addWebhook(selectedStage)">
+                                <mat-icon>add</mat-icon> Add
+                            </button>
+                        </mat-accordion>
+                    }
 
-                                    <ngx-stackedit
-                                        style="height: 200px"
-                                        (onImageUpload)="fs.onImageUpload(pipeline, $event)"
-                                        [(value)]="action.description"
-                                        (valueChange)="dataChangeEmitter.next(0)"
-                                        showPreview="off"
-                                        showToc="off"
-                                    />
+                    @case ("stage") {
+                        <div class="panel_header">
+                            <span>Stage</span>
+                            <div style="flex: 1"></div>
+                            <button mat-flat-button (click)="editStage(selectedStage)">Edit</button>
+                        </div>
+                        <mat-form-field style="width: 100%; margin: 12px 0">
+                            <mat-label>Label</mat-label>
+                            <input matInput type="text" [(ngModel)]="selectedStage.label" (valueChange)="dataChangeEmitter.next(0)"/>
+                        </mat-form-field>
 
-                                    <div style="display: flex; gap: 8px; margin: 8px 0">
-                                        <mat-form-field style="width: 110px">
-                                            <mat-label>Method</mat-label>
-                                            <mat-select [(value)]="action.method" (valueChange)="dataChangeEmitter.next(0)">
-                                                <mat-option value="GET">get</mat-option>
-                                                <mat-option value="POST">post</mat-option>
-                                                <mat-option value="PUT">put</mat-option>
-                                                <mat-option value="PATCH">patch</mat-option>
-                                                <mat-option value="DELETE">delete</mat-option>
-                                            </mat-select>
+                        <ngx-stackedit
+                            style="height: 200px"
+                            (onImageUpload)="fs.onImageUpload(pipeline, $event)"
+                            [(value)]="selectedStage.description"
+                            (valueChange)="dataChangeEmitter.next(0)"
+                            showPreview="off"
+                            showToc="off"
+                        />
+
+                        <div class="panel_header">Stage Triggers</div>
+
+                        <mat-form-field style="width: 100%;">
+                            <mat-label>Preceding stages</mat-label>
+                            <mat-select
+                                multiple
+                                [(value)]="selectedStage.stageTrigger"
+                                (valueChange)="renderGraph()"
+                                (valueChange)="dataChangeEmitter.next(0)"
+                            >
+                                @for (stage of filterPrecedingStages(selectedStage); track stage) {
+                                    <mat-option
+                                        [value]="stage.id"
+                                    >
+                                        {{stage.label}}
+                                    </mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+
+
+                        <mat-form-field style="width: 100%;">
+                            <mat-label>Render as</mat-label>
+                            <mat-select
+                                [(value)]="selectedStage.renderMode"
+                                (valueChange)="renderGraph()"
+                                (valueChange)="dataChangeEmitter.next(0)"
+                            >
+                                <mat-option value="normal">Simple</mat-option>
+                                <mat-option value="gateway">Gateway</mat-option>
+                                <mat-option value="job_container">Jobs</mat-option>
+                            </mat-select>
+                        </mat-form-field>
+
+                        <app-variables-section
+                            [item]="selectedStage"
+                            (valueChange)="dataChangeEmitter.next(0)"
+                        />
+                    }
+
+                    @case ("source") {
+                        <div class="panel_header">
+                            <span>Sources</span>
+                            <div style="flex: 1"></div>
+                        </div>
+
+                        <mat-accordion [multi]="true" displayMode="flat">
+                            @for (source of selectedStage.sources; track source) {
+                                <mat-expansion-panel
+                                    #panel
+                                    [expanded]="true"
+                                >
+                                    <mat-expansion-panel-header>
+                                        <div
+                                            class="header"
+                                            (click)="$event.stopPropagation(); panel.toggle()"
+                                        >
+                                            <div>
+                                                {{source.label}}
+                                            </div>
+
+                                            <button
+                                                mat-icon-button
+                                                class="expand_button"
+                                                [style.transform]="panel.expanded ? '' : 'rotate(-90deg)'"
+                                            >
+                                                <mat-icon>expand_more</mat-icon>
+                                            </button>
+                                        </div>
+                                    </mat-expansion-panel-header>
+                                    <div>
+                                        <mat-form-field style="width: 100%; margin: 12px 0">
+                                            <mat-label>Label</mat-label>
+                                            <input matInput type="text" [(ngModel)]="source.label" (valueChange)="dataChangeEmitter.next(0)" />
                                         </mat-form-field>
-                                        <mat-form-field style="width: 100%; flex: 1">
+
+                                        <ngx-stackedit
+                                            style="height: 200px"
+                                            (onImageUpload)="fs.onImageUpload(pipeline, $event)"
+                                            [(value)]="source.description"
+                                            (valueChange)="dataChangeEmitter.next(0)"
+                                            showPreview="off"
+                                            showToc="off"
+                                        />
+
+                                        <mat-form-field style="width: 100%">
                                             <mat-label>URL</mat-label>
-                                            <input matInput type="text" [(ngModel)]="action.url" (valueChange)="dataChangeEmitter.next(0)" />
+                                            <input matInput type="text" [(ngModel)]="source.url" (valueChange)="dataChangeEmitter.next(0)" />
                                         </mat-form-field>
+
                                     </div>
-
-                                    <p>Headers</p>
-                                    @for (header of action.headers; track header) {
-                                        <div style="display: flex">
-                                            <mat-form-field>
-                                                <mat-label>Name</mat-label>
-                                                <input matInput type="text" [(ngModel)]="header[0]" (valueChange)="dataChangeEmitter.next(0)"/>
-                                            </mat-form-field>
-                                            <mat-form-field>
-                                                <mat-label>Value</mat-label>
-                                                <input matInput type="text" [(ngModel)]="header[1]" (valueChange)="dataChangeEmitter.next(0)"/>
-                                            </mat-form-field>
-                                        </div>
-                                    }
-
-                                    <button mat-flat-button (click)="(action.headers = action.headers ?? []).push(['', ''])">add</button>
-
-                                    <p>Body</p>
-                                    <app-vscode
-                                        style="height: 400px"
-                                        [(code)]="action.body"
-                                        [language]="'auto'"
-                                        (codeChange)="dataChangeEmitter.next(0)"
-                                    />
-                                </div>
-                            </mat-expansion-panel>
-                        }
-                        <button mat-flat-button (click)="addWebhook(selectedStage)">
-                            <mat-icon>add</mat-icon> Add
-                        </button>
-                    </mat-accordion>
-                }
-
-                @case ("stage") {
-                    <div class="panel_header">
-                        <span>Stage</span>
-                        <div style="flex: 1"></div>
-                        <button mat-flat-button (click)="editStage(selectedStage)">Edit</button>
-                    </div>
-                    <mat-form-field style="width: 100%; margin: 12px 0">
-                        <mat-label>Label</mat-label>
-                        <input matInput type="text" [(ngModel)]="selectedStage.label" (valueChange)="dataChangeEmitter.next(0)"/>
-                    </mat-form-field>
-
-                    <ngx-stackedit
-                        style="height: 200px"
-                        (onImageUpload)="fs.onImageUpload(pipeline, $event)"
-                        [(value)]="selectedStage.description"
-                        (valueChange)="dataChangeEmitter.next(0)"
-                        showPreview="off"
-                        showToc="off"
-                    />
-
-                    <div class="panel_header">Stage Triggers</div>
-
-                    <mat-form-field style="width: 100%;">
-                        <mat-label>Preceding stages</mat-label>
-                        <mat-select
-                            multiple
-                            [(value)]="selectedStage.stageTrigger"
-                            (valueChange)="renderGraph()"
-                            (valueChange)="dataChangeEmitter.next(0)"
-                        >
-                            @for (stage of filterPrecedingStages(selectedStage); track stage) {
-                                <mat-option
-                                    [value]="stage.id"
-                                >
-                                    {{stage.label}}
-                                </mat-option>
+                                </mat-expansion-panel>
                             }
-                        </mat-select>
-                    </mat-form-field>
+                            <button mat-flat-button (click)="addSource(selectedStage)">
+                                <mat-icon>add</mat-icon> Add
+                            </button>
+                        </mat-accordion>
+                    }
 
+                    @case ("pipeline") {
+                        <div class="panel_header">
+                            <span>Pipeline</span>
+                            <div style="flex: 1"></div>
+                        </div>
 
-                    <mat-form-field style="width: 100%;">
-                        <mat-label>Render as</mat-label>
-                        <mat-select
-                            [(value)]="selectedStage.renderMode"
-                            (valueChange)="renderGraph()"
+                        <mat-form-field style="width: 100%; margin: 12px 0">
+                            <mat-label>Label</mat-label>
+                            <input matInput type="text" [(ngModel)]="pipeline.label" (ngModelChange)="dataChangeEmitter.next(0)" />
+                        </mat-form-field>
+
+                        <ngx-stackedit
+                            style="height: 200px"
+                            (onImageUpload)="fs.onImageUpload(pipeline, $event)"
+                            [(value)]="pipeline.description"
                             (valueChange)="dataChangeEmitter.next(0)"
-                        >
-                            <mat-option value="normal">Simple</mat-option>
-                            <mat-option value="gateway">Gateway</mat-option>
-                            <mat-option value="job_container">Jobs</mat-option>
-                        </mat-select>
-                    </mat-form-field>
+                            showPreview="off"
+                            showToc="off"
+                        />
 
-                    <app-variables-section
-                        [item]="selectedStage"
-                        (valueChange)="dataChangeEmitter.next(0)"
-                    />
+                        <app-variables-section
+                            [item]="pipeline"
+                            (valueChange)="dataChangeEmitter.next(0)"
+                        />
+                    }
+
+                    @default {
+                        Select something.
+                    }
                 }
-
-                @case ("source") {
-                    <div class="panel_header">
-                        <span>Sources</span>
-                        <div style="flex: 1"></div>
-                    </div>
-
-                    <mat-accordion [multi]="true" displayMode="flat">
-                        @for (source of selectedStage.sources; track source) {
-                            <mat-expansion-panel
-                                #panel
-                                [expanded]="true"
-                            >
-                                <mat-expansion-panel-header>
-                                    <div
-                                        class="header"
-                                        (click)="$event.stopPropagation(); panel.toggle()"
-                                    >
-                                        <div>
-                                            {{source.label}}
-                                        </div>
-
-                                        <button
-                                            mat-icon-button
-                                            class="expand_button"
-                                            [style.transform]="panel.expanded ? '' : 'rotate(-90deg)'"
-                                        >
-                                            <mat-icon>expand_more</mat-icon>
-                                        </button>
-                                    </div>
-                                </mat-expansion-panel-header>
-                                <div>
-                                    <mat-form-field style="width: 100%; margin: 12px 0">
-                                        <mat-label>Label</mat-label>
-                                        <input matInput type="text" [(ngModel)]="source.label" (valueChange)="dataChangeEmitter.next(0)" />
-                                    </mat-form-field>
-
-                                    <ngx-stackedit
-                                        style="height: 200px"
-                                        (onImageUpload)="fs.onImageUpload(pipeline, $event)"
-                                        [(value)]="source.description"
-                                        (valueChange)="dataChangeEmitter.next(0)"
-                                        showPreview="off"
-                                        showToc="off"
-                                    />
-
-                                    <mat-form-field style="width: 100%">
-                                        <mat-label>URL</mat-label>
-                                        <input matInput type="text" [(ngModel)]="source.url" (valueChange)="dataChangeEmitter.next(0)" />
-                                    </mat-form-field>
-
-                                </div>
-                            </mat-expansion-panel>
-                        }
-                        <button mat-flat-button (click)="addSource(selectedStage)">
-                            <mat-icon>add</mat-icon> Add
-                        </button>
-                    </mat-accordion>
-                }
-
-                @case ("pipeline") {
-                    <div class="panel_header">
-                        <span>Pipeline</span>
-                        <div style="flex: 1"></div>
-                    </div>
-
-                    <mat-form-field style="width: 100%; margin: 12px 0">
-                        <mat-label>Label</mat-label>
-                        <input matInput type="text" [(ngModel)]="pipeline.label" (ngModelChange)="dataChangeEmitter.next(0)" />
-                    </mat-form-field>
-
-                    <ngx-stackedit
-                        style="height: 200px"
-                        (onImageUpload)="fs.onImageUpload(pipeline, $event)"
-                        [(value)]="pipeline.description"
-                        (valueChange)="dataChangeEmitter.next(0)"
-                        showPreview="off"
-                        showToc="off"
-                    />
-
-                    <app-variables-section
-                        [item]="pipeline"
-                        (valueChange)="dataChangeEmitter.next(0)"
-                    />
-                }
-
-                @default {
-                    Select something.
-                }
-            }
-        </ng-scrollbar>
-    </mat-sidenav>
-</mat-sidenav-container>
+            </ng-scrollbar>
+        </mat-sidenav>
+    </mat-sidenav-container>
+}

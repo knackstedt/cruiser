@@ -1,5 +1,5 @@
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { ApplicationRef, Component, EventEmitter, Inject, Injector, Input, Optional } from '@angular/core';
+import { ApplicationRef, Component, EventEmitter, Inject, Injector, Input, Optional, Output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -21,10 +21,11 @@ import { VariablesSectionComponent } from 'src/app/components/variables-section/
 import { ArtifactsSectionComponent } from 'src/app/components/artifacts-section/artifacts-section.component';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ReactFlowComponent } from 'src/app/components/reactflow/reactflow-wrapper';
-import { Edge, Handle, Node, Position } from 'reactflow';
+import { Edge, Handle, MarkerType, Node, Position } from 'reactflow';
 import { TaskGroupNodeComponent } from 'src/app/components/stage-editor/task-group-node/task-group-node.component';
 import React from 'react';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSidenavModule } from '@angular/material/sidenav';
 
 @Component({
     selector: 'app-stage-editor',
@@ -37,6 +38,7 @@ import { MatSelectModule } from '@angular/material/select';
         MatTooltipModule,
         MatCheckboxModule,
         MatSelectModule,
+        MatSidenavModule,
         FormsModule,
         NgScrollbarModule,
         FormioWrapperComponent,
@@ -51,15 +53,24 @@ import { MatSelectModule } from '@angular/material/select';
 })
 export class StageEditorComponent {
 
+    readonly schemas = Object.seal(Schemas);
+    readonly schemaMap = (() => {
+        const m: { [key: string]: typeof Schemas[0]} = {};
+        Schemas.forEach(s => m[s.kind] = s);
+        return m;
+    })();
+    readonly defaultSchema = DefaultSchema;
+
     readonly defaultContainerImage = "ghcr.io/knackstedt/cruiser/cruiser-agent:latest";
 
     @Input() pipeline: PipelineDefinition = {} as any;
     @Input() stage: StageDefinition = {} as any;
 
+    @Output() close = new EventEmitter();
+
     selectedJob: JobDefinition;
     selectedTaskGroup: TaskGroupDefinition;
     selectedTask: TaskDefinition;
-    selectedTaskSchema: Object;
 
     selectedJobIndex = 0;
 
@@ -109,10 +120,10 @@ export class StageEditorComponent {
                 dropListGroup: []
             },
             {
-                onTaskGroupSelect: ({ job, taskGroup }) => { this.selectTaskGroup(taskGroup); this.renderJobs();},
+                onTaskGroupSelect: ({ job, taskGroup }) => { this.selectTaskGroup(taskGroup); },
                 onTaskClick: ({ job, taskGroup, task }) => { this.selectTask(task); this.renderJobs();},
                 onAddTask: ({ job, taskGroup }) => { this.addTask(taskGroup); this.renderJobs();},
-                onTaskDrop: ({ job, taskGroup, event }) => { this.taskDrop(job, taskGroup, event); this.renderJobs();; },
+                onTaskDrop: ({ job, taskGroup, event }) => { this.taskDrop(job, taskGroup, event); this.renderJobs(); },
             },
             [
                 React.createElement(Handle, { type: "target", position: Position.Left }),
@@ -122,16 +133,12 @@ export class StageEditorComponent {
     }
 
     constructor(
-        @Optional() @Inject(MAT_DIALOG_DATA) private readonly data,
         private readonly fetch: Fetch,
         public  readonly fs: FileUploadService,
         public  readonly dialog: MatDialog,
-        public  readonly dialogRef: MatDialogRef<any>,
         private readonly injector: Injector,
         private readonly appRef: ApplicationRef
     ) {
-        this.pipeline = data?.pipeline;
-        this.stage = data?.stage;
     }
 
     ngOnInit() {
@@ -152,6 +159,13 @@ export class StageEditorComponent {
         this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
             stages: this.pipeline.stages
         });
+    }
+
+    // Delete the current stage and exit.
+    deleteStage() {
+        this.pipeline.stages = this.pipeline.stages.filter(s => s.id != this.stage.id);
+        this.patchPipeline();
+        this.close.emit();
     }
 
     async addJob() {
@@ -311,7 +325,6 @@ export class StageEditorComponent {
         if (!task.taskScriptArguments) task.taskScriptArguments = {};
 
         this.selectedTask = task;
-        this.selectedTaskSchema = Schemas.find(s => s.kind == task.taskScriptId) || DefaultSchema;
         this.currentSelection = 'task';
     }
 
@@ -330,6 +343,11 @@ export class StageEditorComponent {
                     id: preTaskGroupId.split(':')[1] + "_" + taskGroup.id.split(':')[1],
                     sourceHandle: "source",
                     type: "bezier",
+                    markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                        width: 16,
+                        height: 16
+                    },
                     style: {
                         strokeWidth: 2,
                         stroke: '#00c7ff',
@@ -349,14 +367,6 @@ export class StageEditorComponent {
                 data: { job, taskGroup },
                 targetPosition: null,
                 sourcePosition: null,
-                style: {
-                    "--background": true
-                        ? "#6d6d6d"
-                        : "#4b4b4b",
-                    "--border-color": this.selectedTaskGroup?.id == taskGroup?.id
-                        ? "#6d6d6d"
-                        : "#0000",
-                } as any, // react doesn't have typing for CSS variables.
                 position: {
                     x: 0,
                     y: 0

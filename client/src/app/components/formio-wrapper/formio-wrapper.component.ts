@@ -1,6 +1,5 @@
 import { Component, ElementRef, EventEmitter, Input, Output, SimpleChange, SimpleChanges, ViewEncapsulation } from '@angular/core';
 import { Formio } from 'formiojs/dist/formio.form.min.js';
-import { isValidElement } from 'react';
 
 
 @Component({

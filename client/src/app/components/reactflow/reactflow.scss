@@ -13,19 +13,30 @@ ngx-reactflow {
 
     .react-flow__controls-button {
         background-color: var(--panel-background-color);
-        fill: var(--text-color)
+        fill: var(--text-color);
+        border-bottom-color: var(--splitter-background-color)
     }
 
     .react-flow__handle {
         opacity: 0;
         pointer-events: none;
         height: 0;
-        // display: none;
-        // background-color: #69f0ae;
-        // width: 10px;
-        // height: 10px;
-        // border: 0;
-        // border-radius: 2px;
+    }
+
+    .react-flow__handle-right {
+        right: 0;
+    }
+
+    .react-flow__handle-left {
+        left: 0;
+    }
+
+    .react-flow__attribution {
+        background: var(--background-color);
+    }
+
+    .react-flow__attribution a {
+        color: var(--text-color);
     }
 
     .mat-mdc-form-field-subscript-wrapper {

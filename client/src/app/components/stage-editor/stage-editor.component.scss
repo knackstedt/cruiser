@@ -1,55 +1,84 @@
 :host {
     display: flex;
+    flex-direction: column;
     width: 100%;
     height: 100%;
 
+    --mat-sidenav-container-background-color: #363636;
     --mat-expansion-container-background-color: #0000;
-    --editor-background-color: #2b2b2b;
     // --mdc-secondary-navigation-tab-container-height
 }
-:host ::ng-deep {
-    .ng-scroll-content {
-        width: 100%;
-    }
-}
 
-.sidebar {
-    flex: 0 0 700px;
-    display: flex;
-    flex-direction: column;
-    background-color: #181818;
-    position: relative;
+mat-sidenav-container {
+    flex: 1;
 
     ::ng-deep {
         .mat-mdc-tab-header {
             --mdc-secondary-navigation-tab-container-height: 42px;
         }
-        .mat-mdc-tab-group .mat-mdc-tab-body-wrapper {
+
+        .mat-mdc-tab-group.header-only .mat-mdc-tab-body-wrapper {
             display: none;
         }
     }
 
-    mat-tab-group {
+    mat-tab-group.header-only {
         height: 42px;
+        background: #1a1a1a;
+    }
+
+    ::ng-deep {
+        .add-btn {
+            padding: 0;
+            min-width: unset;
+
+            .mdc-tab__text-label {
+                height: 100%;
+            }
+        }
+
+        .job-tab-label {
+            padding: 0;
+            min-width: unset;
+
+            .mdc-tab__text-label {
+                height: 100%;
+            }
+
+            .label {
+                padding: 0 24px;
+            }
+        }
     }
 
     ngx-reactflow {
         flex: 1;
-    }
-
-    .floating_toolbar {
-        position: absolute;
-        top: 42px;
-        right: 0;
-        z-index: 1;
+        background: #313131;
     }
 }
 
-.content {
-    flex: 1;
-    overflow: hidden;
-    background-color: #1f1f1f;
-    box-shadow: 0 0 8px #00000094;
+mat-sidenav {
+    width: 640px;
+    min-width: 400px;
+
+    ::ng-deep {
+        .ng-scroll-content {
+            width: 100%;
+            padding: 24px;
+        }
+
+        .mat-expansion-panel:not([class*=mat-elevation-z]) {
+            box-shadow: 0;
+        }
+    }
+}
+
+.headerbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 12px;
+    height: 48px;
 }
 
 .titlebar {
@@ -75,24 +104,4 @@ ngx-stackedit {
     height: 260px;
     border-top-right-radius: 2px;
     border-top-left-radius: 2px;
-}
-
-.job_add_button {
-    cursor: pointer;
-    width: 100px;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-    transition: background-color 100ms ease;
-}
-
-.exit_button {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    z-index: 10;
-}
-
-.content_area {
-    padding: 16px;
-    padding-right: 48px;
 }

@@ -44,6 +44,7 @@ import { VariablesSectionComponent } from 'src/app/components/variables-section/
         StackEditorComponent,
         VscodeComponent,
         VariablesSectionComponent,
+        StageEditorComponent,
         FormsModule
     ],
     templateUrl: './release-editor.component.html',
@@ -64,6 +65,8 @@ export class StagesComponent {
     public pipeline: PipelineDefinition = {} as any;
     isUnsavedState = false;
     isRestoredSave = false;
+
+    editingStage = false
 
     nodes: Node[] = [];
     edges: Edge[] = [];
@@ -331,19 +334,8 @@ export class StagesComponent {
     }
 
     editStage(stage: StageDefinition) {
-        firstValueFrom(this.dialog.open(StageEditorComponent, {
-            data: {
-                pipeline: this.pipeline,
-                stage
-            },
-            disableClose: true,
-            width: "90vw",
-            height: "90vh"
-        }).afterClosed())
-            .then(res => {
-                this.patchPipeline();
-                this.renderGraph();
-            })
+        this.editingStage = true;
+        this.selectedStage = stage;
     }
 
     async deleteStage(stage) {

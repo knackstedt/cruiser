@@ -1,0 +1,15 @@
+{
+    "display": "form",
+    "components": [
+        {
+            "label": "Script",
+            "description": "Enter your shell script here",
+            "autoExpand": true,
+            "tabindex": "1",
+            "tableView": true,
+            "key": "arguments",
+            "type": "textarea",
+            "input": true
+        }
+    ]
+}

@@ -74,3 +74,22 @@ table {
 .as-split-gutter {
     background-color: var(--splitter-background-color) !important;
 }
+
+
+.shadow-right {
+    box-shadow: #000 -6px 0 6px -6px inset;
+    width: 6px;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    position: absolute;
+}
+
+.shadow-top {
+    box-shadow: #000 0 6px 6px -6px inset;
+    height: 6px;
+    top: 0;
+    right: 0;
+    left: 0;
+    position: absolute;
+}
