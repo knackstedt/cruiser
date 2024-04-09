@@ -24,6 +24,7 @@ export type CruiserUserProfile = {
     image: string
 }
 
+// @ts-ignore (agent doesn't have the type for this)
 declare module 'express-session' {
     interface SessionData {
         _state: string,
