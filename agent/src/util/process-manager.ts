@@ -25,9 +25,9 @@ export const RunProcess = async (
 
 
         if (task.preBreakpoint) {
-            logger.info({ msg: `Tripping on Breakpoint`, breakpoint: true });
+            logger.info({ msg: `Tripping on Breakpoint`, breakpoint: true, taskGroup, task });
             await TripBreakpoint(jobInstance, false, taskGroup, task);
-            logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false });
+            logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false, taskGroup, task });
         }
 
         // Try to create the CWD.
@@ -84,10 +84,11 @@ export const RunProcess = async (
 
 
                 logger.info({
-                    msg: `Spawning process`,
+                    msg: `Spawning process ${command} for task ${task.label} in group ${taskGroup.label}`,
                     command,
                     args,
                     execEnv,
+                    taskGroup,
                     task
                 });
 
@@ -98,26 +99,28 @@ export const RunProcess = async (
                     windowsHide: true
                 });
 
-                process.stdout.on('data', (data) => logger.stdout({ time: Date.now(), data }));
-                process.stderr.on('data', (data) => logger.stderr({ time: Date.now(), data }));
+                process.stdout.on('data', (data) => logger.stdout({ time: Date.now(), data, taskGroup, task }));
+                process.stderr.on('data', (data) => logger.stderr({ time: Date.now(), data, taskGroup, task }));
 
                 process.on('error', (err) => logger.error(err));
 
                 process.on('disconnect', (...args) => {
                     logger.error({
                         msg: `Process unexpectedly disconnected`,
-                        args
+                        args,
+                        taskGroup,
+                        task
                     });
                     res(process);
                 });
 
                 process.on('exit', (code) => {
                     if (code == 0) {
-                        logger.info({ msg: `Process exited successfully` });
+                        logger.info({ msg: `Process exited successfully`, taskGroup, task });
                         res(process);
                     }
                     else {
-                        logger.error({ msg: `Process exited with non-zero exit code`, code });
+                        logger.error({ msg: `Process exited with non-zero exit code`, code, taskGroup, task });
                         res(process);
                     }
                 });
@@ -133,14 +136,16 @@ export const RunProcess = async (
 
         if (process?.exitCode == 0) {
             logger.info({
-                msg: `Completed task ${task.label}`,
+                msg: `Completed task ${task.label} in group ${taskGroup.label}`,
                 process,
+                taskGroup,
+                task,
                 block: "end"
             });
             if (task.postBreakpoint) {
-                logger.info({ msg: `Tripping on Breakpoint`, breakpoint: true });
+                logger.info({ msg: `Tripping on Breakpoint`, breakpoint: true, taskGroup, task });
                 await TripBreakpoint(jobInstance, true, taskGroup, task);
-                logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false });
+                logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false, taskGroup, task });
             }
         }
         else {
@@ -149,9 +154,9 @@ export const RunProcess = async (
                 ...(process.exitCode == -1 ? { err: process['err'] } : { process })
             });
             if (task.disableErrorBreakpoint != true) {
-                logger.info({ msg: `Breaking on error`, breakpoint: true, error: true });
+                logger.info({ msg: `Breaking on error`, breakpoint: true, error: true, taskGroup, task });
                 await TripBreakpoint(jobInstance, true, taskGroup, task);
-                logger.info({ msg: `Resuming from Breakpoint`, breakpoint: true, error: false });
+                logger.info({ msg: `Resuming from Breakpoint`, breakpoint: true, error: false, taskGroup, task });
             }
         }
     }
