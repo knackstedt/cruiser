@@ -9,6 +9,7 @@ export type JobInstance = {
         "frozen"        | // Job (task group) is frozen
         "sealing"       | // Job is compressing
         "finished"      | // Job is finished and acknowledged by scheduler
+        "cancelled"     | // Job was cancelled by user
         "failed"
     pipeline: string,
     pipeline_instance: string,
