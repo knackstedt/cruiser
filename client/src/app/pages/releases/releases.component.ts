@@ -95,9 +95,9 @@ export class ReleasesComponent implements OnInit {
         },
         {
             label: "Cancel",
-            isVisible: ({ pipeline, instance }) => ['started', 'running', 'waiting'].includes(instance.status.phase),
+            // isVisible: ({ pipeline, instance }) => ['started', 'running', 'waiting'].includes(instance.status.phase),
             action: ({pipeline, instance}) => {
-                this.fetch.post(`/api/pipeline/${pipeline.id}/${instance.id}/cancel`, {})
+                this.fetch.post(`/api/pipeline/${pipeline.id}/${instance.id}/stop`, {})
                     .then(res => {
                         // ???
                     })

@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { JobDefinition, PipelineDefinition, StageDefinition } from 'src/types/pipeline';
+import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from 'src/types/pipeline';
 import { TableModule } from 'primeng/table';
 import { MatDialog } from '@angular/material/dialog';
 import { JobDetailsComponent } from './job-details/job-details.component';
@@ -28,7 +28,7 @@ import { DurationViewerComponent } from 'src/app/components/duration-viewer/dura
     }
 })
 export class StagePopupComponent {
-    @Input() pipeline: PipelineDefinition;
+    @Input() pipelineInstance: PipelineInstance;
     @Input() stage: StageDefinition;
 
     runningJobs: JobDefinition[] = [];
@@ -42,7 +42,8 @@ export class StagePopupComponent {
     }
 
     async ngOnInit() {
-        const runningJobs = (await this.fetch.get(`/api/odata/job_instance?$filter=stage eq '${this.stage.id}'`))['value'];
+        const url = `/api/odata/job_instance?$filter=stage eq '${this.stage.id}' and pipeline_instance eq '${this.pipelineInstance.id}'`;
+        const runningJobs = (await this.fetch.get(url))['value'];
 
         const stageJobMap = {};
         const runningJobMap = {};

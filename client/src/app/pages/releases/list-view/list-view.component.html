@@ -114,7 +114,7 @@
                                     [class.finished]="stage?.['_state'] == 'finished'"
                                     [matTooltip]="stage['_isReadyForApproval'] ? 'Stage requires Approval' : stage?.['_state']"
                                     [ngx-tooltip]="stage.jobs?.length > 0 ? tooltip : null"
-                                    [ngx-tooltip-context]="stage"
+                                    [ngx-tooltip-context]="{ instance, stage }"
                                     [ngx-tooltip-config]="{ position: 'bottom', alignment: 'start', triggers:['click'], stayOpen: true }"
                                     (click)="(stage['_isReadyForApproval']) ? parent.approveStage(instance, stage) : 1"
                                 >
@@ -146,8 +146,8 @@
                                 </div>
                                 <ng-template #tooltip let-data>
                                     <app-stage-popup
-                                        [pipeline]="parent.selectedPipeline"
-                                        [stage]="data"
+                                        [pipelineInstance]="data.instance"
+                                        [stage]="data.stage"
                                     />
                                 </ng-template>
                             }
