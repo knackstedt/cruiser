@@ -23,7 +23,7 @@ const loadIntoCache = async (uid: string, jobId: string, namespace: string) => {
         const { body: pods } = await k8sApi.listNamespacedPod(namespace);
 
         const pod = pods.items.find(i =>
-            i.metadata?.annotations?.['cruiser.dev/job-id'] == jobId
+            i.metadata?.annotations?.['cruiser.dev/job-instance-id'] == jobId
         );
         //
         if (pod?.status?.podIP) {
@@ -50,7 +50,7 @@ export const getPodEndpointUrl = async (jobKubeUid: string, jobId: string, names
 
     let url = `http://${ip.replace(/\./g, '-')}.${namespace}.pod.cluster.local:8080`;
 
-    let isOk = await axios.get(url + '/ping')
+    let isOk = await axios.get(url + '/ping', { timeout: 3000 })
         .then(r => true)
         .catch(e => {
             logger.warn(e);
@@ -67,7 +67,7 @@ export const getPodEndpointUrl = async (jobKubeUid: string, jobId: string, names
     url = `http://${ip.replace(/\./g, '-')}.${namespace}.pod.cluster.local:8080`;
 
     // Test if we got a new one
-    isOk = await axios.get(url + '/ping')
+    isOk = await axios.get(url + '/ping', { timeout: 3000 })
         .then(r => true)
         .catch(e => e);
 
@@ -87,14 +87,13 @@ router.use('/:id', route(async (req, res, next) => {
 
     const id = req.params['id'];
 
-    const [ jobs ] = await db.query<JobInstance[][]>(`SELECT * FROM ${id}`);
-    const [ job ] = jobs;
+    const [job] = await db.select<JobInstance>(id);
 
     if (!job)
         return next(404);
 
     const uid = job['jobUid'];
-    const jobId = job.id.split(':')[1];
+    const jobId = job.id;
 
     const url = await getPodEndpointUrl(uid, jobId, job.kubeNamespace ?? environment.cruiser_kube_namespace);
 
@@ -103,6 +102,7 @@ router.use('/:id', route(async (req, res, next) => {
         reqBodyEncoding: null,
         preserveHostHdr: false,
         limit: '50mb',
+        // timeout: 3000,
         proxyReqOptDecorator(proxyReqOpts, srcReq) {
             proxyReqOpts.headers['X-Cruiser-Token'] = job['kubeAuthnToken'];
             return proxyReqOpts;
