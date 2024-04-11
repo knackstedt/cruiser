@@ -1,11 +1,11 @@
 import fs, { stat } from 'fs-extra';
 import * as k8s from '@kubernetes/client-node';
-import { logger } from './logger';
-import { db } from './db';
-import { JobInstance } from '../types/agent-task';
-import { environment } from './environment';
-import { PipelineInstance } from '../types/pipeline';
-import { RunStage } from './pipeline';
+import { logger } from './util/logger';
+import { db } from './util/db';
+import { JobInstance } from './types/agent-task';
+import { environment } from './util/environment';
+import { PipelineInstance } from './types/pipeline';
+import { RunStage } from './util/pipeline';
 import axios from 'axios';
 
 const kc = new k8s.KubeConfig();

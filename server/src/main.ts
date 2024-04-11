@@ -24,7 +24,7 @@ import { SourcesApi } from './api/sources';
 import { Guest, User } from './guards/role-guards';
 import { CronScheduler } from './util/scheduler';
 import { BlobUploadApi } from './api/filestorage';
-import { WatchAndFlushJobs } from './util/job-flusher';
+import { WatchAndFlushJobs } from './job-flusher';
 import { environment } from './util/environment';
 import { VaultApi } from './api/vault';
 import { AsciiBanner } from './util/motd';
