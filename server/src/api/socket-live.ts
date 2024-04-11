@@ -2,6 +2,7 @@ import { Server, Socket } from "socket.io";
 import { sessionHandler } from '../middleware/session';
 import { SessionData } from 'express-session';
 import { afterDatabaseConnected, db } from '../util/db';
+import { PipelineInstance } from '../types/pipeline';
 
 export class SocketLiveService {
 
@@ -24,11 +25,17 @@ export class SocketLiveService {
                 );
 
             const watchPipelineInstances = () =>
-                db.live("pipeline_instance", data =>
-                    data.action == "CLOSE"
-                        ? watchPipelineInstances()
-                        : activeSockets.forEach(s => s.emit("live:pipeline_instance", data))
-                );
+                db.live<PipelineInstance>("pipeline_instance", data => {
+                    if (data.action == "CLOSE")
+                        return watchPipelineInstances();
+
+                    db.query<PipelineInstance[][]>(`select * from '${data.result.id}' fetch status.jobInstances`)
+                        .then(([[instance]]) => {
+                            data.result = instance;
+                            activeSockets.forEach(s => s.emit("live:pipeline_instance", data));
+                        })
+                    .catch(err => { /* TODO */})
+                });
 
             const watchJobInstances = () =>
                 db.live("job_instance", data =>
