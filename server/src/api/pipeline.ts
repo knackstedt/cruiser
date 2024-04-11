@@ -18,7 +18,7 @@ router.get('/', route(async (req, res, next) => {
     const [
         // kubeJobs,
         [pipelines],
-        [jobs]
+        // [jobs]
     ] = await Promise.all([
         // GetAllRunningJobs(),
         getReleases
@@ -26,14 +26,15 @@ router.get('/', route(async (req, res, next) => {
             ? db.query("select * from pipeline where _isUserEditInstance != true")
             // : db.query("select * from pipeline where _isUserEditInstance != true and kind = 'build'"),
             : db.query("select * from pipeline where _isUserEditInstance != true"),
-        db.query("select * from jobs where latest = true")
+        // db.query("select * from jobs where latest = true")
     ]);
 
-    res.send({
-        pipelines,
-        jobs,
-        // kubeJobs
-    });
+    res.send(pipelines);
+    // res.send({
+    //     pipelines,
+    //     jobs,
+    //     // kubeJobs
+    // });
 }));
 
 router.use('/:id', route(async (req, res, next) => {
