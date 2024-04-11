@@ -122,48 +122,58 @@ export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => 
         const kubeAuthnToken = randomString(128);
         const podName = `cruiser-ea-${podId}`;
 
-        SetJobToken(kubeAuthnToken);
+        try {
+            SetJobToken(kubeAuthnToken);
 
-        // await db.query(`UPDATE job_instance SET latest = false WHERE job.id = '${job.id}'`);
+            // await db.query(`UPDATE job_instance SET latest = false WHERE job.id = '${job.id}'`);
 
-        const [jobInstance] = (await db.create<Omit<JobInstance, "id">>(`job_instance:${id}`, {
-            state: "queued",
-            queueEpoch: Date.now(),
-            errorCount: 0,
-            warnCount: 0,
-            job: job.id,
-            jobUid: id,
-            pipeline: instance.spec.id,
-            pipeline_instance: instance.id,
-            stage: stage.id,
-            kubeNamespace: namespace,
-            kubePodName: podName,
-            kubeAuthnToken
-        })) as any as JobInstance[];
+            const [jobInstance] = (await db.create<Omit<JobInstance, "id">>(`job_instance:${id}`, {
+                state: "queued",
+                queueEpoch: Date.now(),
+                errorCount: 0,
+                warnCount: 0,
+                job: job.id,
+                jobUid: id,
+                pipeline: instance.spec.id,
+                pipeline_instance: instance.id,
+                stage: stage.id,
+                kubeNamespace: namespace,
+                kubePodName: podName,
+                kubeAuthnToken
+            })) as any as JobInstance[];
 
-        job.jobInstance = jobInstance.id;
+            job.jobInstance = jobInstance.id;
 
-        instance.status.jobInstances = instance.status.jobInstances ?? [];
-        instance.status.jobInstances.push(jobInstance.id);
-        await db.merge(instance.id, instance);
+            instance.status.jobInstances = instance.status.jobInstances ?? [];
+            instance.status.jobInstances.push(jobInstance.id);
+            await db.merge(instance.id, instance);
 
-        const kubeJob = await createKubeJob(
-            instance,
-            instance.spec,
-            stage,
-            job,
-            jobInstance,
-            namespace,
-            podName,
-            podId,
-            kubeAuthnToken
-        )
+            const kubeJob = await createKubeJob(
+                instance,
+                instance.spec,
+                stage,
+                job,
+                jobInstance,
+                namespace,
+                podName,
+                podId,
+                kubeAuthnToken
+            );
 
-        const kubeJobMetadata = kubeJob.metadata;
+            // @ts-ignore
+            const kubeJobMetadata = kubeJob.metadata;
 
-        await db.merge(jobInstance.id, {
-            jobUid: kubeJobMetadata.uid,
-        });
+            await db.merge(jobInstance.id, {
+                jobUid: kubeJobMetadata.uid,
+            });
+        }
+        catch(ex) {
+            return {
+                status: 500,
+                message: "Failed to start job",
+                err: ex
+            }
+        }
 
         return {
             status: 200,
@@ -172,7 +182,7 @@ export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => 
     })
 }
 
-const createKubeJob = async (
+const createKubeJob = (
     pipelineInstance: PipelineInstance,
     pipeline: PipelineDefinition,
     stage: StageDefinition,
@@ -182,8 +192,8 @@ const createKubeJob = async (
     podName: string,
     podId: string,
     kubeAuthnToken: string
-) => {
-    const { body: kubeJob } = await k8sBatchApi.createNamespacedJob(namespace, {
+) =>
+    k8sBatchApi.createNamespacedJob(namespace, {
         apiVersion: "batch/v1",
         kind: "Job",
         metadata: {
@@ -255,12 +265,15 @@ const createKubeJob = async (
                                 ...(jobDefinition.environment ?? []),
                                 ...(stage.environment ?? []),
                                 ...(pipeline.environment ?? [])
-                            ]
+                            ].filter(e => !!e.name.trim()) // Clear any empty env variables
                         }
                     ]
                 }
             }
         }
+    })
+    .then(({body}) => body)
+    .catch(err => {
+        debugger;
     });
-    return kubeJob;
-}
+
