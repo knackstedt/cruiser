@@ -39,7 +39,7 @@ export class ReleasesComponent implements OnInit {
     pipelines: PipelineDefinition[] = [];
     filteredPipelines: PipelineDefinition[] = [];
     kubeJobs: k8s.V1Job[] = [];
-    jobs: JobInstance[] = [];
+    // jobs: JobInstance[] = [];
 
     selectedPipeline: PipelineDefinition;
     pipelineGroups: { label: string, items: PipelineDefinition[]; }[] = [
@@ -108,64 +108,94 @@ export class ReleasesComponent implements OnInit {
 
     private subscriptions = [
         this.liveSocket.subscribe(({ ev, data }) => {
-            // switch(data.action) {
-            //     case "CREATE": {
-            //         switch (ev) {
-            //             case "pipeline":          { this.pipelines.unshift(data.result); break }
-            //             case "pipeline_instance": { this._pipelineInstances.unshift(data.result); break }
-            //             case "job_instance":      { this.jobs.unshift(data.result); break }
-            //         }
-            //         break;
-            //     }
-            //     case "UPDATE": {
-            //         switch (ev) {
-            //             case "pipeline": {
-            //                 this.pipelines.splice(
-            //                     this.pipelines.findIndex(p => p.id == data.result.id),
-            //                     1,
-            //                     data.result
-            //                 );
-            //                 break;
-            //             }
-            //             case "pipeline_instance": {
-            //                 // this._pipelineInstances = [data.result];
-            //                 // this._pipelineInstances[this._pipelineInstances.findIndex(p => p.id == data.result.id)] = data.result
-            //                 // this._pipelineInstances.splice(
-            //                 //     1,
-            //                 //     data.result
-            //                 //     );
-            //                 const old = this._pipelineInstances.findIndex(p => p.id == data.result.id);
-            //                 Object.assign(old, data.result);
-            //                 break;
-            //             }
-            //             case "job_instance": {
-            //                 this.jobs.splice(
-            //                     this.jobs.findIndex(p => p.id == data.result.id),
-            //                     1,
-            //                     data.result
-            //                 );
-            //                 break;
-            //             }
-            //         }
-            //         break;
-            //     }
-            //     case "DELETE": {
-            //         switch (ev) {
-            //             case "pipeline": {
-            //                 (this.pipelines.find(p => p.id == data.result.id) ?? {} as any).deleted = true;
-            //                 break;
-            //             }
-            //             case "pipeline_instance": { /* invalid? */ break; }
-            //             case "job_instance": { /* invalid? */ break; }
-            //         }
-            //         break;
-            //     }
-            // }
+            switch(data.action) {
+                case "CREATE": {
+                    switch (ev) {
+                        case "pipeline":          { this.pipelines.unshift(data.result); break }
+                        case "pipeline_instance": { this._pipelineInstances.unshift(data.result); break }
+                        case "job_instance":      {
+                            const job = data.result as JobInstance;
+                            const instance = this._pipelineInstances.find(i => i.id == job.pipeline_instance);
+
+                            // This pipeline isn't visible, so we'll do nothing
+                            if (!instance) {
+                                return;
+                            }
+
+                            const instanceList = (instance.status.jobInstances = instance.status.jobInstances ?? []) as any as JobInstance[];
+                            instanceList.unshift(job);
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case "UPDATE": {
+                    switch (ev) {
+                        case "pipeline": {
+                            this.pipelines.splice(
+                                this.pipelines.findIndex(p => p.id == data.result.id),
+                                1,
+                                data.result
+                            );
+                            break;
+                        }
+                        case "pipeline_instance": {
+                            // this._pipelineInstances = [data.result];
+                            // this._pipelineInstances[this._pipelineInstances.findIndex(p => p.id == data.result.id)] = data.result
+                            this._pipelineInstances.splice(
+                                this._pipelineInstances.findIndex(p => p.id == data.result.id),
+                                1,
+                                data.result
+                            );
+                            // const old = this._pipelineInstances.findIndex(p => p.id == data.result.id);
+                            // Object.assign(old, data.result);
+                            break;
+                        }
+                        case "job_instance": {
+                            // console.log("replacing job",
+                            //     this.jobs.splice(
+                            //         this.jobs.findIndex(p => p.id == data.result.id),
+                            //         1,
+                            //         data.result
+                            //     ),
+                            //     data.result
+                            // )
+                            // console.log(this.jobs, data.result);
+                            // Object.assign(this.jobs.find(p => p.id == data.result.id), data.result);
+                            const job = data.result as JobInstance;
+                            const instance = this._pipelineInstances.find(i => i.id == job.pipeline_instance);
+
+                            // This pipeline isn't visible, so we'll do nothing
+                            if (!instance) {
+                                return;
+                            }
+                            const instanceList = instance.status?.jobInstances as any as JobInstance[];
+                            const index = instanceList.findIndex(ji => ji.id == job.id);
+                            instanceList[index] = job;
+
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case "DELETE": {
+                    switch (ev) {
+                        case "pipeline": {
+                            (this.pipelines.find(p => p.id == data.result.id) ?? {} as any).deleted = true;
+                            break;
+                        }
+                        case "pipeline_instance": { /* invalid? */ break; }
+                        case "job_instance": { /* invalid? */ break; }
+                    }
+                    break;
+                }
+            }
 
             // debugger;
-            this.ngOnInit();
-            // this.parseData();
-            // this.parseInstances(this._pipelineInstances);
+            // this.ngOnInit();
+            this.parseData();
+            this.parseInstances(this._pipelineInstances);
+            this.changeDetector.detectChanges()
         })
     ]
 
@@ -182,19 +212,9 @@ export class ReleasesComponent implements OnInit {
     }
 
     async ngOnInit() {
-        const {
-            pipelines,
-            kubeJobs,
-            jobs
-        } = (await this.fetch.get<{
-            pipelines: PipelineDefinition[],
-            kubeJobs: k8s.V1Job[],
-            jobs: JobInstance[];
-        }>('/api/pipeline/?release=true'));
+        const pipelines = await this.fetch.get<PipelineDefinition[]>('/api/pipeline/?release=true');
 
         this.pipelines = this.filteredPipelines = pipelines;
-        this.kubeJobs = kubeJobs ?? [];
-        this.jobs = jobs;
 
         this.parseData();
 
@@ -226,9 +246,8 @@ export class ReleasesComponent implements OnInit {
         });
 
         this.pipelineGroups.forEach(g => g.items.sort(orderSort));
-        this.pipelines = [...this.pipelines];
+        this.pipelines = [...(this.pipelines ?? [])];
         this.kubeJobs = [...this.kubeJobs];
-        this.jobs = [...this.jobs];
     }
 
     selectPipeline(pipeline: PipelineDefinition) {
@@ -257,6 +276,7 @@ export class ReleasesComponent implements OnInit {
 
     parseInstances(instances: PipelineInstance[]) {
         instances.forEach(instance => {
+            if (!instance.status) debugger;
             const jobInstanceList = (instance.status.jobInstances as any as JobInstance[]);
 
             instance.spec.stages?.forEach(stage => {
