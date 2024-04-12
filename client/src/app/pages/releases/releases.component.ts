@@ -310,7 +310,8 @@ export class ReleasesComponent implements OnInit {
             });
         });
         this.pipelineInstances = [...instances];
-        this.listView.changeDetector.markForCheck();
+        this.listView?.changeDetector.markForCheck();
+        this.gridView?.changeDetector.markForCheck();
     }
 
     newPipeline(partial: Omit<Partial<PipelineDefinition>, 'id'> = {}) {
@@ -334,16 +335,6 @@ export class ReleasesComponent implements OnInit {
 
     deletePipeline(pipeline = this.selectedPipeline) {
         this.fetch.delete(`/api/odata/${pipeline.id}`);
-
-        // const el = (this.viewContainer.element.nativeElement as HTMLElement).querySelector(`[pipeline-id="${pipeline.id}"]`);
-        // el.classList.add("destroy-animation");
-
-        // setTimeout(() => {
-        //     const group = this.pipelineGroups.find(g => g.label == pipeline.group);
-        //     group.items.splice(group.items.findIndex(i => i.id == pipeline.id), 1);
-
-        //     this.changeDetector.detectChanges();
-        // }, 200);
     }
 
     importPipeline() {
@@ -351,13 +342,6 @@ export class ReleasesComponent implements OnInit {
         input.type = "file";
         input.accept = ".json";
         input.onchange = async (evt) => {
-            // // getting a hold of the file reference
-            // var file = (<any>e.target).files[0];
-
-            // // setting up the reader
-            // var reader = new FileReader();
-            // reader.readAsText(file, 'UTF-8');
-
             const file = input.files.item(0);
             const text = await file.text();
             const json = JSON.parse(text);
