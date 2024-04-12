@@ -58,7 +58,10 @@ export const RunPipeline = async (pipeline: PipelineDefinition, user: string, tr
         },
         status: {
             phase: "started",
-            startEpoch: Date.now()
+            startEpoch: Date.now(),
+            jobInstances: [],
+            startedStages: [],
+            finishedStages: []
         }
     } as PipelineInstance);
 
@@ -90,6 +93,9 @@ export const RunPipeline = async (pipeline: PipelineDefinition, user: string, tr
 }
 
 export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => {
+    instance.status.startedStages = instance.status.startedStages ?? [];
+    instance.status.startedStages.push(stage.id);
+
     if (stage.jobs?.length < 1) {
         return (async() => {
             const [jobInstance] = (await db.create<Omit<JobInstance, "id">>(`job_instance:ulid()`, {
