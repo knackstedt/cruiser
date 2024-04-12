@@ -29,7 +29,7 @@ export class SocketLiveService {
                     if (data.action == "CLOSE")
                         return watchPipelineInstances();
 
-                    db.query<PipelineInstance[][]>(`select * from '${data.result.id}' fetch status.jobInstances`)
+                    db.query<[[PipelineInstance]]>(`select * from '${data.result.id}' fetch status.jobInstances`)
                         .then(([[instance]]) => {
                             data.result = instance;
                             activeSockets.forEach(s => s.emit("live:pipeline_instance", data));
