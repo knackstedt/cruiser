@@ -239,14 +239,18 @@ const createKubeJob = (
                 spec: {
                     tolerations: jobDefinition?.kubeContainerTolerations,
                     restartPolicy: "Never",
+                    enableServiceLinks: false,
                     containers: [
                         {
                             name: podName,
                             image: jobDefinition?.kubeContainerImage || "ghcr.io/knackstedt/cruiser/cruiser-agent:latest",
                             imagePullPolicy: 'Always',
                             securityContext: {
-                                // Must be true for the docker build command
-                                privileged: true
+                                // Must be true for docker build
+                                privileged: true,
+                                capabilities: {
+                                    drop: ["ALL"]
+                                }
                             },
                             resources: {
                                 limits: {
