@@ -13,7 +13,7 @@ import { HTTPLogger, logger } from './util/logger';
 import { DatabaseTableApi } from './api/database-controller';
 import { PipelineApi } from './api/pipeline';
 import { JobActionsApi } from './api/job-actions';
-import { SocketTunnelService } from './api/socket-tunnel';
+import { SocketTunnelService } from './singleton/socket-tunnel';
 import { TunnelApi } from './api/api-tunnel';
 import { ApiTokenMiddleware } from './middleware/api-token';
 import { sessionHandler } from './middleware/session';
@@ -28,7 +28,7 @@ import { WatchAndFlushJobs } from './singleton/job-flusher';
 import { environment } from './util/environment';
 import { VaultApi } from './api/vault';
 import { AsciiBanner } from './util/motd';
-import { SocketLiveService } from './api/socket-live';
+import { SocketLiveService } from './singleton/socket-live';
 import { EventTriggers } from './singleton/event-triggers';
 
 const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
