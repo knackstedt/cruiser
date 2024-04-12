@@ -1,4 +1,4 @@
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process';
 import { exists, mkdir } from 'fs-extra';
 import {environment} from './environment';
 
@@ -30,9 +30,13 @@ export const RunProcess = async (
             logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false, taskGroup, task });
         }
 
+        const processCWD = task.workingDirectory?.startsWith("/")
+            ? task.workingDirectory
+            : environment.buildDir + (task.workingDirectory ?? '');
+
         // Try to create the CWD.
-        if (!await exists(task.workingDirectory || environment.buildDir))
-            await mkdir(task.workingDirectory || environment.buildDir, { recursive: true });
+        if (!await exists(processCWD))
+            await mkdir(processCWD, { recursive: true });
 
         const process: ChildProcessWithoutNullStreams = await new Promise<ChildProcessWithoutNullStreams>(async(res, rej) => {
             try {
@@ -56,25 +60,30 @@ export const RunProcess = async (
                     .filter(e => !e[0].startsWith("KUBERNETES_"))
                     .forEach(e => execEnv[e[0]] = e[1]);
 
+                // TODO: Parse variables out of command? Will we decide against this?
+                // Object.entries(env)
+
                 const roots = [ pipeline, stage, job, taskGroup, task ];
 
+                const secretRequests: Promise<{key: string, value: string}>[] = [];
+
+                // Collect all of the environment variables defined on each level
                 for (let i = 0; i < roots.length; i++) {
                     const envList = roots[i].environment ?? [];
 
                     for (let j = 0; j < envList.length; j++) {
                         const envItem = envList[j] ?? {} as any;
 
+                        // If the variable is a secret, we'll request that.
                         if (envItem.isSecret) {
-                            const { data: result } = await api.get(`/api/${roots[i].id}/${envItem.value}`)
+                            secretRequests.push(api.get(`/api/${roots[i].id}/${envItem.value}`)
+                                .then(res => ({ key: envItem.name, value: res.data }))
                                 .catch(err => {
                                     logger.error(err);
-                                    return { data: null, err };
-                                });
+                                    return { key: envItem.name, value: null, err };
+                                }));
 
-                            if (!result) {
-                                continue;
-                            }
-                            execEnv[envItem.name] = result.value;
+                            continue;
                         }
                         else {
                             execEnv[envItem.name] = envItem.value;
@@ -82,9 +91,15 @@ export const RunProcess = async (
                     }
                 }
 
+                // Resolve all of the secret requests. This allows
+                // them to be fetched in parallel.
+                for await (const secret of secretRequests) {
+                    execEnv[secret.key] = secret.value;
+                }
 
                 logger.info({
                     msg: `Spawning process ${command} for task ${task.label} in group ${taskGroup.label}`,
+                    processCWD,
                     command,
                     args,
                     execEnv,
@@ -94,7 +109,7 @@ export const RunProcess = async (
 
                 const process = spawn(command, args, {
                     env: execEnv,
-                    cwd: task.workingDirectory || environment.buildDir,
+                    cwd: processCWD,
                     timeout: task.commandTimeout || 0,
                     windowsHide: true
                 });
