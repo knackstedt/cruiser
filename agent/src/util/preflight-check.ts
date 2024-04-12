@@ -6,6 +6,18 @@ import { command } from 'execa';
 // Assert we have the following programs!
 const requiredDependencies = [
     {
+        name: "git",
+        message: "program git is required",
+        alpine: "apk add git",
+        corrections: {
+            alpine: "apk add git",
+            debian: "apt install git",
+            ubuntu: "apt install git",
+            // fedora: "",
+            // rhel: ""
+        }
+    },
+    {
         name: "lrzip",
         message: "program lrzip is required",
         corrections: {
