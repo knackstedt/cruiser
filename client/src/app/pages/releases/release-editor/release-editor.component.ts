@@ -25,6 +25,7 @@ import { StageEditorComponent } from 'src/app/components/stage-editor/stage-edit
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from 'src/app/services/user.service';
 import { VariablesSectionComponent } from 'src/app/components/variables-section/variables-section.component';
+import { ImpossibleNodeComponent } from 'src/app/components/stage-editor/impossible-node/impossible-node.component';
 
 
 @Component({
@@ -109,6 +110,20 @@ export class StagesComponent {
             },
             [
                 React.createElement(Handle, { type: "target", position: Position.Left }),
+                React.createElement(Handle, { type: "source", position: Position.Right })
+            ]
+        ),
+        impossible: ReactMagicWrapperComponent.WrapAngularComponent(
+            ImpossibleNodeComponent,
+            this.appRef,
+            this.injector,
+            {
+                // inputs
+            },
+            {
+                // outputs
+            },
+            [
                 React.createElement(Handle, { type: "source", position: Position.Right })
             ]
         )
@@ -303,6 +318,12 @@ export class StagesComponent {
             .filter(s => s.id != stage.id);
     }
 
+    filterMissingPrecedingStages(stage: StageDefinition) {
+        const stages = this.pipeline.stages;
+
+        return stage.stageTrigger?.filter(st => !stages.find(s => s.id == st));
+    }
+
     addWebhook(stage: StageDefinition) {
         stage.webhooks = stage.webhooks ?? [];
         stage.webhooks.push({
@@ -347,14 +368,25 @@ export class StagesComponent {
 
     renderGraph() {
         if (!this.pipeline) return;
+        let hasImpossibleNodes = false;
 
         const edges: Edge[] = [];
         const nodes: Node[] = this.pipeline.stages?.map(stage => {
             for (const precedingStageId of (stage.stageTrigger ?? [])) {
+                // The taskGroup exists and can be mapped
+                let isMissingPreReq = false;
+                if (!this.pipeline.stages.find(tg => tg.id == precedingStageId)) {
+                    hasImpossibleNodes = true;
+                    isMissingPreReq = true;
+                }
+
+                const source = isMissingPreReq ? '_impossible' : precedingStageId.split(':')[1];
+                const target = stage.id.split(':')[1];
+
                 edges.push({
-                    source: precedingStageId.split(':')[1],
-                    target: stage.id.split(':')[1],
-                    id: precedingStageId.split(':')[1] + "_" + stage.id.split(':')[1],
+                    source: source,
+                    target: target,
+                    id: source + "_" + target,
                     sourceHandle: "source",
                     type: "bezier",
                     style: {
@@ -400,6 +432,23 @@ export class StagesComponent {
                 }
             }
         }) ?? [];
+
+        if (hasImpossibleNodes) {
+            nodes.push({
+                id: "_impossible",
+                width: 64,
+                height: 64,
+                type: "impossible",
+                data: { },
+                targetPosition: null,
+                sourcePosition: null,
+                position: {
+                    x: 0,
+                    y: 0
+                }
+            });
+        }
+
         const dagreGraph = new dagre.graphlib.Graph();
 
         dagreGraph.setDefaultEdgeLabel(() => ({}));

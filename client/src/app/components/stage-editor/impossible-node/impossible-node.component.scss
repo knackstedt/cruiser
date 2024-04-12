@@ -1,0 +1,17 @@
+:host {
+    display: flex;
+    width: 64px;
+    height: 64px;
+    background-color: #4e3534;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    border: 2px solid #ff5252;
+}
+
+mat-icon {
+    color: #e46962a1;
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+}

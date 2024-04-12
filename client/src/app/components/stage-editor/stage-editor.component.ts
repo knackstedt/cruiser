@@ -26,6 +26,7 @@ import { TaskGroupNodeComponent } from 'src/app/components/stage-editor/task-gro
 import React from 'react';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
+import { ImpossibleNodeComponent } from 'src/app/components/stage-editor/impossible-node/impossible-node.component';
 
 @Component({
     selector: 'app-stage-editor',
@@ -127,6 +128,20 @@ export class StageEditorComponent {
             },
             [
                 React.createElement(Handle, { type: "target", position: Position.Left }),
+                React.createElement(Handle, { type: "source", position: Position.Right })
+            ]
+        ),
+        impossible: ReactMagicWrapperComponent.WrapAngularComponent(
+            ImpossibleNodeComponent,
+            this.appRef,
+            this.injector,
+            {
+                // inputs
+            },
+            {
+                // outputs
+            },
+            [
                 React.createElement(Handle, { type: "source", position: Position.Right })
             ]
         )
@@ -237,8 +252,10 @@ export class StageEditorComponent {
     }
 
     async deleteTaskGroup(job: JobDefinition, taskGroup: TaskGroupDefinition) {
-        job.taskGroups = job.taskGroups.filter(tg => tg != taskGroup);
+        job.taskGroups = job.taskGroups.filter(tg => tg.id != taskGroup.id);
+
         this.patchPipeline();
+        this.renderJobs()
     }
     async disableTaskGroup(job: JobDefinition, taskGroup: TaskGroupDefinition) {
         taskGroup.disabled = true;
@@ -348,13 +365,24 @@ export class StageEditorComponent {
     }
 
     renderGraph(job: JobDefinition, i: number) {
+        let hasImpossibleNodes = false;
         const edges: Edge[] = [];
         const nodes: Node[] = job.taskGroups?.map(taskGroup => {
             for (const preTaskGroupId of (taskGroup.preTaskGroups ?? [])) {
+                // The taskGroup exists and can be mapped
+                let isMissingPreReq = false;
+                if (!job.taskGroups.find(tg => tg.id == preTaskGroupId)) {
+                    hasImpossibleNodes = true;
+                    isMissingPreReq = true;
+                }
+
+                const source = isMissingPreReq ? '_impossible' : preTaskGroupId.split(':')[1];
+                const target = taskGroup.id.split(':')[1];
+
                 edges.push({
-                    source: preTaskGroupId.split(':')[1],
-                    target: taskGroup.id.split(':')[1],
-                    id: preTaskGroupId.split(':')[1] + "_" + taskGroup.id.split(':')[1],
+                    source: source,
+                    target: target,
+                    id: source + "_" + target,
                     sourceHandle: "source",
                     type: "bezier",
                     markerEnd: {
@@ -373,6 +401,7 @@ export class StageEditorComponent {
                 });
             }
 
+
             return {
                 id: taskGroup.id.split(':')[1],
                 width: 320,
@@ -387,6 +416,23 @@ export class StageEditorComponent {
                 }
             }
         }) ?? [];
+
+        if (hasImpossibleNodes) {
+            nodes.push({
+                id: "_impossible",
+                width: 64,
+                height: 64,
+                type: "impossible",
+                data: { job },
+                targetPosition: null,
+                sourcePosition: null,
+                position: {
+                    x: 0,
+                    y: 0
+                }
+            })
+        }
+
         const dagreGraph = new dagre.graphlib.Graph();
 
         dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -418,6 +464,13 @@ export class StageEditorComponent {
 
     filterPrecedingTaskGroups(taskGroup: TaskGroupDefinition) {
         return this.selectedJob.taskGroups.filter(tg => tg != taskGroup);
+    }
+
+    filterMissingPrecedingTaskGroups(taskGroup: TaskGroupDefinition) {
+        const jobTaskGroups = this.selectedJob.taskGroups;
+
+        // Find all of the task groups that do not exist.
+        return taskGroup.preTaskGroups?.filter(pt => !jobTaskGroups.find(jt => jt.id == pt));
     }
 
     onNodeCtxMenu([evt, { data }]) {

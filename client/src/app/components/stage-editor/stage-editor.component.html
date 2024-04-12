@@ -159,15 +159,37 @@
                                             (valueChange)="renderGraph(selectedJob, selectedJobIndex)"
                                             (valueChange)="dataChangeEmitter.next(0)"
                                         >
-                                            @for (stage of filterPrecedingTaskGroups(selectedTaskGroup); track stage) {
+                                            @for (taskGroup of filterPrecedingTaskGroups(selectedTaskGroup); track taskGroup) {
                                                 <mat-option
-                                                    [value]="stage.id"
+                                                    [value]="taskGroup.id"
                                                 >
-                                                    {{stage.label}}
+                                                    {{taskGroup.label}}
                                                 </mat-option>
                                             }
                                         </mat-select>
                                     </mat-form-field>
+                                    @if (filterMissingPrecedingTaskGroups(selectedTaskGroup)) {
+                                        <div>
+                                            <h4 style="margin: 0">Invalid Preceding Task Groups:</h4>
+                                            <p style="margin: 4px 0">This task group will not run until these are resolved.</p>
+
+                                            @for (id of filterMissingPrecedingTaskGroups(selectedTaskGroup); track id) {
+                                                <div style="color: #ff5252; display: flex; justify-content: space-between; margin-left: 24px">
+                                                    * {{id}}
+
+                                                    <mat-icon
+                                                        (click)="
+                                                            selectedTaskGroup.preTaskGroups.splice(
+                                                                selectedTaskGroup.preTaskGroups.indexOf(id),
+                                                                1
+                                                            )
+                                                        "
+                                                        style="cursor: pointer"
+                                                    >delete_forever</mat-icon>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
                                     <app-variables-section
                                         [item]="selectedTaskGroup"
                                         (valueChange)="dataChangeEmitter.next(0)"

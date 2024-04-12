@@ -227,7 +227,28 @@
                                 }
                             </mat-select>
                         </mat-form-field>
+                        @if (filterMissingPrecedingStages(selectedStage)) {
+                            <div style="margin-bottom: 12px">
+                                <h4 style="margin: 0">Invalid Preceding Stages:</h4>
+                                <p style="margin: 4px 0">This stage will not run until these are resolved.</p>
 
+                                @for (id of filterMissingPrecedingStages(selectedStage); track id) {
+                                    <div style="color: #ff5252; display: flex; justify-content: space-between; margin-left: 24px">
+                                        * {{id}}
+
+                                        <mat-icon
+                                            (click)="
+                                                selectedStage.stageTrigger.splice(
+                                                    selectedStage.stageTrigger.indexOf(id),
+                                                    1
+                                                )
+                                            "
+                                            style="cursor: pointer"
+                                        >delete_forever</mat-icon>
+                                    </div>
+                                }
+                            </div>
+                        }
 
                         <mat-form-field style="width: 100%;">
                             <mat-label>Render as</mat-label>
