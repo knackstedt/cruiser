@@ -78,7 +78,8 @@ export const WatchAndFlushJobs = async() => {
             }
         },
         (err) => {
-            console.error(err);
+            // There is some case where err is nul
+            err && console.error(err);
             watchJobs();
         }
     );
