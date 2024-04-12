@@ -32,5 +32,6 @@ export type JobInstance = {
 
     errorCount?: number
     warnCount?: number
+    hasProcessedTriggers?: boolean
 };
 

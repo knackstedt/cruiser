@@ -218,6 +218,9 @@ export type PipelineInstance = {
         phase: "started" | "running" | "stopped" | "waiting" | "failed",
         startEpoch: number,
         jobInstances: string[]
+        startedStages: string[],
+        finishedStages: string[],
+        failedStages: string[],
         endEpoch?: number,
         stageApprovals?: {
             stageId: string,
