@@ -10,8 +10,8 @@ import { Fetch, TooltipDirective } from '@dotglitch/ngx-common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
 import { JobInstance } from 'src/types/agent-task';
-import { ViewJsonInMonacoDialog } from 'src/app/services/utils';
 import { MatDialog } from '@angular/material/dialog';
+import { ViewJsonInMonacoDialog } from 'src/app/utils/utils';
 
 type Line = ({
     stream: "stdout" | "stderr" | "agent",

@@ -8,7 +8,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { LazyLoaderService, MenuDirective, TabulatorComponent, TooltipDirective } from '@dotglitch/ngx-common';
 import { JobDefinition, PipelineDefinition } from 'src/types/pipeline';
 import Sortable from 'sortablejs';
-import { orderSort } from '../../services/utils';
+import { orderSort } from '../../utils/utils';
 import { DialogService, Fetch, MenuItem } from '@dotglitch/ngx-common';
 import { StagePopupComponent } from 'src/app/pages/stage-popup/stage-popup.component';
 import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/job-instance-icon.component';
