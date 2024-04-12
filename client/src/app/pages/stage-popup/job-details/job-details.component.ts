@@ -80,7 +80,7 @@ export class JobDetailsComponent {
             });
 
             socket.on("connect", () => {
-                socket.emit("$connect", { job: this.jobInstance.job });
+                socket.emit("$connect", { jobInstanceId: this.jobInstance.id });
             });
             socket.on("$connected", () => {
                 this.connected = true;

@@ -26,10 +26,12 @@ export const getSocketTerminal = async (socket: Socket) => {
     const uid = ulid();
 
     socket.on("ssh:launch", (data) => {
+        // TODO: restore history on reconnect...
+        let history = [];
         try {
             ptyArgs = {
                 name: "xterm-color",
-                 cwd: environment.buildDir,
+                cwd: environment.buildDir,
                 env: {
                     ...process.env,
                     "COLORTERM": "truecolor"
@@ -43,7 +45,7 @@ export const getSocketTerminal = async (socket: Socket) => {
 
         socket.emit("ssh:started", { id: uid });
 
-        ptyProcess?.onData(data => socket.emit("ssh:output", data));
+        ptyProcess?.onData(data => socket.emit("ssh:output", history.push(data)));
         ptyProcess?.onExit(e => socket.emit("ssh:exit", e));
     });
 

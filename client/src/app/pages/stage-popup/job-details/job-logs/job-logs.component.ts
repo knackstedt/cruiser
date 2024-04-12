@@ -230,7 +230,7 @@ export class JobLogsComponent {
 
             socket.on("connect", () => {
                 this.lines = [];
-                socket.emit("$connect", { job: this.jobInstance.job });
+                socket.emit("$connect", { jobInstanceId: this.jobInstance.id });
 
                 this.changeDetector.detectChanges();
             });

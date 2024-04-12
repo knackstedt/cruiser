@@ -18,7 +18,7 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
 
     const { pipelineInstance, pipeline, stage, job, kubeTask, jobInstance } = await getConfig(jobInstanceId);
 
-    const socket = await getSocket(pipeline, job);
+    const socket = await getSocket(pipeline, jobInstance);
     const logger = await getSocketLogger(socket);
     const terminal = await getSocketTerminal(socket);
     await BindSocketBreakpoint(socket, logger);

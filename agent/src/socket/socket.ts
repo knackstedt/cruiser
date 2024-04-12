@@ -4,11 +4,12 @@ import { getLogger } from '../util/logger';
 import { JobDefinition, PipelineDefinition } from '../types/pipeline';
 import { DefaultEventsMap } from '@socket.io/component-emitter';
 import { api } from '../util/axios';
+import { JobInstance } from '../types/agent-task';
 
 const logger = getLogger("agent");
 const showDebug = !!process.env['AGENT_WEBSOCKETS_VERBOSE'];
 
-export const getSocket = async (pipeline: PipelineDefinition, job: JobDefinition) => {
+export const getSocket = async (pipeline: PipelineDefinition, jobInstance: JobInstance) => {
     let socket: Socket;
 
     try {
@@ -43,7 +44,7 @@ export const getSocket = async (pipeline: PipelineDefinition, job: JobDefinition
             socket.on("$get-metadata", () => {
                 socket.emit("$metadata", {
                     pipeline,
-                    job
+                    jobInstance
                 });
             });
 
