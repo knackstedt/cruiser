@@ -34,6 +34,7 @@
                                     class="label"
                                     [ngx-contextmenu]="jobMenu"
                                     [ngx-menu-context]="job"
+                                    (click)="selectJob(job)"
                                 >
                                     {{job.label}}
                                 </div>
