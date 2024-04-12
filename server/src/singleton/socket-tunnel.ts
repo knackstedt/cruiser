@@ -3,6 +3,8 @@ import { ulid } from 'ulidx';
 import { JobDefinition, PipelineDefinition } from '../types/pipeline';
 import { sessionHandler } from '../middleware/session';
 import { Session, SessionData } from 'express-session';
+import { CheckJobToken } from '../util/token-cache';
+import { JobInstance } from '../types/agent-task';
 
 export class SocketTunnelService {
 
@@ -20,7 +22,7 @@ export class SocketTunnelService {
             id: string,
             socket: Socket,
             metadata?: {
-                job: JobDefinition,
+                jobInstance: JobInstance,
                 pipeline: PipelineDefinition,
             }
         }
@@ -40,24 +42,23 @@ export class SocketTunnelService {
             maxHttpBufferSize: 1024**3
         });
         io.engine.use(sessionHandler);
+        io.engine.use((req, res, next) => {
+            if (
+                !req.session?.profile?.roles ||
+                !(
+                    req.session.profile.roles.includes("administrator") ||
+                    req.session.profile.roles.includes("manager") ||
+                    req.session.profile.roles.includes("user")
+                )
+            ) {
+                return next(404);
+            }
+            next();
+        });
 
         io.on("connection", socket => {
             const req = socket.request;
             const session: SessionData = req['session'];
-
-            if (
-                !session?.profile?.roles ||
-                !(
-                    session.profile.roles.includes("administrator") ||
-                    session.profile.roles.includes("manager") ||
-                    session.profile.roles.includes("user")
-                )
-            ) {
-                // If the request isn't secure, purge it.
-                socket.emit("error", { status: 403, message: "Forbidden" });
-                socket.disconnect(true);
-                return;
-            }
 
             const id = ulid();
 
@@ -67,13 +68,13 @@ export class SocketTunnelService {
                 watchJobs: []
             };
 
-            socket.on("$connect", async ({ job }: { job: string }) => {
-                if (!client.watchJobs.includes(job))
-                    client.watchJobs.push(job);
+            socket.on("$connect", async ({ jobInstanceId }: { jobInstanceId: string }) => {
+                if (!client.watchJobs.includes(jobInstanceId))
+                    client.watchJobs.push(jobInstanceId);
 
                 // Find the right container to connect
                 const { socket: srcSocket } = (Object.values(this.connectedSources)
-                    .find(source => source.metadata?.job?.id == job) ?? {});
+                    .find(source => source.metadata?.jobInstance?.id == jobInstanceId) ?? {});
 
                 if (srcSocket) {
                     this.connectClientToSource(socket, srcSocket);
@@ -92,14 +93,14 @@ export class SocketTunnelService {
             maxHttpBufferSize: 1024 ** 3
         });
 
-        // io.engine.use((req, res, next) => {
-        //     const cruiserToken = req.get("X-Cruiser-Token");
-        //     if (cruiserToken) {
-        //         req['_agentToken'] = cruiserToken;
-        //         GetJobToken(cruiserToken) ? next() : next(401);
-        //     }
-        //     next(404);
-        // })
+        io.engine.use((req, res, next) => {
+            const cruiserToken = req.get("X-Cruiser-Token");
+            if (cruiserToken) {
+                CheckJobToken(cruiserToken)
+                    .then(hasToken => hasToken ? next() : next(401));
+            }
+            next(404);
+        })
 
         io.on("connection", socket => {
             const id = ulid();
@@ -112,12 +113,12 @@ export class SocketTunnelService {
                 delete this.connectedSources[id];
             });
 
-            socket.on("$metadata", (data: { job: JobDefinition, pipeline: PipelineDefinition }) => {
+            socket.on("$metadata", (data: { jobInstance: JobInstance, pipeline: PipelineDefinition }) => {
 
                 // Remove any old entries that haven't been disconnected
                 Object.entries(this.connectedSources).forEach(([idx, source]) => {
                     // Check if we have a socket connection to replace.
-                    if (!(source.metadata?.job?.id == data?.job?.id)) return;
+                    if (!(source.metadata?.jobInstance?.id == data?.jobInstance?.id)) return;
 
                     const oldSrc = this.connectedSources[idx];
                     oldSrc.socket.disconnect();
@@ -136,7 +137,7 @@ export class SocketTunnelService {
         const { metadata, socket } = this.connectedSources[id];
 
         Object.values(this.connectedClients).forEach(client => {
-            if (client.watchJobs.includes(metadata.job.id)) {
+            if (client.watchJobs.includes(metadata.jobInstance.id)) {
                 this.connectClientToSource(socket, client.socket);
             }
         })
