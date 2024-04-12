@@ -24,12 +24,12 @@ import { SourcesApi } from './api/sources';
 import { Guest, User } from './guards/role-guards';
 import { CronScheduler } from './util/scheduler';
 import { BlobUploadApi } from './api/filestorage';
-import { WatchAndFlushJobs } from './singleton/job-flusher';
+import { WatchAndFlushJobs } from './singleton/watch-kube-jobs';
 import { environment } from './util/environment';
 import { VaultApi } from './api/vault';
 import { AsciiBanner } from './util/motd';
-import { SocketLiveService } from './singleton/socket-live';
-import { EventTriggers } from './singleton/event-triggers';
+import { SocketLiveService } from './singleton/watch-database';
+import { EventTriggers } from './singleton/watch-jobinstance';
 
 const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
 
