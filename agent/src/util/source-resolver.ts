@@ -55,7 +55,7 @@ export const ResolveSources = async (
                     progress: ({ method, stage, progress }: SimpleGitProgressEvent) => {
                         // console.log(`git.${method} ${stage} stage ${progress}% complete`);
                         logger.info({
-                            msg: `Cloning progress`,
+                            msg: `Cloning progress ${progress}%`,
                             source: sourceForLog,
                             method,
                             stage,
@@ -89,7 +89,7 @@ export const ResolveSources = async (
                     "--depth": source.cloneDepth ? source.cloneDepth : '1'
                 })
 
-                logger.info({ msg: `Done cloning GIT source`, source: sourceForLog });
+                logger.info({ msg: `Done cloning git source ${sourceForLog.label}`, source: sourceForLog });
 
                 return 0;
 
