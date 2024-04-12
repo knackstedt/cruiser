@@ -5,7 +5,7 @@ import { PipelineDefinition, SourceConfiguration, StageDefinition, Webhook } fro
 import { ulid } from 'ulidx';
 import { Edge, Handle, Node, Position } from 'reactflow';
 import dagre from '@dagrejs/dagre';
-import { StageNodeComponent } from 'src/app/pages/releases/release-editor/stage-node/stage-node.component';
+import { StageNodeComponent } from 'src/app/pages/releases/release-editor/reactflow-nodes/stage-node/stage-node.component';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,11 +21,11 @@ import { StackEditorComponent } from 'ngx-stackedit';
 import { Subject, debounceTime, firstValueFrom } from 'rxjs';
 import { FileUploadService } from 'src/app/services/file-upload.service';
 import { MatDialog } from '@angular/material/dialog';
-import { StageEditorComponent } from 'src/app/components/stage-editor/stage-editor.component';
+import { StageEditorComponent } from './stage-editor/stage-editor.component';
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from 'src/app/services/user.service';
 import { VariablesSectionComponent } from 'src/app/components/variables-section/variables-section.component';
-import { ImpossibleNodeComponent } from 'src/app/components/stage-editor/impossible-node/impossible-node.component';
+import { ImpossibleNodeComponent } from './reactflow-nodes/impossible-node/impossible-node.component';
 
 
 @Component({

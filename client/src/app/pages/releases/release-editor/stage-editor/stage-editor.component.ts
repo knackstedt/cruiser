@@ -22,11 +22,11 @@ import { ArtifactsSectionComponent } from 'src/app/components/artifacts-section/
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ReactFlowComponent } from 'src/app/components/reactflow/reactflow-wrapper';
 import { Edge, Handle, MarkerType, Node, Position } from 'reactflow';
-import { TaskGroupNodeComponent } from 'src/app/components/stage-editor/task-group-node/task-group-node.component';
+import { TaskGroupNodeComponent } from '../reactflow-nodes/task-group-node/task-group-node.component';
 import React from 'react';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { ImpossibleNodeComponent } from 'src/app/components/stage-editor/impossible-node/impossible-node.component';
+import { ImpossibleNodeComponent } from '../reactflow-nodes/impossible-node/impossible-node.component';
 
 @Component({
     selector: 'app-stage-editor',
