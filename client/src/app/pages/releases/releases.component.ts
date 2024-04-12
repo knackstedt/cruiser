@@ -56,22 +56,7 @@ export class ReleasesComponent implements OnInit {
         },
         {
             label: "Download JSON",
-            action: async pipeline => {
-                const blob = new Blob([JSON.stringify(pipeline)], { type: "application/json" });
-
-                const link = document.createElement("a");
-                link.download = pipeline.label.replace(/[^a-z0-9A-Z_\-$ ]/g, '') + '.json';
-                link.href = URL.createObjectURL(blob);
-                link.dataset['downloadurl'] = ["application/json", link.download, link.href].join(":");
-                const evt = new MouseEvent("click", {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true,
-                });
-
-                link.dispatchEvent(evt);
-                link.remove();
-            }
+            action: async pipeline => this.exportPipeline(pipeline)
         },
         {
             label: "Delete",
@@ -111,7 +96,10 @@ export class ReleasesComponent implements OnInit {
             switch(data.action) {
                 case "CREATE": {
                     switch (ev) {
-                        case "pipeline":          { this.pipelines.unshift(data.result); break }
+                        case "pipeline": {
+                            this.pipelines.unshift(data.result);
+                            break;
+                        }
                         case "pipeline_instance": { this._pipelineInstances.unshift(data.result); break }
                         case "job_instance":      {
                             const job = data.result as JobInstance;
@@ -195,7 +183,8 @@ export class ReleasesComponent implements OnInit {
             // this.ngOnInit();
             this.parseData();
             this.parseInstances(this._pipelineInstances);
-            this.changeDetector.detectChanges()
+            this.filterPipelines();
+            this.changeDetector.detectChanges();
         })
     ]
 
@@ -355,6 +344,45 @@ export class ReleasesComponent implements OnInit {
 
         //     this.changeDetector.detectChanges();
         // }, 200);
+    }
+
+    importPipeline() {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".json";
+        input.onchange = async (evt) => {
+            // // getting a hold of the file reference
+            // var file = (<any>e.target).files[0];
+
+            // // setting up the reader
+            // var reader = new FileReader();
+            // reader.readAsText(file, 'UTF-8');
+
+            const file = input.files.item(0);
+            const text = await file.text();
+            const json = JSON.parse(text);
+
+            this.fetch.put<PipelineDefinition>(`/api/odata/${json.id}`, json);
+        }
+        input.click();
+        input.remove();
+    }
+
+    exportPipeline(pipeline: PipelineDefinition) {
+        const blob = new Blob([JSON.stringify(pipeline)], { type: "application/json" });
+
+        const link = document.createElement("a");
+        link.download = pipeline.label.replace(/[^a-z0-9A-Z_\-$ ]/g, '') + '.json';
+        link.href = URL.createObjectURL(blob);
+        link.dataset['downloadurl'] = ["application/json", link.download, link.href].join(":");
+        const evt = new MouseEvent("click", {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+        });
+
+        link.dispatchEvent(evt);
+        link.remove();
     }
 
     async triggerPipeline(pipeline = this.selectedPipeline) {
