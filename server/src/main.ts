@@ -24,11 +24,12 @@ import { SourcesApi } from './api/sources';
 import { Guest, User } from './guards/role-guards';
 import { CronScheduler } from './util/scheduler';
 import { BlobUploadApi } from './api/filestorage';
-import { WatchAndFlushJobs } from './job-flusher';
+import { WatchAndFlushJobs } from './singleton/job-flusher';
 import { environment } from './util/environment';
 import { VaultApi } from './api/vault';
 import { AsciiBanner } from './util/motd';
 import { SocketLiveService } from './api/socket-live';
+import { EventTriggers } from './singleton/event-triggers';
 
 const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
 
@@ -125,6 +126,7 @@ if (isDedicatedSocketService) {
 
     CronScheduler();
     WatchAndFlushJobs();
+    EventTriggers();
 }
 // Running as a clustered worker.
 else if (environment.is_production) {
@@ -140,5 +142,6 @@ else {
 
         CronScheduler();
         WatchAndFlushJobs();
+        EventTriggers();
     })
 }
