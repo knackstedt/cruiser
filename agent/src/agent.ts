@@ -9,8 +9,13 @@ import { BindSocketBreakpoint, TripBreakpoint } from './socket/breakpoint';
 import { validateJobCanRun } from './util/job-validator';
 import { UploadArtifacts } from './util/artifact-uploader';
 import { PreflightCheck } from './util/preflight-check';
+import { exists, mkdir } from 'fs-extra';
+import { environment } from './util/environment';
 
 export const RunAgentProcess = async (jobInstanceId: string) => {
+    if (!await exists(environment.buildDir))
+        await mkdir(environment.buildDir, { recursive: true });
+
     const { pipelineInstance, pipeline, stage, job, kubeTask, jobInstance } = await getConfig(jobInstanceId);
 
     const socket = await getSocket(pipeline, job);

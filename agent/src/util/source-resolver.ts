@@ -1,7 +1,7 @@
 import { exists, mkdir, readdir } from 'fs-extra';
 import { simpleGit, SimpleGitProgressEvent, SimpleGitOptions, SimpleGit } from 'simple-git';
 import { JobDefinition, PipelineDefinition } from '../types/pipeline';
-import {environment} from '../util/environment';
+import { environment } from '../util/environment';
 import { JobInstance } from '../types/agent-task';
 import { getSocketLogger } from '../socket/logger';
 import { TripBreakpoint } from '../socket/breakpoint';
@@ -11,10 +11,11 @@ export const ResolveSources = async (
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof getSocketLogger>>
 ) => {
-    if (!pipeline.sources || pipeline.sources.length == 0)
+    const sources = pipeline.stages.flatMap(s => s.sources);
+    if (!sources || sources.length == 0)
         return null;
 
-    return await Promise.all(pipeline.sources.map(async source => {
+    return await Promise.all(sources.map(async source => {
 
         const sourceForLog = {
             ...source,
@@ -67,10 +68,14 @@ export const ResolveSources = async (
 
                 logger.info({ msg: `Cloning GIT source`, source: sourceForLog });
 
-                if (!await exists(environment.buildDir))
-                    await mkdir(environment.buildDir, { recursive: true });
+                const cloneDir = source.targetPath?.startsWith("/")
+                    ? source.targetPath
+                    : environment.buildDir + (source.targetPath ?? '');
 
-                if ((await readdir(environment.buildDir)).length > 0) {
+                if (!await exists(cloneDir))
+                    await mkdir(cloneDir, { recursive: true });
+
+                if ((await readdir(cloneDir)).length > 0) {
                     logger.fatal({
                         msg: "Cannot clone into non-empty directory",
                         state: 'failed'
@@ -80,8 +85,8 @@ export const ResolveSources = async (
                     return 1;
                 }
 
-                await git.clone(source.url, environment.buildDir, {
-                    "--depth": '1'
+                await git.clone(source.url, cloneDir, {
+                    "--depth": source.cloneDepth ? source.cloneDepth : '1'
                 })
 
                 logger.info({ msg: `Done cloning GIT source`, source: sourceForLog });
