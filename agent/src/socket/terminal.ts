@@ -3,6 +3,7 @@ import shx from "shelljs";
 import * as pty from "node-pty";
 import { Socket, io } from "socket.io-client";
 import { ulid } from 'ulidx';
+import { environment } from '../util/environment';
 
 // Make an attempt to get a compatible PTY program.
 const shell = os.platform() == "win32"
@@ -28,7 +29,7 @@ export const getSocketTerminal = async (socket: Socket) => {
         try {
             ptyArgs = {
                 name: "xterm-color",
-                cwd: process.cwd(),
+                 cwd: environment.buildDir,
                 env: {
                     ...process.env,
                     "COLORTERM": "truecolor"
