@@ -6,7 +6,6 @@ import { HTTPLogger, logger } from './util/logger';
 import { RunAgentProcess } from './agent';
 import {environment} from './util/environment';
 import { FilesystemApi } from './api/filesystem';
-import { AgentApi } from './api/agent';
 
 if (
     !process.env['CRUISER_AGENT_ID'] ||
@@ -35,7 +34,6 @@ if (
     app.use(HTTPLogger);
 
     app.use("/fs", FilesystemApi);
-    app.use("/agent", AgentApi);
 
     app.use((req, res, next) => next(404));
     app.use((err, req, res, next) => {

@@ -3,6 +3,7 @@ import {environment} from '../util/environment';
 import { getLogger } from '../util/logger';
 import { JobDefinition, PipelineDefinition } from '../types/pipeline';
 import { DefaultEventsMap } from '@socket.io/component-emitter';
+import { api } from '../util/axios';
 
 const logger = getLogger("agent");
 const showDebug = !!process.env['AGENT_WEBSOCKETS_VERBOSE'];
@@ -37,12 +38,32 @@ export const getSocket = async (pipeline: PipelineDefinition, job: JobDefinition
             socket.on("disconnect", () => {
                 logger.warn("Socket lost connection to cluster");
             });
+            // During the connect handshake, we need to tell the server
+            // what this job is
             socket.on("$get-metadata", () => {
                 socket.emit("$metadata", {
                     pipeline,
                     job
                 });
             });
+
+            // If we get a cancel event, we'll stop the agent.
+            socket.on("$cancel", async () => {
+                await api.patch(`/api/odata/${environment.jobInstanceId}`, {
+                    state: "cancelled",
+                    endEpoch: Date.now()
+                });
+
+                logger.warn({
+                    msg: "Task cancelled by user. Shutting down..."
+                });
+
+                // 5ms to allow anything necessary to flush
+                setTimeout(() => {
+                    process.exit(0);
+                }, 5)
+            });
+
             socket.on("error", (err) => {
                 logger.error(err);
                 rej(err)
