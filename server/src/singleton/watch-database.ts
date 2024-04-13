@@ -67,20 +67,6 @@ export class SocketLiveService {
                 const req = socket.request;
                 const session: SessionData = req['session'];
 
-                if (
-                    !session?.profile?.roles ||
-                    !(
-                        session.profile.roles.includes("administrator") ||
-                        session.profile.roles.includes("manager") ||
-                        session.profile.roles.includes("user")
-                    )
-                ) {
-                    // If the request isn't authenticated, purge it.
-                    socket.emit("error", { status: 403, message: "Forbidden" });
-                    socket.disconnect(true);
-                    return;
-                }
-
                 activeSockets.push(socket);
 
                 socket.on("disconnect", () => {
