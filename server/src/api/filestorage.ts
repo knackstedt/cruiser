@@ -19,7 +19,7 @@ router.use('/upload', route(async (req, res, next) => {
             return next({ status: err.httpCode, message: err.message, stack: err.stack });
         }
         try {
-            const uploadFiles: formidable.File[] = files as any;
+            const uploadFiles: formidable.File[] = files['file'] as any;
 
             const data = JSON.parse(fields['data'][0]);
             const names = Object.keys(files);
@@ -40,7 +40,7 @@ router.use('/upload', route(async (req, res, next) => {
                     jobInstance.stage,
                     jobInstance.job,
                     jobInstance.id
-                ].join('/');
+                ].join('/') + '/';
 
 
                 await fs.mkdirp(rootPath).catch(e => null);
