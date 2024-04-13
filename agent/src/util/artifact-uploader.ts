@@ -260,7 +260,7 @@ export const UploadArtifacts = async (
     const uploads = [];
 
     try {
-        for (const artifact of (job.artifacts ?? [])) {
+        for (const artifact of (job.outputArtifacts ?? [])) {
             const dir = artifact.source;
             const dest = artifact.destination || artifact.label;
             const contents = await getFilesInFolderFlat(artifact.source);
@@ -324,7 +324,7 @@ export const UploadArtifacts = async (
     }
     catch(ex) {
         logger.fatal({
-            msg: "Failed to seal artifacts",
+            msg: "Failed to seal outputArtifacts",
             message: ex.message,
             stack: ex.stack
         })

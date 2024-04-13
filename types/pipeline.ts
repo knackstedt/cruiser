@@ -3,8 +3,18 @@ import { HistoryObject } from './history-object';
 import { EnvironmentVariable } from './environment';
 import { AxiosProxyConfig } from 'axios';
 
-export type BuildArtifact = {
-    id: `artifact:${string}`
+export type InputArtifact = {
+    id: `artifact_input:${string}`
+    label: string
+    description?: string
+
+    job: string,
+    sourceArtifact: string
+    destination: string,
+}
+
+export type OutputArtifact = {
+    id: `artifact_output:${string}`
     label: string
     description?: string
     source: string
@@ -75,7 +85,8 @@ export type JobDefinition = {
     runState?: "success" | "fail" | "running"
 
     taskGroups: TaskGroupDefinition[]
-    artifacts?: BuildArtifact[]
+    inputArtifacts?: InputArtifact[]
+    outputArtifacts?: OutputArtifact[]
     environment?: EnvironmentVariable[]
 
     kubeNamespace?: string,
@@ -119,7 +130,6 @@ export type StageDefinition = {
     lastRunState?: string
     order: number
     onlyOnPreviousSuccess?: boolean
-    fetchSources?: boolean
     cleanupArtifacts?: boolean
     cleanDirectory?: boolean
     autoTriggerOnPreviousStageCompletion?: boolean
