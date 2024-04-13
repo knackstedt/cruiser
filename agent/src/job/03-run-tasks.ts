@@ -33,7 +33,7 @@ const executeTaskGroup = async (
             if (task.disabled) continue;
 
             logger.info({
-                msg: `Initiating task ${task.label} in group ${taskGroup.label}`,
+                msg: `Initiating task '${task.label}' in group '${taskGroup.label}'`,
                 task,
                 block: "start"
             });
@@ -54,7 +54,7 @@ const executeTaskGroup = async (
         }
 
         logger.info({
-            msg: `Completed TaskGroup ${taskGroup.label}`,
+            msg: `Completed TaskGroup '${taskGroup.label}'`,
             taskGroup,
             block: "end"
         });
