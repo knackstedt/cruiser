@@ -14,9 +14,15 @@
     transition-property: border-left-color, color, background-color;
 
     &.error {
-        color: red;
+        color: #ef5350;
         &:hover {
-            color: red;
+            color: #ef9a9a;
+        }
+    }
+    &.warning {
+        color: #ff9800;
+        &:hover {
+            color: #ffa726;
         }
     }
 

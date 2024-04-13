@@ -107,7 +107,8 @@
             @if (line.rendered) {
                 <div
                     class="line"
-                    [class.error]="['error', 'fatal'].includes(line.level)"
+                    [class.error]="['error', 'fatal'].includes(line.level?.toLowerCase())"
+                    [class.warning]="['warning', 'warn'].includes(line.level?.toLowerCase())"
                     [style.height]="lineHeight + 'px'"
                     [attr.index]="line.index"
                     [style.top]="(line.index*lineHeight)+'px'"
