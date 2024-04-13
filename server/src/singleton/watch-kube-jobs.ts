@@ -34,7 +34,7 @@ export const WatchAndFlushJobs = async() => {
             }
         },
         (err) => {
-            console.error(err);
+            err && console.error(err);
             watchPods();
         }
     )
