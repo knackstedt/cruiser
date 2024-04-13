@@ -98,7 +98,7 @@ export const RunProcess = async (
                 }
 
                 logger.info({
-                    msg: `Spawning process ${command} for task ${task.label} in group ${taskGroup.label}`,
+                    msg: `Spawning process '${command}' for task '${task.label}' in group '${taskGroup.label}'`,
                     processCWD,
                     command,
                     args,
@@ -121,7 +121,7 @@ export const RunProcess = async (
 
                 process.on('disconnect', (...args) => {
                     logger.error({
-                        msg: `Process unexpectedly disconnected`,
+                        msg: `Process '${command}' unexpectedly disconnected`,
                         args,
                         taskGroup,
                         task
@@ -131,11 +131,11 @@ export const RunProcess = async (
 
                 process.on('exit', (code) => {
                     if (code == 0) {
-                        logger.info({ msg: `Process exited successfully`, taskGroup, task });
+                        logger.info({ msg: `Process '${command}' exited successfully`, taskGroup, task });
                         res(process);
                     }
                     else {
-                        logger.error({ msg: `Process exited with non-zero exit code`, code, taskGroup, task });
+                        logger.error({ msg: `Process '${command}' exited with non-zero exit code`, code, taskGroup, task });
                         res(process);
                     }
                 });
@@ -151,7 +151,7 @@ export const RunProcess = async (
 
         if (process?.exitCode == 0) {
             logger.info({
-                msg: `Completed task ${task.label} in group ${taskGroup.label}`,
+                msg: `Completed task '${task.label}' in group '${taskGroup.label}'`,
                 process,
                 taskGroup,
                 task,
