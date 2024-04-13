@@ -121,6 +121,14 @@
         --filled-color: #1b5e20;
         --filled-background-color: #69f0ae;
     }
+    &.cancelled {
+        --background-color: #413c26;
+        --border-color: #fe8d59;
+        --color: #fdf3aa;
+
+        --filled-background-color: #413c26;
+        --filled-color: #fdf3aa;
+    }
     &.requires_approval {
         --background-color: #004174;
         --border-color: #2196F3;

@@ -100,11 +100,12 @@
                             @for (stage of instance.spec.stages; track stage) {
                                 <div
                                     class="stage-block"
-                                    [class.running]="!['frozen','finished','failed',null].includes(stage['_latestJob']?.state)"
+                                    [class.running]="!parent.completedStates.includes(stage['_latestJob']?.state)"
                                     [class.requires_approval]="stage['_isReadyForApproval']"
                                     [class.filled]="stage.jobs?.length > 0"
                                     [class.outlined]="!(stage.jobs?.length > 0)"
                                     [class.pending]="stage?.['_state'] == 'pending'"
+                                    [class.cancelled]="stage?.['_state'] == 'cancelled'"
                                     [class.queued]="stage?.['_state'] == 'queued'"
                                     [class.initializing]="stage?.['_state'] == 'initializing'"
                                     [class.cloning]="stage?.['_state'] == 'cloning'"
@@ -127,23 +128,25 @@
                                         @switch(stage?.['_state']) {
                                             @case ("pending") { <mat-icon fontIcon="pending" /> }
                                             @case ("queued") { <mat-icon fontIcon="pending" /> }
-                                            @case ("initializing") { <mat-icon fontIcon="pending" /> }
+                                            @case ("initializing") { <mat-icon fontIcon="start" /> }
+                                            @case ("cancelled") { <mat-icon fontIcon="block" /> }
                                             @case ("cloning") { <mat-icon fontIcon="downloading" /> }
                                             @case ("building") { <mat-icon class="rotate" fontIcon="change_circle" /> }
                                             @case ("sealing") { <mat-icon fontIcon="archive" /> }
                                             @case ("frozen") { <mat-icon fontIcon="pause" /> }
-                                            @case ("failed") { <mat-icon fontIcon="block" /> }
+                                            @case ("failed") { <mat-icon fontIcon="cancel" style="color: #b71c1c;"/> }
                                             @case ("finished") { <mat-icon fontIcon="check_circle" /> }
+                                            @case ("stopped") { <mat-icon fontIcon="tag" /> }
                                         }
                                     }
                                     <div class="label">{{stage.label}}</div>
 
-                                    @if (![null, "pending", "failed", "finished"].includes(stage?.['_state'])) {
+                                    <!-- @if (![null, "pending", "failed", "finished", 'cancelled'].includes(stage?.['_state'])) {
                                         <mat-progress-bar
                                             color="primary"
                                             mode="indeterminate"
                                         />
-                                    }
+                                    } -->
                                 </div>
                                 <ng-template #tooltip let-data>
                                     <app-stage-popup
