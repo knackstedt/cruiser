@@ -6,6 +6,7 @@ import { JobInstance } from '../types/agent-task';
 import { getSocketLogger } from '../socket/logger';
 import { TripBreakpoint } from '../socket/breakpoint';
 import { api } from '../util/axios';
+import { decompressTarGZip, decompressTarLrz } from '../util/compression';
 
 export const GetInputs = async (
     pipelineInstance: PipelineInstance,
@@ -18,6 +19,19 @@ export const GetInputs = async (
     await Promise.all(job.inputArtifacts?.map(async artifact => {
         const source = pipeline.stages.flatMap(s => s.jobs).flatMap(j => j.outputArtifacts)
             .find(a => a.id == artifact.sourceArtifact);
+
+        logger.info({
+            msg: `Downloading input artifact '${artifact.label}:${source.label}'`,
+            artifact,
+            sourceArtifact: source
+        });
+
+        if (!source) {
+            logger.warn({
+
+            })
+            return null;
+        }
 
         const file = [
             pipeline.id,
@@ -34,11 +48,32 @@ export const GetInputs = async (
         });
 
         return new Promise((res, rej) => {
-            let sWriter = createWriteStream(`/tmp/${artifact.id}`);
+            const targetFile = `/tmp/${artifact.id}`;
+            let sWriter = createWriteStream(targetFile);
             stream.data.pipe(sWriter);
             sWriter.on("close", () => {
                 try {
+                    logger.info({
+                        msg: `Downloaded input artifact '${artifact.label}:${source.label}'.`,
+                        artifact,
+                        sourceArtifact: source
+                    });
 
+                    logger.info({
+                        msg: `Extracting input artifact '${artifact.label}:${source.label}'.`,
+                        artifact
+                    });
+                    // TODO: Extract it.
+
+                    const decompress = (() => {
+                        switch (source.compressionAlgorithm) {
+                            case "gzip": return decompressTarGZip;
+                            case "lrzip":
+                            default: return decompressTarLrz;
+                        }
+                    })();
+
+                    res(decompress(targetFile, artifact.destination, logger));
                 }
                 catch(err) {
                     rej(err);
@@ -87,12 +122,11 @@ export const GetInputs = async (
                 // );
 
                 const options: Partial<SimpleGitOptions> = {
-                    baseDir: process.cwd(),
+                    baseDir: environment.buildDir,
                     binary: 'git',
                     maxConcurrentProcesses: 6,
                     trimmed: false,
                     progress: ({ method, stage, progress }: SimpleGitProgressEvent) => {
-                        // console.log(`git.${method} ${stage} stage ${progress}% complete`);
                         logger.info({
                             msg: `:git: ${stage} objects: ${progress.toString().padStart(3, " ")}%`,
                             source: sourceForLog,
