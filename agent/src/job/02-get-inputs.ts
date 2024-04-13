@@ -63,7 +63,6 @@ export const GetInputs = async (
                         msg: `Extracting input artifact '${artifact.label}:${source.label}'.`,
                         artifact
                     });
-                    // TODO: Extract it.
 
                     const decompress = (() => {
                         switch (source.compressionAlgorithm) {
@@ -86,8 +85,13 @@ export const GetInputs = async (
     }) ?? []);
 
     const sources = stage.sources;
-    if (!sources || sources.length == 0)
+    if (!sources || sources.length == 0) {
+        logger.debug({
+            msg: `Stage '${stage.label}' has no sources to run`,
+            stage
+        })
         return null;
+    }
 
     return await Promise.all(sources.map(async source => {
 
