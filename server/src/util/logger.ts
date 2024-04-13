@@ -27,7 +27,7 @@ export const getLogger = (file: string) => pino({
     }
 });
 
-const _logger = getLogger(`verbose-${process.pid}`);
+const _logger = getLogger(`server-${Date.now()}`);
 
 const heapStats = getHeapStatistics();
 const toGb = (stat) => {
