@@ -128,7 +128,7 @@ export const GetInputs = async (
                     "--depth": source.cloneDepth ? source.cloneDepth : '1'
                 })
 
-                logger.info({ msg: `Done cloning git source ${sourceForLog.label}`, source: sourceForLog });
+                logger.info({ msg: `Done cloning git source '${sourceForLog.label}'`, source: sourceForLog });
 
                 return 0;
 
