@@ -4,7 +4,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { JobDefinition } from 'src/types/pipeline';
+import { getPriorStages } from 'src/app/utils/utils';
+import { OutputArtifact, JobDefinition, PipelineDefinition, StageDefinition } from 'src/types/pipeline';
 import { ulid } from 'ulidx';
 
 @Component({
@@ -21,10 +22,16 @@ import { ulid } from 'ulidx';
     standalone: true
 })
 export class ArtifactsSectionComponent implements OnInit {
+    @Input() kind: "input" | "output" = "output";
 
+    @Input() pipeline: PipelineDefinition;
+    @Input() stage: StageDefinition;
     @Input() job: JobDefinition;
 
     @Output() valueChange = new EventEmitter();
+
+    priorStages: StageDefinition[] = [];
+    availableArtifacts: { stage: StageDefinition, artifacts: OutputArtifact[]}[] = [];
 
     readonly compressionAlgorithms = [
         { name: "lrzip", extension: ".tar.lrz" },
@@ -43,15 +50,37 @@ export class ArtifactsSectionComponent implements OnInit {
 
     ngOnInit() {
         if (!this.job) return;
-        this.job.artifacts = this.job.artifacts ?? [];
+        this.job.inputArtifacts = this.job.inputArtifacts ?? [];
+        this.job.outputArtifacts = this.job.outputArtifacts ?? [];
+        this.availableArtifacts = [];
+
+        const priorStages = getPriorStages(this.pipeline, this.stage);
+
+        priorStages.forEach(stage => {
+            const artifacts = stage.jobs.flatMap(j => j.outputArtifacts);
+            this.availableArtifacts.push({
+                stage,
+                artifacts
+            });
+        })
     }
 
-    addArtifact() {
-        this.job.artifacts.push({
-            id: `artifact:${ulid()}`,
+    addInputArtifact() {
+        this.job.inputArtifacts.push({
+            id: `artifact_input:${ulid()}`,
             label: '',
             destination: '',
-            source: '',
+            job: '',
+            sourceArtifact: ''
+        })
+    }
+
+    addOutputArtifact() {
+        this.job.outputArtifacts.push({
+            id: `artifact_output:${ulid()}`,
+            label: '',
+            destination: '',
+            source: ''
         })
     }
 

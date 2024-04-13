@@ -117,7 +117,18 @@
                                 [item]="selectedJob"
                                 (valueChange)="dataChangeEmitter.next(0)"
                             />
+
                             <app-artifacts-section
+                                kind="input"
+                                [pipeline]="pipeline"
+                                [stage]="stage"
+                                [job]="selectedJob"
+                                (valueChange)="dataChangeEmitter.next(0)"
+                            />
+
+                            <app-artifacts-section
+                                [pipeline]="pipeline"
+                                [stage]="stage"
                                 [job]="selectedJob"
                                 (valueChange)="dataChangeEmitter.next(0)"
                             />
@@ -168,7 +179,7 @@
                                             }
                                         </mat-select>
                                     </mat-form-field>
-                                    @if (filterMissingPrecedingTaskGroups(selectedTaskGroup)) {
+                                    @if (filterMissingPrecedingTaskGroups(selectedTaskGroup)?.length > 0) {
                                         <div>
                                             <h4 style="margin: 0">Invalid Preceding Task Groups:</h4>
                                             <p style="margin: 4px 0">This task group will not run until these are resolved.</p>

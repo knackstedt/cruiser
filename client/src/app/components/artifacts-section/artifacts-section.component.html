@@ -1,46 +1,95 @@
-<p>Artifacts</p>
+@if (kind == "input") {
+    <p>Input Artifacts</p>
+}
+@else {
+    <p>Output Artifacts</p>
+}
 
-@if (job.artifacts) {
-    @for (artifact of job.artifacts; track artifact) {
-        <div class="row">
-            <div style="display: flex; gap: 12px">
-                <mat-form-field style="flex: 1">
-                    <mat-label>Label</mat-label>
-                    <input matInput type="text" [(ngModel)]="artifact.label" (ngModelChange)="valueChange.emit()"/>
-                </mat-form-field>
-
+@if (kind == "input") {
+    @if (job.inputArtifacts) {
+        @for (artifact of job.inputArtifacts; track artifact) {
+            <div class="row">
                 <mat-form-field>
-                    <mat-label>Algorithm</mat-label>
-                    <mat-select [value]="artifact.compressionAlgorithm ?? 'lrzip'" (valueChange)="artifact.compressionAlgorithm = $event">
-                        @for (algorithm of compressionAlgorithms; track algorithm) {
-                            <mat-option [value]="algorithm.name">{{algorithm.name}}</mat-option>
+                    <mat-label>Artifact</mat-label>
+                    <mat-select>
+                        @for (group of availableArtifacts; track group) {
+                            <mat-optgroup [label]="group.stage.label">
+                                @for (artifact of group.artifacts; track artifact) {
+                                    <mat-option [value]="artifact.id">{{artifact.label || artifact.source}}</mat-option>
+                                }
+                            </mat-optgroup>
                         }
                     </mat-select>
                 </mat-form-field>
-            </div>
-            <br/>
-            <div style="display: flex; gap: 12px;">
-                <mat-form-field style="flex: 1">
-                    <mat-label>Source</mat-label>
-                    <input matInput type="text" [(ngModel)]="artifact.source" (ngModelChange)="valueChange.emit()"/>
-                </mat-form-field>
 
-                <mat-form-field style="flex: 1">
-                    <mat-label>Destination</mat-label>
-                    <input
-                        matInput
-                        type="text"
-                        [ngModel]="artifact.destination || artifact.label"
-                        (ngModelChange)="artifact.destination = $event; valueChange.emit()"
-                    />
-                    <div matSuffix style="padding: 0 12px;">{{getExtension(artifact.compressionAlgorithm ?? "lrzip")}}</div>
-                </mat-form-field>
+                <div style="display: flex; gap: 12px;">
+                    <!-- <mat-form-field style="flex: 1">
+                        <mat-label>Source</mat-label>
+                        <input matInput type="text" [(ngModel)]="artifact.source" (ngModelChange)="valueChange.emit()"/>
+                    </mat-form-field> -->
+
+                    <mat-form-field style="flex: 1">
+                        <mat-label>Destination</mat-label>
+                        <input
+                            matInput
+                            type="text"
+                            [ngModel]="artifact.destination || artifact.label"
+                            (ngModelChange)="artifact.destination = $event; valueChange.emit()"
+                        />
+                    </mat-form-field>
+                </div>
             </div>
-        </div>
+        }
+
+        <button mat-flat-button (click)="addInputArtifact(); valueChange.emit()">
+            <mat-icon>add</mat-icon>
+            Add
+        </button>
     }
+}
+@if (kind == "output") {
+    @if (job.outputArtifacts) {
+        @for (artifact of job.outputArtifacts; track artifact) {
+            <div class="row">
+                <div style="display: flex; gap: 12px">
+                    <mat-form-field style="flex: 1">
+                        <mat-label>Label</mat-label>
+                        <input matInput type="text" [(ngModel)]="artifact.label" (ngModelChange)="valueChange.emit()"/>
+                    </mat-form-field>
 
-    <button mat-flat-button (click)="addArtifact(); valueChange.emit()">
-        <mat-icon>add</mat-icon>
-        Add
-    </button>
+                    <mat-form-field>
+                        <mat-label>Algorithm</mat-label>
+                        <mat-select [value]="artifact.compressionAlgorithm ?? 'lrzip'" (valueChange)="artifact.compressionAlgorithm = $event">
+                            @for (algorithm of compressionAlgorithms; track algorithm) {
+                                <mat-option [value]="algorithm.name">{{algorithm.name}}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+                <br/>
+                <div style="display: flex; gap: 12px;">
+                    <mat-form-field style="flex: 1">
+                        <mat-label>Source</mat-label>
+                        <input matInput type="text" [(ngModel)]="artifact.source" (ngModelChange)="valueChange.emit()"/>
+                    </mat-form-field>
+
+                    <mat-form-field style="flex: 1">
+                        <mat-label>Destination</mat-label>
+                        <input
+                            matInput
+                            type="text"
+                            [ngModel]="artifact.destination || artifact.label"
+                            (ngModelChange)="artifact.destination = $event; valueChange.emit()"
+                        />
+                        <div matSuffix style="padding: 0 12px;">{{getExtension(artifact.compressionAlgorithm ?? "lrzip")}}</div>
+                    </mat-form-field>
+                </div>
+            </div>
+        }
+
+        <button mat-flat-button (click)="addOutputArtifact(); valueChange.emit()">
+            <mat-icon>add</mat-icon>
+            Add
+        </button>
+    }
 }
