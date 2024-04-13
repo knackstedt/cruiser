@@ -12,6 +12,19 @@ export class SocketLiveService {
             maxHttpBufferSize: 1024 ** 3
         });
         io.engine.use(sessionHandler);
+        io.engine.use((req, res, next) => {
+            if (
+                !req.session?.profile?.roles ||
+                !(
+                    req.session.profile.roles.includes("administrator") ||
+                    req.session.profile.roles.includes("manager") ||
+                    req.session.profile.roles.includes("user")
+                )
+            ) {
+                return next(404);
+            }
+            next();
+        });
         const activeSockets: Socket[] = [];
 
         afterDatabaseConnected(() => {
