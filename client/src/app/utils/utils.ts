@@ -1,4 +1,5 @@
 import { MatDialog } from '@angular/material/dialog';
+import { Socket } from 'socket.io-client';
 import { JobDefinition, PipelineDefinition, StageDefinition } from 'src/types/pipeline';
 
 /**
@@ -130,4 +131,14 @@ export const getPriorStages = (pipeline: PipelineDefinition, stage: StageDefinit
     addStages(stage);
 
     return Object.values(priorStages);
+}
+
+export const BindSocketLogger = (name: string, socket: Socket<any, any>) => {
+    // TODO: Create a flag to disable/enable this?
+    socket.onAny(ev => {
+        console.log(`%c[ws:${name}] %c<-- ${ev}`, "color: #ffca28", "color: #0dbc79")
+    })
+    socket.onAnyOutgoing(ev => {
+        console.log(`%c[ws:${name}] %c--> ${ev}`, "color: #ffca28", "color: #11a8cd");
+    })
 }

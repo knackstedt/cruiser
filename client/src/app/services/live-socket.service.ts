@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Observer, Subject, Subscription } from 'rxjs';
+import { JobInstance } from 'src/types/agent-task';
+import { BindSocketLogger } from 'src/app/utils/utils';
 
 type LiveRecordChange<T = any> = {
     ev: 'pipeline' | 'pipeline_instance' | 'job_instance',
@@ -26,9 +28,10 @@ export class LiveSocketService<T = any> extends Subject<LiveRecordChange<T>> {
             path: "/ws/live-socket",
             withCredentials: true
         });
+        BindSocketLogger("live", socket);
 
-        // socket.on("connect", () => {
-        // });
+        socket.on("connect", () => {
+        });
         socket.on("disconnect", () => {
             this.connected = false;
         });

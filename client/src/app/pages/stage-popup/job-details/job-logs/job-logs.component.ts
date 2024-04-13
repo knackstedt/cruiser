@@ -11,7 +11,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
 import { JobInstance } from 'src/types/agent-task';
 import { MatDialog } from '@angular/material/dialog';
-import { ViewJsonInMonacoDialog } from 'src/app/utils/utils';
+import { BindSocketLogger, ViewJsonInMonacoDialog } from 'src/app/utils/utils';
 
 type Line = ({
     stream: "stdout" | "stderr" | "agent",
@@ -216,7 +216,19 @@ export class JobLogsComponent {
             for (let i = 0; i < el; i++) {
                 const fn = notASwitch[entries[i].ev];
                 // if (!fn) console.log(entries[i]);
-                fn?.(entries[i].data, false);
+                if (fn) {
+                    fn?.(entries[i].data, false);
+                }
+                else {
+                    parseAgent({
+                        ...entries[i],
+                        msg: entries[i].msg ?? entries[i].message ?? entries[i].title,
+                        time: entries[i].time,
+                        task: null,
+                        block: null,
+                        level: entries[i].logLevel,
+                    }, false);
+                }
             }
             console.timeEnd("Parse log history");
 
@@ -227,6 +239,7 @@ export class JobLogsComponent {
                 path: "/ws/socket-tunnel",
                 withCredentials: true
             });
+            BindSocketLogger('logs', socket);
 
             socket.on("connect", () => {
                 this.lines = [];

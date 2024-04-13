@@ -10,6 +10,7 @@ import { AnsiToXTermTheme, darkTheme } from 'src/app/services/theme.service';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { BindSocketLogger } from 'src/app/utils/utils';
 
 @Component({
     selector: 'app-xterm-wrapper',
@@ -60,8 +61,9 @@ export class XtermWrapperComponent implements OnInit {
 
         const socket = this.socket = io({
             path: "/ws/socket-tunnel",
-            withCredentials: true
+            withCredentials: true,
         });
+        BindSocketLogger('terminal', socket);
 
         socket.on("connect", () => {
             socket.emit("$connect", { jobInstanceId: this.jobInstance.id });
