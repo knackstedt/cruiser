@@ -13,6 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { ToastrService } from 'ngx-toastr';
+import { PipelineSocketService } from 'src/app/services/pipeline-socket.service';
 
 @Component({
     selector: 'app-releases',
@@ -47,7 +48,8 @@ export class ReleasesComponent implements OnInit {
     ]
 
     interval;
-    dispose = false
+    dispose = false;
+    readonly completedStates = ['frozen', 'finished', 'failed', 'cancelled', null];
 
     readonly ctxMenu: MenuItem<PipelineDefinition>[] = [
         {
@@ -82,11 +84,24 @@ export class ReleasesComponent implements OnInit {
             label: "Cancel",
             // isVisible: ({ pipeline, instance }) => ['started', 'running', 'waiting'].includes(instance.status.phase),
             action: ({pipeline, instance}) => {
-                this.fetch.post(`/api/pipeline/${pipeline.id}/${instance.id}/stop`, {})
-                    .then(res => {
-                        // ???
+                // this.fetch.post(`/api/pipeline/${pipeline.id}/${instance.id}/stop`, {})
+                //     .then(res => {
+                //         // ???
+                //     })
+                //     .catch(err => this.toastr.warning("Failed to cancel pipeline"));
+                const data = structuredClone(instance);
+                data.status.jobInstances = data.status.jobInstances.map(j => j['id']);
+                data.status.phase = "stopped";
+
+                this.fetch.patch(`/api/odata/${instance.id}`, data).then(res => {
+                    (instance.status.jobInstances as any as JobInstance[]).forEach(jobInstance => {
+                        // If the job instance is already completed, don't try to stop it
+                        if (!this.completedStates.includes(jobInstance.state)) {
+                            this.pipelineSocket.emit("$stop-job", { jobInstanceId: jobInstance.id })
+                        }
                     })
-                    .catch(err => this.toastr.warning("Failed to cancel pipeline"))
+                })
+
             }
         },
     ];
@@ -195,7 +210,8 @@ export class ReleasesComponent implements OnInit {
         private readonly user: UserService,
         private readonly changeDetector: ChangeDetectorRef,
         private readonly confirmationService: ConfirmationService,
-        private readonly toastr: ToastrService
+        private readonly toastr: ToastrService,
+        private readonly pipelineSocket: PipelineSocketService
     ) {
 
     }
@@ -299,13 +315,19 @@ export class ReleasesComponent implements OnInit {
                 const states = Object.keys(compositeState);
                 stage['_state'] =
                     states.length == 0
-                    ? 'pending'
+                    ? (
+                        ["running", "starting", "waiting"].includes(instance.status.phase)
+                            ? 'pending'
+                            : instance.status.phase
+                    )
                     : states.length == 1
                     ? states[0]
                     : states.includes("failed")
                     ? 'failed'
                     : states.includes("frozen")
                     ? 'frozen'
+                    : states.includes("cancelled")
+                    ? 'cancelled'
                     : 'building';
             });
         });
