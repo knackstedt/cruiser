@@ -55,7 +55,7 @@ export const ResolveSources = async (
                     progress: ({ method, stage, progress }: SimpleGitProgressEvent) => {
                         // console.log(`git.${method} ${stage} stage ${progress}% complete`);
                         logger.info({
-                            msg: `Cloning progress ${progress}%`,
+                            msg: `:git: ${stage} objects: ${progress.toString().padStart(3, " ")}%`,
                             source: sourceForLog,
                             method,
                             stage,
