@@ -8,7 +8,9 @@ const logger = getLogger("metrics");
 export const getSocketMetrics = async () => {
     const socket = io(environment.cruiserUrl, {
         path: "/ws/socket-tunnel-internal",
-        extraHeaders: {}
+        extraHeaders: {
+            "X-Cruiser-Token": environment.cruiserToken
+        }
     });
 
     // "connection" event happens when any client connects to this io instance.

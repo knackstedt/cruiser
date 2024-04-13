@@ -15,7 +15,9 @@ export const getSocket = async (pipeline: PipelineDefinition, jobInstance: JobIn
     try {
         socket = io(environment.cruiserUrl, {
             path: "/ws/socket-tunnel-internal",
-            // extraHeaders: {}
+            extraHeaders: {
+                "X-Cruiser-Token": environment.cruiserToken
+            }
         });
 
         logger.info("Connecting to socket...");
