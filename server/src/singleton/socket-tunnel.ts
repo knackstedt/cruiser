@@ -93,16 +93,19 @@ export class SocketTunnelService {
             maxHttpBufferSize: 1024 ** 3
         });
 
-        io.engine.use((req, res, next) => {
-            const cruiserToken = req.get("X-Cruiser-Token");
-            if (cruiserToken) {
-                CheckJobToken(cruiserToken)
-                    .then(hasToken => hasToken ? next() : next(401));
+        io.on("connection", async socket => {
+            const cruiserToken = socket.handshake.auth["X-Cruiser-Token"];
+            if (!cruiserToken) {
+                socket.disconnect();
+                return;
             }
-            next(404);
-        })
 
-        io.on("connection", socket => {
+            const isAuthenticated = await CheckJobToken(cruiserToken);
+
+            if (!isAuthenticated) {
+                socket.disconnect();
+                return;
+            }
             const id = ulid();
 
             this.connectedSources[id] = { socket, id };
