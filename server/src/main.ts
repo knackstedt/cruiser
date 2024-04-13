@@ -30,6 +30,7 @@ import { VaultApi } from './api/vault';
 import { AsciiBanner } from './util/motd';
 import { SocketLiveService } from './singleton/watch-database';
 import { EventTriggers } from './singleton/watch-jobinstance';
+import { SocketEventService } from './singleton/socket-service';
 
 const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
 
@@ -121,8 +122,9 @@ if (isDedicatedSocketService) {
     const port = 6820;
     server.listen(port);
 
-    new SocketTunnelService(server);
-    new SocketLiveService(server);
+    const sts = new SocketTunnelService(server);
+    const sls = new SocketLiveService(server);
+    const ses = new SocketEventService(server, sts);
 
     CronScheduler();
     WatchAndFlushJobs();
@@ -137,8 +139,9 @@ else {
     bootstrapServer().then(server => {
         console.log(AsciiBanner);
 
-        new SocketTunnelService(server);
-        new SocketLiveService(server);
+        const sts = new SocketTunnelService(server);
+        const sls = new SocketLiveService(server);
+        const ses = new SocketEventService(server, sts);
 
         CronScheduler();
         WatchAndFlushJobs();

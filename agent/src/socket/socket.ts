@@ -49,7 +49,7 @@ export const getSocket = async (pipeline: PipelineDefinition, jobInstance: JobIn
             });
 
             // If we get a cancel event, we'll stop the agent.
-            socket.on("$cancel", async () => {
+            socket.on("$stop-job", async () => {
                 await api.patch(`/api/odata/${environment.jobInstanceId}`, {
                     state: "cancelled",
                     endEpoch: Date.now()
