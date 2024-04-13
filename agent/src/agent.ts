@@ -22,52 +22,61 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
     const terminal = await getSocketTerminal(socket);
     await BindSocketBreakpoint(socket, logger);
 
+    try {
+        // Perform preflight checks
+        logger.info({ state: "Preflight", msg: "Running preflight check" });
+        await api.patch(`/api/odata/${jobInstanceId}`, { state: "preflight", initEpoch: Date.now() })
+        await PreflightCheck();
+        logger.info({ state: "Preflight", msg: "Preflight check finished" });
 
-    // Perform preflight checks
-    logger.info({ state: "Preflight", msg: "Running preflight check" });
-    await api.patch(`/api/odata/${jobInstanceId}`, { state: "preflight", initEpoch: Date.now() })
-    await PreflightCheck();
-    logger.info({ state: "Preflight", msg: "Preflight check finished" });
+        // logger.info({ state: "Initializing", msg: "Begin initializing" });
+        // await api.patch(`/api/odata/${jobInstanceId}`, { state: "initializing", initEpoch: Date.now() })
+        // await validateJobCanRun(job, logger);
+        // logger.info({ state: "Initializing", msg: "Agent initialize completed" });
 
-    // logger.info({ state: "Initializing", msg: "Begin initializing" });
-    // await api.patch(`/api/odata/${jobInstanceId}`, { state: "initializing", initEpoch: Date.now() })
-    // await validateJobCanRun(job, logger);
-    // logger.info({ state: "Initializing", msg: "Agent initialize completed" });
+        // Download sources
+        logger.info({ state: "Cloning", msg: "Agent source cloning", block: "start" });
+        await api.patch(`/api/odata/${jobInstanceId}`, { state: "cloning", cloneEpoch: Date.now() })
+        await GetInputs(pipelineInstance, pipeline, stage, job, jobInstance, logger);
+        logger.info({ state: "Cloning", msg: "Agent source cloning completed", block: "end" });
 
-    // Download sources
-    logger.info({ state: "Cloning", msg: "Agent source cloning", block: "start" });
-    await api.patch(`/api/odata/${jobInstanceId}`, { state: "cloning", cloneEpoch: Date.now() })
-    await GetInputs(pipelineInstance, pipeline, stage, job, jobInstance, logger);
-    logger.info({ state: "Cloning", msg: "Agent source cloning completed", block: "end" });
+        // Follow job steps to build code
+        logger.info({ state: "Building", msg: "Agent building", block: "start" });
+        await api.patch(`/api/odata/${jobInstanceId}`, { state: "building", buildEpoch: Date.now() })
+        await RunTasks(
+            pipelineInstance,
+            pipeline,
+            stage,
+            job,
+            kubeTask,
+            logger
+        );
+        logger.info({ state: "Building", msg: "Agent build completed", block: "end" });
 
-    // Follow job steps to build code
-    logger.info({ state: "Building", msg: "Agent building", block: "start" });
-    await api.patch(`/api/odata/${jobInstanceId}`, { state: "building", buildEpoch: Date.now() })
-    await RunTasks(
-        pipelineInstance,
-        pipeline,
-        stage,
-        job,
-        kubeTask,
-        logger
-    );
-    logger.info({ state: "Building", msg: "Agent build completed", block: "end" });
-
-    // Seal (compress) artifacts
-    logger.info({ state: "Sealing", msg: "Agent sealing", block: "start" });
-    await api.patch(`/api/odata/${jobInstanceId}`, { state: "sealing", uploadEpoch: Date.now() })
-    await UploadArtifacts(
-        pipelineInstance,
-        pipeline,
-        stage,
-        job,
-        kubeTask,
-        logger
-    );
-    // await TripBreakpoint(jobInstance, false);
-    logger.info({ state: "Sealing", msg: "Agent sealing completed", block: "end" });
+        // Seal (compress) artifacts
+        logger.info({ state: "Sealing", msg: "Agent sealing", block: "start" });
+        await api.patch(`/api/odata/${jobInstanceId}`, { state: "sealing", uploadEpoch: Date.now() })
+        await UploadArtifacts(
+            pipelineInstance,
+            pipeline,
+            stage,
+            job,
+            kubeTask,
+            logger
+        );
+        // await TripBreakpoint(jobInstance, false);
+        logger.info({ state: "Sealing", msg: "Agent sealing completed", block: "end" });
 
 
-    logger.info({ state: "finished", msg: "Agent has completed it's work.", block: "end" });
-    await api.patch(`/api/odata/${jobInstanceId}`, { state: "finished", endEpoch: Date.now() });
+        logger.info({ state: "finished", msg: "Agent has completed it's work.", block: "end" });
+        await api.patch(`/api/odata/${jobInstanceId}`, { state: "finished", endEpoch: Date.now() });
+    }
+    catch(err) {
+        logger.fatal({
+            msg: "Cannot continue build task!",
+            stack: err.stack,
+            message: err.message ?? err.title ?? err.name
+        })
+        await TripBreakpoint(jobInstance, false);
+    }
 }
