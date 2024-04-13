@@ -38,6 +38,10 @@ export const getSocket = async (pipeline: PipelineDefinition, jobInstance: JobIn
                 logger.info("Socket connected");
                 res(socket);
             });
+            socket.on("connect_error", (err) => {
+                logger.error(`connect_error due to ${err.message}`);
+                rej(err);
+            });
             socket.on("disconnect", () => {
                 logger.warn("Socket lost connection to cluster");
             });
