@@ -56,7 +56,7 @@ export const getSocketTerminal = async (socket: Socket, logger: Awaited<ReturnTy
 
         socket.emit("ssh:started", { id: uid });
 
-        ptyProcess?.onData(data => socket.emit("ssh:output", data && history.push(data)));
+        ptyProcess?.onData(data => socket.emit("ssh:output", history.push(data) && data));
         ptyProcess?.onExit(e => socket.emit("ssh:exit", e));
     });
 
