@@ -1,57 +1,58 @@
 # Cruiser
-
-Cruiser -- a modern and robust CI/CD toolchain for tomorrow's applications.
+The modern and robust CI/CD toolchain for tomorrow's applications.
 
 ## Motivation
 
 It'd be sweet to have a CI/CD platform that doesn't require constant jerry-rigging to work
-the way you need it to, and can reduce the amount of time spent trying to connect your CI/CD
-system with your git repositories and your devops tracking systems. Something that **just works**
-without needing to spend hundreds of hours reconfiguring and updating.
+the way you need it to. Your automation tools should **just work**,
 
-Enter Dot Ops, a robust approach to CI/CD, with enterprise-grade
-security and extensibility. With support for elastic agents and an interface made
-for real humans, it's the next best thing in DevSecOps!
+Enter Cruiser, a robust approach to CI/CD, with enterprise-grade
+security and extensibility. With native Kubernetes support and an interface made
+for humans, it's the next best thing in DevSecOps!
 
 > #### ⚠️ ALPHA STATE
 
-The project is currently in its very early alpha stages. We are in the process of
-solidifying the base of the framework and stabilizing the architecture.
+The project is currently in its early alpha stages. We are in the process of
+solidifying the base of the framework and stabilizing the architecture. There will be bugs, 
+and you have been warned :)
 
 
 ## Roadmap
- - [X] Create "freeze" points and allow remote terminal connections through web UI
- - [ ] Support Artillery load testing OOTB
- - [ ] Create base worker image and sample k8s setup
- - [ ] Enable disabling pipelines, jobs, stages, task groups etc.
- - [ ] Pipeline job execution labels can be defined from simple JS scripts
- - [ ] Executed jobs have links to git history up to that job
- - [ ] Known build tools (docker, gulp, msbuild) should have a tailored experience
- - [ ] Pipeline failure hooks
- - [ ] Add env variables:
-   - [ ] "global system"
-   - [ ] "project"
-   - [ ] "pipeline"
-   - [ ] "stage"
-   - [ ] "job"
-   - [ ] "task group"
-   - [ ] "task"
- - [ ] Add release management graphical screen
-     - [ ] Branch filters
-     - [ ] Add "Triggers"
-     - [ ] Add "Approvers"
-     - [ ] Add CRON triggers
-     - [ ] Auto-trigger and approve next release if previous release has been deployed and not redacted
-     - [ ] Manage release secrets
- - [ ] Static build agent support
- - [ ] Add support for pipeline templates
- - [ ] Add stage webhook support
- - [ ] Add support for non-git based code repos
- - [ ] Record error messages over time and provide "smart" analysis
- - [ ] Support for plugin system
- - [ ] Support for hosting git repos
- - [ ] Support for load testing quality gate metric integration
- - [ ] Destroy all humans
+> Ordered by priority.
+- [ ] Branch filters
+- [ ] Add CRON triggers
+- [ ] Pipeline instance labels can be defined from simple JS scripts
+- [ ] Support Pipeline definition as code file (YAML,JSON)
+- [ ] Pipeline, stage, job failure hooks
+- [ ] Env vars & secrets on "global system"
+- [ ] Env vars & secrets on "project"
+- [ ] Auto-trigger and approve next release if previous release has been deployed and not redacted
+- [ ] Add support for pipeline templates
+- [ ] Add support for non-git based code repos
+- [ ] Create base worker images and sample k8s setup
+- [ ] Record error messages over time and provide "smart" analysis
+- [ ] Document installation and use
+- [ ] Known build tools (docker, gulp, msbuild) should have a tailored experience
+- [ ] Support for setting "Deployment freeze" periods
+- [ ] Support for "rollback to latest stable build" API
+- [ ] Support for watching deployment progress
+- [ ] Support for plugin system
+- [ ] Support for hosting git repos
+- [ ] Support user metrics for hosted repos
+- [ ] Support Artillery load testing + metrics (builtin?)
+- [ ] Support for common load testing & quality gate metric integration
+- [ ] Static build agent support
+- [ ] Destroy all humans
+- [X] Add stage "Triggers"
+- [X] Add stage "Approvers"
+- [X] Add stage webhook support
+- [X] Env vars & secrets on "pipeline"
+- [X] Env vars & secrets on "stage"
+- [X] Env vars & secrets on "job"
+- [X] Env vars & secrets on "task group"
+- [X] Env vars & secrets on "task"
+- [X] Enable disabling pipelines, jobs, stages, task groups etc.
+- [X] Create breakpoints and allow remote terminal connections through web UI
 
 
 
