@@ -16,6 +16,7 @@ if (
 }
 
 (async () => {
+    // TODO: Replace this implementation with a websocket filesystem
     const app = express();
 
     // Handle a ping endpoint to check if this is even up

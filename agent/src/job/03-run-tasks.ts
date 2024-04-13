@@ -1,9 +1,9 @@
-import { orderSort } from './util/order-sort';
-import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition, TaskGroupDefinition } from './types/pipeline';
-import { api } from './util/axios';
-import { getSocketLogger } from './socket/logger';
-import { RunProcess } from './util/process-manager';
-import { JobInstance } from './types/agent-task';
+import { orderSort } from '../util/order-sort';
+import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition, TaskGroupDefinition } from '../types/pipeline';
+import { api } from '../util/axios';
+import { getSocketLogger } from '../socket/logger';
+import { RunProcess } from '../util/process-manager';
+import { JobInstance } from '../types/agent-task';
 
 const executeTaskGroup = async (
     pipelineInstance: PipelineInstance,
@@ -69,7 +69,7 @@ const executeTaskGroup = async (
     }
 }
 
-export const RunTaskGroups = (
+export const RunTasks = (
     pipelineInstance: PipelineInstance,
     pipeline: PipelineDefinition,
     stage: StageDefinition,

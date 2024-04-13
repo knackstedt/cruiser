@@ -1,19 +1,58 @@
-import { exists, mkdir, readdir } from 'fs-extra';
+import { createWriteStream, exists, mkdir, readdir } from 'fs-extra';
 import { simpleGit, SimpleGitProgressEvent, SimpleGitOptions, SimpleGit } from 'simple-git';
-import { JobDefinition, PipelineDefinition } from '../types/pipeline';
+import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
 import { environment } from '../util/environment';
 import { JobInstance } from '../types/agent-task';
 import { getSocketLogger } from '../socket/logger';
 import { TripBreakpoint } from '../socket/breakpoint';
+import { api } from '../util/axios';
 
-export const ResolveSources = async (
+export const GetInputs = async (
+    pipelineInstance: PipelineInstance,
     pipeline: PipelineDefinition,
+    stage: StageDefinition,
+    job: JobDefinition,
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof getSocketLogger>>
 ) => {
     const sources = pipeline.stages.flatMap(s => s.sources);
     if (!sources || sources.length == 0)
         return null;
+
+    await Promise.all(job.inputArtifacts?.map(async artifact => {
+        const source = pipeline.stages.flatMap(s => s.jobs).flatMap(j => j.outputArtifacts)
+            .find(a => a.id == artifact.sourceArtifact);
+
+        const file = [
+            pipeline.id,
+            pipelineInstance.id,
+            stage.id,
+            job.id,
+            jobInstance.id,
+            source.destination
+        ].join("/");
+
+        const stream = await api.get(`/api/blobstore/artifact/${file}`, {
+            responseType: "stream",
+            responseEncoding: "binary"
+        });
+
+        return new Promise((res, rej) => {
+            let sWriter = createWriteStream(`/tmp/${artifact.id}`);
+            stream.data.pipe(sWriter);
+            sWriter.on("close", () => {
+                try {
+
+                }
+                catch(err) {
+                    rej(err);
+                }
+            });
+            sWriter.on("error", err => {
+                rej(err)
+            });
+        })
+    }) ?? []);
 
     return await Promise.all(sources.map(async source => {
 

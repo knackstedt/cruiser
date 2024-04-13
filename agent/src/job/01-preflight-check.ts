@@ -1,4 +1,4 @@
-import { logger } from './logger';
+import { logger } from '../util/logger';
 import os from 'os';
 import fs from 'fs-extra';
 import { command } from 'execa';
@@ -90,6 +90,11 @@ export const PreflightCheck = async () => {
 
                 // If the program doesn't exist, attempt to install it.
                 const correction = dependency.corrections[osRelease.id];
+
+                logger.warn({
+                    msg: `Automatically attempting to install missing dependency ${dependency.name}\n` +
+                    `    To improve build times, please add this dependency to your base image.`
+                });
 
                 // Run the corrective action.
                 // Will fail if the user doesn't have access to

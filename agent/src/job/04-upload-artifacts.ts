@@ -6,9 +6,9 @@ import FormData from 'form-data';
 import { getSocketLogger } from '../socket/logger';
 import { JobInstance } from '../types/agent-task';
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
-import { api } from './axios';
-import {environment} from './environment';
-import { getFilesInFolderFlat } from './fs';
+import { api } from '../util/axios';
+import {environment} from '../util/environment';
+import { getFilesInFolderFlat } from '../util/fs';
 import { TripBreakpoint } from '../socket/breakpoint';
 
 const tarCompress = (

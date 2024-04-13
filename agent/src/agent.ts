@@ -1,14 +1,13 @@
-import { ResolveSources } from './util/source-resolver';
+import { GetInputs } from './job/02-get-inputs';
 import { api } from './util/axios';
 import { getConfig } from './util/config';
 import { getSocketLogger } from './socket/logger';
 import { getSocketTerminal } from './socket/terminal';
 import { getSocket } from './socket/socket';
-import { RunTaskGroups } from './run-tasks';
+import { RunTasks } from './job/03-run-tasks';
 import { BindSocketBreakpoint, TripBreakpoint } from './socket/breakpoint';
-import { validateJobCanRun } from './util/job-validator';
-import { UploadArtifacts } from './util/artifact-uploader';
-import { PreflightCheck } from './util/preflight-check';
+import { UploadArtifacts } from './job/04-upload-artifacts';
+import { PreflightCheck } from './job/01-preflight-check';
 import { exists, mkdir } from 'fs-extra';
 import { environment } from './util/environment';
 
@@ -30,21 +29,21 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
     await PreflightCheck();
     logger.info({ state: "Preflight", msg: "Preflight check finished" });
 
-    logger.info({ state: "Initializing", msg: "Begin initializing" });
-    await api.patch(`/api/odata/${jobInstanceId}`, { state: "initializing", initEpoch: Date.now() })
-    await validateJobCanRun(job, logger);
-    logger.info({ state: "Initializing", msg: "Agent initialize completed" });
+    // logger.info({ state: "Initializing", msg: "Begin initializing" });
+    // await api.patch(`/api/odata/${jobInstanceId}`, { state: "initializing", initEpoch: Date.now() })
+    // await validateJobCanRun(job, logger);
+    // logger.info({ state: "Initializing", msg: "Agent initialize completed" });
 
     // Download sources
     logger.info({ state: "Cloning", msg: "Agent source cloning", block: "start" });
     await api.patch(`/api/odata/${jobInstanceId}`, { state: "cloning", cloneEpoch: Date.now() })
-    await ResolveSources(pipeline, jobInstance, logger);
+    await GetInputs(pipelineInstance, pipeline, stage, job, jobInstance, logger);
     logger.info({ state: "Cloning", msg: "Agent source cloning completed", block: "end" });
 
     // Follow job steps to build code
     logger.info({ state: "Building", msg: "Agent building", block: "start" });
     await api.patch(`/api/odata/${jobInstanceId}`, { state: "building", buildEpoch: Date.now() })
-    await RunTaskGroups(
+    await RunTasks(
         pipelineInstance,
         pipeline,
         stage,

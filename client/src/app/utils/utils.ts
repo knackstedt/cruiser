@@ -1,4 +1,5 @@
 import { MatDialog } from '@angular/material/dialog';
+import { JobDefinition, PipelineDefinition, StageDefinition } from 'src/types/pipeline';
 
 /**
  * Wait for a speficied amount of time to pass
@@ -104,3 +105,29 @@ export const ViewJsonInMonacoDialog = async (matDialog: MatDialog, data: Object)
 
     return d;
 };
+
+export const getPriorStages = (pipeline: PipelineDefinition, stage: StageDefinition) => {
+    const stages = pipeline.stages;
+    const stageMap = {};
+    stages.forEach(s => stageMap[s.id] = s);
+    const priorStages: { [key: string]: StageDefinition; } = {};
+
+    const maxDepth = 10;
+    const addStages = (stage: StageDefinition, depth = 0) => {
+
+        for (const id of stage.stageTrigger) {
+            const nextStage = stageMap[id];
+            if (nextStage) {
+                priorStages[nextStage.id] = nextStage;
+
+                // If we go too deep, prevent catastrophic cycle recursion
+                if (depth > maxDepth) return;
+                addStages(nextStage, depth + 1);
+            }
+        }
+    }
+
+    addStages(stage);
+
+    return Object.values(priorStages);
+}
