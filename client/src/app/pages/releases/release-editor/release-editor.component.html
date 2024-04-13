@@ -227,7 +227,7 @@
                                 }
                             </mat-select>
                         </mat-form-field>
-                        @if (filterMissingPrecedingStages(selectedStage)) {
+                        @if (filterMissingPrecedingStages(selectedStage)?.length > 0) {
                             <div style="margin-bottom: 12px">
                                 <h4 style="margin: 0">Invalid Preceding Stages:</h4>
                                 <p style="margin: 4px 0">This stage will not run until these are resolved.</p>
