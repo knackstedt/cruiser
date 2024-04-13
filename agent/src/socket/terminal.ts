@@ -4,6 +4,7 @@ import * as pty from "node-pty";
 import { Socket, io } from "socket.io-client";
 import { ulid } from 'ulidx';
 import { environment } from '../util/environment';
+import { getSocketLogger } from './logger';
 
 // Make an attempt to get a compatible PTY program.
 const shell = os.platform() == "win32"
@@ -18,7 +19,7 @@ const shell = os.platform() == "win32"
     ? "ksh"
     : "sh";
 
-export const getSocketTerminal = async (socket: Socket) => {
+export const getSocketTerminal = async (socket: Socket, logger: Awaited<ReturnType<typeof getSocketLogger>>) => {
 
     let ptyProcess: pty.IPty;
     let ptyArgs;
@@ -26,6 +27,11 @@ export const getSocketTerminal = async (socket: Socket) => {
     const uid = ulid();
 
     socket.on("ssh:launch", (data) => {
+        logger.info({
+            msg: "Starting PTY",
+            data
+        });
+
         // TODO: restore history on reconnect...
         let history = [];
         try {
@@ -40,6 +46,11 @@ export const getSocketTerminal = async (socket: Socket) => {
             ptyProcess = pty.spawn(shell, [], ptyArgs);
         }
         catch (ex) {
+            logger.warn({
+                msg: "Failed to spawn PTY",
+                stack: ex.stack,
+                message: ex.message ?? ex.title ?? ex.name
+            });
             socket.emit("ssh:fatal", ex);
         }
 
