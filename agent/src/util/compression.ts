@@ -97,7 +97,7 @@ export const decompressTarLrz = (
     // lrztar -d ./test.tar.lrz
     return runCommand(
         'lrztar',
-        ['-d', archiveFile],
+        ['-d', archiveFile, '-C', outputPath],
         { archiveFile, outputPath, algorithm: "lrzip" },
         logger
     );
@@ -111,7 +111,7 @@ export const decompressTarGZip = (
     // tar -xf ./test.tar.gz
     return runCommand(
         'tar',
-        ['-xf', archiveFile],
+        ['-xf', archiveFile, '-C', outputPath],
         { archiveFile, outputPath, algorithm: "gzip" },
         logger
     );
