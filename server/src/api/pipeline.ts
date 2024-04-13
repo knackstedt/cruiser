@@ -82,6 +82,11 @@ router.post('/:id/:instance/stop', route(async (req, res, next) => {
     const pipeline: PipelineDefinition = req['pipeline'];
 
     const [[instance]] = await db.query<[PipelineInstance[]]>(`select * from ${req.params['instance']} fetch status.jobInstances`);
+
+    // If the pipeline isn't running, there's no point in cancelling it.
+    if (!["running", "starting", "waiting"].includes(instance.status.phase))
+        return;
+
     const jobs = (instance.status.jobInstances as any as JobInstance[]);
     const results = [];
 
@@ -110,7 +115,7 @@ router.post('/:id/:instance/stop', route(async (req, res, next) => {
         .catch(err => results.push(err));
     }
 
-    instance.status.phase = "stopped";
+    instance.status.phase = "cancelled";
     await db.merge(instance.id, instance);
 
     res.send({

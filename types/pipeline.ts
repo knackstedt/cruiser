@@ -225,7 +225,7 @@ export type PipelineInstance = {
     spec: PipelineDefinition,
     metadata: unknown,
     status: {
-        phase: "started" | "running" | "stopped" | "waiting" | "failed",
+        phase: "started" | "running" | "stopped" | "waiting" | "failed" | "cancelled",
         startEpoch: number,
         jobInstances: string[]
         startedStages: string[],
