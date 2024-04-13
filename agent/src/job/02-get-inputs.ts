@@ -15,10 +15,6 @@ export const GetInputs = async (
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof getSocketLogger>>
 ) => {
-    const sources = pipeline.stages.flatMap(s => s.sources);
-    if (!sources || sources.length == 0)
-        return null;
-
     await Promise.all(job.inputArtifacts?.map(async artifact => {
         const source = pipeline.stages.flatMap(s => s.jobs).flatMap(j => j.outputArtifacts)
             .find(a => a.id == artifact.sourceArtifact);
@@ -53,6 +49,10 @@ export const GetInputs = async (
             });
         })
     }) ?? []);
+
+    const sources = stage.sources;
+    if (!sources || sources.length == 0)
+        return null;
 
     return await Promise.all(sources.map(async source => {
 
