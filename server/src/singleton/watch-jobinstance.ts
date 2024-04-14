@@ -136,7 +136,11 @@ const ProcessStageTriggers = async (
     else {
         // If there are no pipelines left to run, we'll close out the
         // pipeline instance and collect stats for the run
-        pipelineInstance.status.phase = "stopped";
+        if (pipelineInstance.status.phase != "cancelled" &&
+            pipelineInstance.status.phase != "failed"
+        ) {
+            pipelineInstance.status.phase = "stopped";
+        }
         pipelineInstance.status.endEpoch = Date.now();
         pipelineInstance.stats.totalRuntime = pipelineInstance.status.endEpoch - pipelineInstance.status.startEpoch;
         await db.merge(pipelineInstance.id, pipelineInstance);
