@@ -12,7 +12,8 @@ const breakpoints: {
         reject: Function,
         id: string,
         task: TaskDefinition,
-        taskGroup: TaskGroupDefinition
+        taskGroup: TaskGroupDefinition,
+        allowRetry: boolean
     }
 } = {};
 let _socket: Socket;
@@ -74,7 +75,8 @@ export const TripBreakpoint = async (
             reject: rej,
             id: uid,
             task,
-            taskGroup
+            taskGroup,
+            allowRetry
         }
     });
 }
