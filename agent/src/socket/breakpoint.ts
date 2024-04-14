@@ -20,18 +20,21 @@ let _socket: Socket;
 // This will always execute before `TripBreakpoint`.
 export const BindSocketBreakpoint = async (
     socket: Socket,
+    jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof getSocketLogger>>
 ) => {
     _socket = socket;
 
-    socket.on("breakpoint:resume", ({ id, job, retry }: { id: string, job: string, retry: boolean }) => {
-        api.patch(`/api/odata/${job}`, {
+    socket.on("breakpoint:resume", ({ id, retry }: { id: string, retry: boolean }) => {
+        api.patch(`/api/odata/${jobInstance.id}`, {
             state: "building",
             breakpointTask: null,
             breakpointTaskGroup: null
         })
         .then(() => {
-            breakpoints[id]?.resolve(retry)
+            const breakpoint = breakpoints[id];
+            breakpoint?.resolve(retry);
+            breakpoints[id] = undefined;
         })
     });
 
@@ -40,21 +43,6 @@ export const BindSocketBreakpoint = async (
             breakpoints: Object.values(breakpoints)
                 .map(v => ({...v, resolve: undefined, reject: undefined}))
         });
-    });
-
-    // A halt message will kill the job -- full stop.
-    socket.on("breakpoint:halt", async () => {
-        logger.info({
-            msg: "User requested halt of job. Halting."
-        });
-
-        await api.patch(`/api/odata/${environment.jobInstanceId}`, {
-            state: "building",
-            breakpointTask: null,
-            breakpointTaskGroup: null
-        })
-
-        process.exit(0);
     });
 
     return socket;

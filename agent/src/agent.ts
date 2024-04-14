@@ -20,7 +20,7 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
     const socket = await getSocket(pipeline, jobInstance);
     const logger = await getSocketLogger(socket);
     const terminal = await getSocketTerminal(socket, logger);
-    await BindSocketBreakpoint(socket, logger);
+    await BindSocketBreakpoint(socket, jobInstance, logger);
 
     try {
         // Perform preflight checks
