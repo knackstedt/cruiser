@@ -43,6 +43,7 @@ export const BindSocketBreakpoint = async (
         socket.emit("breakpoint:list", {
             breakpoints: Object.values(breakpoints)
                 .map(v => ({...v, resolve: undefined, reject: undefined}))
+                .filter(v => !!v.id)
         });
     });
 
@@ -57,16 +58,7 @@ export const TripBreakpoint = async (
 ) => {
     const uid = ulid();
 
-    await api.patch(`/api/odata/${jobInstance.id}`, {
-        state: "frozen",
-        breakpointTask: task,
-        breakpointTaskGroup: taskGroup
-    });
-
-    _socket.emit("breakpoint:list", {
-        breakpoints: Object.values(breakpoints)
-            .map(v => ({ ...v, resolve: undefined, reject: undefined }))
-    });
+    await api.patch(`/api/odata/${jobInstance.id}`, { state: "frozen" });
 
     return new Promise<boolean>((res, rej) => {
         breakpoints[uid] = {
@@ -76,6 +68,12 @@ export const TripBreakpoint = async (
             task,
             taskGroup,
             allowRetry
-        }
+        };
+
+        _socket.emit("breakpoint:list", {
+            breakpoints: Object.values(breakpoints)
+                .map(v => ({ ...v, resolve: undefined, reject: undefined }))
+                .filter(v => !!v.id)
+        });
     });
 }
