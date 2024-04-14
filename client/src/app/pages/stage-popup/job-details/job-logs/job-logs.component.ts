@@ -48,7 +48,7 @@ type Line = ({
 })
 export class JobLogsComponent {
     @ViewChild(NgScrollbar) scrollbar: NgScrollbar;
-
+    get scroller() { return this.scrollbar.viewport.nativeElement; }
     @Input() jobInstance: JobInstance;
 
 
@@ -68,7 +68,7 @@ export class JobLogsComponent {
     lines: Line[] = [];
     filteredLines: Line[] = [];
     renderedLines: Line[] = [];
-
+    scrollToBottom = true;
 
     private socket: Socket;
     private decoder = new TextDecoder();
@@ -281,8 +281,16 @@ export class JobLogsComponent {
 
     ngAfterViewInit() {
         const viewport = this.scrollbar.viewport.nativeElement;
-        viewport.onscroll = () => {
-            this.onScroll(viewport);
+        viewport.onscroll = (evt: WheelEvent) => {
+            this.updateVirtualLines(viewport);
+
+            if (evt.deltaY < 0) {
+                this.scrollToBottom = false;
+            }
+            else {
+                const currentBottom = viewport.scrollTop + viewport.clientHeight;
+                this.scrollToBottom = currentBottom >= viewport.scrollHeight - 50;
+            }
         };
     }
 
@@ -380,10 +388,20 @@ export class JobLogsComponent {
 
         this.filteredLines = lines;
 
-        this.onScroll(this.scrollbar.viewport.nativeElement);
+        this.updateVirtualLines(this.scroller);
+        if (this.scrollToBottom) {
+            this.scroller.scrollTo({
+                top: this.scroller.scrollHeight
+            });
+            setTimeout(() => {
+                this.scroller.scrollTo({
+                    top: this.scroller.scrollHeight
+                });
+            });
+        }
     }
 
-    onScroll(scroller: HTMLElement) {
+    updateVirtualLines(scroller: HTMLElement) {
         if (!scroller) return;
         const lines = this.filteredLines;
 
