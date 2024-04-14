@@ -15,7 +15,7 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
     if (!await exists(environment.buildDir))
         await mkdir(environment.buildDir, { recursive: true });
 
-    const { pipelineInstance, pipeline, stage, job, kubeTask, jobInstance } = await getConfig(jobInstanceId);
+    const { pipelineInstance, pipeline, stage, job, jobInstance } = await getConfig(jobInstanceId);
 
     const socket = await getSocket(pipeline, jobInstance);
     const logger = await getSocketLogger(socket);
@@ -48,7 +48,7 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
             pipeline,
             stage,
             job,
-            kubeTask,
+            jobInstance,
             logger
         );
         logger.info({ state: "Building", msg: "Agent build completed", block: "end" });
@@ -61,10 +61,9 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
             pipeline,
             stage,
             job,
-            kubeTask,
+            jobInstance,
             logger
         );
-        // await TripBreakpoint(jobInstance, false);
         logger.info({ state: "Sealing", msg: "Agent sealing completed", block: "end" });
 
 
