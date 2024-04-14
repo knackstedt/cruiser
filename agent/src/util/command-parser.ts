@@ -40,23 +40,29 @@ export const ParseCommand = (commandInput: string) => {
         }
         else if (char == '"') {
             // read up to the next " char.
-            const tOff = args.indexOf('"', i);
+            let j = 0;
+            for (j = i+1; args[j] != '"' && j < args.length; j++)
+                if (args[j] == '\\') j++;
 
-            if (tOff == -1)
+            // If there is no match, set to -1
+            if (args[j] != '"')
                 throw new Error("Invalid command");
 
-            chunk += args.slice(i, tOff);
-            i = tOff;
+            chunk += args.slice(i+1, j);
+            i = j;
         }
         else if (char == '\'') {
             // read up to the next ' char.
-            const tOff = args.indexOf('\'', i);
+            let j = 0;
+            for (j = i + 1; args[j] != "'" && j < args.length; j++)
+                if (args[j] == '\\') j++;
 
-            if (tOff == -1)
+            // If there is no match, set to -1
+            if (args[j] != "'")
                 throw new Error("Invalid command");
 
-            chunk += args.slice(i, tOff);
-            i = tOff;
+            chunk += args.slice(i+1, j);
+            i = j;
         }
         else {
             chunk += char;
@@ -71,3 +77,5 @@ export const ParseCommand = (commandInput: string) => {
     }
 }
 
+// Test commands
+// console.log(ParseCommand('git commit -m "⚛ [automation]\\"\\"asd\\"\\"aasd\\" \\"asdincrement version"'))
