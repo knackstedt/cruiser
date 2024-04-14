@@ -2,7 +2,9 @@ const defaultStoragePath = process.env['CRUISER_GLOBAL_STORAGE_PATH'] || (proces
 
 export const environment = Object.seal({
     cruiser_kube_namespace: process.env['CRUISER_KUBE_NAMESPACE'] || process.env['CRUISER_AGENT_NAMESPACE'] || "cruiser",
-    cruiser_cluster_url: process.env['DOTGLITCH_DOTOPS_CLUSTER_URL'],
+
+    // hostname -i => 10.42.1.8
+    cruiser_cluster_url: process.env['CRUISER_CLUSTER_URL'],
     cruiser_admin_id: process.env['CRUISER_ADMINISTRATOR'],
     cruiser_scheduler_poll_interval: parseInt(process.env['CRUISER_SCHEDULER_POLL_INTERVAL'] || (1 * 60).toString()),
     cruiser_vault_secret: process.env['CRUISER_VAULT_SECRET'],

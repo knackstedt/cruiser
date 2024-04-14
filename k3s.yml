@@ -155,11 +155,11 @@ spec:
             secretKeyRef:
               name: cruiser-github-secret
               key: GITHUB_OAUTH_CLIENTID
-        - name: DOTGLITCH_DOTOPS_CLUSTER_URL
+        - name: CRUISER_CLUSTER_URL
           valueFrom:
             configMapKeyRef:
               name: cruiser-config
-              key: DOTGLITCH_DOTOPS_CLUSTER_URL
+              key: CRUISER_CLUSTER_URL
         volumeMounts:
           - name: filestore
             mountPath: /filestore
