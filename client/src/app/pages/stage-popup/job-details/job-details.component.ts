@@ -46,12 +46,12 @@ export class JobDetailsComponent {
     public jobInstance: JobInstance;
     public job: JobDefinition;
 
-    code = '';
-
     config: NgxFileManagerConfiguration;
     connected = false;
     socket: Socket;
     breakpoints: any[] = [];
+    selectedIndex = 0;
+    loadTerminal = false;
 
     constructor(
         @Inject(MAT_DIALOG_DATA) private readonly data: any,

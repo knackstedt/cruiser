@@ -1,7 +1,7 @@
 @if (loadingState != 'ready') {
     <mat-progress-bar [mode]="'indeterminate'"/>
 }
-<div>
+<!-- <div>
     @switch(loadingState) {
         @case ("ready") {
             <mat-icon fontIcon="terminal" />
@@ -22,7 +22,7 @@
             <mat-icon class="rotate" fontIcon="cycle" />
         }
     }
-</div>
+</div> -->
 
 <div class="content">
     @if (!showTerminal) {

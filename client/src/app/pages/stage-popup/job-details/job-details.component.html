@@ -18,20 +18,22 @@
     </div>
 
     <div class="content">
-        <mat-tab-group [mat-stretch-tabs]="false">
+        <mat-tab-group
+            [mat-stretch-tabs]="false"
+            [(selectedIndex)]="selectedIndex"
+            (selectedIndexChange)="$event==1?(loadTerminal=true):null"
+        >
             <mat-tab label="Output">
-                <ng-template matTabContent>
-                    <app-job-logs
-                        [jobInstance]="jobInstance"
-                    />
-                </ng-template>
+                <app-job-logs
+                    [jobInstance]="jobInstance"
+                />
             </mat-tab>
             <mat-tab label="Shell" [disabled]="completeStates.includes(jobInstance.state)">
-                <ng-template matTabContent>
+                @if (loadTerminal) {
                     <app-xterm-wrapper
                         [jobInstance]="jobInstance"
                     />
-                </ng-template>
+                }
             </mat-tab>
             <mat-tab label="File Explorer" [disabled]="completeStates.includes(jobInstance.state)">
                 <ng-template matTabContent>
