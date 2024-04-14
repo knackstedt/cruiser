@@ -9,48 +9,74 @@
         <div style="flex: 1"></div>
 
         <div>
-            @if (jobInstance.state == "frozen") {
-                <mat-icon (click)="resumeJob()">play_circle</mat-icon>
-            }
-            @else {
-                <!-- <mat-icon (click)="pauseJob()">pause_circle</mat-icon> -->
-            }
-
-            @if (!['finished', 'failed'].includes(jobInstance.state)) {
-                <mat-icon (click)="killJob()">stop_circle</mat-icon>
+            @if (!completeStates.includes(jobInstance.state)) {
+                <button mat-mini-fab matTooltip="Cancel Job Instance"  (click)="killJob()">
+                    <mat-icon>stop_circle</mat-icon>
+                </button>
             }
         </div>
     </div>
 
-    <mat-tab-group [mat-stretch-tabs]="false">
-        <mat-tab label="Output">
-            <ng-template matTabContent>
-                <app-job-logs
-                    [jobInstance]="jobInstance"
-                />
-            </ng-template>
-        </mat-tab>
-        <mat-tab label="Shell" [disabled]="['failed','finished'].includes(jobInstance.state)">
-            <ng-template matTabContent>
-                <app-xterm-wrapper
-                    [jobInstance]="jobInstance"
-                />
-            </ng-template>
-        </mat-tab>
-        <mat-tab label="File Explorer" [disabled]="['failed','finished'].includes(jobInstance.state)">
-            <ng-template matTabContent>
-                @if (config) {
-                    <app-filemanager
-                        gridSize="small"
-                        [config]="config"
+    <div class="content">
+        <mat-tab-group [mat-stretch-tabs]="false">
+            <mat-tab label="Output">
+                <ng-template matTabContent>
+                    <app-job-logs
+                        [jobInstance]="jobInstance"
                     />
+                </ng-template>
+            </mat-tab>
+            <mat-tab label="Shell" [disabled]="completeStates.includes(jobInstance.state)">
+                <ng-template matTabContent>
+                    <app-xterm-wrapper
+                        [jobInstance]="jobInstance"
+                    />
+                </ng-template>
+            </mat-tab>
+            <mat-tab label="File Explorer" [disabled]="completeStates.includes(jobInstance.state)">
+                <ng-template matTabContent>
+                    @if (config) {
+                        <app-filemanager
+                            gridSize="small"
+                            [config]="config"
+                        />
+                    }
+                </ng-template>
+            </mat-tab>
+            <!-- <mat-tab label="Tests">???</mat-tab> -->
+            <!-- <mat-tab label="Artifacts"></mat-tab> -->
+            <!-- <mat-tab label="Sources">???</mat-tab> -->
+        </mat-tab-group>
+
+        @if (breakpoints.length > 0) {
+            <div class="breakpoints">
+                <p>Breakpoints</p>
+                @for (breakpoint of breakpoints; track breakpoint) {
+                    <div class="breakpoint">
+                        @if(breakpoint.task) {
+                            <div style="display: flex;flex-direction: column;">
+                                <span>Task {{breakpoint.task?.label}}</span>
+                                <span>Group {{breakpoint.taskGroup?.label}}</span>
+                            </div>
+                        }
+                        @else {
+                            <span>{{breakpoint.id}}</span>
+                        }
+                        <div style="flex: 1"></div>
+
+                        @if (breakpoint.allowRetry) {
+                            <button mat-mini-fab (click)="clearBreakpoint(breakpoint, true)">
+                                <mat-icon>replay</mat-icon>
+                            </button>
+                        }
+                        <button mat-mini-fab (click)="clearBreakpoint(breakpoint, false)">
+                            <mat-icon>play_arrow</mat-icon>
+                        </button>
+                    </div>
                 }
-            </ng-template>
-        </mat-tab>
-        <!-- <mat-tab label="Tests">???</mat-tab> -->
-        <!-- <mat-tab label="Artifacts"></mat-tab> -->
-        <!-- <mat-tab label="Sources">???</mat-tab> -->
-    </mat-tab-group>
+            </div>
+        }
+    </div>
 }
 
 

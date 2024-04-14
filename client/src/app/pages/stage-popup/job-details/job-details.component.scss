@@ -16,5 +16,26 @@
     padding: 0 12px;
 }
 
+button {
+    background-color: #0000;
+}
 
+.content {
+    display: flex;
+    height: 100%;
+}
 
+.breakpoints {
+    padding: 12px;
+    width: 440px;
+
+    .breakpoint {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        &:hover {
+            background-color: #323232;
+        }
+    }
+}

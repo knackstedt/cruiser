@@ -166,7 +166,7 @@ export class JobLogsComponent {
 
         // If the pipeline is no longer running, attempt to load the logs from
         // the disk
-        if (['finished', 'failed'].includes(this.jobInstance.state)) {
+        if (['finished', 'failed', 'cancelled'].includes(this.jobInstance.state)) {
             this.isCompletedRun = true;
             const data = await this.fetch.get<string>(`/api/blobstore/log/${this.jobInstance.pipeline}/${this.jobInstance.pipeline_instance}/${this.jobInstance.stage}/${this.jobInstance.job}/${this.jobInstance.id}.log`, { responseType: "text" });
             const entries = data.split('\n').map((line, i) => {

@@ -8,6 +8,11 @@ import { JobDefinition, TaskDefinition } from 'src/types/pipeline';
 import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/job-instance-icon.component';
 import { XtermWrapperComponent } from 'src/app/pages/stage-popup/job-details/xterm-wrapper/xterm-wrapper.component';
 import { JobLogsComponent } from 'src/app/pages/stage-popup/job-details/job-logs/job-logs.component';
+import { PipelineSocketService } from 'src/app/services/pipeline-socket.service';
+import { JobInstance } from 'src/types/agent-task';
+import { BindSocketLogger } from 'src/app/utils/utils';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
     selector: 'app-job-details',
@@ -24,6 +29,8 @@ import { JobLogsComponent } from 'src/app/pages/stage-popup/job-details/job-logs
     imports: [
         MatIconModule,
         MatTabsModule,
+        MatButtonModule,
+        MatTooltipModule,
         MenuDirective,
         XtermWrapperComponent,
         JobLogsComponent,
@@ -34,7 +41,9 @@ import { JobLogsComponent } from 'src/app/pages/stage-popup/job-details/job-logs
 })
 export class JobDetailsComponent {
 
-    public jobInstance;
+    readonly completeStates = ['finished', 'failed', 'cancelled'];
+
+    public jobInstance: JobInstance;
     public job: JobDefinition;
 
     code = '';
@@ -42,10 +51,12 @@ export class JobDetailsComponent {
     config: NgxFileManagerConfiguration;
     connected = false;
     socket: Socket;
+    breakpoints: any[] = [];
 
     constructor(
         @Inject(MAT_DIALOG_DATA) private readonly data: any,
-        private readonly fetch: Fetch
+        private readonly fetch: Fetch,
+        private readonly pipelineSocket: PipelineSocketService
     ) {
         // this.jobInstance = data.jobInstance
         this.job = data.job;
@@ -55,7 +66,7 @@ export class JobDetailsComponent {
         if (!this.jobInstance) {
             this.fetch.get(`/api/odata/${this.data.jobInstance.id}`)
                 .then(ji => {
-                    this.jobInstance = ji;
+                    this.jobInstance = ji as any;
                     this.ngOnInit();
                 });
             return;
@@ -73,11 +84,12 @@ export class JobDetailsComponent {
             path: "/agent",
         }
 
-        if ([].includes(this.jobInstance.status)) {
+        if (!['finished', 'failed', 'cancelled'].includes(this.jobInstance.state)) {
             const socket = this.socket = io({
                 path: "/ws/socket-tunnel",
                 withCredentials: true
             });
+            BindSocketLogger("breakpoint", socket);
 
             socket.on("connect", () => {
                 socket.emit("$connect", { jobInstanceId: this.jobInstance.id });
@@ -91,24 +103,21 @@ export class JobDetailsComponent {
                 this.connected = false;
             });
 
-
-            socket.on("breakpoint:trip", ({id, task, job}: {id: string, task: TaskDefinition, job: string}) => {
-                if (job != this.jobInstance.id) return;
-
-                // This pipeline just tripped a breakpoint
+            socket.on("breakpoint:list", ({breakpoints}) => {
+                this.breakpoints = breakpoints;
             });
         }
     }
 
-    resumeJob() {
+    clearBreakpoint(breakpoint, retry) {
         this.socket.emit("breakpoint:resume", {
-            // id,
-            // job,
-            // retry
+            ...breakpoint,
+            retry
         })
     }
 
     killJob() {
-        this.socket.emit("breakpoint:halt")
+        console.log("killer")
+        this.pipelineSocket.emit("$stop-job", { jobInstanceId: this.jobInstance.id })
     }
 }

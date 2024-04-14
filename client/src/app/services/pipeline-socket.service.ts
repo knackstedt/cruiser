@@ -15,15 +15,11 @@ type LiveRecordChange<T = any> = {
 @Injectable({
     providedIn: 'root'
 })
-export class PipelineSocketService<T = any> extends Subject<LiveRecordChange<T>> {
-    public value: LiveRecordChange<T>;
-
+export class PipelineSocketService {
     private socket: Socket;
     connected = false;
 
     constructor() {
-        super();
-
         const socket = this.socket = io({
             path: "/ws/socket-service",
             withCredentials: true
