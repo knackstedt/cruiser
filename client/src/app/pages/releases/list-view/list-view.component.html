@@ -100,7 +100,6 @@
                             @for (stage of instance.spec.stages; track stage) {
                                 <div
                                     class="stage-block"
-                                    [class.running]="!parent.completedStates.includes(stage['_latestJob']?.state)"
                                     [class.requires_approval]="stage['_isReadyForApproval']"
                                     [class.filled]="stage.jobs?.length > 0"
                                     [class.outlined]="!(stage.jobs?.length > 0)"

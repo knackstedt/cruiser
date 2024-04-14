@@ -49,7 +49,7 @@ export class ReleasesComponent implements OnInit {
 
     interval;
     dispose = false;
-    readonly completedStates = ['frozen', 'finished', 'failed', 'cancelled', null];
+    readonly completedStates = ['finished', 'failed', 'cancelled', null];
 
     readonly ctxMenu: MenuItem<PipelineDefinition>[] = [
         {
@@ -84,14 +84,9 @@ export class ReleasesComponent implements OnInit {
             label: "Cancel",
             // isVisible: ({ pipeline, instance }) => ['started', 'running', 'waiting'].includes(instance.status.phase),
             action: ({pipeline, instance}) => {
-                // this.fetch.post(`/api/pipeline/${pipeline.id}/${instance.id}/stop`, {})
-                //     .then(res => {
-                //         // ???
-                //     })
-                //     .catch(err => this.toastr.warning("Failed to cancel pipeline"));
                 const data = structuredClone(instance);
                 data.status.jobInstances = data.status.jobInstances.map(j => j['id']);
-                data.status.phase = "stopped";
+                data.status.phase = "cancelled";
 
                 this.fetch.patch(`/api/odata/${instance.id}`, data).then(res => {
                     (instance.status.jobInstances as any as JobInstance[]).forEach(jobInstance => {
@@ -101,7 +96,6 @@ export class ReleasesComponent implements OnInit {
                         }
                     })
                 })
-
             }
         },
     ];
@@ -316,7 +310,7 @@ export class ReleasesComponent implements OnInit {
                 stage['_state'] =
                     states.length == 0
                     ? (
-                        ["running", "starting", "waiting"].includes(instance.status.phase)
+                        ["started", "running", "starting", "waiting"].includes(instance.status.phase)
                             ? 'pending'
                             : instance.status.phase
                     )
