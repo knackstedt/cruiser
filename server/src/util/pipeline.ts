@@ -224,6 +224,7 @@ const createKubeJob = (
                 metadata: {
                     annotations: {
                         "cruiser.dev/created-by": "$cruiser",
+                        "cruiser.dev/release": pipelineInstance.identifier,
                         "cruiser.dev/pipeline-id": pipeline.id,
                         "cruiser.dev/pipeline-label": pipeline.label,
                         "cruiser.dev/pipeline-instance-id": pipelineInstance.id,
@@ -264,8 +265,6 @@ const createKubeJob = (
                             },
                             ports: [{ containerPort: 8080 }],
                             env: [
-                                // TODO: pass surreal connection string
-                                // consider using HTTP POST instead.
                                 { name: "CI_ENVIRONMENT", value: "cruiser" },
                                 // TODO: calculate this value by introspecting the server
                                 // hostname -i => ip address
