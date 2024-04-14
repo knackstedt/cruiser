@@ -154,7 +154,7 @@ export const GetInputs = async (
 
                 if ((await readdir(cloneDir)).length > 0) {
                     logger.fatal({
-                        msg: "Cannot clone into non-empty directory",
+                        msg: "⏸ Cannot clone into non-empty directory",
                         state: 'failed'
                     });
 

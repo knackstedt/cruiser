@@ -63,13 +63,12 @@ export const TripBreakpoint = async (
         breakpointTaskGroup: taskGroup
     });
 
-    _socket.emit("breakpoint:trip", {
-        job: jobInstance.id,
-        task: task,
-        id: uid
+    _socket.emit("breakpoint:list", {
+        breakpoints: Object.values(breakpoints)
+            .map(v => ({ ...v, resolve: undefined, reject: undefined }))
     });
 
-    return new Promise((res, rej) => {
+    return new Promise<boolean>((res, rej) => {
         breakpoints[uid] = {
             resolve: res,
             reject: rej,

@@ -25,7 +25,7 @@ export const RunProcess = async (
 
 
         if (task.preBreakpoint) {
-            logger.info({ msg: `Tripping on Breakpoint`, breakpoint: true, taskGroup, task });
+            logger.info({ msg: `⏸ Tripping on Breakpoint`, breakpoint: true, taskGroup, task });
             await TripBreakpoint(jobInstance, false, taskGroup, task);
             logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false, taskGroup, task });
         }
@@ -79,7 +79,10 @@ export const RunProcess = async (
                             secretRequests.push(api.get(`/api/${roots[i].id}/${envItem.value}`)
                                 .then(res => ({ key: envItem.name, value: res.data }))
                                 .catch(err => {
-                                    logger.error(err);
+                                    logger.error({
+                                        msg: `Failed to load secret '${envItem.key}'`,
+                                        err
+                                    });
                                     return { key: envItem.name, value: null, err };
                                 }));
 
@@ -117,7 +120,12 @@ export const RunProcess = async (
                 process.stdout.on('data', (data) => logger.stdout({ time: Date.now(), data, taskGroup, task }));
                 process.stderr.on('data', (data) => logger.stderr({ time: Date.now(), data, taskGroup, task }));
 
-                process.on('error', (err) => logger.error(err));
+                process.on('error', (err) => {
+                    logger.error({
+                        msg: "Process error",
+                        err
+                    })
+                });
 
                 process.on('disconnect', (...args) => {
                     logger.error({
@@ -158,9 +166,9 @@ export const RunProcess = async (
                 block: "end"
             });
             if (task.postBreakpoint) {
-                logger.info({ msg: `Tripping on Breakpoint`, breakpoint: true, taskGroup, task });
-                await TripBreakpoint(jobInstance, true, taskGroup, task);
-                logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false, taskGroup, task });
+                logger.info({ msg: `⏸ Tripping on Breakpoint`, breakpoint: true, taskGroup, task });
+                retry = await TripBreakpoint(jobInstance, true, taskGroup, task);
+                logger.info({ msg: `▶ Resuming from Breakpoint`, breakpoint: false, taskGroup, task });
             }
         }
         else {
@@ -168,10 +176,11 @@ export const RunProcess = async (
                 msg: process.exitCode == -1 ? "Failed to spawn process" : "Process exited with code " + process.exitCode,
                 ...(process.exitCode == -1 ? { err: process['err'] } : { process })
             });
+
             if (task.disableErrorBreakpoint != true) {
-                logger.info({ msg: `Breaking on error`, breakpoint: true, error: true, taskGroup, task });
-                await TripBreakpoint(jobInstance, true, taskGroup, task);
-                logger.info({ msg: `Resuming from Breakpoint`, breakpoint: true, error: false, taskGroup, task });
+                logger.info({ msg: `⏸ Breaking on error`, breakpoint: true, error: true, taskGroup, task });
+                retry = await TripBreakpoint(jobInstance, true, taskGroup, task);
+                logger.info({ msg: `▶ Resuming from Breakpoint`, breakpoint: true, error: false, taskGroup, task });
             }
         }
     }

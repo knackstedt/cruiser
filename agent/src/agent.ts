@@ -73,7 +73,7 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
     }
     catch(err) {
         logger.fatal({
-            msg: "Cannot continue build task!",
+            msg: "⏸ Cannot continue build task!",
             stack: err.stack,
             message: err.message ?? err.title ?? err.name
         })

@@ -127,7 +127,7 @@ export const UploadArtifacts = async (
             }
             else {
                 logger.warn({
-                    msg: `Failed to seal artifact '${artifact.label}'`,
+                    msg: `⏸ Failed to seal artifact '${artifact.label}'`,
                     artifact,
                     result
                 });

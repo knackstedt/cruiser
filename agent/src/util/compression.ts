@@ -20,7 +20,12 @@ const runCommand = (
         process.stdout.on('data', (data) => (stdout += data) && logger.stdout({ time: Date.now(), data, scope: "sealing" }));
         process.stderr.on('data', (data) => (stderr += data) && logger.stderr({ time: Date.now(), data, scope: "sealing" }));
 
-        process.on('error', (err) => logger.error(err));
+        process.on('error', (err) => {
+            logger.error({
+                msg: "Process error",
+                err
+            })
+        });
 
         process.on('disconnect', (...args) => {
             logger.error({
