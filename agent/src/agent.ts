@@ -23,6 +23,15 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
     await BindSocketBreakpoint(socket, jobInstance, logger);
 
     try {
+        logger.info({
+            msg: "Agent started",
+            pipelineInstance,
+            pipeline,
+            stage,
+            job,
+            jobInstance
+        });
+
         // Perform preflight checks
         logger.info({ state: "Preflight", msg: "Running preflight check" });
         await api.patch(`/api/odata/${jobInstanceId}`, { state: "preflight", initEpoch: Date.now() })
