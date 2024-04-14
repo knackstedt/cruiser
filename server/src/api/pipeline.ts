@@ -77,53 +77,6 @@ router.get('/:id/start', route(async (req, res, next) => {
     });
 }));
 
-// Endpoint to stop and kill an entire pipeline.
-router.post('/:id/:instance/stop', route(async (req, res, next) => {
-    const pipeline: PipelineDefinition = req['pipeline'];
-
-    const [[instance]] = await db.query<[PipelineInstance[]]>(`select * from ${req.params['instance']} fetch status.jobInstances`);
-
-    // If the pipeline isn't running, there's no point in cancelling it.
-    if (!["running", "starting", "waiting"].includes(instance.status.phase))
-        return;
-
-    const jobs = (instance.status.jobInstances as any as JobInstance[]);
-    const results = [];
-
-    for (const job of jobs) {
-        const uid = job['jobUid'];
-
-        const url = await getPodEndpointUrl(uid, job.id, job.kubeNamespace ?? environment.cruiser_kube_namespace)
-            .catch(err => err);
-
-        if (typeof url != "string") {
-            results.push(url);
-            continue;
-        }
-
-        // Tell the agent to stop.
-        await axios.post(
-            url + `/api/agent/stop`,
-            {},
-            {
-                headers: {
-                    'X-Cruiser-Token': job['kubeAuthnToken']
-                }
-            }
-        )
-        .then(res => results.push(res))
-        .catch(err => results.push(err));
-    }
-
-    instance.status.phase = "cancelled";
-    await db.merge(instance.id, instance);
-
-    res.send({
-        message: "ok",
-        results
-    });
-}));
-
 router.get('/:id/:instance/:stage/approve', route(async (req, res, next) => {
     const pipeline: PipelineDefinition = req['pipeline'];
 
