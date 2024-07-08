@@ -1,5 +1,5 @@
 # Cruiser
-The modern and robust CI/CD toolchain for tomorrow's applications.
+Revolutionizing CICD with Kubernetes.
 
 ## Motivation
 
