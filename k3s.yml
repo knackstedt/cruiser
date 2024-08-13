@@ -174,7 +174,7 @@ spec:
               - ALL
         livenessProbe:
           httpGet:
-            path: /ngsw.json
+            path: /index.html
             port: 8080
           initialDelaySeconds: 60
           failureThreshold: 3
