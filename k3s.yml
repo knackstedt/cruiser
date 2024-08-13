@@ -275,7 +275,7 @@ spec:
             - ALL
       containers:
       - name: cruiser-db
-        image: surrealdb/surrealdb:v1.2.2
+        image: surrealdb/surrealdb:v1.5.4
         ports:
           - containerPort: 8000
         resources:
