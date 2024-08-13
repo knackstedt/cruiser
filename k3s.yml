@@ -166,7 +166,7 @@ spec:
         securityContext:
           privileged: false
           allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
+        #   readOnlyRootFilesystem: true
           runAsNonRoot: true
           runAsUser: 101
           capabilities:
