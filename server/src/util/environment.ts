@@ -19,13 +19,17 @@ export const environment = Object.seal({
     surreal_pass: process.env['SURREAL_PASSWORD'],
     surreal_cruiser_database: process.env['CRUISER_SURREAL_DATABASE'] || "cruiser",
     surreal_cruiser_namespace: process.env['CRUISER_SURREAL_NAMESPACE'] || "dotglitch",
-    surreal_session_secret: process.env['SESSION_SECRET'],
-    surreal_session_database: "cruiser",
-    surreal_session_namespace: "dotglitch",
-    surreal_session_table: "user_sessions",
+
+    // Notably; this is the database name **within** a SurrealDB instance.
+    express_session_database: process.env['EXPRESS_SESSION_DATABASE'] || "cruiser",
+    express_session_namespace: process.env['EXPRESS_SESSION_NAMESPACE'] || "dotglitch",
+    express_session_table: process.env['EXPRESS_SESSION_TABLE'] || "user_sessions",
+    express_session_secret: process.env['EXPRESS_SESSION_SECRET'] || process.env['SESSION_SECRET'],
 
     github_client_id: process.env['GITHUB_OAUTH_CLIENTID'],
     github_client_secret: process.env['GITHUB_OAUTH_SECRET'],
 
     is_production: process.env["NODE_ENV"]?.toLowerCase() == "production",
+
+    is_running_local_agents: process.env["KUBERNETES"]
 });

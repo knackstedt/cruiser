@@ -13,14 +13,14 @@ const store = new SurrealDBStore({
         password: environment.surreal_pass,
     },
     connectionOpts: {
-        namespace: environment.surreal_session_namespace,
-        database: environment.surreal_session_database,
+        namespace: environment.express_session_namespace,
+        database: environment.express_session_database,
     },
-    tableName: environment.surreal_session_table
+    tableName: environment.express_session_table
 });
 
 router.use(session({
-    secret: environment.surreal_session_secret,
+    secret: environment.express_session_secret,
     saveUninitialized: false,
     resave: false,
     cookie: {
