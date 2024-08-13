@@ -163,6 +163,22 @@ spec:
         volumeMounts:
           - name: filestore
             mountPath: /filestore
+        securityContext:
+          privileged: false
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 101
+          capabilities:
+            drop:
+              - ALL
+        livenessProbe:
+          httpGet:
+            path: /ngsw.json
+            port: 8080
+          initialDelaySeconds: 60
+          failureThreshold: 3
+          periodSeconds: 10
       imagePullSecrets:
       - name: harbor-key
 
@@ -247,9 +263,16 @@ spec:
           persistentVolumeClaim:
             claimName: cruiser-db-pvc
       securityContext:
+        privileged: false
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
         fsGroup: 1000
         runAsUser: 1000
         runAsGroup: 1000
+        capabilities:
+          drop:
+            - ALL
       containers:
       - name: cruiser-db
         image: surrealdb/surrealdb:v1.2.2
@@ -287,7 +310,8 @@ spec:
             secretKeyRef:
               name: cruiser-db-secret
               key: SURREAL_PASS
-
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://dynatrace-otel-collector.dynatrace-otel.svc.cluster.local:4318/
 ---
 
 apiVersion: v1
