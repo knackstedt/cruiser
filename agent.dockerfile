@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:22-alpine
 # FROM oven/bun:alpine
 
 # Add required base dependencies
@@ -14,6 +14,8 @@ RUN rm /agent/src/types
 COPY ./types /agent/src/types
 
 WORKDIR /agent
+
+USER 1000
 
 # Install general agent deps
 RUN npm i
