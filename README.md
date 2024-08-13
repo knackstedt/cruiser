@@ -24,6 +24,7 @@ and you have been warned :)
 - [ ] Pipeline instance labels can be defined from simple JS scripts
 - [ ] Support Pipeline definition as code file (YAML,JSON)
 - [ ] Pipeline, stage, job failure hooks
+- [ ] Projects that can group pipelines and teams / boards
 - [ ] Env vars & secrets on "global system"
 - [ ] Env vars & secrets on "project"
 - [ ] Auto-trigger and approve next release if previous release has been deployed and not redacted
@@ -41,6 +42,14 @@ and you have been warned :)
 - [ ] Support user metrics for hosted repos
 - [ ] Support Artillery load testing + metrics (builtin?)
 - [ ] Support for common load testing & quality gate metric integration
+- [ ] Agent configure graph: disabled tasks become opaque
+- [ ] Agent configure graph: task conditions (if not met make the dependants all a shade of red/pink?)
+- [ ] On startup run preflight checks (create alert center)
+- [ ] Allow rollback of failed / partial deployments / tasks
+- [ ] Simulate task execution (clarify: how?)
+- [ ] Branch based templating and filters builtin
+- [ ] Advanced task filter syntax (use JS?)
+- [ ] Kanban tracking board
 - [ ] Static build agent support
 - [ ] Destroy all humans
 - [X] Add stage "Triggers"
