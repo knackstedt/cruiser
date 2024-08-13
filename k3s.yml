@@ -262,17 +262,6 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: cruiser-db-pvc
-      securityContext:
-        privileged: false
-        allowPrivilegeEscalation: false
-        readOnlyRootFilesystem: true
-        runAsNonRoot: true
-        fsGroup: 1000
-        runAsUser: 1000
-        runAsGroup: 1000
-        capabilities:
-          drop:
-            - ALL
       containers:
       - name: cruiser-db
         image: surrealdb/surrealdb:v1.5.4
@@ -289,6 +278,17 @@ spec:
         volumeMounts:
           - name: data
             mountPath: /data
+        securityContext:
+          privileged: false
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          fsGroup: 1000
+          runAsUser: 1000
+          runAsGroup: 1000
+          capabilities:
+            drop:
+              - ALL
         env:
         - name: SURREAL_AUTH
           value: 'true'
