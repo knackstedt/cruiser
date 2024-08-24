@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { ulid } from 'ulidx';
 import { JobDefinition, PipelineDefinition } from '../types/pipeline';
-import { sessionHandler } from '../middleware/session';
+import { SessionMiddleware } from '../middleware/session';
 import { Session, SessionData } from 'express-session';
 import { CheckJobToken } from '../util/token-cache';
 import { JobInstance } from '../types/agent-task';
@@ -41,7 +41,7 @@ export class SocketTunnelService {
             path: "/ws/socket-tunnel",
             maxHttpBufferSize: 1024**3
         });
-        io.engine.use(sessionHandler);
+        io.engine.use(SessionMiddleware);
         io.engine.use((req, res, next) => {
             if (
                 !req.session?.profile?.roles ||

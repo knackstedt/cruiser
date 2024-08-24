@@ -93,6 +93,7 @@ export type JobDefinition = {
     kubeJobAnnotations?: { [key: string]: string },
     kubeJobLabels?: { [key: string]: string },
     kubeContainerTolerations?: k8s.V1Toleration[];
+    kubeContainerAffinity?: k8s.V1Affinity;
     kubeContainerAnnotations?: { [key: string]: string },
     kubeContainerLabels?: { [key: string]: string },
     kubeContainerImage?: string,

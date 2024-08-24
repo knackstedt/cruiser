@@ -1,3 +1,4 @@
+import { exec } from 'child_process';
 import { ulid } from 'ulidx';
 import * as k8s from '@kubernetes/client-node';
 
@@ -198,8 +199,71 @@ const createKubeJob = (
     podName: string,
     podId: string,
     kubeAuthnToken: string
-) =>
-    k8sBatchApi.createNamespacedJob(namespace, {
+) => {
+
+    // TODO: Add a compendium of standard environment variables
+    // https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
+    // https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html
+    // https://developer.harness.io/docs/continuous-integration/troubleshoot-ci/ci-env-var/
+    // https://docs.acquia.com/acquia-cloud-platform/features/pipelines/variables
+    // https://docs.gocd.org/current/faq/dev_use_current_revision_in_build.html
+    // https://learn.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
+    // https://devopsqa.wordpress.com/2019/11/19/list-of-available-jenkins-environment-variables/
+    // https://docs.travis-ci.com/user/environment-variables/
+    // https://www.jetbrains.com/help/teamcity/predefined-build-parameters.html#Build+Branch+Parameters
+    const envVariables = [
+        { name: "CI", value: "true" },
+        // { name: "CI_COMMIT_AUTHOR", value: "true" },
+        // { name: "CI_COMMIT_BEFORE_SHA", value: "true" },
+        // { name: "CI_COMMIT_BRANCH", value: "true" },
+        // { name: "CI_COMMIT_DESCRIPTION", value: "true" },
+        // { name: "CI_COMMIT_MESSAGE", value: "true" },
+        // { name: "CI_COMMIT_REF_NAME", value: "true" },
+        // { name: "CI_COMMIT_REF_PROTECTED", value: "true" },
+        // { name: "CI_COMMIT_REF_SLUG", value: "true" },
+        // { name: "CI_COMMIT_SHA", value: "true" },
+        // { name: "CI_COMMIT_SHORT_SHA", value: "true" },
+        // { name: "CI_COMMIT_TAG", value: "true" },
+        // { name: "CI_COMMIT_TAG_MESSAGE", value: "true" },
+        // { name: "CI_COMMIT_TIMESTAMP", value: "true" },
+        // { name: "CI_COMMIT_TITLE", value: "true" },
+        { name: "CI_ENVIRONMENT", value: "cruiser" },
+        // TODO: calculate this value by introspecting the server
+        // hostname -i => ip address
+        { name: "CRUISER_CLUSTER_URL", value: environment.cruiser_cluster_url },
+        { name: "CRUISER_AGENT_ID", value: jobInstance.id.split(':')[1] },
+        { name: "CRUISER_SERVER_TOKEN", value: kubeAuthnToken },
+        ...(jobDefinition.environment ?? []),
+        ...(stage.environment ?? []),
+        ...(pipeline.environment ?? [])
+    ].filter(e => !!e.name.trim());
+
+    // If the environment is not on kube, run the agents on the same device.
+    // In the future, this should be able to spawn agents elsewhere
+    // (other elastic options and static agents)
+    // future: should also support settings based on the job
+    if (environment.is_running_local_agents) {
+        const env = {};
+        envVariables.forEach(v => env[v.name] = v.value);
+
+        return new Promise((res, rej) => {
+            let log: string;
+            const proc = exec("node agent/main.ts", {
+                env,
+                windowsHide: true
+            }, res);
+
+            proc.on("exit", code => code == 0 ? res(log) : rej(new Error("Agent process exited with non-zero code " + code)));
+            proc.on("disconnect", () => rej(new Error("Agent process disconnected!")));
+            proc.on("error", e => rej);
+
+            proc.stderr.addListener("data", data => log += data);
+            proc.stdout.addListener("data", data => log += data);
+        })
+    }
+
+
+    return k8sBatchApi.createNamespacedJob(namespace, {
         apiVersion: "batch/v1",
         kind: "Job",
         metadata: {
@@ -238,7 +302,6 @@ const createKubeJob = (
                     labels: jobDefinition?.kubeContainerLabels,
                 },
                 spec: {
-                    tolerations: jobDefinition?.kubeContainerTolerations,
                     restartPolicy: "Never",
                     enableServiceLinks: false,
                     containers: [
@@ -247,37 +310,30 @@ const createKubeJob = (
                             image: jobDefinition?.kubeContainerImage || "ghcr.io/knackstedt/cruiser/cruiser-agent:latest",
                             imagePullPolicy: 'Always',
                             securityContext: {
-                                // Must be true for docker build
+                                // Must be true for docker build. Urgh.
                                 privileged: true,
+                                allowPrivilegeEscalation: false,
                                 capabilities: {
                                     drop: ["ALL"]
                                 }
                             },
                             resources: {
                                 limits: {
-                                    cpu: jobDefinition?.kubeCpuLimit,
-                                    memory: jobDefinition?.kubeMemLimit
+                                    cpu: jobDefinition?.kubeCpuLimit || '1000m',
+                                    memory: jobDefinition?.kubeMemLimit || '4000Mi'
                                 },
                                 requests: {
-                                    cpu: jobDefinition?.kubeCpuRequest,
-                                    memory: jobDefinition?.kubeMemRequest
+                                    cpu: jobDefinition?.kubeCpuRequest || '100m',
+                                    memory: jobDefinition?.kubeMemRequest || '750Mi'
                                 }
                             },
                             ports: [{ containerPort: 8080 }],
-                            env: [
-                                { name: "CI_ENVIRONMENT", value: "cruiser" },
-                                // TODO: calculate this value by introspecting the server
-                                // hostname -i => ip address
-                                { name: "CRUISER_CLUSTER_URL", value: environment.cruiser_cluster_url },
-                                { name: "CRUISER_AGENT_ID", value: jobInstance.id.split(':')[1] },
-                                { name: "CRUISER_SERVER_TOKEN", value: kubeAuthnToken },
-                                ...(jobDefinition.environment ?? []),
-                                ...(stage.environment ?? []),
-                                ...(pipeline.environment ?? [])
-                            ].filter(e => !!e.name.trim()) // Clear any empty env variables
+                            env: envVariables // Clear any empty env variables
                         }
-                    ]
-                }
+                    ],
+                    affinity: jobDefinition?.kubeContainerAffinity,
+                    tolerations: jobDefinition?.kubeContainerTolerations
+                },
             }
         }
     })
@@ -285,4 +341,7 @@ const createKubeJob = (
     .catch(err => {
         debugger;
     });
+}
+
+
 

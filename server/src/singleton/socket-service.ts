@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { sessionHandler } from '../middleware/session';
+import { SessionMiddleware } from '../middleware/session';
 import { SessionData } from 'express-session';
 import { SocketTunnelService } from './socket-tunnel';
 
@@ -23,7 +23,7 @@ export class SocketEventService {
             path: "/ws/socket-service",
             maxHttpBufferSize: 1024 ** 3
         });
-        io.engine.use(sessionHandler);
+        io.engine.use(SessionMiddleware);
         io.engine.use((req, res, next) => {
             if (
                 !req.session?.profile?.roles ||

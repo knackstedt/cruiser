@@ -14,6 +14,9 @@ const k8sWatch = new k8s.Watch(kc);
 if (!environment.cruiser_log_dir.endsWith('/')) environment.cruiser_log_dir += '/';
 fs.mkdirSync(environment.cruiser_log_dir, { recursive: true });
 
+// Connect "watchers" to the kube api for changes to Pods and Jobs
+// Cleanup jobs when pods complete, and trigger log storage when a job
+// finishes.
 export const WatchAndFlushJobs = async() => {
     const podMap: { [key: string]: k8s.V1Pod | 0 } = {};
     const watchPods = () => k8sWatch.watch(`/api/v1/namespaces/${environment.cruiser_kube_namespace}/pods`,
@@ -137,6 +140,8 @@ const SweepJobs = async () => {
     setTimeout(SweepJobs.bind(this), flushInterval);
 }
 
+// When a job completes, take the log from kube and write it into a log file under storage.
+// TODO: live write the file without bothering with this mess of an API.
 const SaveLogAndCleanup = async (pod: k8s.V1Pod, job: k8s.V1Job) => {
     const { body: log } = await k8sApi.readNamespacedPodLog(pod.metadata.name, pod.metadata.namespace);
 

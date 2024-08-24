@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
-import { sessionHandler } from '../middleware/session';
+import { SessionMiddleware } from '../middleware/session';
 import { SessionData } from 'express-session';
-import { afterDatabaseConnected, db } from '../util/db';
+import { db } from '../util/db';
 import { PipelineInstance } from '../types/pipeline';
 
 export class SocketLiveService {
@@ -11,23 +11,15 @@ export class SocketLiveService {
             path: "/ws/live-socket",
             maxHttpBufferSize: 1024 ** 3
         });
-        io.engine.use(sessionHandler);
+        io.engine.use(SessionMiddleware);
         io.engine.use((req, res, next) => {
-            if (
-                !req.session?.profile?.roles ||
-                !(
-                    req.session.profile.roles.includes("administrator") ||
-                    req.session.profile.roles.includes("manager") ||
-                    req.session.profile.roles.includes("user")
-                )
-            ) {
-                return next(404);
-            }
+            res.headers.set("Access-Control-Allow-Origin", "*");
+            res.headers.set("foodude", "*");
             next();
         });
         const activeSockets: Socket[] = [];
 
-        afterDatabaseConnected(() => {
+        db.wait().then(() => {
 
             const watchPipelines = () =>
                 db.live("pipeline", data =>

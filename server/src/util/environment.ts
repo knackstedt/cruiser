@@ -9,6 +9,9 @@ export const environment = Object.seal({
     cruiser_scheduler_poll_interval: parseInt(process.env['CRUISER_SCHEDULER_POLL_INTERVAL'] || (1 * 60).toString()),
     cruiser_vault_secret: process.env['CRUISER_VAULT_SECRET'],
 
+    cruiser_rest_port: parseInt(process.env['CRUISER_REST_PORT'] || '6800'),
+    cruiser_websocket_port: parseInt(process.env['CRUISER_WEBSOCKET_PORT'] || '6820'),
+
     cruiser_log_dir: process.env['CRUISER_AGENT_LOG_PATH'] || (defaultStoragePath + "/log"),
     cruiser_blob_dir: process.env['CRUISER_BLOB_PATH'] || (defaultStoragePath + "/blob"),
     cruiser_artifact_dir: process.env['CRUISER_ARTIFACT_PATH'] || (defaultStoragePath + "/artifacts"),
@@ -17,6 +20,7 @@ export const environment = Object.seal({
     surreal_url: process.env['SURREAL_URL'],
     surreal_user: process.env['SURREAL_USER'],
     surreal_pass: process.env['SURREAL_PASSWORD'],
+    surreal_scope: process.env['SURREAL_SCOPE'],
     surreal_cruiser_database: process.env['CRUISER_SURREAL_DATABASE'] || "cruiser",
     surreal_cruiser_namespace: process.env['CRUISER_SURREAL_NAMESPACE'] || "dotglitch",
 
