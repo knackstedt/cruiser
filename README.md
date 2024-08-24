@@ -19,10 +19,9 @@ and you have been warned :)
 
 ## Roadmap
 > Ordered by priority.
-- [ ] Branch filters
 - [ ] Add CRON triggers
 - [ ] Pipeline instance labels can be defined from simple JS scripts
-- [ ] Support Pipeline definition as code file (YAML,JSON)
+- [ ] Support Pipeline definition as code file (YAML, JSON)
 - [ ] Pipeline, stage, job failure hooks
 - [ ] Projects that can group pipelines and teams / boards
 - [ ] Env vars & secrets on "global system"
@@ -32,8 +31,7 @@ and you have been warned :)
 - [ ] Add support for non-git based code repos
 - [ ] Create base worker images and sample k8s setup
 - [ ] Record error messages over time and provide "smart" analysis
-- [ ] Document installation and use
-- [ ] Known build tools (docker, gulp, msbuild) should have a tailored experience
+- [ ] Known build tools (docker, gulp, msbuild etc) should have a tailored experience
 - [ ] Support for setting "Deployment freeze" periods
 - [ ] Support for "rollback to latest stable build" API
 - [ ] Support for watching deployment progress
@@ -42,14 +40,22 @@ and you have been warned :)
 - [ ] Support user metrics for hosted repos
 - [ ] Support Artillery load testing + metrics (builtin?)
 - [ ] Support for common load testing & quality gate metric integration
+- [ ] Documentation -- need help!
 - [ ] Agent configure graph: disabled tasks become opaque
 - [ ] Agent configure graph: task conditions (if not met make the dependants all a shade of red/pink?)
-- [ ] On startup run preflight checks (create alert center)
+- [ ] On startup run preflight system checks
+- [ ] System alerts -- failed pipelines, system state + health
 - [ ] Allow rollback of failed / partial deployments / tasks
 - [ ] Simulate task execution (clarify: how?)
-- [ ] Branch based templating and filters builtin
+- [ ] Branch based templating and filters 
 - [ ] Advanced task filter syntax (use JS?)
 - [ ] Kanban tracking board
+- [ ] Fetch secrets from a key vault
+- [ ] Plugins (ui, agent, backend)
+- [ ] AI auto build stages and pipelines
+- [ ] Drop in jenkins replacement or conversion tool
+- [ ] Create Kube CRDs that define everything about the server + build agents
+- [ ] Create Kube CRDs that define build and release pipelines
 - [ ] Static build agent support
 - [ ] Destroy all humans
 - [X] Add stage "Triggers"
