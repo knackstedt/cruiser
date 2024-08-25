@@ -53,6 +53,7 @@
         user-select: none;
         cursor: pointer;
         padding: 0 12px;
+        gap: 4px;
 
         &.selected {
             background-color: #4b4b4b;
@@ -75,9 +76,9 @@
                 width: 24px;
             }
             mat-icon {
-                width: 18px;
-                height: 18px;
-                font-size: 18px;
+                width: 16px;
+                height: 16px;
+                font-size: 16px;
             }
         }
         .label {

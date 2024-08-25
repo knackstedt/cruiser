@@ -1,7 +1,7 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { MenuDirective, MenuItem } from '@dotglitch/ngx-common';
+import { MenuDirective, MenuItem, ThemeService } from '@dotglitch/ngx-common';
 import { UserService } from 'src/app/services/user.service';
 
 @Component({
@@ -18,16 +18,31 @@ import { UserService } from 'src/app/services/user.service';
 export class HeaderbarComponent implements OnInit {
 
 
-    userMenu: MenuItem[] = [
-        { label: "User Profile", link: "" },
-        { label: "Change Password", link: "" },
-        { label: "About", link: "" },
+    readonly userMenu: MenuItem[] = [
+        {
+            label: "Appearance",
+            children: [
+                {
+                    // label: "Light",
+                    labelTemplate: () => `${this.theme.value == "light" ? '⏺' : '\u00A0\u00A0\u00A0'} Light`,
+                    action: () => this.theme.setTheme("light")
+                },
+                {
+                    // label: "Dark",
+                    labelTemplate: () => `${this.theme.value == "dark" ? '⏺' : '\u00A0\u00A0\u00A0\u00A0'} Dark`,
+                    action: () => this.theme.setTheme("dark")
+                },
+            ]
+        },
+        { label: "User Settings", link: "#/User/Settings" },
+        { label: "About", link: "#/About" },
         "separator",
         { label: "Log Out", link: "/api/oauth/gh/logout" },
     ]
 
     constructor(
-        public readonly user: UserService
+        public readonly user: UserService,
+        private readonly theme: ThemeService
     ) { }
 
     ngOnInit() {

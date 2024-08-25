@@ -1,4 +1,4 @@
-import { AsyncPipe, NgForOf, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,6 +6,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { Pages } from '../../component.registry';
 import { Fetch, MenuDirective, MenuItem, NavigationService, ThemeService } from '@dotglitch/ngx-common';
 import pack from '../../../../../package.json';
+import { UserService } from 'src/app/services/user.service';
 
 @Component({
     selector: 'app-menu',
@@ -29,7 +30,7 @@ export class NavMenuComponent {
         .map(i => {
 
             return {
-                label: i.id,
+                label: i['label'] || i.id,
                 link: '#/' + i.id,
                 linkTarget: "_self" as "_self",
                 ...i
@@ -42,39 +43,6 @@ export class NavMenuComponent {
 
     collapsed = false;
     showAdvancedMenu = true;
-
-    readonly profileLinks: MenuItem[] = [
-        {
-            label: "Appearance",
-            children: [
-                // {
-                //     label: "Browser Theme",
-                //     action: () => {
-
-                //     }
-                // },
-                // "separator",
-                {
-                    // label: "Light",
-                    labelTemplate: () => `${this.theme.value == "light" ? '⏺' : '\u00A0\u00A0\u00A0'} Light`,
-                    action: () => this.theme.setTheme("light")
-                },
-                {
-                    // label: "Dark",
-                    labelTemplate: () => `${this.theme.value == "dark" ? '⏺' : '\u00A0\u00A0\u00A0\u00A0'} Dark`,
-                    action: () => this.theme.setTheme("dark")
-                },
-            ]
-        },
-        {
-            label: `Client Version: ${pack.version}`
-        },
-        {
-            labelTemplate: () => `Server Version: ${this.serverVersion}`
-        }
-        // "separator",
-        // { label: "Log out", link: "/api/logout?ngsw-bypass=true" }
-    ]
 
     serverVersion = '';
     interval;
