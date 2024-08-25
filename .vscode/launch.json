@@ -3,13 +3,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Client",
-            "type": "chrome",
-            "request": "launch",
-            "preLaunchTask": "npm: dev:web",
-            "url": "https://localhost:4600/"
-        },
-        {
             "name": "Server",
             "type": "node",
             "request": "launch",
@@ -23,34 +16,9 @@
             ],
             "sourceMaps": true,
             "cwd": "${workspaceRoot}/server",
-        },
-        {
-            "name": "Agent",
-            "type": "node",
-            "request": "launch",
-            "console": "integratedTerminal",
-            "args": [
-                "src/main.ts",
-                "--project"
-            ],
-            "runtimeArgs": [
-                "--nolazy",
-                "-r",
-                "ts-node/register"
-            ],
             "env": {
-                "DOTGLITCH_AGENT_ID" : "01HR65C8K82FNADGPV309K0RS1",
-                "DOTGLITCH_DOTOPS_CLUSTER_URL": "http://dotglitch.dev:8000",
-                // Log the agent websocket transmissions
-                "AGENT_WEBSOCKETS_VERBOSE": "true"
+                "CRUISER_GLOBAL_STORAGE_PATH": "/home/knackstedt/source/@me/dot-ops/data"
             },
-            "cwd": "${workspaceRoot}/agent",
-        },
-        {
-            "name": "Database",
-            "preLaunchTask": "surrealdb",
-            "type": "chrome",
-            "request": "attach"
         }
     ]
 }
