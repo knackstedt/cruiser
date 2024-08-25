@@ -1,7 +1,10 @@
 import session from 'express-session';
+import express from 'express';
 import { SurrealDBStore } from 'connect-surreal';
 import { ulid } from 'ulidx';
 import { environment } from '../util/environment';
+
+const router = express.Router();
 
 const store = new SurrealDBStore({
     url: environment.surreal_url,
@@ -16,7 +19,7 @@ const store = new SurrealDBStore({
     tableName: environment.express_session_table
 });
 
-export const SessionMiddleware = session({
+router.use(session({
     secret: environment.express_session_secret,
     saveUninitialized: false,
     resave: false,
@@ -30,5 +33,6 @@ export const SessionMiddleware = session({
     genid: () => ulid(),
     store: store,
     unset: "destroy"
-});
+}));
 
+export const SessionMiddleware = router;
