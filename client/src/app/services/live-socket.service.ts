@@ -25,7 +25,7 @@ export class LiveSocketService<T = any> extends Subject<LiveRecordChange<T>> {
         super();
 
         const socket = this.socket = io({
-            path: "/ws/live-socket",
+            path: "/socket/live-socket",
             withCredentials: true
         });
         BindSocketLogger("live", socket);

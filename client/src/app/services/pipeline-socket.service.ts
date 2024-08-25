@@ -21,7 +21,7 @@ export class PipelineSocketService {
 
     constructor() {
         const socket = this.socket = io({
-            path: "/ws/socket-service",
+            path: "/socket/socket-service",
             withCredentials: true
         });
         BindSocketLogger("live", socket);
