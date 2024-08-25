@@ -2,7 +2,9 @@
     Agent Groups
 </h1>
 
-<mat-tab-group>
+<mat-tab-group
+    [animationDuration]="200"
+>
     <mat-tab label="Static Agents">
         <div #scroller (scroll)="onScroll(scroller)" cdkDropListGroup style="height: 100%; overflow: auto">
             <!-- NgFor swimlane -->

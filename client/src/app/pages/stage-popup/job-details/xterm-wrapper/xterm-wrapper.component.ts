@@ -60,7 +60,7 @@ export class XtermWrapperComponent implements OnInit {
         this.loadingState = 'connecting';
 
         const socket = this.socket = io({
-            path: "/ws/socket-tunnel",
+            path: "/socket/socket-tunnel",
             withCredentials: true,
         });
         BindSocketLogger('terminal', socket);

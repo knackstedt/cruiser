@@ -86,7 +86,7 @@ export class JobDetailsComponent {
 
         if (!['finished', 'failed', 'cancelled'].includes(this.jobInstance.state)) {
             const socket = this.socket = io({
-                path: "/ws/socket-tunnel",
+                path: "/socket/socket-tunnel",
                 withCredentials: true
             });
             BindSocketLogger("breakpoint", socket);

@@ -1,6 +1,8 @@
 <button class="exit-btn" mat-icon-button (click)="tryClose()"><mat-icon>close</mat-icon></button>
 
-<mat-tab-group>
+<mat-tab-group
+    [animationDuration]="200"
+>
     <mat-tab label="General">
         <h4>Basic Settings</h4>
 

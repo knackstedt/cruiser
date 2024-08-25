@@ -24,6 +24,7 @@
                 <mat-tab-group
                     class="header-only"
                     [mat-stretch-tabs]="false"
+                    [animationDuration]="200"
                     [(selectedIndex)]="selectedJobIndex"
                     (selectedIndexChange)="selectJob(stage.jobs[$event])"
                 >
@@ -140,7 +141,7 @@
                 }
                 @case("taskGroup") {
                     @if (selectedTaskGroup) {
-                        <mat-tab-group [mat-stretch-tabs]="false">
+                        <mat-tab-group [mat-stretch-tabs]="false" [animationDuration]="200">
                             <mat-tab label="Properties">
                                 <ng-scrollbar>
                                     <mat-form-field style="width: 100%">

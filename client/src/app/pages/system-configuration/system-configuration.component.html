@@ -1,0 +1,119 @@
+@if (settings) {
+    <mat-tab-group
+        [mat-stretch-tabs]="false"
+        [animationDuration]="200"
+    >
+        <mat-tab label="Settings">
+            <p-table
+                #dt1
+                [value]="settings.settings"
+                [globalFilterFields]="['key', 'value']"
+            >
+                <ng-template pTemplate="caption">
+                    <div style="display: flex; gap: 12px">
+                        <!-- <button mat-flat-button (click)="addUser()">Add User</button> -->
+
+                        <!-- <button mat-flat-button label="Clear" class="p-button-outlined" icon="pi pi-filter-slash" (click)="dt1.clear()">Clear Filters</button> -->
+                        <mat-form-field>
+                            <input
+                                #_
+                                matInput
+                                type="text"
+                                (input)="dt1.filterGlobal(_.value, 'contains')"
+                                placeholder="Search"
+                            />
+                        </mat-form-field>
+                    </div>
+                </ng-template>
+                <ng-template pTemplate="header">
+                    <tr>
+                        <!-- <th [width]="48"></th> -->
+                        <th pSortableColumn="key">
+                            Key
+                            <p-sortIcon field="key"></p-sortIcon>
+                            <p-columnFilter type="text" field="key" display="menu"/>
+                        </th>
+                        <th pSortableColumn="value" [width]="'40%'">
+                            Value
+                            <p-sortIcon field="value"></p-sortIcon>
+                            <p-columnFilter type="text" field="value" display="menu"/>
+                        </th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-user>
+                    <tr
+                        [ngx-contextmenu]="menu"
+                        [ngx-menu-context]="user"
+                    >
+                        <!-- <td>
+                            <button
+                                mat-icon-button
+                                [ngx-menu]="menu"
+                                [ngx-menu-context]="user"
+                            >
+                                <mat-icon>more_vert</mat-icon>
+                            </button>
+                        </td> -->
+                        <td>
+                            {{user.key}}
+                        </td>
+                        <td>
+                            {{user.value}}
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </mat-tab>
+        <mat-tab label="Environment Variables">
+            <p-table
+                #dt1
+                [value]="settings.environmentVars"
+                [globalFilterFields]="['key', 'value']"
+            >
+                <ng-template pTemplate="caption">
+                    <div style="display: flex; gap: 12px">
+                        <mat-form-field>
+                            <input
+                                #_
+                                matInput
+                                type="text"
+                                (input)="dt1.filterGlobal(_.value, 'contains')"
+                                placeholder="Search"
+                            />
+                        </mat-form-field>
+                    </div>
+                </ng-template>
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th pSortableColumn="key">
+                            Key
+                            <p-sortIcon field="key"></p-sortIcon>
+                            <p-columnFilter type="text" field="key" display="menu"/>
+                        </th>
+                        <th pSortableColumn="value" [width]="'40%'">
+                            Value
+                            <p-sortIcon field="value"></p-sortIcon>
+                            <p-columnFilter type="text" field="value" display="menu"/>
+                        </th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-item>
+                    <tr
+                        [ngx-contextmenu]="menu"
+                        [ngx-menu-context]="item"
+                    >
+                        <td>
+                            {{item.key}}
+                        </td>
+                        <td>
+                            {{item.value}}
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </mat-tab>
+    </mat-tab-group>
+}
+@else {
+    spinner.
+}

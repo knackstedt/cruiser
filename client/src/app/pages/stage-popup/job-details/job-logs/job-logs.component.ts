@@ -236,7 +236,7 @@ export class JobLogsComponent {
         }
         else {
             const socket = this.socket = io({
-                path: "/ws/socket-tunnel",
+                path: "/socket/socket-tunnel",
                 withCredentials: true
             });
             BindSocketLogger('logs', socket);

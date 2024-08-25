@@ -215,6 +215,7 @@
                             <mat-select
                                 multiple
                                 [(value)]="selectedStage.stageTrigger"
+                                [disabled]="filterPrecedingStages(selectedStage).length == 0"
                                 (valueChange)="renderGraph()"
                                 (valueChange)="dataChangeEmitter.next(0)"
                             >
@@ -226,6 +227,9 @@
                                     </mat-option>
                                 }
                             </mat-select>
+                            @if (filterPrecedingStages(selectedStage).length == 0) {
+                                <mat-hint>There are no valid stages that can be specified</mat-hint>
+                            }
                         </mat-form-field>
                         @if (filterMissingPrecedingStages(selectedStage)?.length > 0) {
                             <div style="margin-bottom: 12px">

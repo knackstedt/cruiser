@@ -20,6 +20,7 @@
     <div class="content">
         <mat-tab-group
             [mat-stretch-tabs]="false"
+            [animationDuration]="200"
             [(selectedIndex)]="selectedIndex"
             (selectedIndexChange)="$event==1?(loadTerminal=true):null"
         >

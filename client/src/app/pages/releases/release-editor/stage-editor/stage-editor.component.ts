@@ -112,39 +112,39 @@ export class StageEditorComponent {
     }[] = [];
 
     nodeTypes = {
-        taskGroup: ReactMagicWrapperComponent.WrapAngularComponent(
-            TaskGroupNodeComponent,
-            this.appRef,
-            this.injector,
-            {
-                taskMenu: this.taskMenu,
-                dropListGroup: []
-            },
-            {
-                onTaskGroupSelect: ({ job, taskGroup }) => { this.selectTaskGroup(taskGroup); },
-                onTaskClick: ({ job, taskGroup, task }) => { this.selectTask(task); this.renderJobs();},
-                onAddTask: ({ job, taskGroup }) => { this.addTask(taskGroup); this.renderJobs();},
-                onTaskDrop: ({ job, taskGroup, event }) => { this.taskDrop(job, taskGroup, event); this.renderJobs(); },
-            },
-            [
-                React.createElement(Handle, { type: "target", position: Position.Left }),
-                React.createElement(Handle, { type: "source", position: Position.Right })
-            ]
-        ),
-        impossible: ReactMagicWrapperComponent.WrapAngularComponent(
-            ImpossibleNodeComponent,
-            this.appRef,
-            this.injector,
-            {
-                // inputs
-            },
-            {
-                // outputs
-            },
-            [
-                React.createElement(Handle, { type: "source", position: Position.Right })
-            ]
-        )
+        // taskGroup: ReactMagicWrapperComponent.WrapAngularComponent(
+        //     TaskGroupNodeComponent,
+        //     this.appRef,
+        //     this.injector,
+        //     {
+        //         taskMenu: this.taskMenu,
+        //         dropListGroup: []
+        //     },
+        //     {
+        //         onTaskGroupSelect: ({ job, taskGroup }) => { this.selectTaskGroup(taskGroup); },
+        //         onTaskClick: ({ job, taskGroup, task }) => { this.selectTask(task); this.renderJobs();},
+        //         onAddTask: ({ job, taskGroup }) => { this.addTask(taskGroup); this.renderJobs();},
+        //         onTaskDrop: ({ job, taskGroup, event }) => { this.taskDrop(job, taskGroup, event); this.renderJobs(); },
+        //     },
+        //     [
+        //         React.createElement(Handle, { type: "target", position: Position.Left }),
+        //         React.createElement(Handle, { type: "source", position: Position.Right })
+        //     ]
+        // ),
+        // impossible: ReactMagicWrapperComponent.WrapAngularComponent(
+        //     ImpossibleNodeComponent,
+        //     this.appRef,
+        //     this.injector,
+        //     {
+        //         // inputs
+        //     },
+        //     {
+        //         // outputs
+        //     },
+        //     [
+        //         React.createElement(Handle, { type: "source", position: Position.Right })
+        //     ]
+        // )
     }
 
     constructor(

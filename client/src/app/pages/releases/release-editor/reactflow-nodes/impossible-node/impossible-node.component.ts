@@ -19,5 +19,4 @@ export class ImpossibleNodeComponent {
     }
 
     job: JobDefinition;
-
 }

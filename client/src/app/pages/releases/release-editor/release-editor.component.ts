@@ -5,7 +5,6 @@ import { PipelineDefinition, SourceConfiguration, StageDefinition, Webhook } fro
 import { ulid } from 'ulidx';
 import { Edge, Handle, Node, Position } from 'reactflow';
 import dagre from '@dagrejs/dagre';
-import { StageNodeComponent } from 'src/app/pages/releases/release-editor/reactflow-nodes/stage-node/stage-node.component';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,7 +13,6 @@ import { NgScrollbarModule } from 'ngx-scrollbar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FormsModule } from '@angular/forms';
 import { MatSelectModule } from '@angular/material/select';
-import * as React from 'react';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { StackEditorComponent } from 'ngx-stackedit';
@@ -26,6 +24,8 @@ import { ToastrService } from 'ngx-toastr';
 import { UserService } from 'src/app/services/user.service';
 import { VariablesSectionComponent } from 'src/app/components/variables-section/variables-section.component';
 import { ImpossibleNodeComponent } from './reactflow-nodes/impossible-node/impossible-node.component';
+import { StageNodeComponent } from 'src/app/pages/releases/release-editor/reactflow-nodes/stage-node/stage-node.component';
+import React from 'react';
 
 
 @Component({
@@ -273,7 +273,7 @@ export class StagesComponent {
         if (this.pipeline.state == "new")
             this.fetch.delete(`api/odata/${this.pipeline['_sourceId']}`);
 
-        location.href = "#/Releases";
+        location.href = "#/Pipelines";
     }
 
     selectStage(stage: StageDefinition) {
