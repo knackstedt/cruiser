@@ -12,9 +12,13 @@ import { environment } from './util/environment';
  * Startup the websocket endpoint listener
  */
 export const startWebsocketServer = (server?: http.Server) => {
-    server ??= http.createServer();
-
-    server.listen(environment.cruiser_websocket_port);
+    // If we're started in development mode we're provided an already
+    // bootstrapped server. Otherwise we'll start on another port in order to
+    // support more dynamic scaling
+    if (!server) {
+        server = http.createServer();
+        server.listen(environment.cruiser_websocket_port);
+    }
 
     const sts = new SocketTunnelService(server);
     const sls = new SocketLiveService(server);

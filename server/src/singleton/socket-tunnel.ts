@@ -38,7 +38,7 @@ export class SocketTunnelService {
 
     private startClientService() {
         const io = new Server(this.server, {
-            path: "/ws/socket-tunnel",
+            path: "/socket/socket-tunnel",
             maxHttpBufferSize: 1024**3
         });
         io.engine.use(SessionMiddleware);
@@ -89,7 +89,7 @@ export class SocketTunnelService {
     private startSourceService() {
         // TODO: restrict this to only allow connections from the internal cluster or known agents?
         const io = new Server(this.server, {
-            path: "/ws/socket-tunnel-internal",
+            path: "/socket/socket-tunnel-internal",
             maxHttpBufferSize: 1024 ** 3
         });
 

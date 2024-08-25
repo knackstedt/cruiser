@@ -1,38 +1,23 @@
 
-const Administrator = (req, res, next) => {
-    req['_agentToken'] ||
-    req.session.profile.roles.includes("administrator")
-        ? next()
+/**
+ * Ensure the authenticated user has at least one of the specified roles
+ * in order to access the endpoint.
+ */
+export const RoleGuard = (roles: string[]) => (req, res, next) => {
+    // If we're being accessed via an agent then we'll bypass the user auth flow.
+    const hasAccess = req['_agentToken'] ||
+    // Check if the user has any of the required roles
+    roles.find(r => req.session.profile.roles.includes(r));
+
+    hasAccess ? next()
         : next(401);
 }
 
-const Manager = (req, res, next) => {
-    req['_agentToken'] ||
-    req.session.profile.roles.includes("administrator") ||
-    req.session.profile.roles.includes("manager")
-        ? next()
-        : next(401);
-}
+export const AdministratorRoleGuard = RoleGuard(['administrator'])
 
-const User = (req, res, next) => {
-    req['_agentToken'] ||
-    req.session.profile.roles.includes("administrator") ||
-    req.session.profile.roles.includes("manager") ||
-    req.session.profile.roles.includes("user")
-        ? next()
-        : next(401);
-}
-
-const Guest = (req, res, next) => {
-    req['_agentToken'] ||
-    req.session.profile.roles.includes("administrator") ||
-    req.session.profile.roles.includes("manager") ||
-    req.session.profile.roles.includes("user") ||
-    req.session.profile.roles.includes("guest")
-        ? next()
-        : next(401);
-}
-
+const ManagerRoleGuard = RoleGuard(['administrator', 'manager'])
+const User = RoleGuard(['administrator', 'manager', 'user'])
+const Guest = RoleGuard(['administrator', 'manager', 'guest'])
 
 export const EndpointGuard = (req, res, next) => {
     // Agents get to bypass the auth checks

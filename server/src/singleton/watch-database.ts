@@ -1,14 +1,14 @@
 import { Server, Socket } from "socket.io";
 import { SessionMiddleware } from '../middleware/session';
 import { SessionData } from 'express-session';
-import { db } from '../util/db';
+import { afterDatabaseConnected, db } from '../util/db';
 import { PipelineInstance } from '../types/pipeline';
 
 export class SocketLiveService {
 
     constructor(private server) {
         const io = new Server(this.server, {
-            path: "/ws/live-socket",
+            path: "/socket/live-socket",
             maxHttpBufferSize: 1024 ** 3
         });
         io.engine.use(SessionMiddleware);
@@ -19,8 +19,7 @@ export class SocketLiveService {
         });
         const activeSockets: Socket[] = [];
 
-        db.wait().then(() => {
-
+        afterDatabaseConnected(() => {
             const watchPipelines = () =>
                 db.live("pipeline", data =>
                     data.action == "CLOSE"

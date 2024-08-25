@@ -1,7 +1,7 @@
 import * as express from "express";
 import axios from 'axios';
 import { randomString, route } from '../util/util';
-import { db } from '../util/db';
+import { afterDatabaseConnected, connectDatabase, db } from '../util/db';
 import { logger } from '../util/logger';
 import { CruiserUserProfile, CruiserUserRole } from '../types/cruiser-types';
 import { GitHubUser } from '../types/user';
@@ -23,7 +23,7 @@ const getProfile = async (userId: string, roles?: CruiserUserRole[]) => {
     return profile as any as CruiserUserProfile;
 }
 
-db.wait().then(() => {
+afterDatabaseConnected(() => {
     // Always ensure that the root administrator exists on startup.
     getProfile(environment.cruiser_admin_id ?? 'root', ['administrator']).catch(err => {
             logger.fatal({

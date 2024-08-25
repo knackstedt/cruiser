@@ -20,7 +20,7 @@ export class SocketEventService {
         private socketTunnel: SocketTunnelService
     ) {
         const io = new Server(this.server, {
-            path: "/ws/socket-service",
+            path: "/socket/socket-service",
             maxHttpBufferSize: 1024 ** 3
         });
         io.engine.use(SessionMiddleware);

@@ -1,24 +1,33 @@
 import * as express from "express";
 import { route } from '../util/util';
-import { db } from '../util/db';
 import { CruiserUserProfile } from '../types/cruiser-types';
-
+import { AdministratorRoleGuard } from '../guards/role-guards';
+import { db } from '../util/db';
 
 const router = express.Router();
 
 // Get user.
 router.get('/', route(async (req, res, next) => {
     req.session.profile
-        ? res.send(req.session.profile)
+        ? res.send({
+            profile: req.session.profile,
+            userConfiguration: {
+                defaultWorkspace: "default",
+                workspaces: ["default"]
+            },
+            systemConfiguration: {
+                // List of enabled features / screens
+                features: [""],
+
+                // Can the UI change configuration options
+                enableUIConfiguration: true,
+            }
+        })
         : next(401)
 }));
 
 // Guard access to the rest of this router.
-router.use((req, res, next) => {
-    if (!req.session.profile.roles.includes("administrator"))
-        return next(403);
-    next();
-});
+router.use(AdministratorRoleGuard);
 
 router.post('/add', route(async (req, res, next) => {
     const rolesToAdd = req.body.roles as string[];

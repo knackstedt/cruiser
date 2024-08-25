@@ -1,5 +1,5 @@
 import { logger } from '../util/logger';
-import { db } from '../util/db';
+import { afterDatabaseConnected, db } from '../util/db';
 import { JobInstance } from '../types/agent-task';
 import { PipelineInstance, StageDefinition } from '../types/pipeline';
 import { RunStage } from '../util/pipeline';
@@ -148,7 +148,7 @@ const ProcessStageTriggers = async (
 };
 
 export const EventTriggers = () => {
-    db.wait().then(() => {
+    afterDatabaseConnected(() => {
         const watchJobInstances = () => {
             db.live<JobInstance>("job_instance", data => {
                 if (data.action == "CLOSE") return watchJobInstances();
