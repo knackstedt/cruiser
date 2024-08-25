@@ -3,7 +3,7 @@ import { ComponentRegistration } from '@dotglitch/ngx-common';
 
 export const Pages: ComponentRegistration[] = [
     { id: 'Login', load: () => import('./pages/login/login.component'), hidden: true },
-    // { id: 'Dashboard', load: () => import('./pages/dashboard/dashboard.component'), icon: "dashboard" },
+    { matcher: /^$|Dashboard|landing/, load: () => import('./pages/dashboard/dashboard.component'), icon: "dashboard", label: "Dashboard", id: "Dashboard" },
 
     // {
     //     id: 'Pipelines',
@@ -16,14 +16,14 @@ export const Pages: ComponentRegistration[] = [
     //     hidden: true
     // },
     {
-        id: 'Releases',
-        label: "Past Releases",
+        id: 'Pipelines',
+        label: "Pipelines",
         load: () => import('./pages/releases/releases.component'),
         icon: "new_releases"
     },
     {
         hidden: true,
-        matcher: /Releases\/(?<pipeline_id>[^/]+)/i,
+        matcher: /Pipelines\/(?<pipeline_id>[^/]+)/i,
         load: () => import('./pages/releases/release-editor/release-editor.component')
     },
     // { id: 'Agents', load: () => import('./pages/agents/agents.component'), icon: "dns" },
@@ -32,7 +32,7 @@ export const Pages: ComponentRegistration[] = [
     { id: 'Users', load: () => import('./pages/users/users.component'), icon: "manage_accounts", isVisible: () => {
         return window.user.isManager;
     }},
-    // { id: 'Configuration', load: () => import('src/app/pages/configuration/configuration.component'), icon: "settings" },
+    { id: 'System/Settings', load: () => import('src/app/pages/system-configuration/system-configuration.component'), icon: "settings" },
     // { id: 'Repos', load: () => import('src/app/pages/repos/repos.component'), icon: "https://git-scm.com/images/logos/downloads/Git-Icon-White.svg" },
     // { id: 'Analytics', load: () => import('src/app/pages/analytics/analytics.component'), icon: "analytics" },
 ];
