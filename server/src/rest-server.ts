@@ -18,6 +18,7 @@ import { EndpointGuard } from './guards/role-guards';
 import { BlobUploadApi } from './api/filestorage';
 import { VaultApi } from './api/vault';
 import { environment } from './util/environment';
+import { SystemApi } from './api/system';
 
 
 export const startRestServer = async () => {
@@ -60,12 +61,10 @@ export const startRestServer = async () => {
      */
     app.use("/api/oauth/gh", OpenIDHandler);
 
-
     /**
      * Guard all of the below endpoints to only authenticated sessions
      */
     app.use(EndpointGuard);
-
     const pack = await fs.readJson(environment.is_production ? '/app/package.json' : __dirname + '/../../package.json');
     app.use("/api/version", (req, res) => res.send({ version: pack.version }));
     app.use("/api/user", UserApi);
@@ -76,6 +75,7 @@ export const startRestServer = async () => {
     app.use("/api/pod", TunnelApi);
     app.use("/api/blobstore", BlobUploadApi);
     app.use("/api/vault", VaultApi);
+    app.use("/api/system", SystemApi);
 
     app.use((req, res, next) => next(404));
     app.use(ErrorHandler);
