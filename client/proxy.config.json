@@ -1,9 +1,9 @@
 {
-    "/api": {
+    "/api/": {
         "target": "http://localhost:6800",
         "secure": false
     },
-    "/ws": {
+    "/socket/": {
         "target": "http://localhost:6800",
         "secure": false,
         "ws": true
