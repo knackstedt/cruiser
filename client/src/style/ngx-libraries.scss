@@ -70,7 +70,7 @@ ng-scrollbar.ng-scrollbar {
  * PrimeNG global style overrides
  */
 .p-datatable .p-datatable-tbody>tr>td {
-    padding: 0;
+    // padding: 0;
 }
 
 
@@ -79,4 +79,20 @@ ng-scrollbar.ng-scrollbar {
         font-weight: bold;
         background-color: #E65100;
     }
+}
+
+
+p-table {
+    width: 100%;
+    height: 100%;
+}
+
+.p-datatable {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.p-datatable-wrapper {
+    height: 100%;
 }
