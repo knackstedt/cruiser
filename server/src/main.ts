@@ -9,6 +9,7 @@ import { AsciiBanner } from './util/motd';
 import { connectToSurreal } from './util/db';
 import { startRestServer } from './rest-server';
 import { startWebsocketServer } from './ws-server';
+import { InitDatabase } from './startup/init-database';
 
 const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
 
@@ -17,6 +18,11 @@ const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
      * Perform preflight checks
      */
     await connectToSurreal();
+
+    /**
+     * Preload records in the database
+     */
+    await InitDatabase();
 
     console.log(AsciiBanner);
 

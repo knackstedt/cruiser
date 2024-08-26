@@ -22,7 +22,7 @@ export const environment = Object.seal({
     surreal_pass: process.env['SURREAL_PASSWORD'],
     surreal_scope: process.env['SURREAL_SCOPE'],
     surreal_cruiser_database: process.env['CRUISER_SURREAL_DATABASE'] || "cruiser",
-    surreal_cruiser_namespace: process.env['CRUISER_SURREAL_NAMESPACE'] || "dotglitch",
+    surreal_cruiser_namespace: process.env['CRUISER_SURREAL_NAMESPACE'] || "cruiser",
 
     // Notably; this is the database name **within** a SurrealDB instance.
     express_session_database: process.env['EXPRESS_SESSION_DATABASE'] || "cruiser",
