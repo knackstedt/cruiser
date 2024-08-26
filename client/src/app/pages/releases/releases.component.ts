@@ -341,7 +341,7 @@ export class ReleasesComponent implements OnInit {
             ...partial
         })
             .then(res => {
-                location.hash = `#/Releases/${res.id}`;
+                location.hash = `#/Pipelines/${res.id}`;
             });
     }
 

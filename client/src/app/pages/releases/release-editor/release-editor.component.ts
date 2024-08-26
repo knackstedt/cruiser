@@ -256,7 +256,7 @@ export class StagesComponent {
         await this.fetch.put(`/api/odata/${this.pipeline['_sourceId']}`, data) as any;
         await this.fetch.delete(`/api/odata/${this.pipeline.id}`);
 
-        location.href = "#/Releases";
+        location.href = "#/Pipelines";
     }
 
     // Perform a save of the current clone
