@@ -8,7 +8,7 @@ import { db } from '../util/db';
 export const InitDatabase = async () => {
 
     // Insert the builtin task definitions as immutable.
-    if (true) {
+    if (false) {
         const contents = await fs.readdir(__dirname + "/../tasks/", { withFileTypes: true });
 
         // Collect all files that end in .ts and do not start with _.
