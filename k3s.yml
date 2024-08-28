@@ -283,7 +283,7 @@ spec:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
           runAsNonRoot: true
-          fsGroup: 1000
+        #   fsGroup: 1000
           runAsUser: 1000
           runAsGroup: 1000
           capabilities:
@@ -312,6 +312,9 @@ spec:
               key: SURREAL_PASS
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
           value: http://dynatrace-otel-collector.dynatrace-otel.svc.cluster.local:4318/
+        - name: SURREAL_TRACING_TRACER
+          value: otlp
+
 ---
 
 apiVersion: v1
