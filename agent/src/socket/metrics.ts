@@ -7,7 +7,7 @@ const logger = getLogger("metrics");
 
 export const getSocketMetrics = async () => {
     const socket = io(environment.cruiserUrl, {
-        path: "/ws/socket-tunnel-internal",
+        path: "/socket/socket-tunnel-internal",
         extraHeaders: {
             "X-Cruiser-Token": environment.cruiserToken
         }
