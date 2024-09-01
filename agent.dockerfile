@@ -15,7 +15,7 @@ COPY ./types /agent/src/types
 
 WORKDIR /agent
 
-RUN chown /agent node -R
+RUN chown 1000 /agent -R
 
 USER 1000
 
