@@ -15,6 +15,8 @@ COPY ./types /agent/src/types
 
 WORKDIR /agent
 
+RUN chown /agent node -R
+
 USER 1000
 
 # Install general agent deps
