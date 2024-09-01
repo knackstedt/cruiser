@@ -24,15 +24,15 @@ export const RunProcess = async (
         retry = false;
 
 
-        if (task.preBreakpoint) {
+        if (task.breakBeforeTask) {
             logger.info({ msg: `⏸ Tripping on Breakpoint`, breakpoint: true, taskGroup, task });
             await TripBreakpoint(jobInstance, false, taskGroup, task);
             logger.info({ msg: `Resuming from Breakpoint`, breakpoint: false, taskGroup, task });
         }
 
-        const processCWD = task.workingDirectory?.startsWith("/")
-            ? task.workingDirectory
-            : environment.buildDir + (task.workingDirectory ?? '');
+        const processCWD = task.cwd?.startsWith("/")
+            ? task.cwd
+            : environment.buildDir + (task.cwd ?? '');
 
         // Try to create the CWD.
         if (!await exists(processCWD))
@@ -113,7 +113,7 @@ export const RunProcess = async (
                 const process = spawn(command, args, {
                     env: execEnv,
                     cwd: processCWD,
-                    timeout: task.commandTimeout || 0,
+                    timeout: task.timeout || 0,
                     windowsHide: true
                 });
 
@@ -165,7 +165,8 @@ export const RunProcess = async (
                 task,
                 block: "end"
             });
-            if (task.postBreakpoint) {
+
+            if (task.breakOnTaskSuccess) {
                 logger.info({ msg: `⏸ Tripping on Breakpoint`, breakpoint: true, taskGroup, task });
                 retry = await TripBreakpoint(jobInstance, true, taskGroup, task);
                 logger.info({ msg: `▶ Resuming from Breakpoint`, breakpoint: false, taskGroup, task });
@@ -177,11 +178,17 @@ export const RunProcess = async (
                 ...(process.exitCode == -1 ? { err: process['err'] } : { process })
             });
 
-            if (task.disableErrorBreakpoint != true) {
+            if (task.breakOnTaskFailure) {
                 logger.info({ msg: `⏸ Breaking on error`, breakpoint: true, error: true, taskGroup, task });
                 retry = await TripBreakpoint(jobInstance, true, taskGroup, task);
                 logger.info({ msg: `▶ Resuming from Breakpoint`, breakpoint: true, error: false, taskGroup, task });
             }
+        }
+
+        if (task.breakAfterTask) {
+            logger.info({ msg: `⏸ Tripping on Breakpoint`, breakpoint: true, taskGroup, task });
+            retry = await TripBreakpoint(jobInstance, true, taskGroup, task);
+            logger.info({ msg: `▶ Resuming from Breakpoint`, breakpoint: false, taskGroup, task });
         }
     }
     while(retry)

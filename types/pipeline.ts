@@ -24,25 +24,24 @@ export type OutputArtifact = {
 
 export type TaskDefinition = {
     id: `pipeline_task:${string}`;
-    disabled: boolean,
-    commandTimeout: number
     label: string
-    description?: string
-    workingDirectory?: string
+    disabled: boolean,
+    timeout: number
     order: number
+    description?: string
+    cwd?: string
     kind?: string // default 'command'
 
-    runIfPreviousTaskPassed: boolean
-    runIfPreviousTaskFailed: boolean
-    preBreakpoint: boolean
-    postBreakpoint: boolean
-    disableErrorBreakpoint: boolean
+    breakBeforeTask: boolean
+    breakAfterTask: boolean
+    breakOnTaskFailure: boolean
+    breakOnTaskSuccess: boolean
 
-    numberOfFailureRetries: number
-    continueOnError: boolean,
+    maxRetryAttempts: number
+    retryOnTaskFailure: boolean
+    abortGroupOnTaskFailure: boolean
 
-
-    //taskOnSelfFailure: TaskDefinition
+    branchFilter?: string[]
 
     environment?: EnvironmentVariable[]
 
@@ -67,6 +66,7 @@ export type TaskGroupDefinition = {
     environment?: EnvironmentVariable[]
     tasks?: TaskDefinition[],
     preTaskGroups?: string[],
+    branchFilter?: string[]
 }
 
 export type JobDefinition = {
@@ -83,6 +83,8 @@ export type JobDefinition = {
     lastRun?: string
     lastTriggerReason?: "cron" | "changes" | "manual" | "webhook"
     runState?: "success" | "fail" | "running"
+
+    branchFilter?: string[]
 
     taskGroups: TaskGroupDefinition[]
     inputArtifacts?: InputArtifact[]
@@ -149,6 +151,7 @@ export type StageDefinition = {
     runCount?: number;
 
     executeOnFailure?: boolean;
+    branchFilter?: string[]
 }
 
 export type SourceConfiguration = Partial<{
@@ -159,6 +162,8 @@ export type SourceConfiguration = Partial<{
     type: "git" | "svn" | "tfs"
 
     branch: string
+    branchFilter?: string[]
+
     username: string
     password: string
     cloneDepth: number

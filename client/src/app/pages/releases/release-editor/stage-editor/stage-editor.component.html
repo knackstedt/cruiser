@@ -214,22 +214,6 @@
                             <mat-tab label="Build">
 
                             </mat-tab>
-                            <mat-tab label="Utility">
-
-                            </mat-tab>
-                            <mat-tab label="Test">
-
-                            </mat-tab>
-                            <mat-tab label="Package">
-
-                            </mat-tab>
-                            <mat-tab label="Deploy">
-
-                            </mat-tab>
-                            <mat-tab label="Tool">
-
-                            </mat-tab>
-                            <!-- <mat-tab label="Plugins"></mat-tab> -->
                         </mat-tab-group>
                     }
                     @else {
@@ -277,30 +261,28 @@
                             />
 
                             <div>
-                                <p>Control Flow</p>
+                                <p>Debugging</p>
 
                                 <mat-checkbox
-                                    [(ngModel)]="selectedTask.preBreakpoint"
+                                    [(ngModel)]="selectedTask.breakBeforeTask"
                                 >
-                                    Break before Task
+                                    Break before task runs
                                 </mat-checkbox>
                                 <mat-checkbox
-                                    [(ngModel)]="selectedTask.postBreakpoint"
+                                    [(ngModel)]="selectedTask.breakAfterTask"
                                 >
-                                    Break after Task
+                                    Break after task runs
                                 </mat-checkbox>
-
-                                <!-- <mat-checkbox
-                                    [(ngModel)]="selectedTask.postBreakpoint"
-                                >
-                                    Run only on successful flow
-                                </mat-checkbox>
-
                                 <mat-checkbox
-                                    [(ngModel)]="selectedTask.postBreakpoint"
+                                    [(ngModel)]="selectedTask.breakOnTaskFailure"
                                 >
-                                    Run only on
-                                </mat-checkbox> -->
+                                    Break if task fails
+                                </mat-checkbox>
+                                <mat-checkbox
+                                    [(ngModel)]="selectedTask.breakOnTaskSuccess"
+                                >
+                                    Break if task succeeds
+                                </mat-checkbox>
                             </div>
 
                             <app-variables-section
