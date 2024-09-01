@@ -8,6 +8,7 @@ import { randomString } from './util';
 import { JobInstance } from '../types/agent-task';
 import { SetJobToken } from './token-cache';
 import { environment } from './environment';
+import { logger } from './logger';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
@@ -312,7 +313,7 @@ const createKubeJob = (
                             securityContext: {
                                 // Must be true for docker build. Urgh.
                                 privileged: true,
-                                allowPrivilegeEscalation: false,
+                                // allowPrivilegeEscalation: false,
                                 capabilities: {
                                     drop: ["ALL"]
                                 }
@@ -339,7 +340,10 @@ const createKubeJob = (
     })
     .then(({body}) => body)
     .catch(err => {
-        debugger;
+        logger.error({
+            msg: err.body?.message || err.message || "unknown error",
+            body: err.body
+        })
     });
 }
 
