@@ -32,6 +32,11 @@ export const WatchAndFlushJobs = async() => {
             if (pod.metadata.annotations?.['cruiser.dev/created-by'] != "$cruiser")
                 return;
 
+            // TODO: Live update of k8s pod state
+            // db.merge("", {
+            //     k8sPhase: pod.status.phase
+            // })
+
             if (pod.status.phase == "Running") {
                 podMap[pod.metadata.annotations?.['cruiser.dev/job-instance-id']] = pod;
             }
@@ -59,6 +64,13 @@ export const WatchAndFlushJobs = async() => {
             const isComplete = job.status.conditions?.find(c => c.type == "Complete" && c.status);
             const isFailed = job.status.conditions?.find(c => c.type == "Failed" && c.status);
             // const isSuspended = job.status.conditions?.find(c => c.type == "Suspended" && c.status);
+
+            const failedPods = job.status.uncountedTerminatedPods?.failed?.length || 0;
+
+            // If there are any pod failures -- report them
+            if (failedPods > 0) {
+                // TODO: What do we precisely do here?
+            }
 
             // This tells us when the job is done.
             if (isComplete || isFailed) {
