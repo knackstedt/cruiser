@@ -7,28 +7,34 @@ const cpuInterval = environment.agent_metric_cpu_interval;
 const menInterval = environment.agent_metric_mem_interval;
 const netInterval = environment.agent_metric_net_interval;
 
-const logger = getLogger("metrics");
+// const logger = getLogger("metrics");
 
 export const CreateMetricsSocketServer = async (socket: Socket) => {
-    const sockets: Socket[] = [];
 
-    // Send initial data
-    // si.getStaticData().then(data => socket.emit("metrics:static", data));
-    // si.getDynamicData().then(data => socket.emit("metrics:metrics", data));
+    // TODO: cleanup very old records to prevent oom crashing
+    // TODO: configure granularity and data aging
 
-    setInterval(() => si.currentLoad().then(data =>
-        sockets.forEach(socket => socket.emit("metrics:cpu", data))
-    ), cpuInterval);
+    const cpuDatapoints: { time: number, data: si.Systeminformation.CurrentLoadData }[] = [];
+    const memDatapoints: { time: number, data: si.Systeminformation.MemData }[] = [];
+    const netDatapoints: { time: number, data: si.Systeminformation.NetworkStatsData[] }[] = [];
 
-    setInterval(() => si.mem().then(data =>
-        sockets.forEach(socket => socket.emit("metrics:mem", data))
-    ), menInterval);
+    setInterval(() => si.currentLoad().then(data => {
+        const item = { time: Date.now(), data};
+        socket.emit("metrics:cpu", item);
+        cpuDatapoints.push(item);
+    }), cpuInterval);
 
-    setInterval(() => si.networkStats().then(data =>
-        sockets.forEach(socket => socket.emit("metrics:network", data))
-    ), netInterval);
+    setInterval(() => si.mem().then(data => {
+        const item = { time: Date.now(), data};
+        socket.emit("metrics:mem", item);
+        memDatapoints.push(item);
+    }), menInterval);
 
-    sockets.push(socket);
+    setInterval(() => si.networkStats().then(data => {
+        const item = { time: Date.now(), data};
+        socket.emit("metrics:network", item);
+        netDatapoints.push(item);
+    }), netInterval);
 
     socket.on("metrics:get-static", () => {
         // Send initial data
@@ -36,7 +42,12 @@ export const CreateMetricsSocketServer = async (socket: Socket) => {
         si.getDynamicData().then(data => socket.emit("metrics:dynamic", data));
     });
 
-    socket.on("disconnect", () => {
-        sockets.splice(sockets.indexOf(socket), 1);
+    // Provide historical data on init
+    socket.on("metrics:get-history", () => {
+        socket.emit("metrics:history", {
+            cpu: cpuDatapoints,
+            memory: memDatapoints,
+            network: netDatapoints
+        })
     });
 }
