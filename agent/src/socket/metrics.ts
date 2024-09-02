@@ -1,11 +1,11 @@
 import { io, Socket } from 'socket.io-client';
 import si from 'systeminformation';
 import {environment} from '../util/environment';
-import { getLogger } from '../util/logger';
 
 const cpuInterval = environment.agent_metric_cpu_interval;
 const menInterval = environment.agent_metric_mem_interval;
 const netInterval = environment.agent_metric_net_interval;
+const dynamicInterval = environment.agent_metric_net_interval;
 
 // const logger = getLogger("metrics");
 const maxdatapoints = 120;
@@ -46,10 +46,13 @@ export const CreateMetricsSocketServer = async (socket: Socket) => {
             netDatapoints.splice(0, 1);
     }), netInterval);
 
+    setInterval(() => si.getDynamicData().then(data =>
+        socket.emit("metrics:dynamic", data)
+    ), dynamicInterval);
+
     socket.on("metrics:get-static", () => {
         // Send initial data
         si.getStaticData().then(data => socket.emit("metrics:static", data));
-        si.getDynamicData().then(data => socket.emit("metrics:dynamic", data));
     });
 
     // Provide historical data on init
