@@ -8,6 +8,7 @@ const menInterval = environment.agent_metric_mem_interval;
 const netInterval = environment.agent_metric_net_interval;
 
 // const logger = getLogger("metrics");
+const maxdatapoints = 120;
 
 export const CreateMetricsSocketServer = async (socket: Socket) => {
 
@@ -21,19 +22,28 @@ export const CreateMetricsSocketServer = async (socket: Socket) => {
     setInterval(() => si.currentLoad().then(data => {
         const item = { time: Date.now(), data};
         socket.emit("metrics:cpu", item);
+
         cpuDatapoints.push(item);
+        if (cpuDatapoints.length >= maxdatapoints)
+            cpuDatapoints.splice(0, 1);
     }), cpuInterval);
 
     setInterval(() => si.mem().then(data => {
         const item = { time: Date.now(), data};
         socket.emit("metrics:mem", item);
+
         memDatapoints.push(item);
+        if (memDatapoints.length >= maxdatapoints)
+            memDatapoints.splice(0, 1);
     }), menInterval);
 
     setInterval(() => si.networkStats().then(data => {
         const item = { time: Date.now(), data};
         socket.emit("metrics:network", item);
+
         netDatapoints.push(item);
+        if (netDatapoints.length >= maxdatapoints)
+            netDatapoints.splice(0, 1);
     }), netInterval);
 
     socket.on("metrics:get-static", () => {
