@@ -12,11 +12,6 @@ export class SocketLiveService {
             maxHttpBufferSize: 1024 ** 3
         });
         io.engine.use(SessionMiddleware);
-        io.engine.use((req, res, next) => {
-            res.headers.set("Access-Control-Allow-Origin", "*");
-            res.headers.set("foodude", "*");
-            next();
-        });
         const activeSockets: Socket[] = [];
 
         afterDatabaseConnected(() => {
