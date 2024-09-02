@@ -136,9 +136,11 @@ export const getPriorStages = (pipeline: PipelineDefinition, stage: StageDefinit
 export const BindSocketLogger = (name: string, socket: Socket<any, any>) => {
     // TODO: Create a flag to disable/enable this?
     socket.onAny(ev => {
+        if (name == ev.split(":")[0])
         console.log(`%c[ws:${name}] %c<-- ${ev}`, "color: #ffca28", "color: #0dbc79")
     })
     socket.onAnyOutgoing(ev => {
+        if (name == ev.split(":")[0])
         console.log(`%c[ws:${name}] %c--> ${ev}`, "color: #ffca28", "color: #11a8cd");
     })
 }
