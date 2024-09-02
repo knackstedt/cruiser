@@ -4,7 +4,7 @@ import * as pty from "node-pty";
 import { Socket, io } from "socket.io-client";
 import { ulid } from 'ulidx';
 import { environment } from '../util/environment';
-import { getSocketLogger } from './logger';
+import { CreateLoggerSocketServer } from './logger';
 
 // Make an attempt to get a compatible PTY program.
 const shell = os.platform() == "win32"
@@ -19,7 +19,7 @@ const shell = os.platform() == "win32"
     ? "ksh"
     : "sh";
 
-export const getSocketTerminal = async (socket: Socket, logger: Awaited<ReturnType<typeof getSocketLogger>>) => {
+export const CreateTerminalSocketServer = async (socket: Socket, logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>) => {
 
     let ptyProcess: pty.IPty;
     let ptyArgs;

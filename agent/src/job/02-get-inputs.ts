@@ -3,7 +3,7 @@ import { simpleGit, SimpleGitProgressEvent, SimpleGitOptions, SimpleGit } from '
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
 import { environment } from '../util/environment';
 import { JobInstance } from '../types/agent-task';
-import { getSocketLogger } from '../socket/logger';
+import { CreateLoggerSocketServer } from '../socket/logger';
 import { TripBreakpoint } from '../socket/breakpoint';
 import { api } from '../util/axios';
 import { decompressTarGZip, decompressTarLrz } from '../util/compression';
@@ -14,7 +14,7 @@ export const GetInputs = async (
     stage: StageDefinition,
     job: JobDefinition,
     jobInstance: JobInstance,
-    logger: Awaited<ReturnType<typeof getSocketLogger>>
+    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {
     await Promise.all(job.inputArtifacts?.map(async artifact => {
         const source = pipeline.stages.flatMap(s => s.jobs).flatMap(j => j.outputArtifacts)

@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import os from 'os';
 import FormData from 'form-data';
 
-import { getSocketLogger } from '../socket/logger';
+import { CreateLoggerSocketServer } from '../socket/logger';
 import { JobInstance } from '../types/agent-task';
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
 import { api } from '../util/axios';
@@ -18,7 +18,7 @@ const uploadBinary = async (
     path: string,
     dirContents: Awaited<ReturnType<typeof getFilesInFolderFlat>>,
     jobInstance: JobInstance,
-    logger: Awaited<ReturnType<typeof getSocketLogger>>
+    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {
     try {
         const fileName = path.split('/').pop();
@@ -73,7 +73,7 @@ export const UploadArtifacts = async (
     stage: StageDefinition,
     job: JobDefinition,
     jobInstance: JobInstance,
-    logger: Awaited<ReturnType<typeof getSocketLogger>>
+    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {
     // const compressArtifact = os.platform() == "win32"
     //     ? compressZip

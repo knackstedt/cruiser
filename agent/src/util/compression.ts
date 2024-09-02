@@ -1,5 +1,5 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
-import { getSocketLogger } from '../socket/logger';
+import { CreateLoggerSocketServer } from '../socket/logger';
 import { environment } from './environment';
 import { mkdirp } from 'fs-extra';
 
@@ -66,7 +66,7 @@ const runCommand = (
 export const compressTarLrz = (
     dir: string,
     targetFile: string,
-    logger: Awaited<ReturnType<typeof getSocketLogger>>
+    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {
     const path = targetFile + '.tar.lrz';
 
@@ -82,7 +82,7 @@ export const compressTarLrz = (
 export const compressTarGZip = (
     dir: string,
     targetFile: string,
-    logger: Awaited<ReturnType<typeof getSocketLogger>>
+    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {
     const path = targetFile + '.tar.gz';
 
@@ -98,7 +98,7 @@ export const compressTarGZip = (
 export const decompressTarLrz = async (
     archiveFile: string,
     outputPath: string,
-    logger: Awaited<ReturnType<typeof getSocketLogger>>
+    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {
     await mkdirp(outputPath);
 
@@ -114,7 +114,7 @@ export const decompressTarLrz = async (
 export const decompressTarGZip = async (
     archiveFile: string,
     outputPath: string,
-    logger: Awaited<ReturnType<typeof getSocketLogger>>
+    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {
     await mkdirp(outputPath);
 

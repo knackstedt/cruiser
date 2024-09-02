@@ -3,7 +3,7 @@ import { ulid } from 'ulidx';
 import { JobInstance } from '../types/agent-task';
 import { api } from '../util/axios';
 import { TaskDefinition, TaskGroupDefinition } from '../types/pipeline';
-import { getSocketLogger } from './logger';
+import { CreateLoggerSocketServer } from './logger';
 import {environment} from '../util/environment';
 
 const breakpoints: {
@@ -19,10 +19,10 @@ const breakpoints: {
 let _socket: Socket;
 
 // This will always execute before `TripBreakpoint`.
-export const BindSocketBreakpoint = async (
+export const CreateBreakpointSocketServer = async (
     socket: Socket,
     jobInstance: JobInstance,
-    logger: Awaited<ReturnType<typeof getSocketLogger>>
+    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {
     _socket = socket;
 

@@ -3,7 +3,7 @@ import { getLogger } from '../util/logger';
 
 const logger = getLogger("agent");
 
-export const getSocketLogger = async(socket: Socket) => {
+export const CreateLoggerSocketServer = async(socket: Socket) => {
     const history: {
         ev: string,
         data: Object

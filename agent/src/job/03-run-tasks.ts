@@ -1,7 +1,7 @@
 import { orderSort } from '../util/order-sort';
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition, TaskGroupDefinition } from '../types/pipeline';
 import { api } from '../util/axios';
-import { getSocketLogger } from '../socket/logger';
+import { CreateLoggerSocketServer } from '../socket/logger';
 import { RunProcess } from '../util/process-manager';
 import { JobInstance } from '../types/agent-task';
 
@@ -12,7 +12,7 @@ const executeTaskGroup = async (
     job: JobDefinition,
     jobInstance: JobInstance,
     taskGroup: TaskGroupDefinition,
-    logger: Awaited<ReturnType<typeof getSocketLogger>>
+    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {
     try {
         logger.info({
@@ -75,7 +75,7 @@ export const RunTasks = (
     stage: StageDefinition,
     job: JobDefinition,
     jobInstance: JobInstance,
-    logger: Awaited<ReturnType<typeof getSocketLogger>>
+    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {
     job.taskGroups?.sort(orderSort);
 

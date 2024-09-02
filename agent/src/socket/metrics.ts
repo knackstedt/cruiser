@@ -1,51 +1,46 @@
-import { io } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 import si from 'systeminformation';
 import {environment} from '../util/environment';
 import { getLogger } from '../util/logger';
 
+const cpuInterval = environment.agent_metric_cpu_interval;
+const menInterval = environment.agent_metric_mem_interval;
+const netInterval = environment.agent_metric_net_interval;
+
 const logger = getLogger("metrics");
 
-export const getSocketMetrics = async () => {
-    const socket = io(environment.cruiserUrl, {
-        path: "/socket/socket-tunnel-internal",
-        extraHeaders: {
-            "X-Cruiser-Token": environment.cruiserToken
-        }
-    });
+export const CreateMetricsSocketServer = async (socket: Socket) => {
+    const sockets: Socket[] = [];
 
-    // "connection" event happens when any client connects to this io instance.
+    // Send initial data
+    // si.getStaticData().then(data => socket.emit("metrics:static", data));
+    // si.getDynamicData().then(data => socket.emit("metrics:metrics", data));
+
+    setInterval(() => si.currentLoad().then(data =>
+        sockets.forEach(socket => socket.emit("metrics:cpu", data))
+    ), cpuInterval);
+
+    setInterval(() => si.mem().then(data =>
+        sockets.forEach(socket => socket.emit("metrics:mem", data))
+    ), menInterval);
+
+    setInterval(() => si.networkStats().then(data =>
+        sockets.forEach(socket => socket.emit("metrics:network", data))
+    ), netInterval);
+
+
     socket.on("connection", socket => {
         let intervals = [];
 
-        // Create a new pty service when client connects.
-        // console.log("socket has been bound")
-        // intervals.push(setInterval(async() => {
-
-        //     // Send dynamic data
-        //     const data = await si.getDynamicData();
-        //     socket.emit("metrics", data);
-        // }, 2500));
-
         // Send initial data
         si.getStaticData().then(data => socket.emit("metrics:static", data));
-        si.getDynamicData().then(data => socket.emit("metrics:metrics", data));
+        // si.getDynamicData().then(data => socket.emit("metrics:metrics", data));
 
         // CPU Metrics
-        intervals.push(setInterval(() => {
-            si.currentLoad().then(data => socket.emit("metrics:cpumetrics", data));
-        }, 250));
-
-        // Memory Metrics
-        intervals.push(setInterval(() => {
-            si.mem().then(data => socket.emit("metrics:memmetrics", data));
-        }, 250));
-
-        intervals.push(setInterval(() => {
-            si.networkStats().then(data => socket.emit("metrics:networkmetrics", data));
-        }, 250));
+        sockets.push(socket);
 
         socket.on("disconnect", () => {
-            intervals.forEach(i => clearInterval(i));
+            sockets.splice(socket);
         });
     });
 }

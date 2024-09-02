@@ -9,7 +9,7 @@ import { JobInstance } from '../types/agent-task';
 const logger = getLogger("agent");
 const showDebug = !!process.env['AGENT_WEBSOCKETS_VERBOSE'];
 
-export const getSocket = async (pipeline: PipelineDefinition, jobInstance: JobInstance) => {
+export const CreateBaseSocketServer = async (pipeline: PipelineDefinition, jobInstance: JobInstance) => {
     let socket: Socket;
 
     try {

@@ -6,5 +6,9 @@ export const environment = {
     buildDir: process.cwd() + '/build/',
     jobInstanceId: `job_instance:` + process.env['CRUISER_AGENT_ID'].toUpperCase(),
     agentIsWindowsHost: os.platform() == "win32",
-    is_production: process.env['NODE_ENV'] == "production"
+    is_production: process.env['NODE_ENV'] == "production",
+
+    agent_metric_cpu_interval: parseInt(process.env['CRUISER_AGENT_METRIC_CPU_INTERVAL'] || '250'),
+    agent_metric_mem_interval: parseInt(process.env['CRUISER_AGENT_METRIC_MEM_INTERVAL'] || '250'),
+    agent_metric_net_interval: parseInt(process.env['CRUISER_AGENT_METRIC_NET_INTERVAL'] || '250'),
 }

@@ -1,15 +1,16 @@
 import { GetInputs } from './job/02-get-inputs';
 import { api } from './util/axios';
 import { getConfig } from './util/config';
-import { getSocketLogger } from './socket/logger';
-import { getSocketTerminal } from './socket/terminal';
-import { getSocket } from './socket/socket';
+import { CreateLoggerSocketServer } from './socket/logger';
+import { CreateTerminalSocketServer } from './socket/terminal';
+import { CreateBaseSocketServer } from './socket/socket';
 import { RunTasks } from './job/03-run-tasks';
-import { BindSocketBreakpoint, TripBreakpoint } from './socket/breakpoint';
+import { CreateBreakpointSocketServer, TripBreakpoint } from './socket/breakpoint';
 import { UploadArtifacts } from './job/04-upload-artifacts';
 import { PreflightCheck } from './job/01-preflight-check';
 import { exists, mkdir } from 'fs-extra';
 import { environment } from './util/environment';
+import { CreateMetricsSocketServer } from './socket/metrics';
 
 export const RunAgentProcess = async (jobInstanceId: string) => {
     if (!await exists(environment.buildDir))
@@ -17,10 +18,14 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
 
     const { pipelineInstance, pipeline, stage, job, jobInstance } = await getConfig(jobInstanceId);
 
-    const socket = await getSocket(pipeline, jobInstance);
-    const logger = await getSocketLogger(socket);
-    const terminal = await getSocketTerminal(socket, logger);
-    await BindSocketBreakpoint(socket, jobInstance, logger);
+    /**
+     * Create socket "servers" that will provide information to clients
+     */
+    const socket = await CreateBaseSocketServer(pipeline, jobInstance);
+    const logger = await CreateLoggerSocketServer(socket);
+    const terminal = await CreateTerminalSocketServer(socket, logger);
+    const breakpoint = await CreateBreakpointSocketServer(socket, jobInstance, logger);
+    const metrics = await CreateMetricsSocketServer(socket);
 
     try {
         logger.info({
@@ -33,24 +38,24 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
         });
 
         // Perform preflight checks
-        logger.info({ state: "Preflight", msg: "Running preflight check" });
+        logger.info({ state: "preflight", msg: "Running preflight check" });
         await api.patch(`/api/odata/${jobInstanceId}`, { state: "preflight", initEpoch: Date.now() })
         await PreflightCheck();
-        logger.info({ state: "Preflight", msg: "Preflight check finished" });
+        logger.info({ state: "preflight", msg: "Preflight check finished" });
 
-        // logger.info({ state: "Initializing", msg: "Begin initializing" });
+        // logger.info({ state: "initializing", msg: "Begin initializing" });
         // await api.patch(`/api/odata/${jobInstanceId}`, { state: "initializing", initEpoch: Date.now() })
         // await validateJobCanRun(job, logger);
-        // logger.info({ state: "Initializing", msg: "Agent initialize completed" });
+        // logger.info({ state: "initializing", msg: "Agent initialize completed" });
 
         // Download sources
-        logger.info({ state: "Cloning", msg: "Agent source cloning", block: "start" });
+        logger.info({ state: "cloning", msg: "Agent source cloning", block: "start" });
         await api.patch(`/api/odata/${jobInstanceId}`, { state: "cloning", cloneEpoch: Date.now() })
         await GetInputs(pipelineInstance, pipeline, stage, job, jobInstance, logger);
-        logger.info({ state: "Cloning", msg: "Agent source cloning completed", block: "end" });
+        logger.info({ state: "cloning", msg: "Agent source cloning completed", block: "end" });
 
         // Follow job steps to build code
-        logger.info({ state: "Building", msg: "Agent building", block: "start" });
+        logger.info({ state: "building", msg: "Agent building", block: "start" });
         await api.patch(`/api/odata/${jobInstanceId}`, { state: "building", buildEpoch: Date.now() })
         await RunTasks(
             pipelineInstance,
@@ -60,10 +65,10 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
             jobInstance,
             logger
         );
-        logger.info({ state: "Building", msg: "Agent build completed", block: "end" });
+        logger.info({ state: "building", msg: "Agent build completed", block: "end" });
 
         // Seal (compress) artifacts
-        logger.info({ state: "Sealing", msg: "Agent sealing", block: "start" });
+        logger.info({ state: "sealing", msg: "Agent sealing", block: "start" });
         await api.patch(`/api/odata/${jobInstanceId}`, { state: "sealing", uploadEpoch: Date.now() })
         await UploadArtifacts(
             pipelineInstance,
@@ -73,7 +78,7 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
             jobInstance,
             logger
         );
-        logger.info({ state: "Sealing", msg: "Agent sealing completed", block: "end" });
+        logger.info({ state: "sealing", msg: "Agent sealing completed", block: "end" });
 
 
         logger.info({ state: "finished", msg: "Agent has completed it's work.", block: "end" });

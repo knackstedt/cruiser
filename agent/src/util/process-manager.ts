@@ -3,7 +3,7 @@ import { exists, mkdir } from 'fs-extra';
 import {environment} from './environment';
 
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition, TaskDefinition, TaskGroupDefinition } from '../types/pipeline';
-import { getSocketLogger } from '../socket/logger';
+import { CreateLoggerSocketServer } from '../socket/logger';
 import { JobInstance } from '../types/agent-task';
 import { TripBreakpoint } from '../socket/breakpoint';
 import { ParseCommand } from './command-parser';
@@ -17,7 +17,7 @@ export const RunProcess = async (
     taskGroup: TaskGroupDefinition,
     task: TaskDefinition,
     jobInstance: JobInstance,
-    logger: Awaited<ReturnType<typeof getSocketLogger>>
+    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {
     let retry = false;
     do {
