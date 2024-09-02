@@ -28,19 +28,15 @@ export const CreateMetricsSocketServer = async (socket: Socket) => {
         sockets.forEach(socket => socket.emit("metrics:network", data))
     ), netInterval);
 
+    sockets.push(socket);
 
-    socket.on("connection", socket => {
-        let intervals = [];
-
+    socket.on("metrics:get-static", () => {
         // Send initial data
         si.getStaticData().then(data => socket.emit("metrics:static", data));
-        // si.getDynamicData().then(data => socket.emit("metrics:metrics", data));
+        si.getDynamicData().then(data => socket.emit("metrics:dynamic", data));
+    });
 
-        // CPU Metrics
-        sockets.push(socket);
-
-        socket.on("disconnect", () => {
-            sockets.splice(socket);
-        });
+    socket.on("disconnect", () => {
+        sockets.splice(sockets.indexOf(socket), 1);
     });
 }
