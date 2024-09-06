@@ -33,8 +33,14 @@ ng-scrollbar.ng-scrollbar {
 .ngx-menu ngx-menu a {
     color: #e0e0e0;
 }
+.ngx-menu ngx-menu .disabled a {
+    color: #848484;
+}
 .light .ngx-menu ngx-menu a {
     color: #272727;
+}
+.light .ngx-menu ngx-menu a {
+    color: #656565;
 }
 
 .as-split-gutter {
