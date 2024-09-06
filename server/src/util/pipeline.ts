@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import { ulid } from 'ulidx';
 import * as k8s from '@kubernetes/client-node';
+import fs from 'fs-extra';
 
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
 import { db } from './db';
@@ -9,6 +10,7 @@ import { JobInstance } from '../types/agent-task';
 import { SetJobToken } from './token-cache';
 import { environment } from './environment';
 import { logger } from './logger';
+import os from 'os';
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
@@ -78,7 +80,8 @@ export const RunPipeline = async (pipeline: PipelineDefinition, user: string, tr
 
         return result;
     }
-    // If the pipeline as a whole was triggered, run all of the
+
+    // If the pipeline as a whole was triggered, run all
     // entrypoint stages.
     else {
         let startedStageNum = 0;
@@ -133,8 +136,6 @@ export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => 
         try {
             SetJobToken(kubeAuthnToken);
 
-            // await db.query(`UPDATE job_instance SET latest = false WHERE job.id = '${job.id}'`);
-
             const [jobInstance] = (await db.create<Omit<JobInstance, "id">>(`job_instance:${id}`, {
                 state: "queued",
                 queueEpoch: Date.now(),
@@ -169,7 +170,7 @@ export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => 
             );
 
             // @ts-ignore
-            const kubeJobMetadata = kubeJob.metadata;
+            const kubeJobMetadata = kubeJob?.metadata;
 
             await db.merge(jobInstance.id, {
                 jobUid: kubeJobMetadata.uid,
@@ -190,7 +191,7 @@ export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => 
     })
 }
 
-const createKubeJob = (
+const createKubeJob = async (
     pipelineInstance: PipelineInstance,
     pipeline: PipelineDefinition,
     stage: StageDefinition,
@@ -247,104 +248,134 @@ const createKubeJob = (
         const env = {};
         envVariables.forEach(v => env[v.name] = v.value);
 
-        return new Promise((res, rej) => {
-            let log: string;
-            const proc = exec("node agent/main.ts", {
-                env,
-                windowsHide: true
-            }, res);
+        // TODO: Replace with build dir
+        const buildDir = os.tmpdir() + '/cruiser_dev/';
 
-            proc.on("exit", code => code == 0 ? res(log) : rej(new Error("Agent process exited with non-zero code " + code)));
-            proc.on("disconnect", () => rej(new Error("Agent process disconnected!")));
-            proc.on("error", e => rej);
+        await fs.emptyDir(buildDir);
 
-            proc.stderr.addListener("data", data => log += data);
-            proc.stdout.addListener("data", data => log += data);
-        })
-    }
-
-
-    return k8sBatchApi.createNamespacedJob(namespace, {
-        apiVersion: "batch/v1",
-        kind: "Job",
-        metadata: {
-            annotations: {
-                "cruiser.dev/created-by": "$cruiser",
-                "cruiser.dev/pipeline-id": pipeline.id,
-                "cruiser.dev/pipeline-label": pipeline.label,
-                "cruiser.dev/pipeline-instance-id": pipelineInstance.id,
-                "cruiser.dev/stage-id": stage.id,
-                "cruiser.dev/stage-label": stage.label,
-                "cruiser.dev/job-id": jobDefinition.id,
-                "cruiser.dev/job-label": jobDefinition.label,
-                "cruiser.dev/job-instance-id": jobInstance.id,
-                ...jobDefinition?.kubeJobAnnotations
+        let log = '';
+        const proc = exec("ts-node -O '{\"target\": \"esnext\", \"module\": \"commonjs\"}' src/main.ts", {
+            cwd: "../agent",
+            env: {
+                ...process.env,
+                ...env,
+                CRUISER_AGENT_BUILD_DIR: buildDir
             },
-            labels: jobDefinition?.kubeJobLabels,
-            name: podName,
-        },
-        spec: {
-            activeDeadlineSeconds: Number.MAX_SAFE_INTEGER,
-            template: {
-                metadata: {
-                    annotations: {
-                        "cruiser.dev/created-by": "$cruiser",
-                        "cruiser.dev/release": pipelineInstance.identifier,
-                        "cruiser.dev/pipeline-id": pipeline.id,
-                        "cruiser.dev/pipeline-label": pipeline.label,
-                        "cruiser.dev/pipeline-instance-id": pipelineInstance.id,
-                        "cruiser.dev/stage-id": stage.id,
-                        "cruiser.dev/stage-label": stage.label,
-                        "cruiser.dev/job-id": jobDefinition.id,
-                        "cruiser.dev/job-label": jobDefinition.label,
-                        "cruiser.dev/job-instance-id": jobInstance.id,
-                        ...jobDefinition?.kubeContainerAnnotations
-                    },
-                    labels: jobDefinition?.kubeContainerLabels,
-                },
-                spec: {
-                    restartPolicy: "Never",
-                    enableServiceLinks: false,
-                    containers: [
-                        {
-                            name: podName,
-                            image: jobDefinition?.kubeContainerImage || "ghcr.io/knackstedt/cruiser/cruiser-agent:latest",
-                            imagePullPolicy: 'Always',
-                            securityContext: {
-                                // Must be true for docker build. Urgh.
-                                privileged: true,
-                                // allowPrivilegeEscalation: false,
-                                capabilities: {
-                                    drop: ["ALL"]
-                                }
-                            },
-                            resources: {
-                                limits: {
-                                    cpu: jobDefinition?.kubeCpuLimit || '1000m',
-                                    memory: jobDefinition?.kubeMemLimit || '4000Mi'
-                                },
-                                requests: {
-                                    cpu: jobDefinition?.kubeCpuRequest || '100m',
-                                    memory: jobDefinition?.kubeMemRequest || '750Mi'
-                                }
-                            },
-                            ports: [{ containerPort: 8080 }],
-                            env: envVariables // Clear any empty env variables
-                        }
-                    ],
-                    affinity: jobDefinition?.kubeContainerAffinity,
-                    tolerations: jobDefinition?.kubeContainerTolerations
-                },
+            windowsHide: true
+        });
+
+        proc.stderr.addListener("data", data => log += data);
+        proc.stdout.addListener("data", data => log += data);
+
+        proc.on("exit", async code => {
+            if (code) {
+                logger.error(new Error("Agent process exited with non-zero code " + code));
             }
-        }
-    })
-    .then(({body}) => body)
-    .catch(err => {
-        logger.error({
-            msg: err.body?.message || err.message || "unknown error",
-            body: err.body
+            else {
+                const dir = [
+                    environment.cruiser_log_dir,
+                    pipeline.id,
+                    pipelineInstance.id,
+                    stage.id,
+                    jobDefinition.id
+                ].join('/');
+
+                await fs.mkdir(dir, { recursive: true });
+
+                // Write the file to disk.
+                await fs.writeFile(
+                    dir + '/' + jobInstance.id + ".log",
+                    log
+                );
+            }
+        });
+        proc.on("disconnect", () => logger.error(new Error("Agent process disconnected!")));
+
+        return null;
+    }
+    else {
+        return k8sBatchApi.createNamespacedJob(namespace, {
+            apiVersion: "batch/v1",
+            kind: "Job",
+            metadata: {
+                annotations: {
+                    "cruiser.dev/created-by": "$cruiser",
+                    "cruiser.dev/pipeline-id": pipeline.id,
+                    "cruiser.dev/pipeline-label": pipeline.label,
+                    "cruiser.dev/pipeline-instance-id": pipelineInstance.id,
+                    "cruiser.dev/stage-id": stage.id,
+                    "cruiser.dev/stage-label": stage.label,
+                    "cruiser.dev/job-id": jobDefinition.id,
+                    "cruiser.dev/job-label": jobDefinition.label,
+                    "cruiser.dev/job-instance-id": jobInstance.id,
+                    ...jobDefinition?.kubeJobAnnotations
+                },
+                labels: jobDefinition?.kubeJobLabels,
+                name: podName,
+            },
+            spec: {
+                activeDeadlineSeconds: 15 * 60,
+                template: {
+                    metadata: {
+                        annotations: {
+                            "cruiser.dev/created-by": "$cruiser",
+                            "cruiser.dev/release": pipelineInstance.identifier,
+                            "cruiser.dev/pipeline-id": pipeline.id,
+                            "cruiser.dev/pipeline-label": pipeline.label,
+                            "cruiser.dev/pipeline-instance-id": pipelineInstance.id,
+                            "cruiser.dev/stage-id": stage.id,
+                            "cruiser.dev/stage-label": stage.label,
+                            "cruiser.dev/job-id": jobDefinition.id,
+                            "cruiser.dev/job-label": jobDefinition.label,
+                            "cruiser.dev/job-instance-id": jobInstance.id,
+                            ...jobDefinition?.kubeContainerAnnotations
+                        },
+                        labels: jobDefinition?.kubeContainerLabels,
+                    },
+                    spec: {
+                        restartPolicy: "Never",
+                        enableServiceLinks: false,
+                        containers: [
+                            {
+                                name: podName,
+                                image: jobDefinition?.kubeContainerImage || "ghcr.io/knackstedt/cruiser/cruiser-agent:latest",
+                                imagePullPolicy: 'Always',
+                                securityContext: {
+                                    // Must be true for docker build. Urgh.
+                                    privileged: true,
+                                    // allowPrivilegeEscalation: false,
+                                    // capabilities: {
+                                    //     drop: ["ALL"]
+                                    // }
+                                },
+                                resources: {
+                                    limits: {
+                                        cpu: jobDefinition?.kubeCpuLimit || '1000m',
+                                        memory: jobDefinition?.kubeMemLimit || '4000Mi'
+                                    },
+                                    requests: {
+                                        cpu: jobDefinition?.kubeCpuRequest || '100m',
+                                        memory: jobDefinition?.kubeMemRequest || '750Mi'
+                                    }
+                                },
+                                ports: [{ containerPort: 8080 }],
+                                env: envVariables // Clear any empty env variables
+                            }
+                        ],
+                        affinity: jobDefinition?.kubeContainerAffinity,
+                        tolerations: jobDefinition?.kubeContainerTolerations
+                    },
+                }
+            }
         })
-    });
+        .then(({body}) => body)
+        .catch(err => {
+            logger.error({
+                msg: err.body?.message || err.message || "unknown error",
+                body: err.body
+            })
+        });
+    }
 }
 
 

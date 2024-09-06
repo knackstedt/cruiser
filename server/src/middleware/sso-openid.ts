@@ -13,6 +13,7 @@ const getProfile = async (userId: string, roles?: CruiserUserRole[]) => {
     let [result] = await db.query("SELECT * from users WHERE login = $user", { user: userId });
     let [profile] = result as any;
 
+    // Establish the database user
     if (!profile) {
         [ profile ] = await db.create("users:ulid()", {
             login: userId,

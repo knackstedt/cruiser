@@ -7,6 +7,7 @@ import { SocketLiveService } from './singleton/watch-database';
 import { EventTriggers } from './singleton/watch-jobinstance';
 import { SocketEventService } from './singleton/socket-service';
 import { environment } from './util/environment';
+import { GitWatcher } from './singleton/watch-git';
 
 /**
  * Startup the websocket endpoint listener
@@ -27,6 +28,7 @@ export const startWebsocketServer = (server?: http.Server) => {
     CronScheduler();
     WatchAndFlushJobs();
     EventTriggers();
+    GitWatcher();
 
     // TODO: Enable graceful "disconnect" signal to tell clients
     // that they need to reconnect to a new instance of the app

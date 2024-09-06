@@ -4,6 +4,7 @@ import { db } from '../util/db';
 import { PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
 // import { GetAllRunningJobs } from '../util/kube';
 import { RunPipeline, RunStage } from '../util/pipeline';
+import { JobInstance } from '../types/agent-task';
 
 const router = express.Router();
 
@@ -51,7 +52,7 @@ router.use('/:id', route(async (req, res, next) => {
 }));
 
 // Endpoint for a user to manually trigger a pipeline
-router.get('/:id/start', route(async (req, res, next) => {
+router.get('/:id/run', route(async (req, res, next) => {
     const pipeline: PipelineDefinition = req['pipeline'];
 
     // Get an array of stage ids from query params
@@ -73,15 +74,17 @@ router.get('/:id/start', route(async (req, res, next) => {
     });
 }));
 
-router.get('/:id/:instance/:stage', route(async (req, res, next) => {
-    const pipeline: PipelineDefinition = req['pipeline'];
-
+router.get('/:id/:instance/:stage/run', route(async (req, res, next) => {
+    const [pipeline] = await db.select<PipelineDefinition>(req.params['id']);
     const [instance] = await db.select<PipelineInstance>(req.params['instance']);
+    const stage = pipeline?.stages?.find(s => s.id == req.params['stage']);
 
-    if (instance.spec.id != pipeline.id)
+    if (instance.spec.id != pipeline.id || !stage)
         throw { status: 400, message: "Pipeline / Instance mismatch. Please make sure the pipeline instance is an instance of the specified pipeline" };
 
-    const [stage] = await db.select<StageDefinition>(req.params['stage']);
+    instance.status.phase = "waiting";
+    // Remove all of the job instances for the stage that's being re-run
+    instance.status.jobInstances = (instance.status.jobInstances as any as JobInstance[]).filter(ji => ji.stage != stage.id) as any;
 
     const result = await RunStage(instance, stage);
 

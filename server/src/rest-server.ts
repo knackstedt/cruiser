@@ -20,7 +20,6 @@ import { VaultApi } from './api/vault';
 import { environment } from './util/environment';
 import { SystemApi } from './api/system';
 
-
 export const startRestServer = async () => {
     const app: Express = express();
     app.disable('x-powered-by');
