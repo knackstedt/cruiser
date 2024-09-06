@@ -11,8 +11,6 @@ const dynamicInterval = environment.agent_metric_net_interval;
 const maxdatapoints = 120;
 
 export const CreateMetricsSocketServer = async (socket: Socket) => {
-
-    // TODO: cleanup very old records to prevent oom crashing
     // TODO: configure granularity and data aging
 
     const cpuDatapoints: { time: number, data: si.Systeminformation.CurrentLoadData }[] = [];

@@ -1,13 +1,9 @@
 import * as express from "express";
 import { route } from '../util/util';
 import { db } from '../util/db';
-import { PipelineDefinition, PipelineInstance } from '../types/pipeline';
+import { PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
 // import { GetAllRunningJobs } from '../util/kube';
 import { RunPipeline, RunStage } from '../util/pipeline';
-import axios from 'axios';
-import { JobInstance } from '../types/agent-task';
-import { getPodEndpointUrl } from './api-tunnel';
-import { environment } from '../util/environment';
 
 const router = express.Router();
 
@@ -75,6 +71,21 @@ router.get('/:id/start', route(async (req, res, next) => {
         message: "ok",
         pipeline
     });
+}));
+
+router.get('/:id/:instance/:stage', route(async (req, res, next) => {
+    const pipeline: PipelineDefinition = req['pipeline'];
+
+    const [instance] = await db.select<PipelineInstance>(req.params['instance']);
+
+    if (instance.spec.id != pipeline.id)
+        throw { status: 400, message: "Pipeline / Instance mismatch. Please make sure the pipeline instance is an instance of the specified pipeline" };
+
+    const [stage] = await db.select<StageDefinition>(req.params['stage']);
+
+    const result = await RunStage(instance, stage);
+
+    res.send(result);
 }));
 
 router.get('/:id/:instance/:stage/approve', route(async (req, res, next) => {

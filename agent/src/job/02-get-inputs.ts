@@ -1,4 +1,4 @@
-import { createWriteStream, exists, mkdir, readdir } from 'fs-extra';
+import { createWriteStream, exists, mkdir, mkdirp, readdir } from 'fs-extra';
 import { simpleGit, SimpleGitProgressEvent, SimpleGitOptions, SimpleGit } from 'simple-git';
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
 import { environment } from '../util/environment';
@@ -16,7 +16,7 @@ export const GetInputs = async (
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {
-    await Promise.all(job.inputArtifacts?.map(async artifact => {
+    for (const artifact of (job.inputArtifacts || [])) {
         const source = pipeline.stages.flatMap(s => s.jobs).flatMap(j => j.outputArtifacts)
             .find(a => a.id == artifact.sourceArtifact);
 
@@ -27,9 +27,7 @@ export const GetInputs = async (
         });
 
         if (!source) {
-            logger.warn({
-
-            })
+            logger.warn({ })
             return null;
         }
 
@@ -47,7 +45,7 @@ export const GetInputs = async (
             responseEncoding: "binary"
         });
 
-        return new Promise((res, rej) => {
+        await new Promise((res, rej) => {
             const targetFile = `/tmp/${artifact.id}`;
             let sWriter = createWriteStream(targetFile);
             stream.data.pipe(sWriter);
@@ -78,23 +76,20 @@ export const GetInputs = async (
                     rej(err);
                 }
             });
-            sWriter.on("error", err => {
-                rej(err)
-            });
+            sWriter.on("error", rej);
         })
-    }) ?? []);
+    }
 
-    const sources = stage.sources;
-    if (!sources || sources.length == 0) {
+    const sources = stage.sources.filter(s => !s.disabled) || [];
+    if (sources.length == 0) {
         logger.debug({
-            msg: `Stage '${stage.label}' has no sources to run`,
+            msg: `Stage '${stage.label}' has no sources to fetch`,
             stage
         })
         return null;
     }
 
-    return await Promise.all(sources.map(async source => {
-
+    for (const source of sources) {
         const sourceForLog = {
             ...source,
             // prevent password from being logged
@@ -122,9 +117,9 @@ export const GetInputs = async (
                 //     `[credential "${host}"]\n` +
                 //     `	 username = ${source.username || 'DotOps'}\n` +
                 //     `    helper = "!f() { test \\"$1\\" = get && echo \\"password=${source.password}\\"; }; f"\n`
-                //     // `    helper = "!f() { test \"$1\" = get && echo \"password=$(cat $HOME/.secret)\"; }; f"\n`
+                //     // ` w   helper = "!f() { test \"$1\" = get && echo \"password=$(cat $HOME/.secret)\"; }; f"\n`
                 // );
-
+                const repoSlug = source.url.split('/').pop().replace(/\.git$/, '');
                 const options: Partial<SimpleGitOptions> = {
                     baseDir: environment.buildDir,
                     binary: 'git',
@@ -143,30 +138,34 @@ export const GetInputs = async (
 
                 const git = simpleGit(options);
 
-                logger.info({ msg: `Cloning GIT source`, source: sourceForLog });
+                logger.info({ msg: `Begin cloning source :git: '${repoSlug}'`, source: sourceForLog });
 
-                const cloneDir = source.targetPath?.startsWith("/")
+                const fallbackDir = pipeline.id + '/' + jobInstance.id + '/' + repoSlug;
+                const cloneDir = !source.targetPath ? (environment.buildDir + '/' + (source.targetPath || fallbackDir))
+                    : source.targetPath?.startsWith("/")
                     ? source.targetPath
                     : environment.buildDir + (source.targetPath ?? '');
 
-                if (!await exists(cloneDir))
-                    await mkdir(cloneDir, { recursive: true });
+                do {
+                    await mkdirp(cloneDir);
 
-                if ((await readdir(cloneDir)).length > 0) {
-                    logger.fatal({
-                        msg: "⏸ Cannot clone into non-empty directory",
-                        state: 'failed'
-                    });
-
-                    await TripBreakpoint(jobInstance, false);
-                    return 1;
+                    if ((await readdir(cloneDir)).length > 0) {
+                        logger.fatal({
+                            msg: "⏸ Cannot clone into non-empty directory",
+                            state: 'failed'
+                        });
+                    }
+                    else {
+                        break;
+                    }
                 }
+                while (await TripBreakpoint(jobInstance, true))
 
                 await git.clone(source.url, cloneDir, {
                     "--depth": source.cloneDepth ? source.cloneDepth : '1'
-                })
+                });
 
-                logger.info({ msg: `Done cloning git source '${sourceForLog.label}'`, source: sourceForLog });
+                logger.info({ msg: `✅ Done cloning git source '${sourceForLog.label || sourceForLog.url?.split('/').pop()}'`, source: sourceForLog });
 
                 return 0;
 
@@ -185,5 +184,7 @@ export const GetInputs = async (
                 // return execa('git', args, { cwd: source.targetPath });
             }
         }
-    }));
+    }
+
+    return 0;
 }

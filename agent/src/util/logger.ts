@@ -41,7 +41,7 @@ const toGb = (stat) => {
 };
 
 _logger.info({
-    message: "Application Started",
+    msg: "Application Started",
     cwd: process.cwd(),
     ...Object.entries(heapStats).map(([k, v]) => ({
         [k]: toGb(v)

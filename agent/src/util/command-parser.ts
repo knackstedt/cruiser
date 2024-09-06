@@ -12,7 +12,9 @@ const parserRx = /(?<env>(?:(?:[A-Z0-9_-]+)=(?:[A-Z0-9_-]+) )*)(?<cmd>[^ =]+) ?(
  * echo foo 'bar baz'
  */
 export const ParseCommand = (commandInput: string) => {
-    commandInput = commandInput.replace(/[\n]/g, '');
+    // TODO: This entire process is a bit jank if a user wants to embed bash scripting
+    // in a build step.
+    commandInput = commandInput.replace(/[\n]/g, ' ');
 
     const { env, cmd, args } = commandInput.match(parserRx)?.groups ?? {};
 
@@ -79,3 +81,6 @@ export const ParseCommand = (commandInput: string) => {
 
 // Test commands
 // console.log(ParseCommand('git commit -m "⚛ [automation]\\"\\"asd\\"\\"aasd\\" \\"asdincrement version"'))
+// const res = ParseCommand('bash -c "echo $PWD"');
+// console.log(res);
+

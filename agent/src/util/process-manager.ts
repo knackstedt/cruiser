@@ -143,7 +143,7 @@ export const RunProcess = async (
                         res(process);
                     }
                     else {
-                        logger.error({ msg: `Process '${command}' exited with non-zero exit code`, code, taskGroup, task });
+                        logger.error({ msg: `Process '${command}' exited with non-zero exit code (${code})`, code, taskGroup, task });
                         res(process);
                     }
                 });
@@ -173,10 +173,10 @@ export const RunProcess = async (
             }
         }
         else {
-            logger.error({
-                msg: process.exitCode == -1 ? "Failed to spawn process" : "Process exited with code " + process.exitCode,
-                ...(process.exitCode == -1 ? { err: process['err'] } : { process })
-            });
+            // logger.error({
+            //     msg: process.exitCode == -1 ? "Failed to spawn process" : `Process exited with non-zero code (${process.exitCode})`,
+            //     ...(process.exitCode == -1 ? { err: process['err'] } : { process })
+            // });
 
             if (task.breakOnTaskFailure) {
                 logger.info({ msg: `⏸ Breaking on error`, breakpoint: true, error: true, taskGroup, task });

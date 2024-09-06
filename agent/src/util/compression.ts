@@ -50,7 +50,7 @@ const runCommand = (
                 } as any);
             }
             else {
-                logger.error({ msg: `Process exited with non-zero exit code`, code });
+                logger.error({ msg: `Process exited with non-zero exit code 777`, code });
                 res({
                     ...metadata,
                     ...process,

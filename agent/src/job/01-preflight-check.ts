@@ -2,6 +2,7 @@ import { logger } from '../util/logger';
 import os from 'os';
 import fs from 'fs-extra';
 import { command } from 'execa';
+import { environment } from '../util/environment';
 
 // Assert we have the following programs!
 const requiredDependencies = [
@@ -48,6 +49,10 @@ const requiredDependencies = [
  * dependencies on Linux based systems.
  */
 export const PreflightCheck = async () => {
+
+    // Ensure the build directory exists
+    await fs.mkdirp(environment.buildDir);
+
     const platform = os.platform();
 
     switch (platform) {
