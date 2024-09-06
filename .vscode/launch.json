@@ -19,6 +19,21 @@
             "env": {
                 "CRUISER_GLOBAL_STORAGE_PATH": "/home/knackstedt/source/@me/dot-ops/data"
             },
+        },
+        {
+            "name": "Agent",
+            "type": "node",
+            "request": "launch",
+            "args": [
+                "command-parser.ts"
+            ],
+            "runtimeArgs": [
+                "--nolazy",
+                "-r",
+                "ts-node/register"
+            ],
+            "sourceMaps": true,
+            "cwd": "${workspaceRoot}/agent/src/util"
         }
     ]
 }

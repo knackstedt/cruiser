@@ -1,37 +1,90 @@
 {
-  // For more information, visit: https://go.microsoft.com/fwlink/?LinkId=733558
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "surrealdb",
-      "type": "shell",
-      "command": "bash",
-      "args": [
-        "-c",
-        "database/debug.sh"
-      ],
-      "isBackground": true,
-        "problemMatcher": {
-            "owner": "surrealdb",
-            "pattern": [
-                {
-                    "severity": 1,
-                    "message": 3,
-                    "file": 2,
-                    "kind": "file",
-                    "regexp": "^([^ ]+)  ([A-Z]+) ([^ ]+): (.+)$"
+    // For more information, visit: https://go.microsoft.com/fwlink/?LinkId=733558
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "▶ web",
+            "type": "npm",
+            "script": "dev",
+            "options": {
+                "cwd": "client"
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "typescript",
+                "pattern": "$tsc",
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": {
+                        "regexp": "(.*?)"
+                    },
+                    "endsPattern": {
+                        "regexp": "bundle generation complete"
+                    }
                 }
+            }
+        },
+        {
+            "label": "▶ surrealdb",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "database/debug.sh"
             ],
-            "background": {
-                "activeOnStart": true,
-                "beginsPattern": {
-                    "regexp": "Connecting to Surreal..."
-                },
-                "endsPattern": {
-                    "regexp": "Done applying database template."
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "surrealdb",
+                "pattern": [
+                    {
+                        "severity": 1,
+                        "message": 3,
+                        "file": 2,
+                        "kind": "file",
+                        "regexp": "^([^ ]+)  ([A-Z]+) ([^ ]+): (.+)$"
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": {
+                        "regexp": "Connecting to Surreal..."
+                    },
+                    "endsPattern": {
+                        "regexp": "Done applying database template."
+                    }
+                }
+            }
+        },
+        {
+            "label": "▶ (test) agent",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "database/debug.sh"
+            ],
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "surrealdb",
+                "pattern": [
+                    {
+                        "severity": 1,
+                        "message": 3,
+                        "file": 2,
+                        "kind": "file",
+                        "regexp": "^([^ ]+)  ([A-Z]+) ([^ ]+): (.+)$"
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": {
+                        "regexp": "Connecting to Surreal..."
+                    },
+                    "endsPattern": {
+                        "regexp": "Done applying database template."
+                    }
                 }
             }
         }
-    }
-  ]
+    ]
 }
