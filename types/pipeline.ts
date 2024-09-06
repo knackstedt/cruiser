@@ -159,6 +159,7 @@ export type SourceConfiguration = Partial<{
     label: string
     description: string
     targetPath: string
+    disabled: boolean
     type: "git" | "svn" | "tfs"
 
     branch: string
@@ -172,11 +173,19 @@ export type SourceConfiguration = Partial<{
 
     pollingBehavior: string
     pollForUpdates: boolean,
+    pollIntervalSeconds: number,
 
     denyList: string
     invertFilter: boolean
 
     url: string
+
+    // A map of the last valid hash and which branch ref it points to
+    lastGitHash: {
+        [key: string]: string
+    }
+
+    // ... This should be revisited
     pipelines: PipelineDefinition[]
 }>
 
@@ -197,7 +206,7 @@ export type PipelineDefinition = {
     pipelineTemplate: string,
     // If the pipeline is a clone so a user can edit and save
     // it all at once
-    isUserEditInstance: boolean,
+    _isUserEditInstance: boolean,
     automaticScheduling: boolean
 
     cronSchedule: string
