@@ -8,6 +8,9 @@
     "dependencies": {
         "@dotglitch/odatav4": "^0.0.8",
         "@kubernetes/client-node": "^0.20.0",
+        "@opentelemetry/api": "^1.9.0",
+        "@opentelemetry/auto-instrumentations-node": "^0.50.0",
+        "@opentelemetry/sdk-node": "^0.53.0",
         "adm-zip": "^0.5.10",
         "axios": "^1.6.7",
         "connect-surreal": "^0.0.2",
