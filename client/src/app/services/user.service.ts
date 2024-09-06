@@ -8,7 +8,8 @@ import { CruiserUserProfile } from 'src/types/cruiser-types';
 })
 export class UserService extends Subject<CruiserUserProfile> {
     public value: CruiserUserProfile;
-
+    public systemConfiguration;
+    public userConfiguration;
 
     get isAdministrator() { return this.value?.roles?.includes('administrator') }
     get isManager()       { return this.value?.roles?.includes('manager') || this.value?.roles?.includes('administrator') }
@@ -21,12 +22,14 @@ export class UserService extends Subject<CruiserUserProfile> {
         super();
         window['user'] = this;
 
-        fetch.get<CruiserUserProfile>('/api/user').then(u => {
-            if (u['lockedOut'] == true) {
+        fetch.get<{ profile: CruiserUserProfile, systemConfiguration, userConfiguration }>('/api/user').then(data => {
+            if (data['lockedOut'] == true || data.profile['lockedOut'] == true) {
                 window.root.isLockedOut = true;
             }
             else {
-                this.next(this.value = u);
+                this.systemConfiguration = data.systemConfiguration;
+                this.userConfiguration = data.userConfiguration;
+                this.next(this.value = data.profile);
                 window.root.isAuthenticated = true;
             }
         }).finally(() => {

@@ -1,9 +1,10 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { PipelineDefinition, StageDefinition } from 'src/types/pipeline';
+import { PipelineDefinition, PipelineInstance, StageDefinition } from 'src/types/pipeline';
 import dagre from '@dagrejs/dagre';
 import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/job-instance-icon.component';
-import { Fetch } from '@dotglitch/ngx-common';
+import { Fetch, MenuDirective } from '@dotglitch/ngx-common';
 import { JobInstance } from 'src/types/agent-task';
+import { ReleasesComponent } from 'src/app/pages/releases/releases.component';
 
 const NODE_HEIGHT = 20;
 const NODE_WIDTH = 40;
@@ -13,23 +14,29 @@ const NODE_WIDTH = 40;
     templateUrl: './stage-svg-diagram.component.html',
     styleUrls: ['./stage-svg-diagram.component.scss'],
     imports: [
-        JobInstanceIconComponent
+        JobInstanceIconComponent,
+        MenuDirective
     ],
     standalone: true
 })
 export class StageSvgDiagramComponent {
 
     @Input() pipeline: PipelineDefinition;
+    instance: PipelineInstance;
 
     stages: (StageDefinition & { position: {x,y}; })[] = []
 
     constructor(
+        public readonly pipelinesComponent: ReleasesComponent,
         private readonly fetch: Fetch
     ) { }
 
     async ngOnInit() {
         const { value: instances } = await this.fetch.get<any>(`/api/odata/pipeline_instance?$filter=spec.id eq '${this.pipeline.id}'&$orderby=id desc`);
         if (!instances[0]) return; // No runs
+
+        this.instance = instances[0];
+
         const { value: jobs } = await this.fetch.get<{ value: JobInstance[] }>(`/api/odata/job_instance?$filter=pipeline_instance eq '${instances[0].id}'`);
 
         jobs.forEach(j => {

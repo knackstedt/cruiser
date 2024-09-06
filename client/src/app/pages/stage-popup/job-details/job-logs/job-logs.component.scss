@@ -4,6 +4,14 @@
     height: 100%;
 }
 
+.headerbar {
+    user-select: none;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+}
+
 .line {
     position: absolute;
     width: 100%;
@@ -54,8 +62,9 @@
 }
 
 .console {
-    background: #1F1F1F;
-    color: #BDDED6;
+    background: hsl(0, 0%, 12%);
+    // color: #BDDED6;
+    color: #91939d;
     font-family: 'Courier New', Courier, monospace;
 
     *::selection {
@@ -63,11 +72,16 @@
     }
 
     .stdout {
-        color: #91939d;
+        // color: #91939d;
+        color: #BDDED6;
     }
 
     .stderr {
-        color: #f06292
+        color: #f06292;
+    }
+
+    .breakpoint {
+        color: #ffc107;
     }
 
     .time {
@@ -111,4 +125,15 @@ ng-scrollbar {
     &.shadow::after {
         box-shadow: #000 0 6px 6px -6px inset;
     }
+}
+
+// Hide the font detection element offscreen
+.font-detector {
+    position: fixed;
+    right: 100vw;
+    opacity: 0;
+    pointer-events: none;
+    user-select: none;
+    font-family: 'Courier New', Courier, monospace;
+    // font-size: 14px;
 }

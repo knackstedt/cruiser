@@ -1,16 +1,19 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, Input, ViewChild } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { NgScrollbar, NgScrollbarModule } from 'ngx-scrollbar';
-import { TaskDefinition } from 'src/types/pipeline';
-import { io, Socket } from 'socket.io-client';
-import ansi, { ParsedSpan, parse } from 'ansicolor';
-import { darkTheme } from 'src/app/services/theme.service';
-import { Fetch, TooltipDirective } from '@dotglitch/ngx-common';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
-import { JobInstance } from 'src/types/agent-task';
 import { MatDialog } from '@angular/material/dialog';
+
+import { Fetch, TooltipDirective } from '@dotglitch/ngx-common';
+import { NgScrollbar, NgScrollbarModule } from 'ngx-scrollbar';
+import { io, Socket } from 'socket.io-client';
+import ansi, { ParsedSpan, parse } from 'ansicolor';
+import { gitmojis } from 'gitmojis';
+
+import { TaskDefinition } from 'src/types/pipeline';
+import { darkTheme } from 'src/app/services/theme.service';
+import { JobInstance } from 'src/types/agent-task';
 import { BindSocketLogger, ViewJsonInMonacoDialog } from 'src/app/utils/utils';
 
 type Line = ({
@@ -47,6 +50,7 @@ type Line = ({
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class JobLogsComponent {
+    @ViewChild("fontDetector") fontDetector: ElementRef;
     @ViewChild(NgScrollbar) scrollbar: NgScrollbar;
     get scroller() { return this.scrollbar.viewport.nativeElement; }
     @Input() jobInstance: JobInstance;
@@ -54,6 +58,10 @@ export class JobLogsComponent {
 
     readonly lineHeight = 19;
     readonly bufferLines = 10;
+
+    // Width of the scroll viewport. Required to make horizontal scrolling not clip
+    scrollWidth = 1000;
+    charWidth = 20;
 
     showStdOut = true;
     showStdErr = true;
@@ -78,7 +86,6 @@ export class JobLogsComponent {
         private readonly fetch: Fetch,
         private readonly dialog: MatDialog
     ) {
-
         this.setColors();
     }
 
@@ -86,7 +93,6 @@ export class JobLogsComponent {
         // This is following the library doc. (Yes, it's non-standard)
         ansi.rgb = darkTheme;
     }
-
 
     async ngOnInit() {
         const commitLine = (line: string, stream: "stdout" | "stderr", time = 0, doCommit = true, data) => {
@@ -279,10 +285,11 @@ export class JobLogsComponent {
         }
     }
 
-    ngAfterViewInit() {
-        const viewport = this.scrollbar.viewport.nativeElement;
+    ngAfterViewInit(delay = false) {
+
+        const viewport = this.scroller;
         viewport.onscroll = (evt: WheelEvent) => {
-            this.updateVirtualLines(viewport);
+            this.updateVirtualLines();
 
             if (evt.deltaY < 0) {
                 this.scrollToBottom = false;
@@ -292,6 +299,8 @@ export class JobLogsComponent {
                 this.scrollToBottom = currentBottom >= viewport.scrollHeight - 50;
             }
         };
+
+        this.onResize();
     }
 
     ngOnDestroy() {
@@ -388,20 +397,13 @@ export class JobLogsComponent {
 
         this.filteredLines = lines;
 
-        this.updateVirtualLines(this.scroller);
-        if (this.scrollToBottom) {
-            this.scroller.scrollTo({
-                top: this.scroller.scrollHeight
-            });
-            setTimeout(() => {
-                this.scroller.scrollTo({
-                    top: this.scroller.scrollHeight
-                });
-            });
-        }
+        this.refocusPanel(false);
+
+        this.calculateScrollWidth();
     }
 
-    updateVirtualLines(scroller: HTMLElement) {
+    updateVirtualLines() {
+        const scroller = this.scroller;
         if (!scroller) return;
         const lines = this.filteredLines;
 
@@ -441,7 +443,91 @@ export class JobLogsComponent {
         this.changeDetector.detectChanges();
     }
 
+    refocusPanel(delay = true) {
+        setTimeout(() => {
+            this.updateVirtualLines();
+            if (this.scrollToBottom) {
+                this.goToEnd()
+            }
+        }, delay ? 15 : 0)
+    }
+
+    goToEnd() {
+        this.scroller.scrollTo({
+            top: this.scroller.scrollHeight
+        });
+
+        setTimeout(() => {
+            this.scroller.scrollTo({
+                top: this.scroller.scrollHeight
+            });
+        });
+    }
+
+    downloadLog() {
+        const log = this.lines.map(line => {
+            return line.time +
+                ' | ' +
+                (line.stream == "agent" ? '[agent] ' : '') +
+                (
+                    line.data?.map(d => d.text).join('') ||
+                    ( line['error']
+                        ? (line['error'] + ' ' + line._original?.message?.trim())
+                        : line.msg?.trim()
+                    )
+                )
+        }).join('\n');
+        const blob = new Blob([log], {
+            type: 'text/plain'
+        });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+
+        // TODO: add the job label
+        a.download = `${this.jobInstance.id}.log`;
+        document.body.appendChild(a);
+        a.click();
+
+        // Cleanup
+        window.URL.revokeObjectURL(url);
+        a.remove();
+    }
+
     viewLineData(line: Line) {
         ViewJsonInMonacoDialog(this.dialog, line._original || line);
     }
+
+    @HostListener("window:resize")
+    onResize() {
+        const el: HTMLDivElement = this.fontDetector.nativeElement;
+        const mWidth = el.children[0].clientWidth;
+        const dotWidth = el.children[1].clientWidth;
+
+        if (mWidth != dotWidth) {
+            console.error(new Error("Cannot initiate with a non monospace font"));
+        }
+        this.charWidth = mWidth;
+        this.calculateScrollWidth();
+    }
+
+    calculateScrollWidth() {
+        let charCount = 0;
+        this.filteredLines.forEach(l => {
+            if (l.msg.length > charCount)
+                charCount = l.msg.length;
+        });
+
+        // The timestamp consumes ~14 characters
+        charCount += 14;
+
+        this.scrollWidth = this.charWidth * charCount;
+        console.log(this);
+    }
+
+    parseGitmoji(text: string) {
+        return text?.replace(/(:[^:]+:)/, (match, id) =>
+            gitmojis.find(g => g.code == id)?.emoji || id)
+        }
 }

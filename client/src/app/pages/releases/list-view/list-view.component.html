@@ -30,6 +30,13 @@
                     [ngx-contextmenu]="parent.ctxMenu"
                     [ngx-menu-context]="pipeline"
                 >
+                    <!-- If the pipeline isn't active, show a button to turn it on -->
+                    <!-- @if (pipeline.state != 'active') {
+                        <mat-icon
+                            (click)=""
+                        >play</mat-icon>
+                    } -->
+
                     <div>
                         <div class="title">{{pipeline.label}}</div>
                         <div class="active_stage">{{pipeline.group}}</div>
@@ -47,6 +54,7 @@
             </cdk-virtual-scroll-viewport>
         </ng-scrollbar>
     </div>
+
     <div style="flex: 1; display: flex; flex-direction: column;">
         <div class="header">
             <span class="title">
@@ -90,6 +98,8 @@
                         *cdkVirtualFor="let instance of parent.pipelineInstances"
                         [ngx-contextmenu]="parent.instanceCtxMenu"
                         [ngx-menu-context]="{ pipeline: parent.selectedPipeline, instance }"
+                        [attr.pipeline-id]="parent.selectedPipeline?.id"
+                        [attr.pipeline-instance]="instance.id"
                     >
                         <div class="name">
                             <div>Release {{instance.identifier}} - {{instance.status.phase}}</div>
@@ -117,6 +127,11 @@
                                     [ngx-tooltip]="stage.jobs?.length > 0 ? tooltip : null"
                                     [ngx-tooltip-context]="{ instance, stage }"
                                     [ngx-tooltip-config]="{ position: 'bottom', alignment: 'start', triggers:['click'], stayOpen: true }"
+                                    [ngx-contextmenu]="parent.stageCtxMenu"
+                                    [ngx-menu-context]="{ pipeline: parent.selectedPipeline, instance, stage }"
+                                    [attr.pipeline-id]="parent.selectedPipeline?.id"
+                                    [attr.pipeline-instance]="instance.id"
+                                    [attr.stage-id]="stage.id"
                                     (click)="(stage['_isReadyForApproval']) ? parent.approveStage(instance, stage) : 1"
                                 >
                                     @if (stage['_isReadyForApproval']) {

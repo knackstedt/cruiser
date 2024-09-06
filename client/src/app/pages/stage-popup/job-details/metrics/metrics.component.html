@@ -1,0 +1,90 @@
+<mat-tab-group style="overflow: hidden; flex: 1" [selectedIndex]="0" mat-stretch-tabs="false">
+    <mat-tab label="Processes">
+        <ng-template matTabContent>
+            <app-tabulator
+                key="pid"
+                [dataSource]="metricData?.processes?.['list']"
+                [columns]="[
+                    { field: 'name', title: 'Process Name' },
+                    { field: 'user', title: 'User' },
+                    { field: 'cpu', title: '% CPU', formatter: cpuFormatter },
+                    { field: 'pid', title: 'ID' },
+                    { field: 'memRss', title: 'Memory', formatter: byteFormatter },
+                    { field: 'state', title: 'State' },
+                    { field: 'priority', title: 'Priority' }
+                ]"
+            />
+        </ng-template>
+    </mat-tab>
+    <mat-tab label="NetworkConnections">
+        <ng-template matTabContent>
+            <app-tabulator
+                key="pid"
+                [dataSource]="_metricData?.networkConnections"
+                [columns]="[
+                    { field: 'process', title: 'Process Name' },
+                    { field: 'pid', title: 'ID' },
+                    { field: 'protocol', title: 'Protocol' },
+                    { field: 'localAddress', title: 'Local Address' },
+                    { field: 'localPort', title: 'Local Port' },
+                    { field: 'peerAddress', title: 'Peer Address' },
+                    { field: 'peerPort', title: 'Peer Port' },
+                    { field: 'state', title: 'State' },
+                ]"
+            />
+        </ng-template>
+    </mat-tab>
+    <mat-tab label="Resources">
+        <ng-template matTabContent>
+            <div class="resources tab-contents">
+                <app-live-graph
+                    #cpuGraph
+                    [xaxis]="xaxis"
+                    [yaxis]="[{type: 'value', max: 100, min: 0}]"
+                    [dataSource]="cpuData"
+                />
+                <app-live-graph
+                    #memGraph
+                    [xaxis]="xaxis"
+                    [yaxis]="{type: 'value', max: metricData?.mem?.total, axisLabel: { formatter: byteFormatterBare }}"
+                    [dataSource]="memoryData"
+                />
+                <app-live-graph
+                    #networkGraph
+                    [xaxis]="xaxis"
+                    [yaxis]="{type: 'value', axisLabel: { formatter: byteFormatterBare }}"
+                    [dataSource]="networkData"
+                />
+            </div>
+        </ng-template>
+    </mat-tab>
+    <mat-tab label="File Systems">
+        <div class="filesystems tab-contents">
+            <app-tabulator
+                key="fs"
+                [dataSource]="_metricData?.fsSize"
+                [columns]="[
+                    { field: 'fs', title: 'Device' },
+                    { field: 'mount', title: 'Directory' },
+                    { field: 'type', title: 'Type' },
+                    { field: 'size', title: 'Total', formatter: byteFormatter },
+                    { field: 'available', title: 'Available', formatter: byteFormatter },
+                    { field: 'used', title: 'Used', formatter: byteFormatter }
+                ]"
+            />
+        </div>
+    </mat-tab>
+    <mat-tab label="Networks">
+        <app-tabulator [dataSource]="_metricData?.wifiNetworks"
+            key="bssid"
+            [columns]="[
+                { field: 'ssid', title: 'Name' },
+                { field: 'bssid', title: 'MAC' },
+                { field: 'mode', title: 'mode' },
+                { field: 'channel', title: 'Channel' },
+                { field: 'frequency', title: 'Frequency' },
+                { field: 'signalLevel', title: 'Strength' }
+            ]"
+        />
+    </mat-tab>
+</mat-tab-group>

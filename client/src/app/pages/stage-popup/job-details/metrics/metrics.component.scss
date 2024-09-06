@@ -1,0 +1,26 @@
+:host {
+    display: block;
+    overflow: hidden;
+    height: 100%;
+}
+
+:host ::ng-deep {
+    .mat-mdc-tab.mdc-tab {
+        height: 28px;
+    }
+}
+
+.resources {
+
+    app-live-graph {
+        height: 100%;
+        flex: 1;
+    }
+}
+
+.tab-contents {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    overflow: hidden;
+}

@@ -1,4 +1,4 @@
-<div style="display: flex; align-items: center; padding: 0 12px; gap: 8px">
+<div class="headerbar">
     @if (connected) {
         <span>Ln {{lines.length}}</span>
     }
@@ -94,24 +94,32 @@
     <!-- <div>collapse all</div> -->
     <div (click)="showTimestamps = !showTimestamps">timestamps</div>
     <!-- <div>raw output</div> -->
-    <div>go to end</div>
-    <div>download log</div>
+    <div (click)="goToEnd()">go to end</div>
+    <div (click)="downloadLog()">download log</div>
 </div>
 <ng-scrollbar
     #scrollbar
     class="console"
     [class.shadow]="scrollbar?.viewport?.scrollTop > 2"
+    track="all"
 >
-    <div cdkVirtualScrollingElement [style.height]="filteredLines.length*lineHeight + 'px'">
+    <div
+        cdkVirtualScrollingElement
+        [style.height]="(filteredLines.length*lineHeight + 14) + 'px'"
+        [style.width]="(scrollWidth + 14) + 'px'"
+        style="position: relative;"
+    >
         @for (line of renderedLines; track line) {
             @if (line.rendered) {
                 <div
                     class="line"
                     [class.error]="['error', 'fatal'].includes(line.level?.toLowerCase())"
                     [class.warning]="['warning', 'warn'].includes(line.level?.toLowerCase())"
+                    [class.breakpoint]="line._original.breakpoint"
                     [style.height]="lineHeight + 'px'"
                     [attr.index]="line.index"
                     [style.top]="(line.index*lineHeight)+'px'"
+
                 >
                     @if (line.stream == "agent") {
                         <span class="process agent">
@@ -129,7 +137,6 @@
                                         fontIcon="loupe"
                                     />
                                 </span>
-
                             }
                             @else {
                                 <span class="blank"></span>
@@ -138,10 +145,10 @@
                                 <span class="time" (dblclick)="viewLineData(line)">{{line?.time}} </span>
                             }
                             @if (["error", "fatal"].includes(line.level)) {
-                                <span class="message">[agent] {{line['error']?.trim() || line.msg?.trim()}} {{line._original?.['message']?.trim()}}</span>
+                                <span class="message">[agent] {{parseGitmoji(line['error']?.trim() || (line.msg?.trim() || ''))}} {{parseGitmoji(line._original?.['message']?.trim())}}</span>
                             }
                             @else {
-                                <span class="message">[agent] {{line.msg?.trim()}} {{line._original?.['message']?.trim()}}</span>
+                                <span class="message">[agent] {{parseGitmoji(line.msg?.trim() + ' ' + (line._original?.['message']?.trim() || ''))}}</span>
                             }
                         </span>
                     }
@@ -170,7 +177,14 @@
 
     <span class="message">
         @for (segment of line.data; track segment) {
-        <span class="segment" [style]="segment.css">{{segment.text}}</span>
+            <span class="segment" [style]="segment.css">{{parseGitmoji(segment.text)}}</span>
         }
     </span>
 </ng-template>
+
+
+<!-- Verify that both children occupy the same width -->
+<div #fontDetector class="font-detector">
+    <div>M</div>
+    <div>.</div>
+</div>

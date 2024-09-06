@@ -61,11 +61,11 @@
                         <div class="panel_header">Schedule</div>
                         <mat-form-field>
                             <mat-label>CRONTAB Schedule</mat-label>
-                            <input matInput type="text" [(ngModel)]="selectedStage.cronTrigger" (valueChange)="dataChangeEmitter.next(0)"/>
+                            <input matInput type="text" [(ngModel)]="selectedStage.cronTrigger" (ngModelChange)="dataChangeEmitter.next(0)"/>
                         </mat-form-field>
 
                         <!-- <mat-form-field> -->
-                            <mat-checkbox [(ngModel)]="selectedStage.cronExcludeAuto" (valueChange)="dataChangeEmitter.next(0)">
+                            <mat-checkbox [(ngModel)]="selectedStage.cronExcludeAuto" (ngModelChange)="dataChangeEmitter.next(0)">
                                 Only automatically trigger on CRONTAB execution
                             </mat-checkbox>
                         <!-- </mat-form-field> -->
@@ -94,7 +94,7 @@
 
                         <mat-form-field style="width: 100%;">
                             <mat-label>Minimum number of approvals to run</mat-label>
-                            <input matInput type="number" min="0" [(ngModel)]="selectedStage.requiredApprovals" (valueChange)="dataChangeEmitter.next(0)" />
+                            <input matInput type="number" min="0" [(ngModel)]="selectedStage.requiredApprovals" (ngModelChange)="dataChangeEmitter.next(0)" />
                         </mat-form-field>
                     }
 
@@ -127,7 +127,7 @@
                                     <div>
                                         <mat-form-field style="width: 100%; margin: 12px 0">
                                             <mat-label>Label</mat-label>
-                                            <input matInput type="text" [(ngModel)]="action.label" (valueChange)="dataChangeEmitter.next(0)" />
+                                            <input matInput type="text" [(ngModel)]="action.label" (ngModelChange)="dataChangeEmitter.next(0)" />
                                         </mat-form-field>
 
                                         <ngx-stackedit
@@ -152,7 +152,7 @@
                                             </mat-form-field>
                                             <mat-form-field style="width: 100%; flex: 1">
                                                 <mat-label>URL</mat-label>
-                                                <input matInput type="text" [(ngModel)]="action.url" (valueChange)="dataChangeEmitter.next(0)" />
+                                                <input matInput type="text" [(ngModel)]="action.url" (ngModelChange)="dataChangeEmitter.next(0)" />
                                             </mat-form-field>
                                         </div>
 
@@ -161,11 +161,11 @@
                                             <div style="display: flex">
                                                 <mat-form-field>
                                                     <mat-label>Name</mat-label>
-                                                    <input matInput type="text" [(ngModel)]="header[0]" (valueChange)="dataChangeEmitter.next(0)"/>
+                                                    <input matInput type="text" [(ngModel)]="header[0]" (ngModelChange)="dataChangeEmitter.next(0)"/>
                                                 </mat-form-field>
                                                 <mat-form-field>
                                                     <mat-label>Value</mat-label>
-                                                    <input matInput type="text" [(ngModel)]="header[1]" (valueChange)="dataChangeEmitter.next(0)"/>
+                                                    <input matInput type="text" [(ngModel)]="header[1]" (ngModelChange)="dataChangeEmitter.next(0)"/>
                                                 </mat-form-field>
                                             </div>
                                         }
@@ -194,9 +194,15 @@
                             <div style="flex: 1"></div>
                             <button mat-flat-button (click)="editStage(selectedStage)">Edit</button>
                         </div>
+
                         <mat-form-field style="width: 100%; margin: 12px 0">
                             <mat-label>Label</mat-label>
-                            <input matInput type="text" [(ngModel)]="selectedStage.label" (valueChange)="dataChangeEmitter.next(0)"/>
+                            <input
+                                matInput
+                                type="text"
+                                [(ngModel)]="selectedStage.label"
+                                (ngModelChange)="dataChangeEmitter.next(0)"
+                            />
                         </mat-form-field>
 
                         <ngx-stackedit
@@ -273,63 +279,82 @@
                         />
                     }
 
-                    @case ("source") {
+                    @case ("sources") {
                         <div class="panel_header">
                             <span>Sources</span>
                             <div style="flex: 1"></div>
                         </div>
 
-                        <mat-accordion [multi]="true" displayMode="flat">
+                        <div class="list" style="margin-bottom: 12px">
                             @for (source of selectedStage.sources; track source) {
-                                <mat-expansion-panel
-                                    #panel
-                                    [expanded]="true"
+                                <div
+                                    class="list-item"
+                                    (click)="selectedSource = source; view='source'"
                                 >
-                                    <mat-expansion-panel-header>
-                                        <div
-                                            class="header"
-                                            (click)="$event.stopPropagation(); panel.toggle()"
-                                        >
-                                            <div>
-                                                {{source.label}}
-                                            </div>
-
-                                            <button
-                                                mat-icon-button
-                                                class="expand_button"
-                                                [style.transform]="panel.expanded ? '' : 'rotate(-90deg)'"
-                                            >
-                                                <mat-icon>expand_more</mat-icon>
-                                            </button>
-                                        </div>
-                                    </mat-expansion-panel-header>
+                                    <mat-icon>edit</mat-icon>
                                     <div>
-                                        <mat-form-field style="width: 100%; margin: 12px 0">
-                                            <mat-label>Label</mat-label>
-                                            <input matInput type="text" [(ngModel)]="source.label" (valueChange)="dataChangeEmitter.next(0)" />
-                                        </mat-form-field>
-
-                                        <ngx-stackedit
-                                            style="height: 200px"
-                                            (onImageUpload)="fs.onImageUpload(pipeline, $event)"
-                                            [(value)]="source.description"
-                                            (valueChange)="dataChangeEmitter.next(0)"
-                                            showPreview="off"
-                                            showToc="off"
-                                        />
-
-                                        <mat-form-field style="width: 100%">
-                                            <mat-label>URL</mat-label>
-                                            <input matInput type="text" [(ngModel)]="source.url" (valueChange)="dataChangeEmitter.next(0)" />
-                                        </mat-form-field>
-
+                                        {{source.label || source.url?.split("/").pop()}}
                                     </div>
-                                </mat-expansion-panel>
+                                </div>
                             }
-                            <button mat-flat-button (click)="addSource(selectedStage)">
-                                <mat-icon>add</mat-icon> Add
-                            </button>
-                        </mat-accordion>
+                        </div>
+
+                        <button mat-flat-button (click)="addSource(selectedStage)">
+                            <mat-icon>add</mat-icon> Add
+                        </button>
+                    }
+
+                    @case ("source") {
+                        @if (selectedSource) {
+                            <mat-form-field style="width: 100%; margin: 12px 0">
+                                <mat-label>{{selectedSource.label ? 'Label' : selectedSource.url?.split('/').pop()}}</mat-label>
+                                <input
+                                    matInput
+                                    type="text"
+                                    [(ngModel)]="selectedSource.label"
+                                    (ngModelChange)="dataChangeEmitter.next(0)"
+                                />
+                            </mat-form-field>
+                        }
+
+                        <ngx-stackedit
+                            style="height: 200px; margin-bottom: 12px"
+                            (onImageUpload)="fs.onImageUpload(pipeline, $event)"
+                            [(value)]="selectedSource.description"
+                            (valueChange)="dataChangeEmitter.next(0)"
+                            showPreview="off"
+                            showToc="off"
+                        />
+
+                        <mat-form-field style="width: 100%">
+                            <mat-label>URL</mat-label>
+                            <input matInput type="text" [(ngModel)]="selectedSource.url" (ngModelChange)="dataChangeEmitter.next(0)" />
+                        </mat-form-field>
+
+                        <mat-form-field style="width: 100%">
+                            <mat-label>Destination</mat-label>
+                            <input
+                                matInput
+                                type="text"
+                                [(ngModel)]="selectedSource.targetPath"
+                                (ngModelChange)="dataChangeEmitter.next(0)"
+                            />
+                        </mat-form-field>
+
+                        <mat-form-field style="width: 100%">
+                            <mat-label>Clone Depth</mat-label>
+                            <input matInput type="number" [(ngModel)]="selectedSource.cloneDepth" (ngModelChange)="dataChangeEmitter.next(0)" />
+                        </mat-form-field>
+
+                        <mat-form-field style="width: 100%">
+                            <mat-label>Username</mat-label>
+                            <input matInput type="text" [(ngModel)]="selectedSource.username" (ngModelChange)="dataChangeEmitter.next(0)" />
+                        </mat-form-field>
+                        <mat-form-field style="width: 100%">
+                            <mat-label>Password</mat-label>
+                            <input matInput type="text" [(ngModel)]="selectedSource.password" (ngModelChange)="dataChangeEmitter.next(0)" />
+                        </mat-form-field>
+
                     }
 
                     @case ("pipeline") {

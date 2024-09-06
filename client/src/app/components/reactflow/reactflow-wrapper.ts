@@ -22,6 +22,18 @@ export class ReactFlowComponent extends ReactMagicWrapperComponent {
 
     @Input() nodes?: Node<any, string | undefined>[] | undefined;
     @Input() edges?: Edge<any>[] | undefined;
+    // _nodes = [];
+    // @Input() set nodes(val: Node<any, string | undefined>[] | undefined) {
+    //     this._nodes = [...val];
+    //     this.ngAfterViewInit()
+    // }
+    // get nodes() { return this._nodes }
+    // _edges = [];
+    // @Input() set edges(val: Edge<any>[] | undefined) {
+    //     this._edges = [...val];
+    //     this.ngAfterViewInit()
+    // }
+    // get edges() { return this._edges }
     // @Input() initialNodes?: Node<any, string | undefined>[] | undefined;
     // @Input() initialEdges?: Edge<any>[] | undefined;
     @Input() defaultEdgeOptions?: DefaultEdgeOptions | undefined;

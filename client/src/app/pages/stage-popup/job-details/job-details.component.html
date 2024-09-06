@@ -22,10 +22,14 @@
             [mat-stretch-tabs]="false"
             [animationDuration]="200"
             [(selectedIndex)]="selectedIndex"
-            (selectedIndexChange)="$event==1?(loadTerminal=true):null"
+            (selectedIndexChange)="
+                $event == 0 ? (logs.refocusPanel()) :
+                $event == 1 ? (loadTerminal=true) : null
+            "
         >
             <mat-tab label="Output">
                 <app-job-logs
+                    #logs
                     [jobInstance]="jobInstance"
                 />
             </mat-tab>
@@ -45,6 +49,14 @@
                         />
                     }
                 </ng-template>
+            </mat-tab>
+            <mat-tab [disabled]="completeStates.includes(jobInstance.state)">
+                <ng-template mat-tab-label>
+                    <mat-icon>experiment</mat-icon>
+                    Metrics
+                </ng-template>
+
+                <agent-metrics-monitor [jobInstance]="jobInstance"/>
             </mat-tab>
             <!-- <mat-tab label="Tests">???</mat-tab> -->
             <!-- <mat-tab label="Artifacts"></mat-tab> -->

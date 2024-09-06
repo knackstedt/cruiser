@@ -31,8 +31,7 @@ import { NgScrollbarModule } from 'ngx-scrollbar';
         StagePopupComponent,
         MenuDirective
     ],
-    standalone: true,
-    // changeDetection: ChangeDetectionStrategy.OnPush
+    standalone: true
 })
 export class ListViewComponent {
     constructor(

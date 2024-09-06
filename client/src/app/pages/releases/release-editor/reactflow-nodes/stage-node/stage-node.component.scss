@@ -49,6 +49,10 @@ button {
     &.job-container {
         width: 240px;
     }
+    &.disabled {
+        opacity: .6;
+        text-decoration: line-through;
+    }
 }
 
 .node {

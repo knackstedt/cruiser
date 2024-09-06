@@ -36,8 +36,8 @@ export class XtermWrapperComponent implements OnInit {
 
     showTerminal = false;
 
-    rowHeight = 17;
-    charWidth = 8;
+    rowHeight = 18;
+    charWidth = 9.61;
 
     socket: Socket;
 

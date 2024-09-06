@@ -29,7 +29,7 @@ mat-sidenav {
             padding: 24px;
         }
         .mat-expansion-panel:not([class*=mat-elevation-z]) {
-            box-shadow: 0;
+            box-shadow: none;
         }
     }
 }
@@ -61,6 +61,16 @@ ng-scrollbar {
     }
 }
 
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.list-item {
+    display: flex;
+    align-items: center;
+}
+
 mat-accordion {
     display: block;
 
@@ -83,8 +93,13 @@ mat-accordion {
         }
     }
 
-    ::ng-deep .mat-expansion-panel-body {
-        padding: 0;
+    ::ng-deep {
+        .mat-expansion-panel {
+            --mat-expansion-container-background-color: #0000;
+        }
+        .mat-expansion-panel-body {
+            padding: 0;
+        }
     }
 
     // :focus .selected, :focus.selected {

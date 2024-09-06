@@ -15,6 +15,8 @@
                 [jobInstance]="stage['_latestJob']"
                 [style.left]="stage.position.x + 'px'"
                 [style.top]="stage.position.y + 'px'"
+                [ngx-contextmenu]="pipelinesComponent.stageCtxMenu"
+                [ngx-menu-context]="{ pipeline: pipelinesComponent.selectedPipeline, instance, stage }"
             />
         }
     </div>

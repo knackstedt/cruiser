@@ -77,12 +77,12 @@ export class ReleasesComponent implements OnInit {
     ];
 
     readonly instanceCtxMenu: MenuItem<{ pipeline: PipelineDefinition, instance: PipelineInstance}>[] = [
-        {
-            labelTemplate: data => "Instance " + data.instance.identifier
-        },
+        // {
+        //     labelTemplate: data => "Instance " + data.instance.identifier
+        // },
         {
             label: "Cancel",
-            // isVisible: ({ pipeline, instance }) => ['started', 'running', 'waiting'].includes(instance.status.phase),
+            isDisabled: ({ pipeline, instance }) => !['started', 'running', 'waiting'].includes(instance.status.phase),
             action: ({pipeline, instance}) => {
                 const data = structuredClone(instance);
                 data.status.jobInstances = data.status.jobInstances.map(j => j['id']);
@@ -99,6 +99,16 @@ export class ReleasesComponent implements OnInit {
             }
         },
     ];
+
+    readonly stageCtxMenu: MenuItem<{ pipeline: PipelineDefinition, instance: PipelineInstance, stage: StageDefinition }>[] = [
+        ...this.instanceCtxMenu,
+        {
+            label: "Run",
+            isDisabled: ({ instance }) => !['stopped', 'failed', 'cancelled'].includes(instance.status.phase),
+            action: ({ pipeline, instance, stage }) =>
+                this.fetch.get(`/api/pipeline/${pipeline.id}/${instance.id}/${stage.id}/run`)
+        }
+    ]
 
     private subscriptions = [
         this.liveSocket.subscribe(({ ev, data }) => {
@@ -386,7 +396,7 @@ export class ReleasesComponent implements OnInit {
     }
 
     async triggerPipeline(pipeline = this.selectedPipeline) {
-        await this.fetch.get(`/api/pipeline/${pipeline.id}/start`)
+        await this.fetch.get(`/api/pipeline/${pipeline.id}/run`)
             .then(({ pipeline: newPipeline }) => {
                 Object.assign(pipeline, newPipeline);
                 // this.selectPipeline(pipeline);
@@ -394,7 +404,7 @@ export class ReleasesComponent implements OnInit {
     }
 
     async triggerPipelineWithOptions(pipeline: PipelineDefinition) {
-        await this.fetch.get(`/api/pipeline/${pipeline.id}/start`);
+        await this.fetch.get(`/api/pipeline/${pipeline.id}/run`);
         pipeline.stats = pipeline.stats ?? { runCount: 0, successCount: 0, failCount: 0, totalRuntime: 0 };
         pipeline.stats.runCount += 1;
     }

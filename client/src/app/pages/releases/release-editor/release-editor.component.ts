@@ -1,4 +1,4 @@
-import { ApplicationRef, ElementRef, Input, ViewChild, Injector, Component } from '@angular/core';
+import { ApplicationRef, ElementRef, Input, ViewChild, Injector, Component, NgZone } from '@angular/core';
 import { Fetch, MenuItem, ReactMagicWrapperComponent, VscodeComponent } from '@dotglitch/ngx-common';
 import { ReactFlowComponent } from '../../../components/reactflow/reactflow-wrapper';
 import { PipelineDefinition, SourceConfiguration, StageDefinition, Webhook } from 'src/types/pipeline';
@@ -26,6 +26,7 @@ import { VariablesSectionComponent } from 'src/app/components/variables-section/
 import { ImpossibleNodeComponent } from './reactflow-nodes/impossible-node/impossible-node.component';
 import { StageNodeComponent } from 'src/app/pages/releases/release-editor/reactflow-nodes/stage-node/stage-node.component';
 import React from 'react';
+import { SourceNodeComponent } from 'src/app/pages/releases/release-editor/reactflow-nodes/source-node/source-node.component';
 
 
 @Component({
@@ -51,8 +52,9 @@ import React from 'react';
     templateUrl: './release-editor.component.html',
     styleUrl: './release-editor.component.scss'
 })
-export class StagesComponent {
-    @ViewChild("canvas") canvasRef: ElementRef<any>
+export class ReleaseEditorComponent {
+    @ViewChild("canvas") canvasRef: ElementRef<any>;
+    @ViewChild(ReactFlowComponent) reactFlow: ReactFlowComponent;
 
     get container() { return this.canvasRef.nativeElement }
 
@@ -79,6 +81,8 @@ export class StagesComponent {
             {
                 contextMenu: [
                     { label: "Edit Stage", action: s => this.editStage(s) },
+                    { label: "Disable Stage", action: s => this.disableStage(s), isVisible: s => !s.disabled },
+                    { label: "Enable Stage", action: s => this.enableStage(s), isVisible: s => s.disabled },
                     { label: "Delete Stage", action: s => this.deleteStage(s) }
                 ] as MenuItem<StageDefinition>[]
             },
@@ -91,8 +95,8 @@ export class StagesComponent {
                 onTriggerClick:      ({ stage }) => (this.mode = "view") && (this.view = 'trigger')        && this.selectStage(stage),
                 onTriggerEditClick:  ({ stage }) => (this.mode = "edit") && (this.view = 'trigger')        && this.selectStage(stage),
 
-                onSourceClick:       ({ stage }) => (this.mode = "view") && (this.view = 'source')         && this.selectStage(stage),
-                onSourceEditClick:   ({ stage }) => (this.mode = "edit") && (this.view = 'source')         && this.selectStage(stage),
+                onSourceClick:       ({ stage }) => (this.mode = "view") && (this.view = 'sources')         && this.selectStage(stage),
+                onSourceEditClick:   ({ stage }) => (this.mode = "edit") && (this.view = 'sources')         && this.selectStage(stage),
 
                 onScheduleClick:     ({ stage }) => (this.mode = "view") && (this.view = 'schedule')       && this.selectStage(stage),
                 onScheduleEditClick: ({ stage }) => (this.mode = "edit") && (this.view = 'schedule')       && this.selectStage(stage),
@@ -117,11 +121,55 @@ export class StagesComponent {
             ImpossibleNodeComponent,
             this.appRef,
             this.injector,
+            { /* inputs */ },
+            { /* outputs */ },
+            [
+                React.createElement(Handle, { type: "source", position: Position.Right })
+            ]
+        ),
+        source: ReactMagicWrapperComponent.WrapAngularComponent(
+            SourceNodeComponent,
+            this.appRef,
+            this.injector,
             {
-                // inputs
+                /* inputs */
+                contextMenu: [
+                    {
+                        label: "Edit Source",
+                        action: ({stage, source}) => {
+                            this.ngZone.run(() => {
+                                this.mode = "edit";
+                                this.selectedStage = stage;
+                                this.selectedSource = source;
+                                this.renderGraph();
+                                this.view = 'source';
+                            })
+                        }
+                    },
+                    {
+                        label: "Delete Source",
+                        action: ({ stage, source }) => {
+                            this.ngZone.run(() => {
+                                stage.sources.splice(stage.sources.indexOf(source), 1);
+                                this.dataChangeEmitter.next(0);
+                                this.renderGraph();
+                                this.selectStage(stage);
+                            });
+                        }
+                    }
+                ] as MenuItem<{ stage: StageDefinition, source: SourceConfiguration }>[]
             },
             {
                 // outputs
+                onEditSource: ({ stage, source }) => {
+                    this.ngZone.run(() => {
+                        this.mode = "edit";
+                        this.selectedStage = stage;
+                        this.selectedSource = source;
+                        this.renderGraph();
+                        this.view = 'source';
+                    })
+                },
             },
             [
                 React.createElement(Handle, { type: "source", position: Position.Right })
@@ -132,6 +180,7 @@ export class StagesComponent {
     mode: "edit" | "view" = "edit";
     view: string = "";
     selectedStage: StageDefinition;
+    selectedSource: SourceConfiguration;
 
     users = [];
 
@@ -150,7 +199,8 @@ export class StagesComponent {
         private readonly dialog: MatDialog,
         private readonly fetch: Fetch,
         private readonly toaster: ToastrService,
-        private readonly user: UserService
+        private readonly user: UserService,
+        private readonly ngZone: NgZone
     ) {
         fetch.get<{value: any[]}>(`/api/odata/users`).then(data => {
             this.users = data.value;
@@ -194,11 +244,9 @@ export class StagesComponent {
         }
     }
 
-
     ngOnDestroy() {
         this.subscriptions.forEach(s => s.unsubscribe());
     }
-
 
     private initPipelineObject(p: PipelineDefinition) {
 
@@ -245,6 +293,7 @@ export class StagesComponent {
             ...this.pipeline,
             id: this.pipeline['_sourceId'],
             _isUserEditInstance: undefined,
+            _userEditing: undefined,
             _sourceId: undefined,
             "@odata.editLink": undefined,
             "@odata.id": undefined
@@ -277,13 +326,16 @@ export class StagesComponent {
     }
 
     selectStage(stage: StageDefinition) {
-        stage.stageTrigger = stage.stageTrigger ?? [];
-        stage.webhooks = stage.webhooks ?? [];
+        this.selectedSource = null;
+        // This prevents zone detection loss
+        // Should be removed when the react bridge no longer drops zone
+        this.ngZone.run(() => {
+            stage.stageTrigger = stage.stageTrigger ?? [];
+            stage.webhooks = stage.webhooks ?? [];
 
-        this.selectedStage = stage;
-        this.renderGraph();
-
-        console.log("selecting stage", stage, this.view)
+            this.selectedStage = stage;
+            this.renderGraph();
+        })
     }
 
     async addStage(partial: Partial<StageDefinition> = {}) {
@@ -344,7 +396,8 @@ export class StagesComponent {
         stage.sources = stage.sources ?? [];
         stage.sources.push({
             id: `pipeline_source:${ulid()}`,
-            label: "Source"
+            label: "",
+            targetPath: '.'
         });
         this.patchPipeline();
     }
@@ -359,8 +412,21 @@ export class StagesComponent {
         this.selectedStage = stage;
     }
 
-    async deleteStage(stage) {
+    deleteStage(stage: StageDefinition) {
         this.pipeline.stages = this.pipeline.stages.filter(s => s != stage);
+
+        this.patchPipeline();
+        this.renderGraph();
+    }
+
+    disableStage(stage: StageDefinition) {
+        stage.disabled = true;
+        this.patchPipeline();
+        this.renderGraph();
+    }
+
+    enableStage(stage: StageDefinition) {
+        stage.disabled = false;
 
         this.patchPipeline();
         this.renderGraph();
@@ -371,7 +437,10 @@ export class StagesComponent {
         let hasImpossibleNodes = false;
 
         const edges: Edge[] = [];
+        const sourceNodes: Node[] = [];
         const nodes: Node[] = this.pipeline.stages?.map(stage => {
+            const stageUlid = stage.id.split(':')[1];
+
             for (const precedingStageId of (stage.stageTrigger ?? [])) {
                 // The taskGroup exists and can be mapped
                 let isMissingPreReq = false;
@@ -381,12 +450,11 @@ export class StagesComponent {
                 }
 
                 const source = isMissingPreReq ? '_impossible' : precedingStageId.split(':')[1];
-                const target = stage.id.split(':')[1];
 
                 edges.push({
                     source: source,
-                    target: target,
-                    id: source + "_" + target,
+                    target: stageUlid,
+                    id: source + "_" + stageUlid,
                     sourceHandle: "source",
                     type: "bezier",
                     style: {
@@ -400,8 +468,35 @@ export class StagesComponent {
                 });
             }
 
+            // Create nodes for all of the sources for the specified stage
+            if (stage.sources?.length > 0) {
+                edges.push({
+                    source: "source_" + stage.id,
+                    target: stageUlid,
+                    id: "source_edge_" + stage.id,
+                    type: "bezier",
+                    style: {
+                        strokeWidth: 2,
+                        stroke: '#00c7ff',
+                    },
+                    data: { target: stage }
+                });
+
+                sourceNodes.push({
+                    id: "source_" + stage.id,
+                    width: 320,
+                    height: 80,
+                    type: "source",
+                    data: {
+                        stage,
+                        releaseEditor: this
+                    },
+                    position: { x: 0, y: 0 }
+                });
+            }
+
             return {
-                id: stage.id.split(':')[1],
+                id: stageUlid,
                 width:
                     stage?.renderMode == 'gateway'
                     ? 80
@@ -413,8 +508,6 @@ export class StagesComponent {
                     : 80,
                 type: "stage",
                 data: stage,
-                targetPosition: null,
-                sourcePosition: null,
                 style: {
                     "--background": stage.id == this.selectedStage?.id
                         ? "#6d6d6d"
@@ -426,10 +519,7 @@ export class StagesComponent {
                         ? "#00c7ff"
                         : "#0000"
                 } as any, // react doesn't have typing for CSS variables.
-                position: {
-                    x: 0,
-                    y: 0
-                }
+                position: { x: 0, y: 0 }
             }
         }) ?? [];
 
@@ -440,14 +530,10 @@ export class StagesComponent {
                 height: 64,
                 type: "impossible",
                 data: { },
-                targetPosition: null,
-                sourcePosition: null,
-                position: {
-                    x: 0,
-                    y: 0
-                }
+                position: { x: 0, y: 0 }
             });
         }
+        nodes.splice(-1, 0, ...sourceNodes);
 
         const dagreGraph = new dagre.graphlib.Graph();
 

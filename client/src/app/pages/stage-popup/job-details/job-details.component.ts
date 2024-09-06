@@ -13,6 +13,7 @@ import { JobInstance } from 'src/types/agent-task';
 import { BindSocketLogger } from 'src/app/utils/utils';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { AgentMetricsComponent } from './metrics/metrics.component';
 
 @Component({
     selector: 'app-job-details',
@@ -35,7 +36,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
         XtermWrapperComponent,
         JobLogsComponent,
         FilemanagerComponent,
-        JobInstanceIconComponent
+        JobInstanceIconComponent,
+        AgentMetricsComponent
     ],
     standalone: true
 })

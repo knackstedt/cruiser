@@ -45,7 +45,7 @@
     }
 </div>
 
-<button mat-flat-button (click)="onAddTask.emit({job, taskGroup})">
+<button mat-flat-button (click)="onAddTask.emit({job, taskGroup}); $event.stopPropagation()">
     <mat-icon>add</mat-icon>
     Task
 </button>
