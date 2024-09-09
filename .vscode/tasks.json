@@ -56,12 +56,12 @@
             }
         },
         {
-            "label": "▶ (test) agent",
+            "label": "▶ otel viewer",
             "type": "shell",
-            "command": "bash",
+            "command": "otel-desktop-viewer",
             "args": [
-                "-c",
-                "database/debug.sh"
+                "--browser",
+                "7800"
             ],
             "isBackground": true,
             "problemMatcher": {
@@ -78,10 +78,10 @@
                 "background": {
                     "activeOnStart": true,
                     "beginsPattern": {
-                        "regexp": "Connecting to Surreal..."
+                        "regexp": "Setting up own telemetry..."
                     },
                     "endsPattern": {
-                        "regexp": "Done applying database template."
+                        "regexp": "Everything is ready. Begin running and processing data."
                     }
                 }
             }
