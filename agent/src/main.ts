@@ -57,7 +57,7 @@ if (
     const port = 8080;
     server.listen(port);
 
-    server.on("error", logger.error);
+    server.on("error", err => logger.error(err));
     server.on("listening", () => logger.info(`Server listening on port ${port}`));
 })();
 
