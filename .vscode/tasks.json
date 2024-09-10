@@ -27,10 +27,12 @@
         {
             "label": "▶ surrealdb",
             "type": "shell",
-            "command": "bash",
+            "command": "surreal",
             "args": [
-                "-c",
-                "database/debug.sh"
+                "start",
+                "--user=root",
+                "--pass=root",
+                "file:./data/database"
             ],
             "isBackground": true,
             "problemMatcher": {
@@ -47,10 +49,10 @@
                 "background": {
                     "activeOnStart": true,
                     "beginsPattern": {
-                        "regexp": "Connecting to Surreal..."
+                        "regexp": "surreal::env: Running"
                     },
                     "endsPattern": {
-                        "regexp": "Done applying database template."
+                        "regexp": "surrealdb::net: Started web server"
                     }
                 }
             }
