@@ -1,9 +1,10 @@
 import { Socket, io } from "socket.io-client";
 import { getLogger } from '../util/logger';
+import { Span } from '@opentelemetry/api';
 
 const logger = getLogger("agent");
 
-export const CreateLoggerSocketServer = async(socket: Socket) => {
+export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket) => {
     const history: {
         ev: string,
         data: Object

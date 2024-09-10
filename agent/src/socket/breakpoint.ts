@@ -5,6 +5,7 @@ import { api } from '../util/axios';
 import { TaskDefinition, TaskGroupDefinition } from '../types/pipeline';
 import { CreateLoggerSocketServer } from './logger';
 import {environment} from '../util/environment';
+import { Span } from '@opentelemetry/api';
 
 const breakpoints: {
     [key: string]: {
@@ -13,13 +14,16 @@ const breakpoints: {
         id: string,
         task: TaskDefinition,
         taskGroup: TaskGroupDefinition,
-        allowRetry: boolean
+        allowRetry: boolean,
+        jobInstance: JobInstance,
+        span: Span
     }
 } = {};
 let _socket: Socket;
 
 // This will always execute before `TripBreakpoint`.
 export const CreateBreakpointSocketServer = async (
+    parentSpan: Span,
     socket: Socket,
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
@@ -27,13 +31,17 @@ export const CreateBreakpointSocketServer = async (
     _socket = socket;
 
     socket.on("breakpoint:resume", ({ id, retry }: { id: string, retry: boolean }) => {
-        api.patch(`/api/odata/${jobInstance.id}`, {
-            state: "building",
+        parentSpan.addEvent("breakpoint:resume", { breakpoint: id });
+        const breakpoint = breakpoints[id];
+        const span = breakpoint.span;
+        span.addEvent("breakpoint:resume");
+
+        api.patch(parentSpan, `/api/odata/${jobInstance.id}`, {
+            state: breakpoint.jobInstance.state,
             breakpointTask: null,
             breakpointTaskGroup: null
         })
         .then(() => {
-            const breakpoint = breakpoints[id];
             breakpoint?.resolve(retry);
             breakpoints[id] = undefined;
         })
@@ -51,14 +59,17 @@ export const CreateBreakpointSocketServer = async (
 }
 
 export const TripBreakpoint = async (
+    span: Span,
     jobInstance: JobInstance,
     allowRetry: boolean,
     taskGroup?: TaskGroupDefinition,
     task?: TaskDefinition
 ) => {
     const uid = ulid();
+    span.addEvent("breakpoint:trip", { breakpoint: uid });
 
-    await api.patch(`/api/odata/${jobInstance.id}`, { state: "frozen" });
+    const { data } = await api.get(span, `/api/odata/${jobInstance.id}`);
+    await api.patch(span, `/api/odata/${jobInstance.id}`, { state: "frozen" });
 
     return new Promise<boolean>((res, rej) => {
         breakpoints[uid] = {
@@ -67,7 +78,9 @@ export const TripBreakpoint = async (
             id: uid,
             task,
             taskGroup,
-            allowRetry
+            allowRetry,
+            jobInstance: data as any,
+            span
         };
 
         _socket.emit("breakpoint:list", {

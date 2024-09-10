@@ -5,6 +5,7 @@ import { Socket, io } from "socket.io-client";
 import { ulid } from 'ulidx';
 import { environment } from '../util/environment';
 import { CreateLoggerSocketServer } from './logger';
+import { Span } from '@opentelemetry/api';
 
 // Make an attempt to get a compatible PTY program.
 const shell = os.platform() == "win32"
@@ -19,7 +20,7 @@ const shell = os.platform() == "win32"
     ? "ksh"
     : "sh";
 
-export const CreateTerminalSocketServer = async (socket: Socket, logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>) => {
+export const CreateTerminalSocketServer = async (parentSpan: Span, socket: Socket, logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>) => {
 
     let ptyProcess: pty.IPty;
     let ptyArgs;

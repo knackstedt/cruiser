@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import si from 'systeminformation';
 import {environment} from '../util/environment';
+import { Span } from '@opentelemetry/api';
 
 const cpuInterval = environment.agent_metric_cpu_interval;
 const menInterval = environment.agent_metric_mem_interval;
@@ -10,7 +11,7 @@ const dynamicInterval = environment.agent_metric_net_interval;
 // const logger = getLogger("metrics");
 const maxdatapoints = 120;
 
-export const CreateMetricsSocketServer = async (socket: Socket) => {
+export const CreateMetricsSocketServer = async (parentSpan: Span, socket: Socket) => {
     // TODO: configure granularity and data aging
 
     const cpuDatapoints: { time: number, data: si.Systeminformation.CurrentLoadData }[] = [];

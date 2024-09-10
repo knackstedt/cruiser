@@ -5,11 +5,12 @@ import { JobDefinition, PipelineDefinition } from '../types/pipeline';
 import { DefaultEventsMap } from '@socket.io/component-emitter';
 import { api } from '../util/axios';
 import { JobInstance } from '../types/agent-task';
+import { Span } from '@opentelemetry/api';
 
 const logger = getLogger("agent");
 const showDebug = !!process.env['AGENT_WEBSOCKETS_VERBOSE'];
 
-export const CreateBaseSocketServer = async (pipeline: PipelineDefinition, jobInstance: JobInstance) => {
+export const CreateBaseSocketServer = async (parentSpan: Span, pipeline: PipelineDefinition, jobInstance: JobInstance) => {
     let socket: Socket;
 
     try {
@@ -56,7 +57,7 @@ export const CreateBaseSocketServer = async (pipeline: PipelineDefinition, jobIn
 
             // If we get a cancel event, we'll stop the agent.
             socket.on("$stop-job", async () => {
-                await api.patch(`/api/odata/${environment.jobInstanceId}`, {
+                await api.patch(parentSpan, `/api/odata/${environment.jobInstanceId}`, {
                     state: "cancelled",
                     endEpoch: Date.now()
                 });

@@ -12,14 +12,14 @@ export const getLogger = (file: string) => pino({
     },
     transport: {
         targets: [
-            {
-                level: 'trace',
-                target: 'pino/file',
-                options: {
-                    destination: `log/${file}.log`,
-                    mkdir: true
-                },
-            },
+            // {
+            //     level: 'trace',
+            //     target: 'pino/file',
+            //     options: {
+            //         destination: `log/${file}.log`,
+            //         mkdir: true
+            //     },
+            // },
             {
                 target: 'pino/file', level: 'trace', options: { destination: 1 }
             }

@@ -1,8 +1,12 @@
-import { logger } from '../util/logger';
 import os from 'os';
 import fs from 'fs-extra';
 import { command } from 'execa';
+import { context, Span, trace } from '@opentelemetry/api';
+
+import { logger } from '../util/logger';
 import { environment } from '../util/environment';
+
+const tracer = trace.getTracer('agent-preflight');
 
 // Assert we have the following programs!
 const requiredDependencies = [
@@ -48,8 +52,13 @@ const requiredDependencies = [
  * unexpectedly. Will attempt to auto remediate system
  * dependencies on Linux based systems.
  */
-export const PreflightCheck = async () => {
-
+export const PreflightCheck = async (
+    parentSpan: Span
+) => tracer.startActiveSpan(
+    "PreflightCheck",
+    undefined,
+    trace.setSpan(context.active(), parentSpan),
+    async span => {
     // Ensure the build directory exists
     await fs.mkdirp(environment.buildDir);
 
@@ -97,7 +106,7 @@ export const PreflightCheck = async () => {
                 const correction = dependency.corrections[osRelease.id];
 
                 logger.warn({
-                    msg: `Automatically attempting to install missing dependency ${dependency.name}\n` +
+                    msg: `Attempting to automatically install missing dependency ${dependency.name}\n` +
                     `    To improve build times, please add this dependency to your base image.`
                 });
 
@@ -129,4 +138,7 @@ export const PreflightCheck = async () => {
             })
         }
     }
-}
+
+    span.end();
+});
+

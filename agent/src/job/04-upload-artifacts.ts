@@ -2,6 +2,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import fs from 'fs-extra';
 import os from 'os';
 import FormData from 'form-data';
+import { context, Span, trace } from '@opentelemetry/api';
 
 import { CreateLoggerSocketServer } from '../socket/logger';
 import { JobInstance } from '../types/agent-task';
@@ -12,19 +13,26 @@ import { getFilesInFolderFlat } from '../util/fs';
 import { TripBreakpoint } from '../socket/breakpoint';
 import { compressTarGZip, compressTarLrz } from '../util/compression';
 
-
+const tracer = trace.getTracer('agent-artifact-upload');
 
 const uploadBinary = async (
+    parentSpan: Span,
     path: string,
     dirContents: Awaited<ReturnType<typeof getFilesInFolderFlat>>,
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
-) => {
+) => tracer.startActiveSpan(
+    "UploadArtifact",
+    undefined,
+    trace.setSpan(context.active(), parentSpan
+),
+    async span => {
     try {
         const fileName = path.split('/').pop();
+        const sourceDir = environment.buildDir + path;
 
         const formData = new FormData();
-        formData.append('file', fs.createReadStream(environment.buildDir + path));
+        formData.append('file', fs.createReadStream(sourceDir));
         formData.append("data", JSON.stringify({
             fileName: fileName,
             autoRename: true,
@@ -32,9 +40,15 @@ const uploadBinary = async (
             contents: dirContents
         }));
 
+        span.setAttributes({
+            fileName,
+            sourceDir
+        })
+
         let headers = formData.getHeaders();
 
         const result = await api.post(
+            span,
             `/api/blobstore/upload`,
             formData,
             { headers }
@@ -65,16 +79,21 @@ const uploadBinary = async (
         })
         return -1;
     }
-}
+});
 
 export const UploadArtifacts = async (
+    parentSpan: Span,
     pipelineInstance: PipelineInstance,
     pipeline: PipelineDefinition,
     stage: StageDefinition,
     job: JobDefinition,
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
-) => {
+) => tracer.startActiveSpan(
+    "UploadArtifacts",
+    undefined,
+    trace.setSpan(context.active(), parentSpan),
+    async span => {
     // const compressArtifact = os.platform() == "win32"
     //     ? compressZip
     //     : compressLrztar;
@@ -106,17 +125,30 @@ export const UploadArtifacts = async (
                 artifact
             });
 
-            const result = await algorithm(dir, dest, logger);
+            const result = await tracer.startActiveSpan(
+                "CompressArtifact",
+                undefined,
+                trace.setSpan(context.active(), parentSpan),
+                async span => {
+                span.setAttributes({
+                    algorithm: artifact.compressionAlgorithm
+                });
+
+                return algorithm(dir, dest, logger).finally(() => span.end());
+            });
+
             if (result.exitCode == 0) {
                 logger.info({
                     msg: `Sealed artifact '${artifact.label}'`,
                     artifact,
                     result
                 });
+
                 // If it was successful in saving to disk, upload it
                 if (result['path']) {
                     uploads.push(
                         uploadBinary(
+                            span,
                             result['path'],
                             contents,
                             jobInstance,
@@ -131,11 +163,13 @@ export const UploadArtifacts = async (
                     artifact,
                     result
                 });
-                await TripBreakpoint(jobInstance, false);
+                await TripBreakpoint(span, jobInstance, false);
             }
         }
 
-        return Promise.all(uploads);
+        const res = await Promise.all(uploads);
+        span.end();
+        return res;
     }
     catch(ex) {
         logger.fatal({
@@ -143,6 +177,8 @@ export const UploadArtifacts = async (
             message: ex.message,
             stack: ex.stack
         })
+        span.end();
         return null;
     }
-}
+})
+

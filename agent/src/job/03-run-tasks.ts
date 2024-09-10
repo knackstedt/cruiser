@@ -1,3 +1,5 @@
+import { context, Span, trace } from '@opentelemetry/api';
+
 import { orderSort } from '../util/order-sort';
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition, TaskGroupDefinition } from '../types/pipeline';
 import { api } from '../util/axios';
@@ -5,7 +7,10 @@ import { CreateLoggerSocketServer } from '../socket/logger';
 import { RunProcess } from '../util/process-manager';
 import { JobInstance } from '../types/agent-task';
 
+const tracer = trace.getTracer('agent-task-runner');
+
 const executeTaskGroup = async (
+    parentSpan: Span,
     pipelineInstance: PipelineInstance,
     pipeline: PipelineDefinition,
     stage: StageDefinition,
@@ -13,7 +18,11 @@ const executeTaskGroup = async (
     jobInstance: JobInstance,
     taskGroup: TaskGroupDefinition,
     logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
-) => {
+) => tracer.startActiveSpan(
+    "TaskGroup",
+    undefined,
+    trace.setSpan(context.active(), parentSpan),
+    async span => {
     try {
         logger.info({
             msg: `Initiating TaskGroup ${taskGroup.label}`,
@@ -23,8 +32,8 @@ const executeTaskGroup = async (
 
         const tasks = taskGroup.tasks.sort(orderSort) ?? [];
 
-        const envVars: { key: string, value: string; }[] =
-            await api.get(`/api/jobs/${jobInstance.id}/environment`);
+        const { data: envVars } =
+            await api.get<{ key: string, value: string; }[]>(span, `/api/jobs/${jobInstance.id}/environment`);
 
         for (let i = 0; i < tasks.length; i++) {
             const task = tasks[i];
@@ -42,6 +51,7 @@ const executeTaskGroup = async (
             Object.assign(envVars, env);
 
             await RunProcess(
+                span,
                 pipelineInstance,
                 pipeline,
                 stage,
@@ -67,16 +77,22 @@ const executeTaskGroup = async (
             name: ex.name
         });
     }
-}
+    span.end();
+});
 
 export const RunTasks = (
+    parentSpan: Span,
     pipelineInstance: PipelineInstance,
     pipeline: PipelineDefinition,
     stage: StageDefinition,
     job: JobDefinition,
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
-) => {
+) => tracer.startActiveSpan(
+    "Tasks",
+    undefined,
+    trace.setSpan(context.active(), parentSpan),
+    async span => {
     job.taskGroups?.sort(orderSort);
 
     const completedMap: { [key: string]: TaskGroupDefinition } = {};
@@ -114,7 +130,7 @@ export const RunTasks = (
         taskGroups.map(taskGroup => new Promise(async (r) => {
 
             if (!taskGroup.disabled) {
-                await executeTaskGroup(pipelineInstance, pipeline, stage, job, jobInstance, taskGroup, logger);
+                await executeTaskGroup(span, pipelineInstance, pipeline, stage, job, jobInstance, taskGroup, logger);
             }
 
             completedMap[taskGroup.id] = taskGroup;
@@ -135,6 +151,7 @@ export const RunTasks = (
         }))
     );
 
-
-    return runTaskGroups(immediateTaskGroups);
-};
+    const res = await runTaskGroups(immediateTaskGroups);
+    span.end();
+    return res;
+});

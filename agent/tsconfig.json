@@ -13,6 +13,7 @@
         "sourceMap": true,
         "downlevelIteration": false,
         "experimentalDecorators": true,
+        "resolveJsonModule": true,
         "moduleResolution": "node",
         "importHelpers": true,
         "esModuleInterop": true,

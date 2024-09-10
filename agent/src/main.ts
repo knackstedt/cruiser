@@ -1,4 +1,5 @@
 // import "./types";
+import './util/instrumentation';
 import express from 'express';
 import http from 'http';
 
@@ -6,6 +7,7 @@ import { HTTPLogger, logger } from './util/logger';
 import { RunAgentProcess } from './agent';
 import { environment } from './util/environment';
 import { FilesystemApi } from './api/filesystem';
+import { OpenTelemetry } from './util/instrumentation';
 
 if (
     !process.env['CRUISER_AGENT_ID'] ||
@@ -62,9 +64,12 @@ if (
 })();
 
 RunAgentProcess(environment.jobInstanceId)
-    .catch(ex => {
-        logger.error(ex)
+    .then(async () => {
+        await OpenTelemetry.exporter.shutdown();
+        process.exit(0);
     })
-    .then(() => {
-        process.exit(0)
-    })
+    .catch(async ex => {
+        await OpenTelemetry.exporter.shutdown();
+        logger.error(ex);
+        process.exit(1);
+    });
