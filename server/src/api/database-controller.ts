@@ -22,7 +22,7 @@ export const checkSurrealResource = (resource: string) => {
     return resource;
 }
 
-export const tableGuard = (req, res, next) => {
+const tableGuard = (req, res, next) => {
     let target = req.params.table;
 
     let targetId: string;
@@ -47,80 +47,202 @@ export const tableGuard = (req, res, next) => {
     if (/[^a-zA-Z0-9_-]/.test(table))
         throw { status: 404, message: "Invalid target" };
 
-    const restriction = restrictionMap[table];
+    const tableConfig = tableConfigMap[table];
 
-    if (restriction) {
+    if (tableConfig?.accessControl) {
         const groups = req.session.profile.roles;
+        const { read, patch, delete: del, post, write, all } = tableConfig.accessControl;
 
-        if (restriction.read && req.method == 'get') {
-            if (!restriction.read.find(r => groups.includes(r)))
+        if (read && req.method == 'get') {
+            if (!read.find(r => groups.includes(r)))
                 throw { status: 403, message: "Forbidden" };
         }
 
-        if (restriction.patch && req.method == 'patch') {
-            if (!restriction.patch.find(r => groups.includes(r)))
+        if (patch && req.method == 'patch') {
+            if (!patch.find(r => groups.includes(r)))
                 throw { status: 403, message: "Forbidden" };
         }
 
-        if (restriction.delete && req.method == 'delete') {
-            if (!restriction.delete.find(r => groups.includes(r)))
+        if (del && req.method == 'delete') {
+            if (!del.find(r => groups.includes(r)))
                 throw { status: 403, message: "Forbidden" };
         }
 
-        if (restriction.post && req.method == 'post') {
-            if (!restriction.post.find(r => groups.includes(r)))
+        if (post && req.method == 'post') {
+            if (!post.find(r => groups.includes(r)))
                 throw { status: 403, message: "Forbidden" };
         }
 
         // If it's something that would modify a table, check for write access.
-        if (restriction.write && ['post', 'patch', 'delete'].includes(req.method)) {
-            if (!restriction.write.find(r => groups.includes(r)))
+        if (write && ['post', 'patch', 'delete'].includes(req.method)) {
+            if (!write.find(r => groups.includes(r)))
                 throw { status: 403, message: "Forbidden" };
         }
     }
 
+    req['_tableConfig'] = tableConfig;
     req['_table'] = table;
     req['_id'] = id;
 
     next();
 }
 
-type RestrictionMap = {
+/**
+ * Parse the request URL and build queries
+ */
+const requestToOdataGet = async (
+    table: string,
+    req
+) => {
+    const [path, queryString] = req.url.split('?');
+    const hasFilter = queryString?.includes("$filter");
+
+    let finalQuery: string[] = [];
+    // TODO: Fix the upstream parser problem on dot notation
+    for (let i = 0; i < queryString?.length; i++) {
+        const char = queryString[i];
+
+        if (char == '\'') {
+            const to = queryString.indexOf('\'', i);
+            if (to == -1) {
+                throw { status: 400, message: "Malformed Odata" };
+            }
+
+            finalQuery.push(queryString.slice(i, to));
+
+            i = to;
+            continue;
+        }
+        if (char == '.') {
+            finalQuery.push('__DOT__');
+            continue;
+        }
+        finalQuery.push(char);
+    }
+    const finalQueryString = finalQuery.join('').replace(/[&?]\$fetch=[^&]+/, '');
+
+    const query = hasFilter ? createQuery(decodeURIComponent(finalQueryString), {
+        type: SQLLang.SurrealDB
+    }) : {} as Visitor;
+
+    const {
+        select,
+        where,
+        parameters,
+        skip,
+        limit,
+        orderby
+    } = (() => {
+        let { select, where, parameters, skip, limit, orderby } = query;
+
+        select = select?.replace(/__DOT__/g, '.');
+        where = where?.replace(/__DOT__/g, '.');
+        orderby = orderby?.replace(/__DOT__/g, '.')
+            .replace(/\]/g, '')
+            .replace(/\[/g, '');
+
+        return { select, where, parameters, skip: skip || 0, limit, orderby };
+    })();
+
+    const fetch = (() => {
+        const fetchPar = req.query['$fetch'];
+        if (!fetchPar) return '';
+
+        const fields = !Array.isArray(fetchPar) ? [fetchPar] : fetchPar;
+        const fetchStr = fields.join(", ");
+
+        // Validate that the format is generally safe to execute.
+        if (!/^(?:[a-zA-Z_\.]+?)(?:, [a-zA-Z_\.]+?)*$/.test(fetchStr))
+            throw { status: 400, message: "Malformed $fetch" };
+
+        return fetchStr;
+    })();
+
+    const properties = {};
+    parameters?.forEach((value, key) => properties[key] = value);
+
+    // Initiate a query to count the number of total records that match
+    const countQuery = [
+        `SELECT count() from ${table}`,
+        `${where ? 'WHERE (' + where + ')' : ''}`,
+        'GROUP ALL'
+    ].join(' ');
+
+    // Build a full query that we will throw at surreal
+    const entriesQuery = [
+        `SELECT ${select || '*'} FROM ${table}`,
+        `${where ? 'WHERE (' + where + ')' : ''}`,
+        (typeof orderby == "string" && orderby != '1') ? `ORDER BY ${orderby}` : '',
+        typeof limit == "number" ? `LIMIT ${limit}` : '',
+        typeof skip == "number" ? `START ${skip}` : '',
+        `${fetch ? 'FETCH ' + fetch : ''}`
+    ].join(' ');
+
+    return {
+        countQuery,
+        entriesQuery,
+        properties,
+        skip,
+        limit
+    }
+}
+
+type TableConfig = {
+    /**
+     *
+     */
     [key: string]: {
-        read?: CruiserUserRole[],
 
-        post?: CruiserUserRole[],
-        patch?: CruiserUserRole[],
-        delete?: CruiserUserRole[],
+        accessControl?: {
+            read?: CruiserUserRole[],
+            post?: CruiserUserRole[],
+            patch?: CruiserUserRole[],
+            delete?: CruiserUserRole[],
 
-        // Write encompasses `post` `patch` and `delete` together.
-        write?: CruiserUserRole[];
-        // Ensure that the user has at least one of the listed roles,
-        // for ANY of the methods
-        all?: CruiserUserRole[];
-    };
-};
+            // Write encompasses `post` `patch` and `delete` together.
+            write?: CruiserUserRole[];
+            // Ensure that the user has at least one of the listed roles,
+            // for ANY of the methods
+            all?: CruiserUserRole[];
+        }
+
+        afterGet?: (record: Object) => Promise<Object> | Object
+        afterPost?: (record: Object) => Promise<Object> | Object
+        afterPut?: (record: Object) => Promise<Object> | Object
+        afterPatch?: (record: Object) => Promise<Object> | Object
+        afterDelete?: (record: Object) => Promise<Object> | Object
+
+        beforePost?: (record: Object) => Promise<Object> | Object;
+        beforePut?: (record: Object) => Promise<Object> | Object;
+        beforePatch?: (record: Object) => Promise<Object> | Object;
+        beforeDelete?: (record: Object) => Promise<Object> | Object
+    }
+}
 
 // Set restrictions on who can read/write/update on a table.
 // If not present, the table will effectively have no permission
 // constraints
-const restrictionMap: RestrictionMap = {
+const tableConfigMap: TableConfig = {
     "users": {
-        "write": [
-            "administrator"
-        ]
+        accessControl: {
+            write: ["administrator"]
+        }
     }
-};
+}
 
 export const DatabaseTableApi = () => {
     const router = express.Router();
+    const apiPath = '/api/odata';
+
+    // All requests must satisfy the guard.
+    router.use('/:table', tableGuard);
 
     /**
      * Metadata endpoint must be first
      * TODO: Should this endpoint be secured?
      * Seems arbitrary on the surface
      */
-    router.get('/$metadata#:table', tableGuard, route(async (req, res, next) => {
+    router.get('/$metadata#:table', route(async (req, res, next) => {
         const table = req['_table'] as string;
         const schemaFields = Object.keys((
             (await db.query(`INFO FOR TABLE ` + table))[0][0].result as any)?.fd
@@ -128,232 +250,194 @@ export const DatabaseTableApi = () => {
         res.send(schemaFields);
     }));
 
-    router.use('/:table', tableGuard);
-
-    router.get('/:table', tableGuard, route(async (req, res, next) => {
+    /**
+     *
+     */
+    router.get('/:table', route(async (req, res, next) => {
+        const tableConfig = req['_tableConfig'] as TableConfig[''] || {};
         const table = req['_table'] as string;
-
-        // Tables with a colon are specifying a record id.
-        if (req.params['table'].includes(":"))
-            return next();
-
-        const apiPath = '/api/odata';
 
         const addOdataMetadata = (obj) => {
             obj["@odata.id"] = `${apiPath}/${table}('${obj.id}')`;
             // obj["@odata.etag"] = "W/\"08D1694C7E510464\"";
             obj["@odata.editLink"] = `${apiPath}/${table}('${obj.id}')`;
             return obj;
-        }
+        };
 
+        // If the target includes a colon, then we're acting on 1 record
+        if (req.params['table']?.includes(":")) {
+            let [result] = await db.select<any>(table);
 
-        if (table.includes(":")) {
-            const [output] = await db.select(table);
-            res.send(output);
+            if (typeof tableConfig.afterGet == "function")
+                result = await tableConfig.afterGet(result);
+
+            res.send(result);
             return;
         }
 
-        const [ unused, queryString ] = req.url.split('?');
-
-        const hasFilter = queryString?.includes("$filter");
-
-        let finalQuery: string[] = [];
-        for (let i = 0; i < queryString?.length; i++) {
-            const char = queryString[i];
-
-            if (char == '\'') {
-                const to = queryString.indexOf('\'', i);
-                if (to == -1) {
-                    throw { status: 400, message: "Malformed Odata" }
-                }
-
-                finalQuery.push(queryString.slice(i, to));
-
-                i = to;
-                continue;
-            }
-            if (char == '.') {
-                finalQuery.push('__DOT__');
-                continue;
-            }
-            finalQuery.push(char);
-        }
-        const finalQueryString = finalQuery.join('').replace(/[&?]\$fetch=[^&]+/, '');
-
-        const query = hasFilter ? createQuery(decodeURIComponent(finalQueryString), {
-            type: SQLLang.SurrealDB
-        }) : {} as Visitor;
-
         const {
-            select,
-            where,
-            parameters,
+            countQuery,
+            entriesQuery,
+            properties,
             skip,
-            limit,
-            orderby
-        } = (() => {
-            let { select, where, parameters, skip, limit, orderby } = query;
+            limit
+        } = await requestToOdataGet(
+            table,
+            req
+        );
 
-            select  = select?.replace(/__DOT__/g, '.');
-            where   = where?.replace(/__DOT__/g, '.');
-            orderby = orderby?.replace(/__DOT__/g, '.')
-                              .replace(/\]/g, '')
-                              .replace(/\[/g, '');
+        let [
+            countResult,
+            [data]
+        ] = await Promise.all([
+            db.query<any>(countQuery, properties),
+            db.query<any[]>(entriesQuery, properties)
+        ])
+        data ??= [];
+        // const count = countResult.count;
+        const count = countResult?.[0]?.[0]?.count || 0;
 
-            return { select, where, parameters, skip, limit, orderby };
-        })()
-
-        const fetch = (() => {
-            const fetchPar = req.query['$fetch'];
-            if (!fetchPar) return '';
-
-            const fields = !Array.isArray(fetchPar) ? [fetchPar] : fetchPar;
-            const fetchStr = fields.join(", ");
-
-            // Validate that the format is generally safe to execute.
-            if (!/^(?:[a-zA-Z_\.]+?)(?:, [a-zA-Z_\.]+?)*$/.test(fetchStr))
-                throw { status: 400, message: "Malformed $fetch" };
-
-            return fetchStr;
-        })();
-
-        const props = {};
-        parameters?.forEach((value, key) => props[key] = value);
-
-        const p_count = db.query([
-            `SELECT count() from ${table}`,
-            `${where ? 'WHERE (' + where + ')' : ''}`,
-            'GROUP ALL'
-        ].join(' '), props);
-
-        const sql = [
-            `SELECT ${select || '*'} FROM ${table}`,
-            `${where ? 'WHERE (' + where + ')' : ''}`,
-            (typeof orderby == "string" && orderby != '1') ? `ORDER BY ${orderby}` : '',
-            typeof limit == "number" ? `LIMIT ${limit}` : '',
-            typeof skip == "number" ? `START ${skip}` : '',
-            `${fetch ? 'FETCH ' + fetch : ''}`
-        ].join(' ');
-        const [ data ] = await db.query(sql, props);
-
-        const [{ result: countResult }] = await p_count as any;
-        const count = countResult?.[0]?.count;
+        // Add odata metadata properties
+        data = data.map(d => addOdataMetadata(d));
 
         const pars = new URLSearchParams(req.url);
-        pars.set('$skip', skip + (data as any)?.length as any);
+        pars.set('$skip', skip + data.length as any);
 
         res.send({
             '@odata.context': `${apiPath}$metadata#${table}`,
-            '@odata.count': count ?? (data as any)?.length ?? 0,
+            '@odata.count': count ?? data.length ?? 0,
             '@odata.nextlink': (limit + skip) > (count as number)
                                 ? undefined
                                 : `${apiPath}/${table}${decodeURIComponent(pars.toString())}`,
-            value: (data as any).map(d => addOdataMetadata(d))
+            value: data
         });
     }));
 
-
-
     router.post('/:table', route(async (req, res, next) => {
+        const tableConfig = req['_tableConfig'] as TableConfig[''] || {};
+        const id = checkSurrealResource(req.params['table']);
+        let data = req.body;
 
         if (!Array.isArray(req.body)) {
-            res.send((await db.create(checkSurrealResource(req.params['table']) + ":ulid()", req.body))[0]);
+            if (typeof tableConfig.beforePost == "function")
+                data = await tableConfig.beforePost(data);
+
+            let [result] = await db.create(id + ":ulid()", data);
+            if (typeof tableConfig.afterPost == "function")
+                result = await tableConfig.afterPost(result);
+
+            res.send(result);
         }
         else {
-            res.send(await Promise.all(req.body.map(({ data }) => db.create(checkSurrealResource(req.params['table']) + ":ulid()", data))));
+            if (typeof tableConfig.beforePost == "function")
+                data = await Promise.all(data.map(d => tableConfig.beforePost(d)));
+
+            let result = await Promise.all(
+                data.map((item) => db.create(id + ":ulid()", item))
+            );
+
+            if (typeof tableConfig.afterPost == "function")
+                result = await Promise.all(result.map(r => tableConfig.afterPost(r)));
+
+            res.send(result.filter(r => r !== undefined));
         }
     }));
 
-    // router.use('/:id', (req, res, next) => {
-    //     const id = req.params.id as string;
-    //     if (!/^[A-Z0-9]{26}$/.test(id)) return next({ message: "Malformed identifier", status: 400 });
-    //     next();
-    // });
+    router.put('/:table', route(async (req, res, next) => {
+        const tableConfig = req['_tableConfig'] as TableConfig[''] || {};
+        const id = checkSurrealResource(req.params['table']);
+        let data = req.body;
 
-    router.get('/:id', route(async (req, res, next) => {
-        const data = await db.select(req.params['id']);
-        res.send(data[0]);
+        if (!Array.isArray(req.body)) {
+
+            if (typeof tableConfig.beforePut == "function")
+                data = await tableConfig.beforePut(data);
+
+            if (data.id != id) {
+                throw { message: "payload id does not match id in uri", status: 400 }
+            }
+
+            let [result] = await db.update(data.id, data);
+
+            if (typeof tableConfig.afterPut == "function")
+                result = await tableConfig.afterPut(result);
+
+            res.send(result);
+        }
+        else {
+            if (typeof tableConfig.beforePut == "function")
+                data = await Promise.all(data.map(d => tableConfig.beforePut(d)));
+
+            let result = await Promise.all(
+                data.map((item) => db.update(item.id, item))
+            );
+
+            if (typeof tableConfig.afterPut == "function")
+                result = await Promise.all(result.map(r => tableConfig.afterPut(r)));
+
+            res.send(result.filter(r => r !== undefined));
+        }
     }));
 
-    // batch get
-    // [ "id:123", "id:456" ]
-    router.get('/', route(async (req, res, next) => {
-        if (!Array.isArray(req.body)) throw 400;
+    router.patch('/:table', route(async (req, res, next) => {
+        const tableConfig = req['_tableConfig'] as TableConfig[''] || {};
+        const id = checkSurrealResource(req.params['table']);
+        let data = req.body;
 
-        res.send(await Promise.all(
-            req.body.map((id) =>
-                db.select(checkSurrealResource(id))
-                .then(([d]) => d)
-            )
-        ));
+        if (!Array.isArray(req.body)) {
+            if (typeof tableConfig.beforePatch == "function")
+                data = await tableConfig.beforePatch(data);
+
+            // Allow for partial object patches
+            // if (data.id != id) {
+            //     throw { message: "payload id does not match id in uri", status: 400 };
+            // }
+
+            let [result] = await db.merge(id, data);
+
+            if (typeof tableConfig.afterPatch == "function")
+                result = await tableConfig.afterPatch(result);
+
+            res.send(result);
+        }
+        else {
+            if (typeof tableConfig.beforePatch == "function")
+                data = await Promise.all(data.map(d => tableConfig.beforePatch(d)));
+
+            let result = await Promise.all(
+                data.map((item) => db.merge(item.id, item))
+            );
+
+            if (typeof tableConfig.afterPatch == "function")
+                result = await Promise.all(result.map(r => tableConfig.afterPatch(r)));
+
+            res.send(result.filter(r => r !== undefined));
+        }
     }));
 
+    router.delete('/:table', route(async (req, res, next) => {
+        const tableConfig = req['_tableConfig'] as TableConfig[''] || {};
+        const id = checkSurrealResource(req.params['table']);
+        let data = req.body;
 
+        if (!Array.isArray(req.body)) {
+            let [result] = await db.delete(id);
 
-    router.put('/:id', route(async (req, res, next) => {
-        db.update(req.params['id'], req.body)
-            .then(([data]) => res.send(data))
-            .catch(err => next(err))
-    }));
-    // batch PUT
-    // [{ id: "id123", data: {prop1: val}}]
-    router.put('/', route(async (req, res, next) => {
-        if (!Array.isArray(req.body)) throw 400;
+            res.send(result);
+        }
+        else {
+            if (typeof tableConfig.beforeDelete == "function")
+                data = await Promise.all(data.map(d => tableConfig.beforeDelete(d)));
 
-        res.send(await Promise.all(
-            req.body.map(({id, data}) =>
-                db.update(
-                    checkSurrealResource(id),
-                    data
-                )
-                .then(([d]) => d)
-            )
-        ));
-    }));
+            let result = await Promise.all(
+                data.map((item) => db.delete(item.id))
+            );
 
-    router.patch('/:id', route(async (req, res, next) => {
-        res.send(
-            (await db.merge(
-                checkSurrealResource(req.params['id']),
-                req.body
-            ))[0]
-        );
-    }));
+            if (typeof tableConfig.afterDelete == "function")
+                result = await Promise.all(result.map(r => tableConfig.afterDelete(r)));
 
-    // batch patch
-    // [{ id: "id123", data: {prop1: val}}]
-    router.patch('/', route(async (req, res, next) => {
-        if (!Array.isArray(req.body)) throw 400;
-
-        res.send(await Promise.all(
-            req.body.map(({id, data}) =>
-                db.merge(
-                    checkSurrealResource(id),
-                    data
-                )
-                .then(([d]) => d)
-            )
-        ));
-    }));
-
-
-    router.delete('/:id', route(async (req, res, next) => {
-        res.send((await db.delete(checkSurrealResource(req.params['id']))[0]));
-    }));
-
-    // batch delete
-    // [ "id:123", "id:456" ]
-    router.delete('/', route(async (req, res, next) => {
-        if (!Array.isArray(req.body)) throw 400;
-
-        res.send(await Promise.all(
-            req.body.map((id) =>
-                db.delete(
-                    checkSurrealResource(id)
-                )
-                .then(([d]) => d)
-            )
-        ));
+            res.send(result.filter(r => r !== undefined));
+        }
     }));
 
     return router;
