@@ -5,7 +5,7 @@
             [class.selected]="selectedSource?.id == source.id"
             [class.disabled]="source.disabled"
             [ngx-contextmenu]="contextMenu"
-            [ngx-menu-context]="source"
+            [ngx-menu-context]="{ stage, source }"
             (click)="onEditSource.emit({ stage, source })"
         >
             <!-- @switch(source.type) { -->

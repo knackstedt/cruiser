@@ -3,7 +3,7 @@ import { ComponentRegistration } from '@dotglitch/ngx-common';
 
 export const Pages: ComponentRegistration[] = [
     { id: 'Login', load: () => import('./pages/login/login.component'), hidden: true },
-    { matcher: /^$|Dashboard|landing/, load: () => import('./pages/dashboard/dashboard.component'), icon: "dashboard", label: "Dashboard", id: "Dashboard" },
+    // { matcher: /^$|Dashboard|landing/, load: () => import('./pages/dashboard/dashboard.component'), icon: "dashboard", label: "Dashboard", id: "Dashboard" },
 
     // {
     //     id: 'Pipelines',
@@ -16,16 +16,18 @@ export const Pages: ComponentRegistration[] = [
     //     hidden: true
     // },
     {
-        id: 'Pipelines',
-        label: "Pipelines",
-        load: () => import('./pages/releases/releases.component'),
-        icon: "new_releases"
-    },
-    {
         hidden: true,
         matcher: /Pipelines\/(?<pipeline_id>[^/]+)/i,
         load: () => import('./pages/releases/release-editor/release-editor.component')
     },
+    {
+        id: 'Pipelines',
+        matcher: /^$|Dashboard|landing|pipelines/,
+        label: "Pipelines",
+        load: () => import('./pages/releases/releases.component'),
+        icon: "new_releases"
+    },
+
     // { id: 'Agents', load: () => import('./pages/agents/agents.component'), icon: "dns" },
     { id: 'Sources', load: () => import('./pages/sources/sources.component'), icon: "source" },
 

@@ -24,6 +24,9 @@
                         [inputs]="navigator.virtualPath$.value?.args"
                     />
                 }
+                @else {
+                    <ngx-lazy-loader component="Pipelines"/>
+                }
             </div>
         </div>
     }

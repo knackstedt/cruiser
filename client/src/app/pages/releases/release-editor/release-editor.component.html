@@ -3,7 +3,7 @@
         [pipeline]="pipeline"
         [stage]="selectedStage"
         (close)="
-            patchPipeline();
+            dataChangeEmitter.next(0);
             renderGraph();
             editingStage = false;
         "
@@ -57,20 +57,6 @@
         <mat-sidenav mode="side" position="end" [opened]="true">
             <ng-scrollbar>
                 @switch (view) {
-                    @case ("schedule") {
-                        <div class="panel_header">Schedule</div>
-                        <mat-form-field>
-                            <mat-label>CRONTAB Schedule</mat-label>
-                            <input matInput type="text" [(ngModel)]="selectedStage.cronTrigger" (ngModelChange)="dataChangeEmitter.next(0)"/>
-                        </mat-form-field>
-
-                        <!-- <mat-form-field> -->
-                            <mat-checkbox [(ngModel)]="selectedStage.cronExcludeAuto" (ngModelChange)="dataChangeEmitter.next(0)">
-                                Only automatically trigger on CRONTAB execution
-                            </mat-checkbox>
-                        <!-- </mat-form-field> -->
-                    }
-
                     @case ("approver") {
                         <div class="panel_header">Approvers</div>
 
@@ -96,96 +82,6 @@
                             <mat-label>Minimum number of approvals to run</mat-label>
                             <input matInput type="number" min="0" [(ngModel)]="selectedStage.requiredApprovals" (ngModelChange)="dataChangeEmitter.next(0)" />
                         </mat-form-field>
-                    }
-
-                    @case ("webhook") {
-                        <div class="panel_header">Webhooks</div>
-                        <mat-accordion [multi]="true" displayMode="flat">
-                            @for (action of selectedStage.webhooks; track action) {
-                                <mat-expansion-panel
-                                    #panel
-                                    [expanded]="true"
-                                >
-                                    <mat-expansion-panel-header>
-                                        <div
-                                            class="header"
-                                            (click)="$event.stopPropagation(); panel.toggle()"
-                                        >
-                                            <div>
-                                                {{action.label}}
-                                            </div>
-
-                                            <button
-                                                mat-icon-button
-                                                class="expand_button"
-                                                [style.transform]="panel.expanded ? '' : 'rotate(-90deg)'"
-                                            >
-                                                <mat-icon>expand_more</mat-icon>
-                                            </button>
-                                        </div>
-                                    </mat-expansion-panel-header>
-                                    <div>
-                                        <mat-form-field style="width: 100%; margin: 12px 0">
-                                            <mat-label>Label</mat-label>
-                                            <input matInput type="text" [(ngModel)]="action.label" (ngModelChange)="dataChangeEmitter.next(0)" />
-                                        </mat-form-field>
-
-                                        <ngx-stackedit
-                                            style="height: 200px"
-                                            (onImageUpload)="fs.onImageUpload(pipeline, $event)"
-                                            [(value)]="action.description"
-                                            (valueChange)="dataChangeEmitter.next(0)"
-                                            showPreview="off"
-                                            showToc="off"
-                                        />
-
-                                        <div style="display: flex; gap: 8px; margin: 8px 0">
-                                            <mat-form-field style="width: 110px">
-                                                <mat-label>Method</mat-label>
-                                                <mat-select [(value)]="action.method" (valueChange)="dataChangeEmitter.next(0)">
-                                                    <mat-option value="GET">get</mat-option>
-                                                    <mat-option value="POST">post</mat-option>
-                                                    <mat-option value="PUT">put</mat-option>
-                                                    <mat-option value="PATCH">patch</mat-option>
-                                                    <mat-option value="DELETE">delete</mat-option>
-                                                </mat-select>
-                                            </mat-form-field>
-                                            <mat-form-field style="width: 100%; flex: 1">
-                                                <mat-label>URL</mat-label>
-                                                <input matInput type="text" [(ngModel)]="action.url" (ngModelChange)="dataChangeEmitter.next(0)" />
-                                            </mat-form-field>
-                                        </div>
-
-                                        <p>Headers</p>
-                                        @for (header of action.headers; track header) {
-                                            <div style="display: flex">
-                                                <mat-form-field>
-                                                    <mat-label>Name</mat-label>
-                                                    <input matInput type="text" [(ngModel)]="header[0]" (ngModelChange)="dataChangeEmitter.next(0)"/>
-                                                </mat-form-field>
-                                                <mat-form-field>
-                                                    <mat-label>Value</mat-label>
-                                                    <input matInput type="text" [(ngModel)]="header[1]" (ngModelChange)="dataChangeEmitter.next(0)"/>
-                                                </mat-form-field>
-                                            </div>
-                                        }
-
-                                        <button mat-flat-button (click)="(action.headers = action.headers ?? []).push(['', ''])">add</button>
-
-                                        <p>Body</p>
-                                        <app-vscode
-                                            style="height: 400px"
-                                            [(code)]="action.body"
-                                            [language]="'auto'"
-                                            (codeChange)="dataChangeEmitter.next(0)"
-                                        />
-                                    </div>
-                                </mat-expansion-panel>
-                            }
-                            <button mat-flat-button (click)="addWebhook(selectedStage)">
-                                <mat-icon>add</mat-icon> Add
-                            </button>
-                        </mat-accordion>
                     }
 
                     @case ("stage") {
@@ -214,7 +110,7 @@
                             showToc="off"
                         />
 
-                        <div class="panel_header">Stage Triggers</div>
+                        <p class="panel_header">Stage Triggers</p>
 
                         <mat-form-field style="width: 100%;">
                             <mat-label>Preceding stages</mat-label>
@@ -237,6 +133,7 @@
                                 <mat-hint>There are no valid stages that can be specified</mat-hint>
                             }
                         </mat-form-field>
+
                         @if (filterMissingPrecedingStages(selectedStage)?.length > 0) {
                             <div style="margin-bottom: 12px">
                                 <h4 style="margin: 0">Invalid Preceding Stages:</h4>
@@ -273,38 +170,82 @@
                             </mat-select>
                         </mat-form-field>
 
+                        <div>
+                            <div class="panel_header">Schedule</div>
+                            <mat-form-field>
+                                <mat-label>CRONTAB Schedule</mat-label>
+                                <input matInput type="text" [(ngModel)]="selectedStage.cronTrigger" (ngModelChange)="dataChangeEmitter.next(0)"/>
+                            </mat-form-field>
+
+                            <!-- <mat-form-field> -->
+                                <mat-checkbox [(ngModel)]="selectedStage.cronExcludeAuto" (ngModelChange)="dataChangeEmitter.next(0)">
+                                    Only automatically trigger on CRONTAB execution
+                                </mat-checkbox>
+                            <!-- </mat-form-field> -->
+                        </div>
+
+                        <div>
+                            <p class="panel_header">Sources</p>
+
+                            <div class="list" style="margin-bottom: 12px">
+                                @for (source of selectedStage.sources; track source) {
+                                    <div
+                                        class="list-item"
+                                        (click)="selectedSource = source; view='source'"
+                                    >
+                                        <mat-icon>edit</mat-icon>
+                                        <div>
+                                            {{source.label || source.url?.split("/").pop()}}
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <button mat-flat-button (click)="addSource(selectedStage)">
+                                <mat-icon>add</mat-icon> Add Source
+                            </button>
+                        </div>
+
+                        <div>
+                            <p class="panel_header">Webhooks</p>
+
+                            <div class="list" style="margin-bottom: 12px">
+                                @for (webhook of selectedStage.webhooks; track webhook) {
+                                    <div
+                                        class="list-item"
+                                        (click)="selectedWebhook = webhook; view='webhook'"
+                                    >
+                                        <mat-icon>edit</mat-icon>
+                                        <div>
+                                            {{webhook.label || webhook.url?.split("/").pop()}}
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <button mat-flat-button (click)="addWebhook(selectedStage)">
+                                <mat-icon>add</mat-icon> Add Webhook
+                            </button>
+                        </div>
+
                         <app-variables-section
                             [item]="selectedStage"
                             (valueChange)="dataChangeEmitter.next(0)"
                         />
                     }
 
-                    @case ("sources") {
-                        <div class="panel_header">
-                            <span>Sources</span>
-                            <div style="flex: 1"></div>
-                        </div>
-
-                        <div class="list" style="margin-bottom: 12px">
-                            @for (source of selectedStage.sources; track source) {
-                                <div
-                                    class="list-item"
-                                    (click)="selectedSource = source; view='source'"
-                                >
-                                    <mat-icon>edit</mat-icon>
-                                    <div>
-                                        {{source.label || source.url?.split("/").pop()}}
-                                    </div>
-                                </div>
-                            }
-                        </div>
-
-                        <button mat-flat-button (click)="addSource(selectedStage)">
-                            <mat-icon>add</mat-icon> Add
-                        </button>
-                    }
-
                     @case ("source") {
+                        <div style="display: flex; justify-content: space-between;">
+                            <button mat-flat-button (click)="view = 'stage'">
+                                <mat-icon>arrow_back</mat-icon>
+                                Back
+                            </button>
+
+                            <button mat-flat-button (click)="deleteSource(selectedStage, selectedSource)">
+                                <mat-icon>delete_forever</mat-icon>
+                                Delete
+                            </button>
+                        </div>
                         @if (selectedSource) {
                             <mat-form-field style="width: 100%; margin: 12px 0">
                                 <mat-label>{{selectedSource.label ? 'Label' : selectedSource.url?.split('/').pop()}}</mat-label>
@@ -341,6 +282,14 @@
                             />
                         </mat-form-field>
 
+                        <mat-checkbox
+                            [(ngModel)]="selectedSource.disablePolling"
+                            (ngModelChange)="dataChangeEmitter.next(0)"
+                            style="margin: -8px 0 8px 0"
+                        >
+                            <mat-label>Disable automatic build on changes</mat-label>
+                        </mat-checkbox>
+
                         <mat-form-field style="width: 100%">
                             <mat-label>Clone Depth</mat-label>
                             <input matInput type="number" [(ngModel)]="selectedSource.cloneDepth" (ngModelChange)="dataChangeEmitter.next(0)" />
@@ -356,6 +305,87 @@
                         </mat-form-field>
 
                     }
+
+                    @case ("webhook") {
+                        @if (selectedWebhook) {
+                            <div style="display: flex; justify-content: space-between;">
+                                <button mat-flat-button (click)="view = 'stage'">
+                                    <mat-icon>arrow_back</mat-icon>
+                                    Back
+                                </button>
+
+                                <button mat-flat-button (click)="deleteWebhook(selectedStage, selectedWebhook)">
+                                    <mat-icon>delete_forever</mat-icon>
+                                    Delete
+                                </button>
+                            </div>
+
+                            <div>
+                                <mat-form-field style="width: 100%; margin: 12px 0">
+                                    <mat-label>{{selectedWebhook.label ? 'Label' : getHost(selectedWebhook.url)}}</mat-label>
+
+                                    <input matInput type="text" [(ngModel)]="selectedWebhook.label" (ngModelChange)="dataChangeEmitter.next(0)" />
+                                </mat-form-field>
+
+                                <ngx-stackedit
+                                    style="height: 200px"
+                                    (onImageUpload)="fs.onImageUpload(pipeline, $event)"
+                                    [(value)]="selectedWebhook.description"
+                                    (valueChange)="dataChangeEmitter.next(0)"
+                                    showPreview="off"
+                                    showToc="off"
+                                />
+
+                                <div style="display: flex; gap: 8px; margin: 8px 0">
+                                    <mat-form-field style="width: 110px">
+                                        <mat-label>Method</mat-label>
+                                        <mat-select [(value)]="selectedWebhook.method" (valueChange)="dataChangeEmitter.next(0)">
+                                            <mat-option value="GET">get</mat-option>
+                                            <mat-option value="POST">post</mat-option>
+                                            <mat-option value="PUT">put</mat-option>
+                                            <mat-option value="PATCH">patch</mat-option>
+                                            <mat-option value="DELETE">delete</mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                    <mat-form-field style="width: 100%; flex: 1">
+                                        <mat-label>URL</mat-label>
+                                        <input matInput type="text" [(ngModel)]="selectedWebhook.url" (ngModelChange)="dataChangeEmitter.next(0)" />
+                                    </mat-form-field>
+                                </div>
+
+                                <p>Headers</p>
+                                @for (header of selectedWebhook.headers; track header) {
+                                    <div style="display: flex">
+                                        <mat-form-field>
+                                            <mat-label>Name</mat-label>
+                                            <input matInput type="text" [(ngModel)]="header[0]" (ngModelChange)="dataChangeEmitter.next(0)"/>
+                                        </mat-form-field>
+                                        <mat-form-field>
+                                            <mat-label>Value</mat-label>
+                                            <input matInput type="text" [(ngModel)]="header[1]" (ngModelChange)="dataChangeEmitter.next(0)"/>
+                                        </mat-form-field>
+                                    </div>
+                                }
+
+                                <button
+                                    mat-flat-button
+                                    (click)="(selectedWebhook.headers = selectedWebhook.headers ?? []).push(['', ''])"
+                                >
+                                    <mat-icon>add</mat-icon>
+                                    Add
+                                </button>
+
+                                <p>Body</p>
+                                <app-vscode
+                                    style="height: 400px"
+                                    [(code)]="selectedWebhook.body"
+                                    [language]="'auto'"
+                                    (codeChange)="dataChangeEmitter.next(0)"
+                                />
+                            </div>
+                        }
+                    }
+
 
                     @case ("pipeline") {
                         <div class="panel_header">

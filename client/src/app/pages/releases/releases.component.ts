@@ -276,7 +276,7 @@ export class ReleasesComponent implements OnInit {
                 `?$filter=spec.id eq '${this.selectedPipeline.id}'` +
                 `&$orderby=id desc` +
                 `&$fetch=status.jobInstances` +
-                `&$top=20`
+                `&$top=2`
             );
             this._pipelineInstances = instances;
             this.parseInstances(instances);
@@ -335,6 +335,7 @@ export class ReleasesComponent implements OnInit {
                     : 'building';
             });
         });
+
         this.pipelineInstances = [...instances];
         this.listView?.changeDetector.markForCheck();
         this.gridView?.changeDetector.markForCheck();

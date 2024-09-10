@@ -1,0 +1,20 @@
+<div class="container">
+    @for (webhook of webhooks; track webhook) {
+        <div
+            class="webhook"
+            [class.selected]="selectedWebhook?.id == webhook.id"
+            [class.disabled]="webhook.disabled"
+            [ngx-contextmenu]="contextMenu"
+            [ngx-menu-context]="{ stage, webhook }"
+            (click)="onEditWebhook.emit({ stage, webhook })"
+        >
+            <!-- @switch(webhook.type) { -->
+                <!-- @case ("git") { -->
+            <mat-icon>webhook</mat-icon>
+                <!-- } -->
+            <!-- } -->
+            <!-- <div class="label">{{webhook.label}}</div> -->
+            <div class="url">{{webhook.label || getHost(webhook.url)}}</div>
+        </div>
+    }
+</div>

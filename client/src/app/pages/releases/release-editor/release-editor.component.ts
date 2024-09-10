@@ -27,6 +27,7 @@ import { ImpossibleNodeComponent } from './reactflow-nodes/impossible-node/impos
 import { StageNodeComponent } from 'src/app/pages/releases/release-editor/reactflow-nodes/stage-node/stage-node.component';
 import React from 'react';
 import { SourceNodeComponent } from 'src/app/pages/releases/release-editor/reactflow-nodes/source-node/source-node.component';
+import { WebhookNodeComponent } from 'src/app/pages/releases/release-editor/reactflow-nodes/webhook-node/webhook-node.component';
 
 
 @Component({
@@ -147,6 +148,26 @@ export class ReleaseEditorComponent {
                         }
                     },
                     {
+                        label: "Enable Source",
+                        isVisible: ({source}) => source.disabled,
+                        action: ({stage, source}) => {
+                            this.ngZone.run(() => {
+                                source.disabled = false;
+                                this.renderGraph();
+                            })
+                        }
+                    },
+                    {
+                        label: "Disable Source",
+                        isVisible: ({source}) => !source.disabled,
+                        action: ({stage, source}) => {
+                            this.ngZone.run(() => {
+                                source.disabled = true;
+                                this.renderGraph();
+                            })
+                        }
+                    },
+                    {
                         label: "Delete Source",
                         action: ({ stage, source }) => {
                             this.ngZone.run(() => {
@@ -174,6 +195,74 @@ export class ReleaseEditorComponent {
             [
                 React.createElement(Handle, { type: "source", position: Position.Right })
             ]
+        ),
+        webhook: ReactMagicWrapperComponent.WrapAngularComponent(
+            WebhookNodeComponent,
+            this.appRef,
+            this.injector,
+            {
+                /* inputs */
+                contextMenu: [
+                    {
+                        label: "Edit Webhook",
+                        action: ({stage, webhook}) => {
+                            this.ngZone.run(() => {
+                                this.mode = "edit";
+                                this.selectedStage = stage;
+                                this.selectedWebhook = webhook;
+                                this.renderGraph();
+                                this.view = 'webhook';
+                            })
+                        }
+                    },
+                    {
+                        label: "Enable Webhook",
+                        isVisible: ({webhook}) => webhook.disabled,
+                        action: ({stage, webhook}) => {
+                            this.ngZone.run(() => {
+                                webhook.disabled = false;
+                                this.renderGraph();
+                            })
+                        }
+                    },
+                    {
+                        label: "Disable Webhook",
+                        isVisible: ({webhook}) => !webhook.disabled,
+                        action: ({stage, webhook}) => {
+                            this.ngZone.run(() => {
+                                webhook.disabled = true;
+                                this.renderGraph();
+                            })
+                        }
+                    },
+                    {
+                        label: "Delete Webhook",
+                        action: ({ stage, webhook }) => {
+                            this.ngZone.run(() => {
+                                stage.webhooks.splice(stage.webhooks.indexOf(webhook), 1);
+                                this.dataChangeEmitter.next(0);
+                                this.renderGraph();
+                                this.selectStage(stage);
+                            });
+                        }
+                    }
+                ] as MenuItem<{ stage: StageDefinition, webhook: Webhook }>[]
+            },
+            {
+                // outputs
+                onEditWebhook: ({ stage, webhook }) => {
+                    this.ngZone.run(() => {
+                        this.mode = "edit";
+                        this.selectedStage = stage;
+                        this.selectedWebhook = webhook;
+                        this.renderGraph();
+                        this.view = 'webhook';
+                    })
+                },
+            },
+            [
+                React.createElement(Handle, { type: "target", position: Position.Left })
+            ]
         )
     }
 
@@ -181,6 +270,7 @@ export class ReleaseEditorComponent {
     view: string = "";
     selectedStage: StageDefinition;
     selectedSource: SourceConfiguration;
+    selectedWebhook: Webhook;
 
     users = [];
 
@@ -189,7 +279,11 @@ export class ReleaseEditorComponent {
 
     subscriptions = [
         // Save partial changes every 3s
-        this.dataChange$.subscribe(() => this.patchPipeline())
+        this.dataChange$.subscribe(() => {
+            this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
+                stages: this.pipeline.stages
+            });
+        })
     ]
 
     constructor(
@@ -229,7 +323,7 @@ export class ReleaseEditorComponent {
         }
         else {
             const pipeline = await this.fetch.get<PipelineDefinition>(`/api/odata/${this.pipeline_id}`);
-            const p = await this.fetch.put<PipelineDefinition>(`/api/odata/pipeline:${ulid()}`, {
+            const p = await this.fetch.post<PipelineDefinition>(`/api/odata/pipeline`, {
                 ...pipeline,
                 _sourceId: this.pipeline_id,
                 id: undefined,
@@ -250,8 +344,8 @@ export class ReleaseEditorComponent {
 
     private initPipelineObject(p: PipelineDefinition) {
 
-        p.sources = p.sources ?? [];
-        p.stages = p.stages ?? [];
+        p.sources ??= [];
+        p.stages ??= [];
 
         if (p.stages.length == 0) {
             p.stages.push({
@@ -278,13 +372,6 @@ export class ReleaseEditorComponent {
         }
 
         this.pipeline = p;
-    }
-
-    // Save changes to the edit instance
-    async patchPipeline() {
-        this.fetch.patch(`/api/odata/${this.pipeline.id}`, {
-            stages: this.pipeline.stages
-        });
     }
 
     // Apply the changes of the cloned pipeline
@@ -330,8 +417,8 @@ export class ReleaseEditorComponent {
         // This prevents zone detection loss
         // Should be removed when the react bridge no longer drops zone
         this.ngZone.run(() => {
-            stage.stageTrigger = stage.stageTrigger ?? [];
-            stage.webhooks = stage.webhooks ?? [];
+            stage.stageTrigger ??= [];
+            stage.webhooks ??= [];
 
             this.selectedStage = stage;
             this.renderGraph();
@@ -339,7 +426,7 @@ export class ReleaseEditorComponent {
     }
 
     async addStage(partial: Partial<StageDefinition> = {}) {
-        this.pipeline.stages = this.pipeline.stages ?? [];
+        this.pipeline.stages ??= [];
         const stage = {
             id: "pipeline_stage:" + ulid(),
             label: 'Stage - ' + (this.pipeline.stages.length + 1),
@@ -350,7 +437,7 @@ export class ReleaseEditorComponent {
 
         this.pipeline.stages.push(stage);
 
-        this.patchPipeline();
+        this.dataChangeEmitter.next(0);
         this.renderGraph();
     }
 
@@ -361,7 +448,7 @@ export class ReleaseEditorComponent {
 
         this.pipeline.stages.push(newStage);
 
-        this.patchPipeline();
+        this.dataChangeEmitter.next(0);
         this.renderGraph();
     }
 
@@ -377,34 +464,43 @@ export class ReleaseEditorComponent {
     }
 
     addWebhook(stage: StageDefinition) {
-        stage.webhooks = stage.webhooks ?? [];
-        stage.webhooks.push({
+        stage.webhooks ??= [];
+        stage.webhooks.push(this.selectedWebhook = {
             id: `pipeline_stage_webhook:${ulid()}`,
-            label: "Webhook",
+            label: "",
             method: "GET",
             headers: []
-        })
-        this.patchPipeline();
+        });
+        this.view = "webhook";
+        this.dataChangeEmitter.next(0);
+        this.renderGraph();
     }
 
     deleteWebhook(stage: StageDefinition, webhook: Webhook) {
         stage.webhooks.splice(stage.webhooks.indexOf(webhook), 1);
-        this.patchPipeline();
+        this.dataChangeEmitter.next(0);
+        this.renderGraph();
     }
 
     addSource(stage: StageDefinition) {
-        stage.sources = stage.sources ?? [];
-        stage.sources.push({
+        stage.sources ??= [];
+        stage.sources.push(this.selectedSource = {
             id: `pipeline_source:${ulid()}`,
             label: "",
-            targetPath: '.'
+            targetPath: '.',
+            cloneDepth: 1
         });
-        this.patchPipeline();
+        this.view = "source";
+        this.dataChangeEmitter.next(0);
+        this.renderGraph();
     }
 
     deleteSource(stage: StageDefinition, source: SourceConfiguration) {
         stage.sources.splice(stage.sources.indexOf(source), 1);
-        this.patchPipeline();
+
+        this.view = "stage";
+        this.dataChangeEmitter.next(0);
+        this.renderGraph();
     }
 
     editStage(stage: StageDefinition) {
@@ -415,20 +511,20 @@ export class ReleaseEditorComponent {
     deleteStage(stage: StageDefinition) {
         this.pipeline.stages = this.pipeline.stages.filter(s => s != stage);
 
-        this.patchPipeline();
+        this.dataChangeEmitter.next(0);
         this.renderGraph();
     }
 
     disableStage(stage: StageDefinition) {
         stage.disabled = true;
-        this.patchPipeline();
+        this.dataChangeEmitter.next(0);
         this.renderGraph();
     }
 
     enableStage(stage: StageDefinition) {
         stage.disabled = false;
+        this.dataChangeEmitter.next(0);
 
-        this.patchPipeline();
         this.renderGraph();
     }
 
@@ -441,7 +537,8 @@ export class ReleaseEditorComponent {
         const nodes: Node[] = this.pipeline.stages?.map(stage => {
             const stageUlid = stage.id.split(':')[1];
 
-            for (const precedingStageId of (stage.stageTrigger ?? [])) {
+            stage.stageTrigger ??= [];
+            for (const precedingStageId of stage.stageTrigger) {
                 // The taskGroup exists and can be mapped
                 let isMissingPreReq = false;
                 if (!this.pipeline.stages.find(tg => tg.id == precedingStageId)) {
@@ -482,16 +579,50 @@ export class ReleaseEditorComponent {
                     data: { target: stage }
                 });
 
+                const height = stage.sources.length * 36;
                 sourceNodes.push({
                     id: "source_" + stage.id,
                     width: 320,
-                    height: 80,
+                    height,
                     type: "source",
                     data: {
                         stage,
                         releaseEditor: this
                     },
-                    position: { x: 0, y: 0 }
+                    position: { x: 0, y: 0 },
+                    style: {
+                        '--height': height + 'px'
+                    } as any
+                });
+            }
+
+            if (stage.webhooks?.length > 0) {
+                edges.push({
+                    target: "webhook_" + stage.id,
+                    source: stageUlid,
+                    id: "webhook_edge_" + stage.id,
+                    type: "bezier",
+                    style: {
+                        strokeWidth: 2,
+                        stroke: '#00c7ff',
+                    },
+                    data: { source: stage }
+                });
+
+                const height = stage.webhooks.length * 36;
+                sourceNodes.push({
+                    id: "webhook_" + stage.id,
+                    width: 320,
+                    height,
+                    type: "webhook",
+                    data: {
+                        stage,
+                        releaseEditor: this
+                    },
+                    position: { x: 0, y: 0 },
+                    style: {
+                        '--height': height + 'px'
+                    } as any
                 });
             }
 
@@ -562,5 +693,14 @@ export class ReleaseEditorComponent {
 
         this.edges = edges;
         this.nodes = nodes;
+    }
+
+    getHost(url: string) {
+        try {
+            return new URL(url).host
+        }
+        catch {
+            return "New Webhook"
+        }
     }
 }

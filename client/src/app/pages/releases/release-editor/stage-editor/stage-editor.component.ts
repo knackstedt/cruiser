@@ -162,7 +162,7 @@ export class StageEditorComponent {
 
         if (!this.stage) return;
 
-        this.stage.jobs = this.stage.jobs ?? [];
+        this.stage.jobs ??= [];
 
         if (this.stage.jobs.length == 0) {
             this.stage.jobs.push({
@@ -201,7 +201,7 @@ export class StageEditorComponent {
     }
 
     async addJob() {
-        this.stage.jobs = this.stage.jobs ?? [];
+        this.stage.jobs ??= [];
         const job = {
             id: "pipeline_job:" + ulid(),
             label: 'Job - ' + (this.stage.jobs.length + 1),
@@ -238,7 +238,7 @@ export class StageEditorComponent {
     }
 
     async addTaskGroup(job: JobDefinition) {
-        job.taskGroups = job.taskGroups ?? [];
+        job.taskGroups ??= [];
 
         const taskGroup = {
             id: "pipeline_task_group:" + ulid(),
@@ -272,7 +272,7 @@ export class StageEditorComponent {
     }
 
     addTask(taskGroup: TaskGroupDefinition) {
-        taskGroup.tasks = taskGroup.tasks ?? [];
+        taskGroup.tasks ??= [];
 
         const task = {
             id: "pipeline_task:" + ulid(),
@@ -376,7 +376,9 @@ export class StageEditorComponent {
         let hasImpossibleNodes = false;
         const edges: Edge[] = [];
         const nodes: Node[] = job.taskGroups?.map(taskGroup => {
-            for (const preTaskGroupId of (taskGroup.preTaskGroups ?? [])) {
+
+            taskGroup.preTaskGroups ??= [];
+            for (const preTaskGroupId of taskGroup.preTaskGroups) {
                 // The taskGroup exists and can be mapped
                 let isMissingPreReq = false;
                 if (!job.taskGroups.find(tg => tg.id == preTaskGroupId)) {
