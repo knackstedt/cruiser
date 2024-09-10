@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "rootDir": ".",
-        "outDir": "../dist/agent",
+        "outDir": "../../dist/agent",
         "forceConsistentCasingInFileNames": true,
         "strict": false,
         "noImplicitOverride": true,
@@ -19,9 +19,12 @@
         "skipLibCheck": true,
         "target": "es2020",
         "module": "CommonJS",
-        "composite": true
+        "lib": [
+            "es2020"
+        ],
+        "types": ["node"]
     },
-    "files": [
-        "package.json"
+    "references": [
+        { "path": "../" }
     ]
 }
