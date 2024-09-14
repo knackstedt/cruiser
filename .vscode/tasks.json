@@ -12,16 +12,22 @@
             "isBackground": true,
             "problemMatcher": {
                 "owner": "typescript",
-                "pattern": "$tsc",
                 "background": {
-                    "activeOnStart": true,
                     "beginsPattern": {
-                        "regexp": "(.*?)"
+                        "regexp": "ng serve",
                     },
                     "endsPattern": {
-                        "regexp": "bundle generation complete"
+                        "regexp": "Application bundle generation complete."
                     }
-                }
+                },
+                "pattern": [
+                    {
+                        "message": 1,
+                        "file": 5,
+                        "kind": "file",
+                        "regexp": "An unhandled exception occurred: ([^\n]+)"
+                    }
+                ],
             }
         },
         {
@@ -40,19 +46,19 @@
                 "pattern": [
                     {
                         "severity": 1,
-                        "message": 3,
                         "file": 2,
+                        "message": 3,
                         "kind": "file",
-                        "regexp": "^([^ ]+)  ([A-Z]+) ([^ ]+): (.+)$"
+                        "regexp": " (ERROR) surreal::([^:]+): ([^\n]+)"
                     }
                 ],
                 "background": {
                     "activeOnStart": true,
                     "beginsPattern": {
-                        "regexp": "surreal::env: Running"
+                        "regexp": "INFO surreal::env: Running"
                     },
                     "endsPattern": {
-                        "regexp": "surrealdb::net: Started web server"
+                        "regexp": "INFO surrealdb::net: Started web server"
                     }
                 }
             }
