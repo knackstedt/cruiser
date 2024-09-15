@@ -1,6 +1,8 @@
 import { Socket, io } from "socket.io-client";
 import { getLogger } from '../util/logger';
 import { Span } from '@opentelemetry/api';
+import { LogRecord } from '../types/agent-log';
+import { environment } from '../util/environment';
 
 const logger = getLogger("agent");
 
@@ -20,14 +22,21 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
         return null;
     };
 
-    socket.on("log:get-history", () =>
+    socket.on("log:get-history", ({jobInstance}) => {
+        if (jobInstance != environment.jobInstanceId) {
+            // Somehow things went very bad.
+            return;
+        };
         // For each record stored in history, emit it to the client.
         // We emit it to the original emitter, so the records don't
         // duplicate.
         originalEmit("log:history", history)
-    );
+    });
 
     const decoder = new TextDecoder();
+
+    let stdout = '';
+    let stderr = '';
 
     // Create a wrapper for the logger
     // such that all log records can be replayed
@@ -35,55 +44,92 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
     // terminates, we can write the log to disk then subsequently
     // read it to rebuild the entire log result
     return {
-        debug: (obj: Object) => {
-            obj['data'] = { time: Date.now(), level: "debug", ...obj };
-            obj['ev'] = "log:agent";
-            logger.debug(obj);
-            socket.emit(obj['ev'], obj['data']);
-        },
-        info: (obj: Object) => {
-            obj['data'] = { time: Date.now(), level: "info", ...obj };
-            obj['ev'] = "log:agent";
-            logger.info(obj);
-            socket.emit(obj['ev'], obj['data']);
-        },
-        warn: (obj: Object) => {
-            obj['data'] = { time: Date.now(), level: "warn", ...obj };
-            obj['ev'] = "log:agent";
-            logger.warn(obj);
-            socket.emit(obj['ev'], obj['data']);
-        },
-        error: (obj: Object) => {
-            obj['data'] = { time: Date.now(), level: "error", ...obj };
-            obj['ev'] = "log:agent";
-            logger.error(obj);
-            socket.emit(obj['ev'], obj['data']);
-        },
-        fatal: (obj: Object) => {
-            obj['data'] = { time: Date.now(), level: "fatal", ...obj };
-            obj['ev'] = "log:agent";
-            logger.fatal(obj);
-            socket.emit(obj['ev'], obj['data']);
-        },
-        stdout: (obj: Object) => {
-            const t = Date.now();
-            socket.emit("log:stdout", { time: t, data: obj['data'] });
+        debug: (obj: Omit<LogRecord, 'level' | 'time'>) => {
+            const object = {
+                time: Date.now(),
+                level: "debug",
+                ...obj
+            };
 
-            const output = decoder.decode(obj['data']).trim();
-            output.split('\n')
-                .forEach(line =>
-                    process.stdout.write(`log:stdout ${t};${line}\n`)
-                )
+            logger.info(object);
+            socket.emit("log:agent", object);
         },
-        stderr: (obj: Object) => {
-            const t = Date.now();
-            socket.emit("log:stderr", { time: t, data: obj['data'] });
+        info: (obj: Omit<LogRecord, 'level' | 'time'>) => {
+            const object = {
+                time: Date.now(),
+                level: "info",
+                ...obj
+            };
 
-            const output = decoder.decode(obj['data']).trim();
-            output.split('\n')
-                .forEach(line =>
-                    process.stdout.write(`log:stderr ${t};${line}\n`)
+            logger.info(object);
+            socket.emit("log:agent", object);
+        },
+        warn: (obj: Omit<LogRecord, 'level' | 'time'>) => {
+            const object = {
+                time: Date.now(),
+                level: "warn",
+                ...obj
+            };
+
+            logger.warn(object);
+            socket.emit("log:agent", object);        },
+        error: (obj: Omit<LogRecord, 'level' | 'time'>) => {
+            const object = {
+                time: Date.now(),
+                level: "error",
+                ...obj
+            };
+
+            logger.error(object);
+            socket.emit("log:agent", object);
+        },
+        fatal: (obj: Omit<LogRecord, 'level' | 'time'>) => {
+            const object = {
+                time: Date.now(),
+                level: "fatal",
+                ...obj
+            };
+
+            logger.fatal(object);
+            socket.emit("log:agent", object);
+        },
+        stdout: (obj: LogRecord) => {
+            stdout += decoder.decode(obj['chunk'] as any);
+
+            const charIndex = stdout.lastIndexOf('\n');
+            const t = Date.now();
+            if (charIndex != -1) {
+                // If we have enough input for a chunk, flush it out to clients
+                const readyText = stdout.slice(0, charIndex);
+                stdout = stdout.slice(charIndex);
+
+                const lines = readyText.split('\n');
+                socket.emit("log:stdout", { time: t, level: "stdout", chunk: lines });
+
+                // Write all entries to stdout
+                lines.forEach(line =>
+                    line != '' && process.stdout.write(`log:stdout ${t};${line}\n`)
                 )
+            }
+        },
+        stderr: (obj: LogRecord) => {
+            stderr += decoder.decode(obj['chunk'] as any);
+
+            const charIndex = stderr.lastIndexOf('\n');
+            const t = Date.now();
+            if (charIndex != -1) {
+                // If we have enough input for a chunk, flush it out to clients
+                const readyText = stderr.slice(0, charIndex);
+                stderr = stderr.slice(charIndex);
+
+                const lines = readyText.split('\n');
+                socket.emit("log:stderr", { time: t, level: "stderr", chunk: lines });
+
+                // Write all entries to stderr
+                lines.forEach(line =>
+                    line != '' && process.stderr.write(`log:stderr ${t};${line}\n`)
+                );
+            }
         }
     };
 }

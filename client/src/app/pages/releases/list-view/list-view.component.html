@@ -6,6 +6,7 @@
                 <mat-label>Search</mat-label>
                 <input matInput type="text" [(ngModel)]="parent.filter" (ngModelChange)="parent.filterPipelines()" />
             </mat-form-field>
+
             <div style="display: flex; align-items: center; gap: 12px">
                 <div style="flex: 1"></div>
                 <button mat-flat-button (click)="parent.importPipeline()"><mat-icon>upload</mat-icon>Import</button>
@@ -108,66 +109,68 @@
                         <div>{{instance.stats.startEpoch}}</div>
                         <div class="stages">
                             @for (stage of instance.spec.stages; track stage) {
-                                <div
-                                    class="stage-block"
-                                    [class.requires_approval]="stage['_isReadyForApproval']"
-                                    [class.filled]="stage.jobs?.length > 0"
-                                    [class.outlined]="!(stage.jobs?.length > 0)"
-                                    [class.pending]="stage?.['_state'] == 'pending'"
-                                    [class.cancelled]="stage?.['_state'] == 'cancelled'"
-                                    [class.queued]="stage?.['_state'] == 'queued'"
-                                    [class.initializing]="stage?.['_state'] == 'initializing'"
-                                    [class.cloning]="stage?.['_state'] == 'cloning'"
-                                    [class.building]="stage?.['_state'] == 'building'"
-                                    [class.sealing]="stage?.['_state'] == 'sealing'"
-                                    [class.frozen]="stage?.['_state'] == 'frozen'"
-                                    [class.failed]="stage?.['_state'] == 'failed'"
-                                    [class.finished]="stage?.['_state'] == 'finished'"
-                                    [matTooltip]="stage['_isReadyForApproval'] ? 'Stage requires Approval' : stage?.['_state']"
-                                    [ngx-tooltip]="stage.jobs?.length > 0 ? tooltip : null"
-                                    [ngx-tooltip-context]="{ instance, stage }"
-                                    [ngx-tooltip-config]="{ position: 'bottom', alignment: 'start', triggers:['click'], stayOpen: true }"
-                                    [ngx-contextmenu]="parent.stageCtxMenu"
-                                    [ngx-menu-context]="{ pipeline: parent.selectedPipeline, instance, stage }"
-                                    [attr.pipeline-id]="parent.selectedPipeline?.id"
-                                    [attr.pipeline-instance]="instance.id"
-                                    [attr.stage-id]="stage.id"
-                                    (click)="(stage['_isReadyForApproval']) ? parent.approveStage(instance, stage) : 1"
-                                >
-                                    @if (stage['_isReadyForApproval']) {
-                                        <mat-icon fontIcon="rule"/>
-                                    }
-
-                                    @else {
-                                        @switch(stage?.['_state']) {
-                                            @case ("pending") { <mat-icon fontIcon="pending" /> }
-                                            @case ("queued") { <mat-icon fontIcon="pending" /> }
-                                            @case ("initializing") { <mat-icon fontIcon="start" /> }
-                                            @case ("cancelled") { <mat-icon fontIcon="block" /> }
-                                            @case ("cloning") { <mat-icon fontIcon="downloading" /> }
-                                            @case ("building") { <mat-icon class="rotate" fontIcon="change_circle" /> }
-                                            @case ("sealing") { <mat-icon fontIcon="archive" /> }
-                                            @case ("frozen") { <mat-icon fontIcon="pause" /> }
-                                            @case ("failed") { <mat-icon fontIcon="cancel" style="color: #b71c1c;"/> }
-                                            @case ("finished") { <mat-icon fontIcon="check_circle" /> }
-                                            @case ("stopped") { <mat-icon fontIcon="tag" /> }
+                                @if (!stage.disabled) {
+                                    <div
+                                        class="stage-block"
+                                        [class.requires_approval]="stage['_isReadyForApproval']"
+                                        [class.filled]="stage.jobs?.length > 0"
+                                        [class.outlined]="!(stage.jobs?.length > 0)"
+                                        [class.pending]="stage?.['_state'] == 'pending'"
+                                        [class.cancelled]="stage?.['_state'] == 'cancelled'"
+                                        [class.queued]="stage?.['_state'] == 'queued'"
+                                        [class.initializing]="stage?.['_state'] == 'initializing'"
+                                        [class.cloning]="stage?.['_state'] == 'cloning'"
+                                        [class.building]="stage?.['_state'] == 'building'"
+                                        [class.sealing]="stage?.['_state'] == 'sealing'"
+                                        [class.frozen]="stage?.['_state'] == 'frozen'"
+                                        [class.failed]="stage?.['_state'] == 'failed'"
+                                        [class.finished]="stage?.['_state'] == 'finished'"
+                                        [matTooltip]="stage['_isReadyForApproval'] ? 'Stage requires Approval' : stage?.['_state']"
+                                        [ngx-tooltip]="stage.jobs?.length > 0 ? tooltip : null"
+                                        [ngx-tooltip-context]="{ instance, stage }"
+                                        [ngx-tooltip-config]="{ position: 'bottom', alignment: 'start', triggers:['click'], stayOpen: true }"
+                                        [ngx-contextmenu]="parent.stageCtxMenu"
+                                        [ngx-menu-context]="{ pipeline: parent.selectedPipeline, instance, stage }"
+                                        [attr.pipeline-id]="parent.selectedPipeline?.id"
+                                        [attr.pipeline-instance]="instance.id"
+                                        [attr.stage-id]="stage.id"
+                                        (click)="(stage['_isReadyForApproval']) ? parent.approveStage(instance, stage) : 1"
+                                    >
+                                        @if (stage['_isReadyForApproval']) {
+                                            <mat-icon fontIcon="rule"/>
                                         }
-                                    }
-                                    <div class="label">{{stage.label}}</div>
 
-                                    <!-- @if (![null, "pending", "failed", "finished", 'cancelled'].includes(stage?.['_state'])) {
-                                        <mat-progress-bar
-                                            color="primary"
-                                            mode="indeterminate"
+                                        @else {
+                                            @switch(stage?.['_state']) {
+                                                @case ("pending") { <mat-icon fontIcon="pending" /> }
+                                                @case ("queued") { <mat-icon fontIcon="pending" /> }
+                                                @case ("initializing") { <mat-icon fontIcon="start" /> }
+                                                @case ("cancelled") { <mat-icon fontIcon="block" /> }
+                                                @case ("cloning") { <mat-icon fontIcon="downloading" /> }
+                                                @case ("building") { <mat-icon class="rotate" fontIcon="change_circle" /> }
+                                                @case ("sealing") { <mat-icon fontIcon="archive" /> }
+                                                @case ("frozen") { <mat-icon fontIcon="pause" /> }
+                                                @case ("failed") { <mat-icon fontIcon="cancel" style="color: #b71c1c;"/> }
+                                                @case ("finished") { <mat-icon fontIcon="check_circle" /> }
+                                                @case ("stopped") { <mat-icon fontIcon="tag" /> }
+                                            }
+                                        }
+                                        <div class="label">{{stage.label}}</div>
+
+                                        <!-- @if (![null, "pending", "failed", "finished", 'cancelled'].includes(stage?.['_state'])) {
+                                            <mat-progress-bar
+                                                color="primary"
+                                                mode="indeterminate"
+                                            />
+                                        } -->
+                                    </div>
+                                    <ng-template #tooltip let-data>
+                                        <app-stage-popup
+                                            [pipelineInstance]="data.instance"
+                                            [stage]="data.stage"
                                         />
-                                    } -->
-                                </div>
-                                <ng-template #tooltip let-data>
-                                    <app-stage-popup
-                                        [pipelineInstance]="data.instance"
-                                        [stage]="data.stage"
-                                    />
-                                </ng-template>
+                                    </ng-template>
+                                }
                             }
                         </div>
                     </div>

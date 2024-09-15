@@ -2,6 +2,8 @@ import { db } from './db';
 
 const tokenCache: string[] = [];
 
+// TODO: This entire process seems like it's a problem
+
 export const CheckJobToken = async (token: string) => {
     if (tokenCache.includes(token))
         return true;

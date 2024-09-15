@@ -15,7 +15,7 @@ $light-theme: mat.define-light-theme((
         warn: $light-warn,
     ),
     typography: $app-typography,
-    density: -1
+    density: -16
 ));
 
 $dark-primary: mat.define-palette(mat.$green-palette, A200, 400, 800);
@@ -29,7 +29,7 @@ $dark-theme: mat.define-dark-theme((
         warn: $dark-warn,
     ),
     typography: $app-typography,
-    density: -1
+    density: -16
 ));
 
 :root {
@@ -53,7 +53,7 @@ $dark-theme: mat.define-dark-theme((
     @include mat.all-component-colors($light-theme);
 }
 
-mat-icon.material-icons {
+.material-icons {
     font-family: "Material Symbols Outlined";
     font-size: 24px;
     font-weight: 400;
@@ -68,6 +68,35 @@ mat-icon.material-icons {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     -moz-osx-font-smoothing: grayscale;
+}
+
+mat-form-field {
+    --mat-form-field-container-text-size: 14px;
+    --mdc-filled-text-field-label-text-size: 14px;
+}
+
+button.mat-mdc-unelevated-button {
+    height: 32px;
+}
+
+button.mat-mdc-mini-fab {
+    --mdc-fab-small-container-color: #0000;
+}
+
+.mdc-fab.mdc-fab--mini {
+
+    width: 32px;
+    height: 32px;
+
+    .mat-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 24px;
+    }
+}
+
+.mdc-text-field--filled label.mat-mdc-floating-label {
+    display: block;
 }
 
 .cdk-global-scrollblock {

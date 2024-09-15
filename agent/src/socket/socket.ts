@@ -6,6 +6,7 @@ import { DefaultEventsMap } from '@socket.io/component-emitter';
 import { api } from '../util/axios';
 import { JobInstance } from '../types/agent-task';
 import { Span } from '@opentelemetry/api';
+import { OpenTelemetry } from '../util/instrumentation';
 
 const logger = getLogger("agent");
 const showDebug = !!process.env['AGENT_WEBSOCKETS_VERBOSE'];
@@ -67,14 +68,15 @@ export const CreateBaseSocketServer = async (parentSpan: Span, pipeline: Pipelin
                 });
 
                 // 5ms to allow anything necessary to flush
-                setTimeout(() => {
+                setTimeout(async () => {
+                    await OpenTelemetry.exporter.shutdown();
                     process.exit(0);
                 }, 5)
             });
 
             socket.on("error", (err) => {
                 logger.error(err);
-                rej(err)
+                rej(err);
             });
             socket.connect();
         });

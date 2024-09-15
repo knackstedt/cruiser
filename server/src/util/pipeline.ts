@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
 import { db } from './db';
-import { randomString } from './util';
+import { randomString, sleep } from './util';
 import { JobInstance } from '../types/agent-task';
 import { SetJobToken } from './token-cache';
 import { environment } from './environment';
@@ -97,7 +97,7 @@ export const RunPipeline = async (pipeline: PipelineDefinition, user: string, tr
     return result;
 }
 
-export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => {
+export const RunStage = async (instance: PipelineInstance, stage: StageDefinition) => {
     instance.status.startedStages = instance.status.startedStages ?? [];
     instance.status.startedStages.push(stage.id);
 
@@ -126,7 +126,8 @@ export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => 
         })();
     }
 
-    return stage.jobs.map(async job => {
+    const results = [];
+    for (const job of stage.jobs) {
         const namespace = environment.cruiser_kube_namespace;
         const id = ulid();
         const podId = id.toLowerCase();
@@ -173,22 +174,25 @@ export const RunStage = (instance: PipelineInstance, stage: StageDefinition) => 
             const kubeJobMetadata = kubeJob?.metadata;
 
             await db.merge(jobInstance.id, {
-                jobUid: kubeJobMetadata.uid,
+                jobUid: kubeJobMetadata?.uid || "nouid",
             });
         }
         catch(ex) {
-            return {
+            results.push({
                 status: 500,
                 message: "Failed to start job",
                 err: ex
-            }
+            });
+            continue;
         }
 
-        return {
+        results.push({
             status: 200,
             message: "Started job"
-        }
-    })
+        })
+    }
+
+    return results;
 }
 
 const createKubeJob = async (
@@ -235,6 +239,10 @@ const createKubeJob = async (
         { name: "CRUISER_CLUSTER_URL", value: environment.cruiser_cluster_url },
         { name: "CRUISER_AGENT_ID", value: jobInstance.id.split(':')[1] },
         { name: "CRUISER_SERVER_TOKEN", value: kubeAuthnToken },
+
+        // Provide the otel configuration that the server has
+        { name: "OTEL_EXPORTER_OTLP_ENDPOINT", value: process.env['OTEL_EXPORTER_OTLP_ENDPOINT']},
+
         ...(jobDefinition.environment ?? []),
         ...(stage.environment ?? []),
         ...(pipeline.environment ?? [])
@@ -249,12 +257,13 @@ const createKubeJob = async (
         envVariables.forEach(v => env[v.name] = v.value);
 
         // TODO: Replace with build dir
-        const buildDir = os.tmpdir() + '/cruiser_dev/';
+        const buildDir = os.tmpdir() + '/cruiser_dev/' + ulid();
 
         await fs.emptyDir(buildDir);
 
         let log = '';
-        const proc = exec("ts-node -O '{\"target\": \"esnext\", \"module\": \"commonjs\"}' src/main.ts", {
+        // const proc = exec("ts-node -O '{\"target\": \"esnext\", \"module\": \"commonjs\"}' src/main.ts", {
+        const proc = exec("node --nolazy -r ts-node/register src/main.ts", {
             cwd: "../agent",
             env: {
                 ...process.env,
@@ -270,8 +279,11 @@ const createKubeJob = async (
         proc.on("exit", async code => {
             if (code) {
                 logger.error(new Error("Agent process exited with non-zero code " + code));
+                await db.merge(jobInstance.id, { status: "failed" });
             }
             else {
+                await db.merge(jobInstance.id, { status: "finished" });
+
                 const dir = [
                     environment.cruiser_log_dir,
                     pipeline.id,

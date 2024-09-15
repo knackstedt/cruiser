@@ -266,7 +266,8 @@ export const DatabaseTableApi = () => {
 
         // If the target includes a colon, then we're acting on 1 record
         if (req.params['table']?.includes(":")) {
-            let [result] = await db.select<any>(table);
+            // TODO: How should this be sanitized?
+            let [result] = await db.select<any>(req.params['table']);
 
             if (typeof tableConfig.afterGet == "function")
                 result = await tableConfig.afterGet(result);

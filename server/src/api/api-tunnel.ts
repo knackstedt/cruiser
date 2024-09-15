@@ -95,7 +95,12 @@ router.use('/:id', route(async (req, res, next) => {
     const uid = job['jobUid'];
     const jobId = job.id;
 
-    const url = await getPodEndpointUrl(uid, jobId, job.kubeNamespace ?? environment.cruiser_kube_namespace);
+    // TODO: Local debugging is really mangled with this config -- running two workers at once
+    // WILL collide. Unclear on a solution that doesn't poison production mode.
+    // Possible that fs over websocket would resolve this.
+    const url = environment.is_running_local_agents
+        ? "http://localhost:8080"
+        : await getPodEndpointUrl(uid, jobId, job.kubeNamespace ?? environment.cruiser_kube_namespace);
 
     const prox = proxy(url, {
         reqAsBuffer: true,

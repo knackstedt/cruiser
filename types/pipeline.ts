@@ -9,8 +9,8 @@ export type InputArtifact = {
     description?: string
 
     job: string,
-    sourceArtifact: string
-    destination: string,
+    sourceArtifact: string,
+    destination: string
 }
 
 export type OutputArtifact = {
@@ -168,6 +168,7 @@ export type SourceConfiguration = Partial<{
     username: string
     password: string
     cloneDepth: number
+    disablePolling: boolean
 
     lastHash: string,
 

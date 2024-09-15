@@ -4,7 +4,7 @@ import { JobInstance } from '../types/agent-task';
 import { api } from '../util/axios';
 import { TaskDefinition, TaskGroupDefinition } from '../types/pipeline';
 import { CreateLoggerSocketServer } from './logger';
-import {environment} from '../util/environment';
+import { environment } from '../util/environment';
 import { Span } from '@opentelemetry/api';
 
 const breakpoints: {
@@ -14,49 +14,43 @@ const breakpoints: {
         id: string,
         task: TaskDefinition,
         taskGroup: TaskGroupDefinition,
-        allowRetry: boolean,
-        jobInstance: JobInstance,
-        span: Span
-    }
+        allowRetry: boolean;
+    };
 } = {};
 let _socket: Socket;
 
 // This will always execute before `TripBreakpoint`.
 export const CreateBreakpointSocketServer = async (
-    parentSpan: Span,
+    span: Span,
     socket: Socket,
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {
     _socket = socket;
 
-    socket.on("breakpoint:resume", ({ id, retry }: { id: string, retry: boolean }) => {
-        parentSpan.addEvent("breakpoint:resume", { breakpoint: id });
-        const breakpoint = breakpoints[id];
-        const span = breakpoint.span;
-        span.addEvent("breakpoint:resume");
-
-        api.patch(parentSpan, `/api/odata/${jobInstance.id}`, {
-            state: breakpoint.jobInstance.state,
+    socket.on("breakpoint:resume", ({ id, retry }: { id: string, retry: boolean; }) => {
+        api.patch(span, `/api/odata/${jobInstance.id}`, {
+            state: "building",
             breakpointTask: null,
             breakpointTaskGroup: null
         })
-        .then(() => {
-            breakpoint?.resolve(retry);
-            breakpoints[id] = undefined;
-        })
+            .then(() => {
+                const breakpoint = breakpoints[id];
+                breakpoint?.resolve(retry);
+                breakpoints[id] = undefined;
+            });
     });
 
     socket.on("breakpoint:get-list", () => {
         socket.emit("breakpoint:list", {
             breakpoints: Object.values(breakpoints)
-                .map(v => ({...v, resolve: undefined, reject: undefined}))
+                .map(v => ({ ...v, resolve: undefined, reject: undefined }))
                 .filter(v => !!v.id)
         });
     });
 
     return socket;
-}
+};
 
 export const TripBreakpoint = async (
     span: Span,
@@ -66,10 +60,14 @@ export const TripBreakpoint = async (
     task?: TaskDefinition
 ) => {
     const uid = ulid();
-    span.addEvent("breakpoint:trip", { breakpoint: uid });
+try {
 
-    const { data } = await api.get(span, `/api/odata/${jobInstance.id}`);
-    await api.patch(span, `/api/odata/${jobInstance.id}`, { state: "frozen" });
+    // This seems to be puking socket hang-up messages...
+    await api.patch(span, `/api/odata/${jobInstance.id}`, { state: "frozen" })
+        .catch(ex => {
+            // Why the hell is this socket breaking?!
+            console.error(ex);
+        })
 
     return new Promise<boolean>((res, rej) => {
         breakpoints[uid] = {
@@ -78,9 +76,7 @@ export const TripBreakpoint = async (
             id: uid,
             task,
             taskGroup,
-            allowRetry,
-            jobInstance: data as any,
-            span
+            allowRetry
         };
 
         _socket.emit("breakpoint:list", {
@@ -90,3 +86,8 @@ export const TripBreakpoint = async (
         });
     });
 }
+catch(ex) {
+    debugger;
+}
+return null;
+};

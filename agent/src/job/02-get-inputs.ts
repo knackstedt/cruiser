@@ -9,6 +9,8 @@ import { CreateLoggerSocketServer } from '../socket/logger';
 import { TripBreakpoint } from '../socket/breakpoint';
 import { api } from '../util/axios';
 import { decompressTarGZip, decompressTarLrz } from '../util/compression';
+import { cat } from 'shelljs';
+import path from 'path';
 
 const tracer = trace.getTracer('agent-source-fetch');
 
@@ -21,16 +23,20 @@ export const GetInputs = async (
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {
+    const artifacts = (job.inputArtifacts || []);
+
     const ctx = trace.setSpan(context.active(), parentSpan);
     await tracer.startActiveSpan("FetchArtifacts", undefined, ctx, async span => {
-        for (const artifact of (job.inputArtifacts || [])) {
+        for (const artifact of artifacts) {
             const source = pipeline.stages.flatMap(s => s.jobs).flatMap(j => j.outputArtifacts)
                 .find(a => a.id == artifact.sourceArtifact);
 
             logger.info({
                 msg: `Downloading input artifact '${artifact.label}:${source.label}'`,
-                artifact,
-                sourceArtifact: source
+                properties: {
+                    artifact,
+                    sourceArtifact: source.id
+                }
             });
 
             if (!source) {
@@ -53,39 +59,45 @@ export const GetInputs = async (
             });
 
             await new Promise((res, rej) => {
-                const targetFile = `/tmp/${artifact.id}`;
-                let sWriter = createWriteStream(targetFile);
-                stream.data.pipe(sWriter);
-                sWriter.on("close", () => {
-                    try {
-                        logger.info({
-                            msg: `Downloaded input artifact '${artifact.label}:${source.label}'.`,
-                            artifact,
-                            sourceArtifact: source
-                        });
+                const ctx = trace.setSpan(context.active(), span);
+                tracer.startActiveSpan("DownloadArtifact", undefined, ctx, async span => {
+                    const targetFile = `/tmp/${artifact.id}`;
+                    let sWriter = createWriteStream(targetFile);
+                    stream.data.pipe(sWriter);
+                    sWriter.on("close", () => {
+                        try {
+                            logger.info({
+                                msg: `Downloaded input artifact '${artifact.label}:${source.label}'.`,
+                                properties: {
+                                    artifact,
+                                    sourceArtifact: source.id
+                                }
+                            });
 
-                        logger.info({
-                            msg: `Extracting input artifact '${artifact.label}:${source.label}'.`,
-                            artifact
-                        });
+                            const decompress = (() => {
+                                switch (source.compressionAlgorithm) {
+                                    case "gzip": return decompressTarGZip;
+                                    case "lrzip":
+                                    default: return decompressTarLrz;
+                                }
+                            })();
 
-                        const decompress = (() => {
-                            switch (source.compressionAlgorithm) {
-                                case "gzip": return decompressTarGZip;
-                                case "lrzip":
-                                default: return decompressTarLrz;
-                            }
-                        })();
-
-                        res(decompress(targetFile, artifact.destination, logger));
-                    }
-                    catch(err) {
+                            span.end();
+                            res(decompress(targetFile, path.resolve(artifact.destination), logger));
+                        }
+                        catch(err) {
+                            span.end();
+                            rej(err);
+                        }
+                    });
+                    sWriter.on("error", err => {
+                        span.end();
                         rej(err);
-                    }
+                    });
                 });
-                sWriter.on("error", rej);
             })
         }
+        span.end();
     })
 
     await tracer.startActiveSpan("FetchSources", undefined, ctx, async span => {
@@ -93,108 +105,146 @@ export const GetInputs = async (
         if (sources.length == 0) {
             logger.debug({
                 msg: `Stage '${stage.label}' has no sources to fetch`,
-                stage
+                properties: {
+                    stage: stage.id
+                }
             })
             span.end();
             return null;
         }
 
         for (const source of sources) {
-            const sourceForLog = {
-                ...source,
-                // prevent password from being logged
-                password: undefined
-            };
+            if (source.disabled) continue;
 
-            switch (source.type) {
-                case "svn": {
-                    throw new Error("Not Implemented");
-                    return 0;
-                }
-                case "tfs": {
-                    throw new Error("Not Implemented");
-                    return 0;
-                }
-                default:
-                case "git": {
+            const ctx = trace.setSpan(context.active(), span);
+            await tracer.startActiveSpan("FetchSource", undefined, ctx, async span => {
+                const sourceForLog = {
+                    ...source,
+                    // prevent password from being logged
+                    password: undefined
+                };
 
-                    // const [host] = source.url.split('/');
+                span.setAttributes({
+                    'source.id': source.id,
+                    'source.url': source.url,
+                    'source.branch': source.branch
+                });
 
-                    // TODO: Perhaps there's a clean way to read a password from a storage vault
-                    // or other secure manner for git?
-                    // seems
-                    // fs.writeFile(homedir() + `/.gitconfig`,
-                    //     `[credential "${host}"]\n` +
-                    //     `	 username = ${source.username || 'DotOps'}\n` +
-                    //     `    helper = "!f() { test \\"$1\\" = get && echo \\"password=${source.password}\\"; }; f"\n`
-                    //     // ` w   helper = "!f() { test \"$1\" = get && echo \"password=$(cat $HOME/.secret)\"; }; f"\n`
-                    // );
-                    const repoSlug = source.url.split('/').pop().replace(/\.git$/, '');
-                    const options: Partial<SimpleGitOptions> = {
-                        baseDir: environment.buildDir,
-                        binary: 'git',
-                        maxConcurrentProcesses: 6,
-                        trimmed: false,
-                        progress: ({ method, stage, progress }: SimpleGitProgressEvent) => {
-                            logger.info({
-                                msg: `:git: ${stage} objects: ${progress.toString().padStart(3, " ")}%`,
-                                source: sourceForLog,
-                                method,
-                                stage,
-                                progress
-                            })
+                try {
+                    switch (source.type) {
+                        case "svn": {
+                            throw new Error("Not Implemented");
+                            return 0;
                         }
-                    };
+                        case "tfs": {
+                            throw new Error("Not Implemented");
+                            return 0;
+                        }
+                        default:
+                        case "git": {
 
-                    const git = simpleGit(options);
+                            // const [host] = source.url.split('/');
 
-                    logger.info({ msg: `Begin cloning source :git: '${repoSlug}'`, source: sourceForLog });
+                            // TODO: Perhaps there's a clean way to read a password from a storage vault
+                            // or other secure manner for git?
+                            // seems
+                            // fs.writeFile(homedir() + `/.gitconfig`,
+                            //     `[credential "${host}"]\n` +
+                            //     `	 username = ${source.username || 'DotOps'}\n` +
+                            //     `    helper = "!f() { test \\"$1\\" = get && echo \\"password=${source.password}\\"; }; f"\n`
+                            //     // ` w   helper = "!f() { test \"$1\" = get && echo \"password=$(cat $HOME/.secret)\"; }; f"\n`
+                            // );
+                            const repoSlug = source.url.split('/').pop().replace(/\.git$/, '');
+                            const options: Partial<SimpleGitOptions> = {
+                                baseDir: environment.buildDir,
+                                binary: 'git',
+                                maxConcurrentProcesses: 6,
+                                trimmed: false,
+                                progress: ({ method, stage, progress }: SimpleGitProgressEvent) => {
+                                    logger.info({
+                                        msg: `:git: ${stage} objects: ${progress.toString().padStart(3, " ")}%`,
+                                        properties: {
+                                            source: sourceForLog.id,
+                                            method,
+                                            stage,
+                                            progress
+                                        }
+                                    })
+                                }
+                            };
 
-                    const fallbackDir = pipeline.id + '/' + jobInstance.id + '/' + repoSlug;
-                    const cloneDir = !source.targetPath ? (environment.buildDir + '/' + (source.targetPath || fallbackDir))
-                        : source.targetPath?.startsWith("/")
-                        ? source.targetPath
-                        : environment.buildDir + (source.targetPath ?? '');
+                            const git = simpleGit(options);
+                            const cloneDir = path.resolve(source.targetPath);
 
-                    do {
-                        await mkdirp(cloneDir);
+                            logger.info({ msg: `Begin cloning source :git: '${repoSlug}'`, properties: { source: sourceForLog.id } });
 
-                        if ((await readdir(cloneDir)).length > 0) {
-                            logger.fatal({
-                                msg: "⏸ Cannot clone into non-empty directory",
-                                state: 'failed'
+                            do {
+                                try {
+                                    await mkdirp(cloneDir);
+
+                                    if ((await readdir(cloneDir)).length > 0) {
+                                        logger.fatal({
+                                            msg: `⏸ Cannot clone '${repoSlug}' into non-empty directory '${cloneDir}'`,
+                                            properties: {
+                                                source: sourceForLog.id
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        break;
+                                    }
+                                }
+                                catch(ex) {
+                                    logger.error({
+                                        msg: `❌ Failed to access directory '${cloneDir}' for '${repoSlug}'`,
+                                        properties: {
+                                            path: cloneDir,
+                                            source: sourceForLog.id
+                                        }
+                                    });
+                                }
+                            }
+                            while (await TripBreakpoint(span, jobInstance, true))
+
+                            await git.clone(source.url, cloneDir, {
+                                "--depth": source.cloneDepth ? source.cloneDepth : '1'
+                            });
+
+                            logger.info({
+                                msg: `✅ Done cloning git source '${sourceForLog.label || sourceForLog.url?.split('/').pop()}'`,
+                                properties: {
+                                    source: sourceForLog.id
+                                }
                             });
                         }
-                        else {
-                            break;
-                        }
                     }
-                    while (await TripBreakpoint(span, jobInstance, true))
-
-                    await git.clone(source.url, cloneDir, {
-                        "--depth": source.cloneDepth ? source.cloneDepth : '1'
+                }
+                catch(ex) {
+                    span.addEvent("FetchError", {
+                        "source.id": source.id,
+                        "source.label": source.label,
+                        "source.url": source.url,
+                        "source.branch": source.branch,
+                        "source.branchFilter": source.branchFilter,
+                        "source.cloneDepth": source.cloneDepth,
+                        "source.invertFilter": source.invertFilter,
+                        "source.targetPath": source.targetPath,
+                        "source.type": source.type,
+                        "error.message": ex.message,
+                        "error.stack": ex.stack
                     });
 
-                    logger.info({ msg: `✅ Done cloning git source '${sourceForLog.label || sourceForLog.url?.split('/').pop()}'`, source: sourceForLog });
-
-                    span.end();
-                    return 0;
-
-                    // const args = [
-                    //     source.url,
-                    //     typeof source.cloneDepth == 'number' ? "--depth=" + source.cloneDepth : null,
-                    //     source.branch?.length > 0 ? "-b=" + source.branch : null,
-                    //     path.resolve(source.targetPath?.startsWith('/')
-                    //         ? source.targetPath
-                    //         : source.targetPath?.length > 0
-                    //         ? path.join('/build', source.targetPath)
-                    //         : '/build'
-                    //     )
-                    // ].filter(a => !!a);
-
-                    // return execa('git', args, { cwd: source.targetPath });
+                    logger.error({
+                        msg: "Failed to download source",
+                        properties: {
+                            source: source.id,
+                            ...ex
+                        }
+                    });
                 }
-            }
+
+                span.end();
+            });
         }
 
         span.end();

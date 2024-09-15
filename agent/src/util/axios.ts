@@ -12,7 +12,7 @@ const tracer = trace.getTracer('axios');
 export const api = {
     get: ((parentSpan: Span, ...args) => {
         const ctx = trace.setSpan(context.active(), parentSpan);
-        const span = tracer.startSpan("Axios:Get " + environment.cruiserUrl, undefined, ctx);
+        const span = tracer.startSpan("Get " + args[0], undefined, ctx);
         span.setAttributes({
             "http.request.url": args[0],
             "http.method": "GET"
@@ -35,7 +35,7 @@ export const api = {
 
     post: ((parentSpan: Span, ...args) => {
         const ctx = trace.setSpan(context.active(), parentSpan);
-        const span = tracer.startSpan("Axios:Post " + environment.cruiserUrl, undefined, ctx);
+        const span = tracer.startSpan("Post " + args[0], undefined, ctx);
         span.setAttributes({
             "http.request.url": args[0],
             "http.method": "POST"
@@ -58,7 +58,7 @@ export const api = {
 
     patch: ((parentSpan: Span, ...args) => {
         const ctx = trace.setSpan(context.active(), parentSpan);
-        const span = tracer.startSpan("Axios:Patch " + environment.cruiserUrl, undefined, ctx);
+        const span = tracer.startSpan("Patch " + args[0], undefined, ctx);
         span.setAttributes({
             "http.request.url": args[0],
             "http.method": "PATCH"

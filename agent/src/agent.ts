@@ -20,7 +20,7 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
         const { pipelineInstance, pipeline, stage, job, jobInstance } = await getConfig(span, jobInstanceId);
 
         /**
-         * Create socket "servers" that will provide information to clients
+         * Create socket "servers" that will connect to the cruiser server
          */
         const socket = await CreateBaseSocketServer(span, pipeline, jobInstance);
         const logger = await CreateLoggerSocketServer(span, socket);
@@ -28,26 +28,25 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
         const breakpoint = await CreateBreakpointSocketServer(span, socket, jobInstance, logger);
         const metrics = await CreateMetricsSocketServer(span, socket);
 
+
         try {
             logger.info({
-                msg: "Agent started",
-                pipelineInstance,
-                pipeline,
-                stage,
-                job,
-                jobInstance
+                msg: "Agent starting",
+                block: "start",
+                properties: {
+                    pipelineInstance,
+                    pipeline,
+                    stage,
+                    job,
+                    jobInstance
+                }
             });
 
             // Perform preflight checks
-            logger.info({ state: "preflight", msg: "Running preflight check" });
+            logger.info({ state: "preflight", msg: "Running preflight check", block: "start" });
             await api.patch(span, `/api/odata/${jobInstanceId}`, { state: "preflight", initEpoch: Date.now() })
             await PreflightCheck(span);
-            logger.info({ state: "preflight", msg: "Preflight check finished" });
-
-            // logger.info({ state: "initializing", msg: "Begin initializing" });
-            // await api.patch(`/api/odata/${jobInstanceId}`, { state: "initializing", initEpoch: Date.now() })
-            // await validateJobCanRun(job, logger);
-            // logger.info({ state: "initializing", msg: "Agent initialize completed" });
+            logger.info({ state: "preflight", msg: "Preflight check finished", block: "end" });
 
             // Download sources
             logger.info({ state: "cloning", msg: "Agent source cloning", block: "start" });
@@ -90,8 +89,10 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
         catch(err) {
             logger.fatal({
                 msg: "⏸ Cannot continue build task!",
-                stack: err.stack,
-                message: err.message ?? err.title ?? err.name
+                properties: {
+                    stack: err.stack,
+                    message: err.message ?? err.title ?? err.name
+                }
             })
             await TripBreakpoint(span, jobInstance, false);
         }

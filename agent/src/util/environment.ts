@@ -4,7 +4,7 @@ export const environment = {
     cruiserUrl: process.env['CRUISER_CLUSTER_URL'],
     cruiserToken: process.env['CRUISER_SERVER_TOKEN'],
     buildDir: process.env['CRUISER_AGENT_BUILD_DIR'] || (process.cwd() + '/build/'),
-    jobInstanceId: `job_instance:` + process.env['CRUISER_AGENT_ID'].toUpperCase(),
+    jobInstanceId: `job_instance:` + process.env['CRUISER_AGENT_ID']?.toUpperCase(),
     agentIsWindowsHost: os.platform() == "win32",
     is_production: process.env['NODE_ENV'] == "production",
 

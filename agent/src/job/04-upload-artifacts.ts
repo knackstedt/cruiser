@@ -60,22 +60,26 @@ const uploadBinary = async (
 
         logger.info({
             msg: "Successfully uploaded artifact",
-            path
+            properties: {
+                path
+            }
         })
         return 0;
     }
     catch(err) {
         logger.warn({
             msg: "Failed to upload artifact",
-            path,
-            name: err.name,
-            message: err.message,
-            stack: err.stack,
-            code: err.code,
-            headers: err.config.headers,
-            url: err.config.url,
-            data: err.response?.data,
-            responseHeaders: err.response?.headers
+            properties: {
+                path,
+                name: err.name,
+                message: err.message,
+                stack: err.stack,
+                code: err.code,
+                headers: err.config.headers,
+                url: err.config.url,
+                data: err.response?.data,
+                responseHeaders: err.response?.headers
+            }
         })
         return -1;
     }
@@ -122,7 +126,9 @@ export const UploadArtifacts = async (
 
             logger.info({
                 msg: `Sealing artifact '${artifact.label}'`,
-                artifact
+                properties: {
+                    artifact
+                }
             });
 
             const result = await tracer.startActiveSpan(
@@ -140,8 +146,10 @@ export const UploadArtifacts = async (
             if (result.exitCode == 0) {
                 logger.info({
                     msg: `Sealed artifact '${artifact.label}'`,
-                    artifact,
-                    result
+                    properties: {
+                        artifact,
+                        result
+                    }
                 });
 
                 // If it was successful in saving to disk, upload it
@@ -160,8 +168,10 @@ export const UploadArtifacts = async (
             else {
                 logger.warn({
                     msg: `⏸ Failed to seal artifact '${artifact.label}'`,
-                    artifact,
-                    result
+                    properties: {
+                        artifact,
+                        result
+                    }
                 });
                 await TripBreakpoint(span, jobInstance, false);
             }
@@ -174,8 +184,10 @@ export const UploadArtifacts = async (
     catch(ex) {
         logger.fatal({
             msg: "Failed to seal outputArtifacts",
-            message: ex.message,
-            stack: ex.stack
+            properties: {
+                message: ex.message,
+                stack: ex.stack
+            }
         })
         span.end();
         return null;

@@ -21,7 +21,10 @@ export type CruiserUserProfile = {
     name: string,
     label: string,
     roles: CruiserUserRole[],
-    image: string
+    image: string,
+
+    favoritePipelines: string[],
+    favoriteProjects: string[],
 }
 
 // @ts-ignore (agent doesn't have the type for this)

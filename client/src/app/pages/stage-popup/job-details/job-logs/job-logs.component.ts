@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, Input, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, Input, ViewChild, NgZone } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -15,23 +15,28 @@ import { TaskDefinition } from 'src/types/pipeline';
 import { darkTheme } from 'src/app/services/theme.service';
 import { JobInstance } from 'src/types/agent-task';
 import { BindSocketLogger, ViewJsonInMonacoDialog } from 'src/app/utils/utils';
+import { LogMessage, LogRecord } from 'src/types/agent-log';
+import { MaterialSymbols } from 'src/app/utils/mat-symbols';
 
-type Line = ({
-    stream: "stdout" | "stderr" | "agent",
-    fullTime: string;
-    time: string;
-    level: "error" | "info" | "warn" | "fatal" | "debug"
-    data?: ParsedSpan[],
-    rendered: boolean;
-    index: number,
-    marker: boolean,
+type RenderedLine = ({
+    level: "error" | "info" | "warn" | "fatal" | "debug" | "stdout" | "stderr"
+    timestamp: string;
+    record: LogRecord
 
-    state?: string,
-    msg?: string,
-    block?: "start" | "end",
 
-    _expanded?: boolean;
-    _original?: any
+    // output rendered into HTML elements
+    html: ParsedSpan[],
+    plaintext: string,
+
+    // If this line is part of a block && if it's expanded
+    _expanded: boolean,
+
+    // If the line should be rendered in the viewport
+    _visible: boolean
+    _top: number,
+
+    // TODO: Remove this
+    _index: number,
 });
 
 @Component({
@@ -47,7 +52,7 @@ type Line = ({
         MatInputModule
     ],
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.OnPush
+    // changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class JobLogsComponent {
     @ViewChild("fontDetector") fontDetector: ElementRef;
@@ -72,19 +77,19 @@ export class JobLogsComponent {
     connected = false;
     isCompletedRun = false;
 
-    lineCount = 0;
-    lines: Line[] = [];
-    filteredLines: Line[] = [];
-    renderedLines: Line[] = [];
+    lines: RenderedLine[] = [];
+    filteredLines: RenderedLine[] = [];
+    renderedLines: RenderedLine[] = [];
+
     scrollToBottom = true;
 
     private socket: Socket;
-    private decoder = new TextDecoder();
 
     constructor(
         private readonly changeDetector: ChangeDetectorRef,
         private readonly fetch: Fetch,
-        private readonly dialog: MatDialog
+        private readonly dialog: MatDialog,
+        private readonly ngZone: NgZone
     ) {
         this.setColors();
     }
@@ -95,148 +100,25 @@ export class JobLogsComponent {
     }
 
     async ngOnInit() {
-        const commitLine = (line: string, stream: "stdout" | "stderr", time = 0, doCommit = true, data) => {
-            // TODO: save and restore selection...
-
-            const iso = (new Date(time)).toISOString();
-
-            line.split('\n').forEach(line => {
-                if (line.trim().length == 0) return;
-
-                this.lines.push({
-                    stream,
-                    fullTime: iso.replace('T', ' x'),
-                    time: iso.replace(/^[^T]+T/, ''),
-                    level: stream == "stderr" ? "error" : "info",
-                    rendered: false,
-                    index: -1,
-                    marker: false,
-                    msg: line,
-                    data: parse(line).spans,
-                    _original: data
-                });
-            })
-
-            if (doCommit) {
-                this.filterLines();
-            }
-        };
-
-        let stdout = '';
-        const parseStdOut = (args: { data: ArrayBuffer | string, time: number; }, doCommit = true) => {
-            const { data, time } = args;
-            const text = data instanceof ArrayBuffer ? this.decoder.decode(data) : data;
-
-            stdout += text;
-            if (text.endsWith('\n')) {
-                commitLine(stdout, "stdout", time, doCommit, data);
-                stdout = '';
-            }
-        };
-
-        let stderr = '';
-        const parseStdErr = (args: { data: ArrayBuffer | string, time: number; }, doCommit = true) => {
-            const { data, time } = args;
-            const text = data instanceof ArrayBuffer ? this.decoder.decode(data) : data;
-
-            stderr += text;
-
-            if (text.endsWith('\n')) {
-                commitLine(stderr, "stderr", time, doCommit, data);
-                stderr = '';
-            }
-        };
-
-        const parseAgent = (data: { time: number; block: string, msg: string, level: string, command?: string, task: TaskDefinition; }, doCommit = true) => {
-            const iso = (new Date(data.time)).toISOString();
-
-            this.lines.push({
-                ...data,
-                stream: "agent",
-                fullTime: iso.replace('T', ' '),
-                time: iso.replace(/^[^T]+T/, ''),
-                level: data.level as any,
-                rendered: false,
-                index: -1,
-                marker: !!data.block,
-                block: data.block as any,
-                msg: data.msg,
-                _expanded: true,
-                _original: data
-            });
-
-            if (doCommit) {
-                this.filterLines();
-            }
-        };
+        this.lines = [];
+        this.filteredLines = [];
+        this.renderedLines = [];
 
         // If the pipeline is no longer running, attempt to load the logs from
         // the disk
         if (['finished', 'failed', 'cancelled'].includes(this.jobInstance.state)) {
             this.isCompletedRun = true;
-            const data = await this.fetch.get<string>(`/api/blobstore/log/${this.jobInstance.pipeline}/${this.jobInstance.pipeline_instance}/${this.jobInstance.stage}/${this.jobInstance.job}/${this.jobInstance.id}.log`, { responseType: "text" });
-            const entries = data.split('\n').map((line, i) => {
-                if (!line || line.trim().length == 0) return null;
+            const url = [
+                '/api/blobstore/log',
+                this.jobInstance.pipeline,
+                this.jobInstance.pipeline_instance,
+                this.jobInstance.stage,
+                this.jobInstance.job,
+                this.jobInstance.id
+            ].join('/') + '.log';
 
-                // We will assume all lines that don't start with a curlybrace are stdout/stderr
-                if (!line.startsWith("{")) {
-                    if (line.startsWith("log:")) {
-                        const ev = line.slice(0,10);
-                        const t = parseInt(line.slice(11,24));
-                        const msg = line.slice(25);
+            const data = await this.fetch.get<string>(url, { responseType: "text" });
 
-                        return {
-                            ev,
-                            time: t,
-                            data: {
-                                data: msg + '\n',
-                                time: t
-                            }
-                        }
-                    }
-                    // We will assume anything outside of the expected format is an error.
-                    return {
-                        ev: 'log:stderr',
-                        time: i,
-                        data: {
-                            data: line + '\n',
-                            time: i
-                        }
-                    }
-                }
-                // Try to parse the line, don't explode if a line is messed up.
-                try { return JSON.parse(line) } catch(err) { return { level: 50, msg: "Failed to deserialize entry", err } }
-            }).filter(l => l);
-
-            entries.sort((a,b) => a.time > b.time ? 1 : -1);
-            console.log(entries);
-            console.time("Parse log history");
-            const el = entries.length;
-
-            const notASwitch = {
-                "log:stdout": parseStdOut,
-                "log:stderr": parseStdErr,
-                "log:agent":  parseAgent
-            };
-
-            for (let i = 0; i < el; i++) {
-                const fn = notASwitch[entries[i].ev];
-                // if (!fn) console.log(entries[i]);
-                if (fn) {
-                    fn?.(entries[i].data, false);
-                }
-                else {
-                    parseAgent({
-                        ...entries[i],
-                        msg: entries[i].msg ?? entries[i].message ?? entries[i].title,
-                        time: entries[i].time,
-                        task: null,
-                        block: null,
-                        level: entries[i].logLevel,
-                    }, false);
-                }
-            }
-            console.timeEnd("Parse log history");
 
             this.filterLines();
         }
@@ -255,30 +137,22 @@ export class JobLogsComponent {
             });
             socket.on("$connected", () => {
                 this.connected = true;
-                socket.emit("log:get-history");
+                socket.emit("log:get-history", { jobInstance: this.jobInstance.id });
             });
             socket.on("disconnect", () => {
                 this.connected = false;
             });
 
-            socket.on("log:stdout", data => parseStdOut(data));
-            socket.on("log:stderr", data => parseStdErr(data));
-            socket.on("log:agent", data => parseAgent(data));
+            socket.on("log:stdout", (data) => this.onReceiveLine(data));
+            socket.on("log:stderr", (data) => this.onReceiveLine(data));
+            socket.on("log:agent", (data) => this.onReceiveLine(data));
 
-            socket.on("log:history", (entries: { ev: string, data: object; }[]) => {
+            socket.on("log:history", (entries: LogMessage[]) => {
                 console.time("Parse log history");
-                const el = entries.length;
+                entries.forEach(e => this.onReceiveLine(e.data, false));
 
-                const notASwitch = {
-                    "log:stdout": parseStdOut,
-                    "log:stderr": parseStdErr,
-                    "log:agent": parseAgent
-                }
-
-                for (let i = 0; i < el; i++) {
-                    notASwitch[entries[i].ev]?.(entries[i].data, false);
-                }
                 console.timeEnd("Parse log history");
+                // console.log(this.lines);
 
                 this.filterLines();
             });
@@ -307,6 +181,44 @@ export class JobLogsComponent {
         this.socket?.disconnect();
     }
 
+    onReceiveLine(line: LogRecord, runHooks = true) {
+
+        const iso = (new Date(line.time)).toISOString();
+
+        const lines = line.msg ? [line.msg] : line.chunk;
+
+        lines.forEach((ln, i) => {
+            // If the first line is empty don't print it.
+            if (i == 0 && !ln.trim()) return;
+
+            const html = parse(ln).spans.map(s => {
+                return {
+                    ...s,
+                    text: this.parseGitmoji(s.text)
+                };
+            });
+
+            // TODO: Should plaintext strip ANSI codes?
+
+            this.lines.push({
+                _index: 0,
+                _top: 0,
+                _expanded: true,
+                _visible: false,
+                level: line.level,
+                timestamp: iso.replace(/^[^T]+T/, ''),
+                html,
+                plaintext: ln,
+                record: line
+            });
+        });
+
+        console.log(this.lines);
+        if (runHooks) {
+            this.filterLines();
+        }
+    }
+
     filterLines() {
         let lines = this.lines;
 
@@ -325,7 +237,7 @@ export class JobLogsComponent {
             let temp = [];
 
             for (let i = 0; i < ln; i++)
-                if (lines[i].stream != "stdout")
+                if (lines[i].level != "stdout")
                     temp.push(lines[i]);
 
             lines = temp;
@@ -336,7 +248,7 @@ export class JobLogsComponent {
             let temp = [];
 
             for (let i = 0; i < ln; i++)
-                if (lines[i].stream != "stderr")
+                if (lines[i].level != "stderr")
                     temp.push(lines[i]);
 
             lines = temp;
@@ -347,7 +259,7 @@ export class JobLogsComponent {
             let temp = [];
 
             for (let i = 0; i < ln; i++)
-                if (lines[i].stream != "agent")
+                if (["stdout", "stderr"].includes(lines[i].level))
                     temp.push(lines[i]);
 
             lines = temp;
@@ -384,17 +296,23 @@ export class JobLogsComponent {
             const regex = new RegExp(rx, 'ui');
 
             for (let i = 0; i < ln; i++) {
+                const line = lines[i];
                 // If the line has a discrete msg property, check it.
                 // Any other lines will implicitly be shown
-                if (!lines[i].msg)
-                    temp.push(lines[i]);
-                else if (regex.test(lines[i].msg))
-                    temp.push(lines[i]);
+                if (!line.plaintext) {
+                    temp.push(line);
+                }
+                else if (regex.test(line.plaintext))
+                    temp.push(line);
             }
 
             lines = temp;
         }
 
+        lines.forEach((line, index) => {
+            line._index = index;
+            line._top = index * this.lineHeight;
+        })
         this.filteredLines = lines;
 
         this.refocusPanel(false);
@@ -422,10 +340,10 @@ export class JobLogsComponent {
 
             // The swimlane is visible if it's within 500px of the top of the viewport,
             // or if it's within 500px of the bottom of the viewport.
-            line.rendered =
+            line._visible =
                 !(currentY + this.lineHeight + VIRTUAL_SCROLLING_OVERLAP < top) &&
                 !(currentY - VIRTUAL_SCROLLING_OVERLAP > bottom);
-            line.index = i;
+            line._index = i;
 
             currentY += this.lineHeight;
         }
@@ -433,7 +351,7 @@ export class JobLogsComponent {
         const rendered = [];
         let ln = lines.length;
         for (let i = 0; i < ln; i++)
-            if (lines[i].rendered)
+            if (lines[i]._visible)
                 rendered.push(lines[i]);
 
         this.renderedLines = rendered;
@@ -465,18 +383,15 @@ export class JobLogsComponent {
     }
 
     downloadLog() {
-        const log = this.lines.map(line => {
-            return line.time +
-                ' | ' +
-                (line.stream == "agent" ? '[agent] ' : '') +
-                (
-                    line.data?.map(d => d.text).join('') ||
-                    ( line['error']
-                        ? (line['error'] + ' ' + line._original?.message?.trim())
-                        : line.msg?.trim()
-                    )
-                )
-        }).join('\n');
+        const log = this.lines.map(l => {
+            return [
+                l.timestamp,
+                '|',
+                ['stderr', 'stdout'].includes(l.level) ? ('[' + l.level + ']') : '[agent]',
+                l.plaintext
+            ].join(' ');
+
+        }).join('\n')
         const blob = new Blob([log], {
             type: 'text/plain'
         });
@@ -495,8 +410,8 @@ export class JobLogsComponent {
         a.remove();
     }
 
-    viewLineData(line: Line) {
-        ViewJsonInMonacoDialog(this.dialog, line._original || line);
+    viewLineData(line: RenderedLine) {
+        ViewJsonInMonacoDialog(this.dialog, line.record);
     }
 
     @HostListener("window:resize")
@@ -515,19 +430,34 @@ export class JobLogsComponent {
     calculateScrollWidth() {
         let charCount = 0;
         this.filteredLines.forEach(l => {
-            if (l.msg.length > charCount)
-                charCount = l.msg.length;
+            if (l.plaintext.length > charCount)
+                charCount = l.plaintext.length;
         });
 
         // The timestamp consumes ~14 characters
         charCount += 14;
 
         this.scrollWidth = this.charWidth * charCount;
-        console.log(this);
     }
 
     parseGitmoji(text: string) {
-        return text?.replace(/(:[^:]+:)/, (match, id) =>
-            gitmojis.find(g => g.code == id)?.emoji || id)
-        }
+        // TODO: inject mat-icons
+        // TODO: Inject well-known gitmoji to mat-icons?
+        return text?.replace(/:([a-z0-9_\-]{3,30}):/i, (match, id: string) => {
+            id = id.toLowerCase();
+            // Logic to preform as few array scans as possible to find the match.
+            let matSymbolIndex = MaterialSymbols.indexOf(id);
+            matSymbolIndex = matSymbolIndex == -1
+                ? MaterialSymbols.indexOf(id.replace(/_/g, '-'))
+                : matSymbolIndex;
+
+            if (matSymbolIndex > -1) {
+                return `<span class="mat-icon material-icons">${MaterialSymbols[matSymbolIndex]}</span>`;
+            }
+            // TODO: Register icon paths that are well-known (and or allow users to upload custom icons)
+
+            // By this point if we don't have a mat symbol we can try matching a gitmoji...
+            return gitmojis.find(g => g.code == id)?.emoji || id;
+        });
+    }
 }

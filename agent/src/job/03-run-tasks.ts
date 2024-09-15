@@ -26,7 +26,9 @@ const executeTaskGroup = async (
     try {
         logger.info({
             msg: `Initiating TaskGroup ${taskGroup.label}`,
-            taskGroup,
+            properties: {
+                taskGroup,
+            },
             block: "start"
         });
 
@@ -41,11 +43,13 @@ const executeTaskGroup = async (
             // Skip disabled tasks
             if (task.disabled) continue;
 
-            logger.info({
-                msg: `Initiating task '${task.label}' in group '${taskGroup.label}'`,
-                task,
-                block: "start"
-            });
+            // logger.info({
+            //     msg: `Initiating task '${task.label}' in group '${taskGroup.label}'`,
+            //     properties: {
+            //         task,
+            //     },
+            //     block: "start"
+            // });
 
             const env = {};
             Object.assign(envVars, env);
@@ -65,16 +69,20 @@ const executeTaskGroup = async (
 
         logger.info({
             msg: `Completed TaskGroup '${taskGroup.label}'`,
-            taskGroup,
+            properties: {
+                taskGroup,
+            },
             block: "end"
         });
     }
     catch (ex) {
         logger.error({
             msg: "Unhandled error",
-            stack: ex.stack,
-            error: ex.message,
-            name: ex.name
+            properties: {
+                stack: ex.stack,
+                error: ex.message,
+                name: ex.name
+            }
         });
     }
     span.end();
@@ -120,14 +128,16 @@ export const RunTasks = (
     // All task groups that cannot possibly be run will print in a console error.
     if (impossibleTaskGroups.length > 0) {
         logger.warn({
-            msg: "Job has " + impossibleTaskGroups.length + " task groups that cannot possibly execute due to missing dependency task groups!",
-            taskGroups: impossibleTaskGroups
+            msg: "Job has " + impossibleTaskGroups.length + " task groups that cannot possibly execute due to missing dependencies!",
+            properties: {
+                taskGroups: impossibleTaskGroups
+            }
         });
     }
 
-    // Recursive
+    // "Recursive" to trigger all of the taskGroups that
     const runTaskGroups = (taskGroups: TaskGroupDefinition[]) => Promise.all(
-        taskGroups.map(taskGroup => new Promise(async (r) => {
+        taskGroups.map(async taskGroup => {
 
             if (!taskGroup.disabled) {
                 await executeTaskGroup(span, pipelineInstance, pipeline, stage, job, jobInstance, taskGroup, logger);
@@ -146,9 +156,7 @@ export const RunTasks = (
             if (nextTgList.length > 0) {
                 await runTaskGroups(nextTgList);
             }
-
-            r(0);
-        }))
+        })
     );
 
     const res = await runTaskGroups(immediateTaskGroups);

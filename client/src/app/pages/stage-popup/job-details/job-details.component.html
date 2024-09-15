@@ -3,17 +3,20 @@
         <app-job-instance-icon [jobInstance]="jobInstance"/>
 
         <div>
-            <span>{{job.label}}</span>
+            <span>{{job.label}} - {{jobInstance.id}}</span>
         </div>
 
         <div style="flex: 1"></div>
 
         <div>
             @if (!completeStates.includes(jobInstance.state)) {
-                <button mat-mini-fab matTooltip="Cancel Job Instance"  (click)="killJob()">
+                <button mat-mini-fab matTooltip="Stop Job Instance" (click)="killJob()">
                     <mat-icon>stop_circle</mat-icon>
                 </button>
             }
+            <button mat-mini-fab matTooltip="Close" (click)="dialog.close()">
+                <mat-icon>close</mat-icon>
+            </button>
         </div>
     </div>
 
@@ -63,7 +66,7 @@
             <!-- <mat-tab label="Sources">???</mat-tab> -->
         </mat-tab-group>
 
-        @if (breakpoints.length > 0) {
+        @if (breakpoints?.length > 0) {
             <div class="breakpoints">
                 <p>Breakpoints</p>
                 @for (breakpoint of breakpoints; track breakpoint) {

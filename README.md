@@ -50,6 +50,8 @@ and you have been warned :)
 - [ ] Branch based templating and filters 
 - [ ] Advanced task filter syntax (use JS?)
 - [ ] Kanban tracking board
+- [ ] metrics export => how long do builds take, how long does each stage/job/task take
+- [ ] metrics export => how many builds were manual, automated, scheduled
 - [ ] Fetch secrets from a key vault
 - [ ] Plugins (ui, agent, backend)
 - [ ] AI auto build stages and pipelines

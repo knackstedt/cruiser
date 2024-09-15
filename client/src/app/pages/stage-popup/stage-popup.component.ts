@@ -9,6 +9,8 @@ import { Fetch } from '@dotglitch/ngx-common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/job-instance-icon.component';
 import { DurationViewerComponent } from 'src/app/components/duration-viewer/duration-viewer.component';
+import { MatInputModule } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-stage-popup',
@@ -18,6 +20,8 @@ import { DurationViewerComponent } from 'src/app/components/duration-viewer/dura
         MatIconModule,
         MatButtonModule,
         MatTooltipModule,
+        MatInputModule,
+        FormsModule,
         TableModule,
         JobInstanceIconComponent,
         DurationViewerComponent

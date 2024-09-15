@@ -95,7 +95,7 @@ const UnwatchSource = (stage: StageDefinition, source: SourceConfiguration) => {
 }
 
 const UnwatchStage = (stage: StageDefinition) => {
-    stage.sources.forEach(source => UnwatchSource(stage, source));
+    stage.sources?.forEach(source => UnwatchSource(stage, source));
 }
 
 export const GitWatcher = () => {

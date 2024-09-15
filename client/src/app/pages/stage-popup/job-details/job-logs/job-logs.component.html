@@ -107,77 +107,74 @@
         cdkVirtualScrollingElement
         [style.height]="(filteredLines.length*lineHeight + 14) + 'px'"
         [style.width]="(scrollWidth + 14) + 'px'"
-        style="position: relative;"
+        style="position: relative; min-width: 100%;"
     >
         @for (line of renderedLines; track line) {
-            @if (line.rendered) {
-                <div
-                    class="line"
-                    [class.error]="['error', 'fatal'].includes(line.level?.toLowerCase())"
-                    [class.warning]="['warning', 'warn'].includes(line.level?.toLowerCase())"
-                    [class.breakpoint]="line._original.breakpoint"
-                    [style.height]="lineHeight + 'px'"
-                    [attr.index]="line.index"
-                    [style.top]="(line.index*lineHeight)+'px'"
+            <div
+                class="line"
+                [class.error]="['error', 'fatal'].includes(line.level?.toLowerCase())"
+                [class.warning]="['warning', 'warn'].includes(line.level?.toLowerCase())"
+                [class.breakpoint]="false"
+                [style.height]="lineHeight + 'px'"
+                [attr.index]="line._index"
+                [style.top]="line._top+'px'"
+            >
+                @if (!['stdout', 'stderr'].includes(line.level)) {
+                    <span class="process agent">
+                        @if (line.record.block == "start") {
+                            <span class="expansion_toggle">
+                                <mat-icon
+                                    [style.transform]="line._expanded ? 'rotate(90deg)' : ''"
+                                    fontIcon="navigate_next"
+                                />
+                            </span>
+                        }
+                        @else if (["error", "fatal"].includes(line.level)) {
+                            <span class="expansion_toggle" (click)="viewLineData(line)">
+                                <mat-icon
+                                    fontIcon="loupe"
+                                />
+                            </span>
+                        }
+                        @else {
+                            <span class="blank"></span>
+                        }
+                        @if (showTimestamps) {
+                            <span class="time" (dblclick)="viewLineData(line)">{{line?.timestamp}} </span>
+                        }
 
-                >
-                    @if (line.stream == "agent") {
-                        <span class="process agent">
-                            @if (line.block == "start") {
-                                <span class="expansion_toggle">
-                                    <mat-icon
-                                        [style.transform]="line._expanded ? 'rotate(90deg)' : ''"
-                                        fontIcon="navigate_next"
-                                    />
-                                </span>
-                            }
-                            @else if (["error", "fatal"].includes(line.level)) {
-                                <span class="expansion_toggle" (click)="viewLineData(line)">
-                                    <mat-icon
-                                        fontIcon="loupe"
-                                    />
-                                </span>
-                            }
-                            @else {
-                                <span class="blank"></span>
-                            }
-                            @if (showTimestamps) {
-                                <span class="time" (dblclick)="viewLineData(line)">{{line?.time}} </span>
-                            }
-                            @if (["error", "fatal"].includes(line.level)) {
-                                <span class="message">[agent] {{parseGitmoji(line['error']?.trim() || (line.msg?.trim() || ''))}} {{parseGitmoji(line._original?.['message']?.trim())}}</span>
-                            }
-                            @else {
-                                <span class="message">[agent] {{parseGitmoji(line.msg?.trim() + ' ' + (line._original?.['message']?.trim() || ''))}}</span>
-                            }
-                        </span>
-                    }
-                    @else if (line.stream == 'stdout') {
-                        <span class="process stdout">
-                            <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
-                        </span>
-                    }
-                    @else if (line.stream == 'stderr') {
-                        <span class="process stderr">
-                            <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
-                        </span>
-                    }
-                </div>
-            }
+                        <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
+                    </span>
+                }
+                @else if (line.level == 'stdout') {
+                    <span class="process stdout">
+                        <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
+                    </span>
+                }
+                @else if (line.level == 'stderr') {
+                    <span class="process stderr">
+                        <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
+                    </span>
+                }
+            </div>
         }
     </div>
 </ng-scrollbar>
 
 <ng-template #rowTemplate let-line>
-    <span class="blank"></span>
+    @if (['stdout', 'stderr'].includes(line.level)) {
+        <span class="blank"></span>
 
-    @if (showTimestamps) {
-        <span class="time" (dblclick)="viewLineData(line)">{{line?.time}} </span>
+        @if (showTimestamps) {
+            <span class="time" (dblclick)="viewLineData(line)">{{line?.timestamp}} </span>
+        }
     }
 
     <span class="message">
-        @for (segment of line.data; track segment) {
-            <span class="segment" [style]="segment.css">{{parseGitmoji(segment.text)}}</span>
+        <span>{{!['stdout', 'stderr'].includes(line.level) ? '[agent]' : '[' + line.level + ']'}} </span>
+
+        @for (segment of line.html; track segment) {
+            <span class="segment" [style]="segment.css" [innerHTML]="segment.text"></span>
         }
     </span>
 </ng-template>

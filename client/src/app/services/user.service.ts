@@ -41,17 +41,9 @@ export class UserService extends Subject<CruiserUserProfile> {
         })
     }
 
-    override subscribe(observer?: Partial<Observer<CruiserUserProfile>>): Subscription;
-    override subscribe(next: (value: CruiserUserProfile) => void): Subscription;
-    override subscribe(next?: (value: CruiserUserProfile) => void, error?: (error: any) => void, complete?: () => void): Subscription;
-    override subscribe(next?: unknown, error?: unknown, complete?: unknown): import("rxjs").Subscription {
-        if (this.value != undefined) {
-            // @ts-ignore
-            next(this.value);
-        }
-
-        // @ts-ignore
-        return super.subscribe(next, error, complete);
+    override subscribe: Subject<CruiserUserProfile>['subscribe'] = (...args) => {
+        if (this.value != undefined) args[0](this.value);
+        return super.subscribe(...args);
     }
 
     login() {

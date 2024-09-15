@@ -9,6 +9,7 @@
 /log
 /agent/node_modules
 /client/node_modules
+/database/node_modules
 /server/node_modules
 
 /client/.angular

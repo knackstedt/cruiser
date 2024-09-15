@@ -16,4 +16,3 @@ declare global {
         readonly prototype: Error;
     }
 }
-

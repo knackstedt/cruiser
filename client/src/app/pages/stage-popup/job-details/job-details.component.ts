@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { io, Socket } from 'socket.io-client';
 import { Fetch, FilemanagerComponent, MenuDirective, NGX_WEB_COMPONENTS_CONFIG, NgxFileManagerConfiguration, TooltipDirective } from '@dotglitch/ngx-common';
 import { JobDefinition, TaskDefinition } from 'src/types/pipeline';
@@ -56,6 +56,7 @@ export class JobDetailsComponent {
     loadTerminal = false;
 
     constructor(
+        public readonly dialog: MatDialogRef<any>,
         @Inject(MAT_DIALOG_DATA) private readonly data: any,
         private readonly fetch: Fetch,
         private readonly pipelineSocket: PipelineSocketService
@@ -105,7 +106,7 @@ export class JobDetailsComponent {
                 this.connected = false;
             });
 
-            socket.on("breakpoint:list", ({breakpoints}) => {
+            socket.on("breakpoint:list", ({ breakpoints }) => {
                 this.breakpoints = breakpoints;
             });
         }
@@ -119,7 +120,6 @@ export class JobDetailsComponent {
     }
 
     killJob() {
-        console.log("killer")
         this.pipelineSocket.emit("$stop-job", { jobInstanceId: this.jobInstance.id })
     }
 }

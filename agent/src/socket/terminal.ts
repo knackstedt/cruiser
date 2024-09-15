@@ -28,9 +28,9 @@ export const CreateTerminalSocketServer = async (parentSpan: Span, socket: Socke
     const uid = ulid();
 
     socket.on("ssh:launch", (data) => {
-        logger.info({
-            msg: "Starting PTY",
-            data
+        logger.debug({
+            msg: "Starting PTY"
+            // data
         });
 
         // TODO: restore history on reconnect...
@@ -49,8 +49,10 @@ export const CreateTerminalSocketServer = async (parentSpan: Span, socket: Socke
         catch (ex) {
             logger.warn({
                 msg: "Failed to spawn PTY",
-                stack: ex.stack,
-                message: ex.message ?? ex.title ?? ex.name
+                properties: {
+                    stack: ex.stack,
+                    message: ex.message ?? ex.title ?? ex.name
+                }
             });
             socket.emit("ssh:fatal", ex);
         }
