@@ -3,8 +3,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MenuDirective, MenuItem } from '@dotglitch/ngx-common';
-import { StageDefinition } from '../../../../../../../../server/src/types/pipeline';
 import { ReleaseEditorComponent } from '../../release-editor.component';
+import { StageDefinition } from 'src/types/pipeline';
 
 @Component({
     selector: 'app-webhook-node',
