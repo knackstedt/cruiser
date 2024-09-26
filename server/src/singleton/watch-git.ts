@@ -18,8 +18,27 @@ const WatchSource = (pipeline: PipelineDefinition, stage: StageDefinition, sourc
 
     // Start polling
     const interval = setInterval(async () => {
-        const branchResponse = await simpleGit().listRemote([source.url]);
-        const lines = branchResponse.trim().split('\n');
+        if (!source.url || source.url == "undefined") {
+            logger.warn({
+                msg: `Cannot poll repository with invalid source URL`,
+                source
+            });
+            return;
+        }
+        const branchResponse = await simpleGit().listRemote([source.url]).catch(err => {
+            // Something failed. Either the remote is invalid or there was some network error.
+            logger.error({
+                msg: err.message,
+                stack: err.stack
+            });
+            return null;
+        });
+        const lines = branchResponse?.trim().split('\n').filter(l => l.trim().length > 0);
+
+        // If an error is thrown then we'll handle that specifically
+        if (!lines) {
+            return;
+        }
 
         // [branch, hash]
         // filter to only head refs
@@ -77,7 +96,7 @@ const WatchSource = (pipeline: PipelineDefinition, stage: StageDefinition, sourc
 }
 
 const WatchStage = (pipeline: PipelineDefinition, stage: StageDefinition) => {
-    stage.sources.forEach(source => {
+    stage.sources?.forEach(source => {
         if (source.pollForUpdates === false) return;
         WatchSource(pipeline, stage, source);
     })

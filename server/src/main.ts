@@ -24,8 +24,6 @@ const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
      */
     await InitDatabase();
 
-    console.log(AsciiBanner);
-
     // If running as a dedicated socket instance, create
     // an otherwise empty server.
     // Also runs the schedulers in the same process.
