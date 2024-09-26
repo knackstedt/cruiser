@@ -1,10 +1,10 @@
 <div class="headerbar">
     @if (connected) {
-        <span>Ln {{lines.length}}</span>
+        <span>Messages: {{lines.length}}</span>
     }
     @else if (isCompletedRun) {
         <mat-icon fontIcon="history" />
-        <span>Ln {{lines.length}}</span>
+        <span>Messages: {{lines.length}}</span>
     }
     @else {
         <mat-icon style="color: #ff5d5d" fontIcon="mobiledata_off" />
@@ -94,99 +94,12 @@
     <!-- <div>collapse all</div> -->
     <div (click)="showTimestamps = !showTimestamps">timestamps</div>
     <!-- <div>raw output</div> -->
-    <div (click)="goToEnd()">go to end</div>
+    <div (click)="renderer.goToEnd()">go to end</div>
     <div (click)="downloadLog()">download log</div>
 </div>
-<ng-scrollbar
-    #scrollbar
-    class="console"
-    [class.shadow]="scrollbar?.viewport?.scrollTop > 2"
-    track="all"
->
-    <div
-        cdkVirtualScrollingElement
-        [style.height]="(filteredLines.length*lineHeight + 14) + 'px'"
-        [style.width]="(scrollWidth + 14) + 'px'"
-        style="position: relative; min-width: 100%;"
-    >
-        @for (line of renderedLines; track line) {
-            <div
-                class="line"
-                [class.error]="['error', 'fatal'].includes(line.level?.toLowerCase())"
-                [class.warning]="['warning', 'warn'].includes(line.level?.toLowerCase())"
-                [class.breakpoint]="false"
-                [style.height]="lineHeight + 'px'"
-                [attr.index]="line._index"
-                [style.top]="line._top+'px'"
-            >
-                @if (!['stdout', 'stderr'].includes(line.level)) {
-                    <span class="process agent">
-                        @if (line.record.block == "start") {
-                            <span class="expansion_toggle">
-                                <mat-icon
-                                    [style.transform]="line._expanded ? 'rotate(90deg)' : ''"
-                                    fontIcon="navigate_next"
-                                />
-                            </span>
-                        }
-                        @else if (["error", "fatal"].includes(line.level)) {
-                            <span class="expansion_toggle" (click)="viewLineData(line)">
-                                <mat-icon
-                                    fontIcon="loupe"
-                                />
-                            </span>
-                        }
-                        @else {
-                            <span class="blank"></span>
-                        }
-                        @if (showTimestamps) {
-                            <span class="time" (dblclick)="viewLineData(line)">{{line?.timestamp}} </span>
-                        }
 
-                        <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
-                    </span>
-                }
-                @else if (line.level == 'stdout') {
-                    <span class="process stdout">
-                        <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
-                    </span>
-                }
-                @else if (line.level == 'stderr') {
-                    <span class="process stderr">
-                        <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
-                    </span>
-                }
-            </div>
-        }
-    </div>
-</ng-scrollbar>
-
-<ng-template #rowTemplate let-line>
-    @if (['stdout', 'stderr'].includes(line.level)) {
-        <span class="blank"></span>
-
-        @if (showTimestamps) {
-            <span class="time" (dblclick)="viewLineData(line)">{{line?.timestamp}} </span>
-        }
-    }
-
-    <span class="message">
-        <span>
-            <!-- The trailing space is **important**! -->
-            @if (line.level == "stdout") {[taskout] }
-            @else if (line.level == "stderr") {[taskerr] }
-            @else {[cruiser] }
-        </span>
-
-        @for (segment of line.html; track segment) {
-            <span class="segment {{segment.class || ''}}" [style]="segment.css" [innerText]="segment.text"></span>
-        }
-    </span>
-</ng-template>
-
-
-<!-- Verify that both children occupy the same width -->
-<div #fontDetector class="font-detector">
-    <div>M</div>
-    <div>.</div>
-</div>
+<app-logs-renderer
+    #renderer
+    [lines]="filteredLines"
+    [showTimestamps]="showTimestamps"
+/>

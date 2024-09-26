@@ -23,8 +23,7 @@ let _socket: Socket;
 export const CreateBreakpointSocketServer = async (
     span: Span,
     socket: Socket,
-    jobInstance: JobInstance,
-    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
+    jobInstance: JobInstance
 ) => {
     _socket = socket;
 

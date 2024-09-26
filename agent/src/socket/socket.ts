@@ -19,6 +19,9 @@ export const CreateBaseSocketServer = async (parentSpan: Span, pipeline: Pipelin
             path: "/socket/socket-tunnel-internal",
             auth: {
                 "X-Cruiser-Token": environment.cruiserToken
+            },
+            extraHeaders: {
+                "X-Cruiser-Token": environment.cruiserToken
             }
         });
 

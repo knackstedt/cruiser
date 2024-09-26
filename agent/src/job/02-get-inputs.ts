@@ -101,7 +101,7 @@ export const GetInputs = async (
     })
 
     await tracer.startActiveSpan("FetchSources", undefined, ctx, async span => {
-        const sources = stage.sources.filter(s => !s.disabled) || [];
+        const sources = stage.sources?.filter(s => !s.disabled) || [];
         if (sources.length == 0) {
             logger.debug({
                 msg: `Stage \`${stage.label}\` has no sources to fetch`,

@@ -6,6 +6,7 @@ import { ulid } from 'ulidx';
 import { environment } from '../util/environment';
 import { CreateLoggerSocketServer } from './logger';
 import { Span } from '@opentelemetry/api';
+import { logger } from '../util/logger';
 
 // Make an attempt to get a compatible PTY program.
 const shell = os.platform() == "win32"
@@ -20,7 +21,7 @@ const shell = os.platform() == "win32"
     ? "ksh"
     : "sh";
 
-export const CreateTerminalSocketServer = async (parentSpan: Span, socket: Socket, logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>) => {
+export const CreateTerminalSocketServer = async (parentSpan: Span, socket: Socket) => {
 
     let ptyProcess: pty.IPty;
     let ptyArgs;
@@ -28,10 +29,6 @@ export const CreateTerminalSocketServer = async (parentSpan: Span, socket: Socke
     const uid = ulid();
 
     socket.on("ssh:launch", (data) => {
-        logger.debug({
-            msg: "Starting PTY"
-            // data
-        });
 
         // TODO: restore history on reconnect...
         let history = [];

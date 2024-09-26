@@ -24,8 +24,8 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
          */
         const socket = await CreateBaseSocketServer(span, pipeline, jobInstance);
         const logger = await CreateLoggerSocketServer(span, socket);
-        const terminal = await CreateTerminalSocketServer(span, socket, logger);
-        const breakpoint = await CreateBreakpointSocketServer(span, socket, jobInstance, logger);
+        const terminal = await CreateTerminalSocketServer(span, socket);
+        const breakpoint = await CreateBreakpointSocketServer(span, socket, jobInstance);
         const metrics = await CreateMetricsSocketServer(span, socket);
 
 

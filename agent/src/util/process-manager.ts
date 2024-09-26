@@ -21,7 +21,9 @@ export const RunProcess = async (
     taskGroup: TaskGroupDefinition,
     task: TaskDefinition,
     jobInstance: JobInstance,
-    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
+    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>,
+    gid: number,
+    tgid: string
 ) => {
     let retry = false;
     do {
@@ -40,9 +42,9 @@ export const RunProcess = async (
             });
 
             if (task.breakBeforeTask) {
-                logger.info({ msg: `⏸ Tripping on Breakpoint`, properties: { taskGroup, task } });
+                logger.info({ msg: `⏸ Tripping on Breakpoint`, properties: { taskGroup, task, gid, tgid } });
                 await TripBreakpoint(span, jobInstance, false, taskGroup, task);
-                logger.info({ msg: `Resuming from Breakpoint`, properties: { taskGroup, task } });
+                logger.info({ msg: `Resuming from Breakpoint`, properties: { taskGroup, task, gid, tgid } });
             }
 
             // Try to create the CWD.
@@ -93,7 +95,8 @@ export const RunProcess = async (
                                             msg: `Failed to load secret \`${envItem.key}\``,
                                             properties: {
                                                 stack: err.stack,
-                                                message: err.message
+                                                message: err.message,
+                                                gid, tgid
                                             }
                                         });
                                         return { key: envItem.name, value: null, err };
@@ -115,14 +118,7 @@ export const RunProcess = async (
 
                     logger.info({
                         msg: `Spawning process \`${command}\` for task \`${task.label}\` in group \`${taskGroup.label}\``,
-                        properties: {
-                            processCWD,
-                            command,
-                            args,
-                            execEnv,
-                            taskGroup,
-                            task
-                        }
+                        properties: { processCWD, command, args, execEnv, taskGroup, task, gid, tgid }
                     });
 
                     const ctx = trace.setSpan(context.active(), span);
@@ -139,8 +135,8 @@ export const RunProcess = async (
                             windowsHide: true
                         });
 
-                        process.stdout.on('data', (data) => logger.stdout({ time: Date.now(), level: "stdout", chunk: data, properties: { task: task.id } }));
-                        process.stderr.on('data', (data) => logger.stderr({ time: Date.now(), level: "stderr", chunk: data, properties: { task: task.id } }));
+                        process.stdout.on('data', (data) => logger.stdout({ time: Date.now(), level: "stdout", chunk: data, properties: { task: task.id, gid, tgid } }));
+                        process.stderr.on('data', (data) => logger.stderr({ time: Date.now(), level: "stderr", chunk: data, properties: { task: task.id, gid, tgid } }));
 
                         process.on('error', (err) => {
                             span.setAttributes({ "process.exitCode": -2 });
@@ -148,7 +144,8 @@ export const RunProcess = async (
                                 msg: "Process error",
                                 properties: {
                                     stack: err.stack,
-                                    message: err.message
+                                    message: err.message,
+                                    gid, tgid
                                 }
                             })
                         });
@@ -157,11 +154,7 @@ export const RunProcess = async (
                             span.setAttributes({ "process.exitCode": -1 });
                             logger.error({
                                 msg: `Process \`${command}\` unexpectedly disconnected`,
-                                properties: {
-                                    args,
-                                    taskGroup,
-                                    task
-                                }
+                                properties: { args, taskGroup, task, gid, tgid }
                             });
                             res(process);
                         });
@@ -169,12 +162,12 @@ export const RunProcess = async (
                         process.on('exit', (exitCode) => {
                             span.setAttributes({ "process.exitCode": exitCode });
                             if (exitCode == 0) {
-                                logger.info({ msg: `Process \`${command}\` exited successfully`, properties: { taskGroup, task } });
+                                logger.info({ msg: `Process \`${command}\` exited successfully`, properties: { taskGroup, task, gid, tgid } });
                                 span.end();
                                 res(process);
                             }
                             else {
-                                logger.error({ msg: `Process \`${command}\` exited with non-zero exit code \`${exitCode}\``, properties: { code: exitCode, taskGroup, task } });
+                                logger.error({ msg: `Process \`${command}\` exited with non-zero exit code \`${exitCode}\``, properties: { code: exitCode, taskGroup, task, gid, tgid } });
                                 span.end();
                                 res(process);
                             }
@@ -193,18 +186,14 @@ export const RunProcess = async (
             if (process?.exitCode == 0) {
                 logger.info({
                     msg: `Completed task \`${task.label}\` in group \`${taskGroup.label}\``,
-                    properties: {
-                        process,
-                        taskGroup,
-                        task,
-                    },
+                    properties: { process, taskGroup, task, gid, tgid },
                     block: "end"
                 });
 
                 if (task.breakOnTaskSuccess) {
-                    logger.info({ msg: `⏸ Tripping on Breakpoint`, properties: { taskGroup, task } });
+                    logger.info({ msg: `⏸ Tripping on Breakpoint`, properties: { taskGroup, task, gid, tgid } });
                     retry = await TripBreakpoint(span, jobInstance, true, taskGroup, task);
-                    logger.info({ msg: `▶ Resuming from Breakpoint`, properties: { taskGroup, task } });
+                    logger.info({ msg: `▶ Resuming from Breakpoint`, properties: { taskGroup, task, gid, tgid } });
                 }
             }
             else {
@@ -214,16 +203,16 @@ export const RunProcess = async (
                 // });
 
                 if (task.breakOnTaskFailure) {
-                    logger.info({ msg: `⏸ Breaking on error`, properties: { taskGroup, task } });
+                    logger.info({ msg: `⏸ Breaking on error`, properties: { taskGroup, task, gid, tgid } });
                     retry = await TripBreakpoint(span, jobInstance, true, taskGroup, task);
-                    logger.info({ msg: `▶ Resuming from Breakpoint`, properties: { taskGroup, task } });
+                    logger.info({ msg: `▶ Resuming from Breakpoint`, properties: { taskGroup, task, gid, tgid } });
                 }
             }
 
             if (task.breakAfterTask) {
-                logger.info({ msg: `⏸ Tripping on Breakpoint`, properties: { taskGroup, task } });
+                logger.info({ msg: `⏸ Tripping on Breakpoint`, properties: { taskGroup, task, gid, tgid } });
                 retry = await TripBreakpoint(span, jobInstance, true, taskGroup, task);
-                logger.info({ msg: `▶ Resuming from Breakpoint`, properties: { taskGroup, task } });
+                logger.info({ msg: `▶ Resuming from Breakpoint`, properties: { taskGroup, task, gid, tgid } });
             }
 
             span.end();

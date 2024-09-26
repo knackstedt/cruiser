@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, Input, ViewChild, NgZone } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, Input, ViewChild, NgZone, viewChild } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -16,15 +16,26 @@ import { JobInstance } from 'src/types/agent-task';
 import { BindSocketLogger, ViewJsonInMonacoDialog } from 'src/app/utils/utils';
 import { LogMessage, LogRecord } from 'src/types/agent-log';
 import { MaterialSymbols } from 'src/app/utils/mat-symbols';
+import { TaskGroupDefinition } from 'src/types/pipeline';
+import { LogsRendererComponent } from "./logs-renderer/logs-renderer.component";
 
-type RenderedLine = ({
+export type RenderedItem = {
+    kind: "line" | "block"
     level: "error" | "info" | "warn" | "fatal" | "debug" | "stdout" | "stderr"
     timestamp: string;
     record: LogRecord
 
+    selectedTabIndex?: number
+    // output rendered into HTML elements (kind: line)
+    html?: ParsedSpan[],
 
-    // output rendered into HTML elements
-    html: ParsedSpan[],
+    // The task groups and their line data (kind: block)
+    taskGroups?: {
+        label: string,
+        tgid: string
+        parent: RenderedItem
+    }[],
+
     plaintext: string,
 
     // If this line is part of a block && if it's expanded
@@ -32,40 +43,27 @@ type RenderedLine = ({
 
     // If the line should be rendered in the viewport
     _visible: boolean
-    _top: number,
 
     // TODO: Remove this
     _index: number,
-});
+};
 
 @Component({
     selector: 'app-job-logs',
     templateUrl: './job-logs.component.html',
     styleUrls: ['./job-logs.component.scss'],
     imports: [
-        NgTemplateOutlet,
-        NgScrollbarModule,
         TooltipDirective,
         MatIconModule,
         MatCheckboxModule,
-        MatInputModule
+        MatInputModule,
+        LogsRendererComponent
     ],
-    standalone: true,
-    // changeDetection: ChangeDetectionStrategy.OnPush
+    standalone: true
 })
 export class JobLogsComponent {
-    @ViewChild("fontDetector") fontDetector: ElementRef;
-    @ViewChild(NgScrollbar) scrollbar: NgScrollbar;
-    get scroller() { return this.scrollbar.viewport.nativeElement; }
     @Input() jobInstance: JobInstance;
-
-
-    readonly lineHeight = 19;
-    readonly bufferLines = 10;
-
-    // Width of the scroll viewport. Required to make horizontal scrolling not clip
-    scrollWidth = 1000;
-    charWidth = 20;
+    @ViewChild(LogsRendererComponent) logsRenderer: LogsRendererComponent;
 
     showStdOut = true;
     showStdErr = true;
@@ -76,19 +74,20 @@ export class JobLogsComponent {
     connected = false;
     isCompletedRun = false;
 
-    lines: RenderedLine[] = [];
-    filteredLines: RenderedLine[] = [];
-    renderedLines: RenderedLine[] = [];
+    lines: RenderedItem[] = [];
+    filteredLines: RenderedItem[] = [];
 
-    scrollToBottom = true;
+    lineBlocks: RenderedItem[] = [];
+    lineBlockMap: { [key: string]: RenderedItem } = {};
+
+    visibleTaskGroups: {[key: string]: { visible: boolean }} = {};
 
     private socket: Socket;
 
     constructor(
         private readonly changeDetector: ChangeDetectorRef,
         private readonly fetch: Fetch,
-        private readonly dialog: MatDialog,
-        private readonly ngZone: NgZone
+        private readonly dialog: MatDialog
     ) {
         this.setColors();
     }
@@ -101,7 +100,11 @@ export class JobLogsComponent {
     async ngOnInit() {
         this.lines = [];
         this.filteredLines = [];
-        this.renderedLines = [];
+        this.lineBlocks = [];
+        this.lineBlockMap = {};
+        this.visibleTaskGroups = {};
+
+        // console.log(this);
 
         // If the pipeline is no longer running, attempt to load the logs from
         // the disk
@@ -138,7 +141,7 @@ export class JobLogsComponent {
             socket.on("$connected", () => {
                 this.connected = true;
                 historyFetchTime = Date.now();
-
+                console.log("we fuckin connect")
                 socket.emit("$log:get-history", { jobInstanceId: this.jobInstance.id });
             });
             socket.on("disconnect", () => {
@@ -163,30 +166,11 @@ export class JobLogsComponent {
         }
     }
 
-    ngAfterViewInit(delay = false) {
-
-        const viewport = this.scroller;
-        viewport.onscroll = (evt: WheelEvent) => {
-            this.updateVirtualLines();
-
-            if (evt.deltaY < 0) {
-                this.scrollToBottom = false;
-            }
-            else {
-                const currentBottom = viewport.scrollTop + viewport.clientHeight;
-                this.scrollToBottom = currentBottom >= viewport.scrollHeight - 50;
-            }
-        };
-
-        this.onResize();
-    }
-
     ngOnDestroy() {
         this.socket?.disconnect();
     }
 
     onReceiveLine(line: LogRecord, runHooks = true) {
-
         const iso = (new Date(line.time)).toISOString();
 
         const lines = line.msg ? [line.msg] : line.chunk;
@@ -200,90 +184,146 @@ export class JobLogsComponent {
             return se;
         };
 
+        // If this property is set, this line is actually the start or end of a parallel block
+        // of executing tasks
+        if (line.properties?.['parallelBlock'] == true && line.properties['taskGroups']?.length > 0) {
+            // debugger;
+            const gid = line.properties?.['gid'];
+            // TODO: This should be slimmed down somehow.
+            const taskGroups = line.properties['taskGroups'] as TaskGroupDefinition[];
+            taskGroups.forEach((tg, i) => {
+                this.visibleTaskGroups[tg.id] = {
+                    visible: i == 0
+                }
+            })
+            const lineBlock: RenderedItem = {
+                kind: "block",
+                _expanded: true,
+                _index: 0,
+                _visible: true,
+                selectedTabIndex: 0,
+                taskGroups: taskGroups.map(tg => ({ label: tg.label, parent: null, tgid: tg.id })),
+                level: "info",
+                plaintext: "",
+                record: line,
+                timestamp: null
+            };
+
+
+            lineBlock.taskGroups.forEach(tg => tg.parent = lineBlock);
+            this.lineBlocks.push(lineBlock);
+            this.lineBlockMap[gid] = lineBlock;
+            this.lines.push(lineBlock);
+            return;
+        }
+
         lines.forEach((ln, i) => {
             // If the first line is empty don't print it.
             if (i == 0 && !ln.trim()) return;
             // TODO: Should plaintext strip ANSI codes?
 
             // If this is an agent log, perform some mutations that wouldn't normally occur.
-            if (!["stdout", "stderr"].includes(line.level)) {
-                const codeRanges = parseMatches([...ln.matchAll(/(`[^`]+?`)/g)]);
-                let html: ParsedSpan[] = [];
+            const item = (() => {
+                if (!["stdout", "stderr"].includes(line.level)) {
+                    const codeRanges = parseMatches([...ln.matchAll(/(`[^`]+?`)/g)]);
+                    let html: ParsedSpan[] = [];
 
-                if (codeRanges.length == 0) {
-                    html.push({
-                        css: "",
-                        text: ln
-                    });
+                    if (codeRanges.length == 0) {
+                        html.push({
+                            css: "",
+                            text: ln
+                        });
+                    }
+                    else {
+                        let range = codeRanges.shift();
+                        let index = 0;
+                        do {
+                            html.push({
+                                css: "",
+                                text: ln.slice(index, range.start)
+                            });
+                            html.push({
+                                css: "",
+                                class: "code",
+                                text: ln.slice(range.start, range.end)
+                            } as any);
+
+                            // Update tracking variables
+                            index = range.end;
+                            range = codeRanges.shift();
+                        } while(range)
+
+                        // Add the last item
+                        html.push({
+                            css: "",
+                            text: ln.slice(index)
+                        });
+
+                        // Purge any empty spans
+                        html = html.filter(s => s.text.length > 0);
+                    }
+
+                    return {
+                        kind: "line",
+                        _index: 0,
+                        _expanded: true,
+                        _visible: false,
+                        level: line.level,
+                        timestamp: iso.replace(/^[^T]+T/, ''),
+                        html,
+                        plaintext: ln,
+                        record: line
+                    };
                 }
                 else {
-                    let range = codeRanges.shift();
-                    let index = 0;
-                    do {
-                        html.push({
-                            css: "",
-                            text: ln.slice(index, range.start)
-                        });
-                        html.push({
-                            css: "",
-                            class: "code",
-                            text: ln.slice(range.start, range.end)
-                        } as any);
-
-                        // Update tracking variables
-                        index = range.end;
-                        range = codeRanges.shift();
-                    } while(range)
-
-                    // Add the last item
-                    html.push({
-                        css: "",
-                        text: ln.slice(index)
+                    const html = parse(ln).spans.map(s => {
+                        s.text = this.parseGitmoji(s.text);
+                        return s;
                     });
-
-                    // Purge any empty spans
-                    html = html.filter(s => s.text.length > 0);
+                    return {
+                        kind: "line",
+                        _index: 0,
+                        _expanded: true,
+                        _visible: false,
+                        level: line.level,
+                        timestamp: iso.replace(/^[^T]+T/, ''),
+                        html,
+                        plaintext: ln,
+                        record: line
+                    };
                 }
+            })();
 
-                this.lines.push({
-                    _index: 0,
-                    _top: 0,
-                    _expanded: true,
-                    _visible: false,
-                    level: line.level,
-                    timestamp: iso.replace(/^[^T]+T/, ''),
-                    html,
-                    plaintext: ln,
-                    record: line
-                });
-            }
-            else {
-                const html = parse(ln).spans.map(s => {
-                    s.text = this.parseGitmoji(s.text);
-                    return s;
-                });
-                this.lines.push({
-                    _index: 0,
-                    _top: 0,
-                    _expanded: true,
-                    _visible: false,
-                    level: line.level,
-                    timestamp: iso.replace(/^[^T]+T/, ''),
-                    html,
-                    plaintext: ln,
-                    record: line
-                });
-            }
+            // If the line is grouped, find it's group and add it
+            // const gid = line.properties?.['gid'];
+            // const tgid = line.properties?.['tgid'];
+
+            // // Now find the task group within the block
+            // const block = this.lineBlockMap[gid]?.taskGroups.find(e => e.tgid == tgid);
+            // if (gid && block) {
+            //     // debugger;
+            //     block.lines.push(item as RenderedItem);
+            // }
+            // else {
+                // debugger;
+                this.lines.push(item as RenderedItem);
+            // }
         });
 
         // console.log(this.lines);
         if (runHooks) {
             this.filterLines();
+            this.logsRenderer.updateVirtualLines();
         }
     }
 
     filterLines() {
         let lines = this.lines;
+
+        lines = lines.filter(l => {
+            const tgid = l.record.properties?.['tgid'];
+            return !tgid || this.visibleTaskGroups[tgid].visible;
+        });
 
         /**
          * Filter the lines.
@@ -321,8 +361,9 @@ export class JobLogsComponent {
             let ln = lines.length;
             let temp = [];
 
+            // Blocks should not be excluded when show agent is false.
             for (let i = 0; i < ln; i++)
-                if (["stdout", "stderr"].includes(lines[i].level))
+                if (["stdout", "stderr"].includes(lines[i].level) || lines[i].kind == "block")
                     temp.push(lines[i]);
 
             lines = temp;
@@ -372,77 +413,7 @@ export class JobLogsComponent {
             lines = temp;
         }
 
-        lines.forEach((line, index) => {
-            line._index = index;
-            line._top = index * this.lineHeight;
-        })
         this.filteredLines = lines;
-
-        this.refocusPanel(false);
-
-        this.calculateScrollWidth();
-    }
-
-    updateVirtualLines() {
-        const scroller = this.scroller;
-        if (!scroller) return;
-        const lines = this.filteredLines;
-
-        const pos = this.scrollbar.viewport.scrollTop;
-        // const bounds = scroller.getBoundingClientRect();
-        const top = pos;
-        const bottom = pos + this.scrollbar.viewport.clientHeight;
-
-        const VIRTUAL_SCROLLING_OVERLAP = this.lineHeight * this.bufferLines;
-        // Quickly recalculate the heights of the swimlanes
-        let currentY = 0;
-        const l = lines.length;
-
-        for (let i = 0; i < l; i++) {
-            const line = lines[i];
-
-            // The swimlane is visible if it's within 500px of the top of the viewport,
-            // or if it's within 500px of the bottom of the viewport.
-            line._visible =
-                !(currentY + this.lineHeight + VIRTUAL_SCROLLING_OVERLAP < top) &&
-                !(currentY - VIRTUAL_SCROLLING_OVERLAP > bottom);
-            line._index = i;
-
-            currentY += this.lineHeight;
-        }
-
-        const rendered = [];
-        let ln = lines.length;
-        for (let i = 0; i < ln; i++)
-            if (lines[i]._visible)
-                rendered.push(lines[i]);
-
-        this.renderedLines = rendered;
-
-        // console.log(this.renderedLines, this.filteredLines)
-
-        this.changeDetector.detectChanges();
-    }
-
-    refocusPanel(delay = true) {
-        setTimeout(() => {
-            this.updateVirtualLines();
-            if (this.scrollToBottom) {
-                this.goToEnd()
-            }
-        }, delay ? 15 : 0)
-    }
-
-    goToEnd() {
-        this.scroller.scrollTo({
-            top: this.scroller.scrollHeight
-        });
-
-        setTimeout(() => {
-            this.scroller.scrollTo({
-                top: this.scroller.scrollHeight
-            });
-        });
     }
 
     downloadLog() {
@@ -473,36 +444,6 @@ export class JobLogsComponent {
         a.remove();
     }
 
-    viewLineData(line: RenderedLine) {
-        ViewJsonInMonacoDialog(this.dialog, line.record);
-    }
-
-    @HostListener("window:resize")
-    onResize() {
-        const el: HTMLDivElement = this.fontDetector.nativeElement;
-        const mWidth = el.children[0].clientWidth;
-        const dotWidth = el.children[1].clientWidth;
-
-        if (mWidth != dotWidth) {
-            console.error(new Error("Cannot initiate with a non monospace font"));
-        }
-        this.charWidth = mWidth;
-        this.calculateScrollWidth();
-    }
-
-    calculateScrollWidth() {
-        let charCount = 0;
-        this.filteredLines.forEach(l => {
-            if (l.plaintext.length > charCount)
-                charCount = l.plaintext.length;
-        });
-
-        // The timestamp consumes ~14 characters
-        charCount += 14;
-
-        this.scrollWidth = this.charWidth * charCount;
-    }
-
     parseGitmoji(text: string) {
         // TODO: inject mat-icons
         // TODO: Inject well-known gitmoji to mat-icons?
@@ -522,5 +463,9 @@ export class JobLogsComponent {
             // By this point if we don't have a mat symbol we can try matching a gitmoji...
             return gitmojis.find(g => g.code == id)?.emoji || id;
         });
+    }
+
+    refocusPanel(delay?) {
+        this.logsRenderer.refocusPanel(delay)
     }
 }

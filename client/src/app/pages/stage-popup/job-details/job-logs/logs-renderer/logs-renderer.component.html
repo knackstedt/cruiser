@@ -1,0 +1,125 @@
+<!-- Verify that both children occupy the same width -->
+<div #fontDetector class="font-detector">
+    <!-- 10 characters should give us an accuracy of +-0.1px -->
+    <div>MMMMMMMMMM</div>
+    <div>..........</div>
+</div>
+
+<!-- This is used to visualize the number of log entries rendered on the  -->
+<!-- screen at any given time. Used for debugging virtual scrolling. -->
+<!-- <div style="position: absolute; z-index: 200; top: 6px; left: 164px">
+    Filtered lines: {{renderedItems.length}}
+</div> -->
+
+<ng-scrollbar
+    #scrollbar
+    class="console"
+    [class.shadow]="scrollbar?.viewport?.scrollTop > 2"
+    track="all"
+>
+    <div
+        [style.height]="(lines.length*lineHeight + 0) + 'px'"
+        [style.width]="(scrollWidth + 14) + 'px'"
+        style="position: relative; min-width: 100%;"
+    >
+        @for (line of renderedItems; track line) {
+            @if (line.kind == "line") {
+                <div
+                    class="line"
+                    [class.error]="['error', 'fatal'].includes(line.level?.toLowerCase())"
+                    [class.warning]="['warning', 'warn'].includes(line.level?.toLowerCase())"
+                    [class.breakpoint]="false"
+                    [style.height]="lineHeight + 'px'"
+                    [attr.index]="line._index"
+                    [style.top]="line._index*lineHeight+'px'"
+                >
+                    @if (!['stdout', 'stderr'].includes(line.level)) {
+                        <span class="process agent">
+                            @if (line.record.block == "start") {
+                                <span class="expansion_toggle">
+                                    <mat-icon
+                                        [style.transform]="line._expanded ? 'rotate(90deg)' : ''"
+                                        fontIcon="navigate_next"
+                                    />
+                                </span>
+                            }
+                            @else if (["error", "fatal"].includes(line.level)) {
+                                <span class="expansion_toggle" (click)="viewLineData(line)">
+                                    <mat-icon
+                                        fontIcon="loupe"
+                                    />
+                                </span>
+                            }
+                            @else {
+                                <span class="blank"></span>
+                            }
+                            @if (showTimestamps) {
+                                <span class="time" (dblclick)="viewLineData(line)">{{line?.timestamp}} </span>
+                            }
+
+                            <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
+                        </span>
+                    }
+                    @else if (line.level == 'stdout') {
+                        <span class="process stdout">
+                            <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
+                        </span>
+                    }
+                    @else if (line.level == 'stderr') {
+                        <span class="process stderr">
+                            <ng-container [ngTemplateOutlet]="rowTemplate" [ngTemplateOutletContext]="{'$implicit': line}" />
+                        </span>
+                    }
+                </div>
+            }
+            @else {
+                <div
+                    class="block"
+                    [class.breakpoint]="false"
+                    [style.height]="(2)*lineHeight + 'px'"
+                    [attr.index]="line._index"
+                    [style.top]="line._index*lineHeight+'px'"
+                >
+                    <mat-tab-group
+                        [mat-stretch-tabs]="false"
+                        [(selectedIndex)]="line.selectedTabIndex"
+                        style="width: calc(100% - 14px);"
+                        (selectedIndexChange)="onTaskGroupSelection(line)"
+                    >
+                        @for(tab of line.taskGroups; track tab) {
+                            <mat-tab
+                                [label]="tab.label"
+                            >
+                            </mat-tab>
+                        }
+                    </mat-tab-group>
+                </div>
+            }
+        }
+    </div>
+</ng-scrollbar>
+
+<ng-template #rowTemplate let-line>
+    @if (['stdout', 'stderr'].includes(line.level)) {
+        <span class="blank"></span>
+
+        @if (showTimestamps) {
+            <span class="time" (dblclick)="viewLineData(line)">{{line?.timestamp}} </span>
+        }
+    }
+
+    <span class="message">
+        <span>
+            <!-- The trailing space is **important**! -->
+            @if (line.level == "stdout") {[taskout] }
+            @else if (line.level == "stderr") {[taskerr] }
+            @else {[cruiser] }
+        </span>
+
+        @for (segment of line.html; track segment) {
+            <span class="segment {{segment.class || ''}}" [style]="segment.css" [innerText]="segment.text"></span>
+        }
+    </span>
+</ng-template>
+
+

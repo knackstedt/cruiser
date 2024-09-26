@@ -100,7 +100,7 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
                 stdout = stdout.slice(charIndex);
 
                 const lines = readyText.split('\n');
-                socket.emit("log:stdout", { time: t, level: "stdout", chunk: lines });
+                socket.emit("log:stdout", { time: t, level: "stdout", chunk: lines, properties: obj.properties });
 
                 // Write all entries to stdout
                 lines.forEach(line =>
@@ -119,7 +119,7 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
                 stderr = stderr.slice(charIndex);
 
                 const lines = readyText.split('\n');
-                socket.emit("log:stderr", { time: t, level: "stderr", chunk: lines });
+                socket.emit("log:stderr", { time: t, level: "stderr", chunk: lines, properties: obj.properties });
 
                 // Write all entries to stderr
                 lines.forEach(line =>

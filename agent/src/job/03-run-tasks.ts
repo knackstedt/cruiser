@@ -9,6 +9,8 @@ import { JobInstance } from '../types/agent-task';
 
 const tracer = trace.getTracer('agent-task-runner');
 
+let _gid = 100;
+
 const executeTaskGroup = async (
     parentSpan: Span,
     pipelineInstance: PipelineInstance,
@@ -17,17 +19,21 @@ const executeTaskGroup = async (
     job: JobDefinition,
     jobInstance: JobInstance,
     taskGroup: TaskGroupDefinition,
-    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
+    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>,
+    gid: number
 ) => tracer.startActiveSpan(
     "TaskGroup",
     undefined,
     trace.setSpan(context.active(), parentSpan),
     async span => {
+    const tgid = taskGroup.id;
     try {
         logger.info({
             msg: `Initiating TaskGroup \`${taskGroup.label}\``,
             properties: {
                 taskGroup,
+                gid,
+                tgid
             },
             block: "start"
         });
@@ -63,7 +69,9 @@ const executeTaskGroup = async (
                 taskGroup,
                 task,
                 jobInstance,
-                logger
+                logger,
+                gid,
+                tgid
             );
         }
 
@@ -71,6 +79,8 @@ const executeTaskGroup = async (
             msg: `Completed TaskGroup \`${taskGroup.label}\``,
             properties: {
                 taskGroup,
+                gid,
+                tgid
             },
             block: "end"
         });
@@ -81,7 +91,9 @@ const executeTaskGroup = async (
             properties: {
                 stack: ex.stack,
                 error: ex.message,
-                name: ex.name
+                name: ex.name,
+                gid,
+                tgid
             }
         });
     }
@@ -101,6 +113,7 @@ export const RunTasks = (
     undefined,
     trace.setSpan(context.active(), parentSpan),
     async span => {
+
     job.taskGroups?.sort(orderSort);
 
     const completedMap: { [key: string]: TaskGroupDefinition } = {};
@@ -136,28 +149,53 @@ export const RunTasks = (
     }
 
     // "Recursive" to trigger all of the taskGroups that
-    const runTaskGroups = (taskGroups: TaskGroupDefinition[]) => Promise.all(
-        taskGroups.map(async taskGroup => {
-
-            if (!taskGroup.disabled) {
-                await executeTaskGroup(span, pipelineInstance, pipeline, stage, job, jobInstance, taskGroup, logger);
-            }
-
-            completedMap[taskGroup.id] = taskGroup;
-
-            const nextTgList = triggeredTaskGroups.filter(ttg =>
-                ttg.preTaskGroups.every(ptgi => completedMap[ptgi])
-            );
-            // Remove the just-run task group from the list
-            nextTgList.forEach(tg =>
-                triggeredTaskGroups.splice(triggeredTaskGroups.indexOf(tg), 1)
-            );
-
-            if (nextTgList.length > 0) {
-                await runTaskGroups(nextTgList);
+    const runTaskGroups = (taskGroups: TaskGroupDefinition[]) => {
+        const gid = _gid++;
+        logger.info({
+            msg: "Starting series of TaskGroups",
+            block: "start",
+            properties: {
+                parallelBlock: true,
+                taskGroups,
+                gid
             }
         })
-    );
+
+        return Promise.all(
+            taskGroups.map(async taskGroup => {
+
+                if (!taskGroup.disabled) {
+                    await executeTaskGroup(span, pipelineInstance, pipeline, stage, job, jobInstance, taskGroup, logger, gid);
+                }
+
+                completedMap[taskGroup.id] = taskGroup;
+
+                const nextTgList = triggeredTaskGroups.filter(ttg =>
+                    ttg.preTaskGroups.every(ptgi => completedMap[ptgi])
+                );
+                // Remove the just-run task group from the list
+                nextTgList.forEach(tg =>
+                    triggeredTaskGroups.splice(triggeredTaskGroups.indexOf(tg), 1)
+                );
+
+                if (nextTgList.length > 0) {
+                    await runTaskGroups(nextTgList);
+                }
+            })
+        ).then(res => {
+            logger.info({
+                msg: "Ended series of TaskGroups",
+                block: "end",
+                properties: {
+                    parallelBlock: false,
+                    taskGroups,
+                    gid
+                }
+            });
+
+            return res;
+        })
+    };
 
     const res = await runTaskGroups(immediateTaskGroups);
     span.end();
