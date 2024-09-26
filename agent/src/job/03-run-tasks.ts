@@ -25,7 +25,7 @@ const executeTaskGroup = async (
     async span => {
     try {
         logger.info({
-            msg: `Initiating TaskGroup ${taskGroup.label}`,
+            msg: `Initiating TaskGroup \`${taskGroup.label}\``,
             properties: {
                 taskGroup,
             },
@@ -68,7 +68,7 @@ const executeTaskGroup = async (
         }
 
         logger.info({
-            msg: `Completed TaskGroup '${taskGroup.label}'`,
+            msg: `Completed TaskGroup \`${taskGroup.label}\``,
             properties: {
                 taskGroup,
             },
@@ -130,7 +130,7 @@ export const RunTasks = (
         logger.warn({
             msg: "Job has " + impossibleTaskGroups.length + " task groups that cannot possibly execute due to missing dependencies!",
             properties: {
-                taskGroups: impossibleTaskGroups
+                orphanedTaskGroups: impossibleTaskGroups
             }
         });
     }

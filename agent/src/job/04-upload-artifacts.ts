@@ -59,7 +59,7 @@ const uploadBinary = async (
             throw result;
 
         logger.info({
-            msg: "Successfully uploaded artifact",
+            msg: `Successfully uploaded artifact \`${path}\``,
             properties: {
                 path
             }
@@ -68,7 +68,7 @@ const uploadBinary = async (
     }
     catch(err) {
         logger.warn({
-            msg: "Failed to upload artifact",
+            msg: `Failed to upload artifact \`${path}\``,
             properties: {
                 path,
                 name: err.name,
@@ -125,7 +125,7 @@ export const UploadArtifacts = async (
             })();
 
             logger.info({
-                msg: `Sealing artifact '${artifact.label}'`,
+                msg: `Sealing artifact \`${artifact.label}\``,
                 properties: {
                     artifact
                 }
@@ -145,7 +145,7 @@ export const UploadArtifacts = async (
 
             if (result.exitCode == 0) {
                 logger.info({
-                    msg: `Sealed artifact '${artifact.label}'`,
+                    msg: `Sealed artifact \`${artifact.label}\``,
                     properties: {
                         artifact,
                         result
@@ -167,7 +167,7 @@ export const UploadArtifacts = async (
             }
             else {
                 logger.warn({
-                    msg: `⏸ Failed to seal artifact '${artifact.label}'`,
+                    msg: `⏸ Failed to seal artifact \`${artifact.label}\``,
                     properties: {
                         artifact,
                         result

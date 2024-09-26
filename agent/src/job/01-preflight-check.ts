@@ -106,8 +106,8 @@ export const PreflightCheck = async (
                 const correction = dependency.corrections[osRelease.id];
 
                 logger.warn({
-                    msg: `Attempting to automatically install missing dependency ${dependency.name}\n` +
-                    `    To improve build times, please add this dependency to your base image.`
+                    msg: `Attempting to automatically install missing dependency \`${dependency.name}\`.\n` +
+                    `    To improve build times, add this dependency to your base image.`
                 });
 
                 // Run the corrective action.

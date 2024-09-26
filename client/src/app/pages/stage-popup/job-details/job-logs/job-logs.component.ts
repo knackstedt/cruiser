@@ -11,13 +11,11 @@ import { io, Socket } from 'socket.io-client';
 import ansi, { ParsedSpan, parse } from 'ansicolor';
 import { gitmojis } from 'gitmojis';
 
-import { TaskDefinition } from 'src/types/pipeline';
 import { darkTheme } from 'src/app/services/theme.service';
 import { JobInstance } from 'src/types/agent-task';
 import { BindSocketLogger, ViewJsonInMonacoDialog } from 'src/app/utils/utils';
 import { LogMessage, LogRecord } from 'src/types/agent-log';
 import { MaterialSymbols } from 'src/app/utils/mat-symbols';
-import { HTMLSanitizer } from 'src/app/pipes/urlsanitizer.pipe';
 
 type RenderedLine = ({
     level: "error" | "info" | "warn" | "fatal" | "debug" | "stdout" | "stderr"
@@ -50,8 +48,7 @@ type RenderedLine = ({
         TooltipDirective,
         MatIconModule,
         MatCheckboxModule,
-        MatInputModule,
-        HTMLSanitizer
+        MatInputModule
     ],
     standalone: true,
     // changeDetection: ChangeDetectionStrategy.OnPush
@@ -193,40 +190,90 @@ export class JobLogsComponent {
         const iso = (new Date(line.time)).toISOString();
 
         const lines = line.msg ? [line.msg] : line.chunk;
+        const parseMatches = (matches: RegExpMatchArray[]) => {
+            const se = matches.map(m => ({
+                start: m.index,
+                end: m.index + m[1].length
+            }));
+            se.sort((a, b) => a.start - b.start);
+
+            return se;
+        };
 
         lines.forEach((ln, i) => {
             // If the first line is empty don't print it.
             if (i == 0 && !ln.trim()) return;
-
-            // TODO: this is embedding <name>, <file> tags, which are invalid and angular strips out.
-
-
-            const html = parse(ln).spans.map(s => {
-                // s.text = s.text.replace(/</g, "&#60;");
-                // s.text = s.text.replace(/>/g, "&gt;");
-                // s.text = s.text.replace(/&/g, "&amp;");
-                // s.text = s.text.replace(/\"/g, "&quot;");
-                // s.text = s.text.replace(/\'/g, "&apos;");
-
-                return {
-                    ...s,
-                    text: this.parseGitmoji(s.text)
-                };
-            });
-
             // TODO: Should plaintext strip ANSI codes?
 
-            this.lines.push({
-                _index: 0,
-                _top: 0,
-                _expanded: true,
-                _visible: false,
-                level: line.level,
-                timestamp: iso.replace(/^[^T]+T/, ''),
-                html,
-                plaintext: ln,
-                record: line
-            });
+            // If this is an agent log, perform some mutations that wouldn't normally occur.
+            if (!["stdout", "stderr"].includes(line.level)) {
+                const codeRanges = parseMatches([...ln.matchAll(/(`[^`]+?`)/g)]);
+                let html: ParsedSpan[] = [];
+
+                if (codeRanges.length == 0) {
+                    html.push({
+                        css: "",
+                        text: ln
+                    });
+                }
+                else {
+                    let range = codeRanges.shift();
+                    let index = 0;
+                    do {
+                        html.push({
+                            css: "",
+                            text: ln.slice(index, range.start)
+                        });
+                        html.push({
+                            css: "",
+                            class: "code",
+                            text: ln.slice(range.start, range.end)
+                        } as any);
+
+                        // Update tracking variables
+                        index = range.end;
+                        range = codeRanges.shift();
+                    } while(range)
+
+                    // Add the last item
+                    html.push({
+                        css: "",
+                        text: ln.slice(index)
+                    });
+
+                    // Purge any empty spans
+                    html = html.filter(s => s.text.length > 0);
+                }
+
+                this.lines.push({
+                    _index: 0,
+                    _top: 0,
+                    _expanded: true,
+                    _visible: false,
+                    level: line.level,
+                    timestamp: iso.replace(/^[^T]+T/, ''),
+                    html,
+                    plaintext: ln,
+                    record: line
+                });
+            }
+            else {
+                const html = parse(ln).spans.map(s => {
+                    s.text = this.parseGitmoji(s.text);
+                    return s;
+                });
+                this.lines.push({
+                    _index: 0,
+                    _top: 0,
+                    _expanded: true,
+                    _visible: false,
+                    level: line.level,
+                    timestamp: iso.replace(/^[^T]+T/, ''),
+                    html,
+                    plaintext: ln,
+                    record: line
+                });
+            }
         });
 
         // console.log(this.lines);

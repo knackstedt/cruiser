@@ -32,7 +32,7 @@ export const GetInputs = async (
                 .find(a => a.id == artifact.sourceArtifact);
 
             logger.info({
-                msg: `Downloading input artifact '${artifact.label}:${source.label}'`,
+                msg: `Downloading input artifact \`${artifact.label}:${source.label}\``,
                 properties: {
                     artifact,
                     sourceArtifact: source.id
@@ -67,7 +67,7 @@ export const GetInputs = async (
                     sWriter.on("close", () => {
                         try {
                             logger.info({
-                                msg: `Downloaded input artifact '${artifact.label}:${source.label}'.`,
+                                msg: `Downloaded input artifact \`${artifact.label}:${source.label}\`.`,
                                 properties: {
                                     artifact,
                                     sourceArtifact: source.id
@@ -104,7 +104,7 @@ export const GetInputs = async (
         const sources = stage.sources.filter(s => !s.disabled) || [];
         if (sources.length == 0) {
             logger.debug({
-                msg: `Stage '${stage.label}' has no sources to fetch`,
+                msg: `Stage \`${stage.label}\` has no sources to fetch`,
                 properties: {
                     stage: stage.id
                 }
@@ -176,7 +176,7 @@ export const GetInputs = async (
                             const git = simpleGit(options);
                             const cloneDir = path.resolve(source.targetPath);
 
-                            logger.info({ msg: `Begin cloning source :git: '${repoSlug}'`, properties: { source: sourceForLog.id } });
+                            logger.info({ msg: `Begin cloning source :git: \`${repoSlug}\``, properties: { source: sourceForLog.id } });
 
                             do {
                                 try {
@@ -184,7 +184,7 @@ export const GetInputs = async (
 
                                     if ((await readdir(cloneDir)).length > 0) {
                                         logger.fatal({
-                                            msg: `⏸ Cannot clone '${repoSlug}' into non-empty directory '${cloneDir}'`,
+                                            msg: `⏸ Cannot clone \`${repoSlug}\` into non-empty directory \`${cloneDir}\``,
                                             properties: {
                                                 source: sourceForLog.id
                                             }
@@ -196,7 +196,7 @@ export const GetInputs = async (
                                 }
                                 catch(ex) {
                                     logger.error({
-                                        msg: `❌ Failed to access directory '${cloneDir}' for '${repoSlug}'`,
+                                        msg: `❌ Failed to access directory \`${cloneDir}\` for \`${repoSlug}\``,
                                         properties: {
                                             path: cloneDir,
                                             source: sourceForLog.id
@@ -211,7 +211,7 @@ export const GetInputs = async (
                             });
 
                             logger.info({
-                                msg: `✅ Done cloning git source '${sourceForLog.label || sourceForLog.url?.split('/').pop()}'`,
+                                msg: `✅ Done cloning git source \`${source.label || source.url?.split('/').pop()}\``,
                                 properties: {
                                     source: sourceForLog.id
                                 }
@@ -235,7 +235,7 @@ export const GetInputs = async (
                     });
 
                     logger.error({
-                        msg: "Failed to download source",
+                        msg: `❌ Failed to download source \`${source.label || source.url?.split('/').pop() }\`: ` + ex.message,
                         properties: {
                             source: source.id,
                             ...ex

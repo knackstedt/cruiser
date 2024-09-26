@@ -90,7 +90,7 @@ export const RunProcess = async (
                                     .then(res => ({ key: envItem.name, value: res.data } as any))
                                     .catch(err => {
                                         logger.error({
-                                            msg: `Failed to load secret '${envItem.key}'`,
+                                            msg: `Failed to load secret \`${envItem.key}\``,
                                             properties: {
                                                 stack: err.stack,
                                                 message: err.message
@@ -114,7 +114,7 @@ export const RunProcess = async (
                     }
 
                     logger.info({
-                        msg: `Spawning process '${command}' for task '${task.label}' in group '${taskGroup.label}'`,
+                        msg: `Spawning process \`${command}\` for task \`${task.label}\` in group \`${taskGroup.label}\``,
                         properties: {
                             processCWD,
                             command,
@@ -156,7 +156,7 @@ export const RunProcess = async (
                         process.on('disconnect', (...args) => {
                             span.setAttributes({ "process.exitCode": -1 });
                             logger.error({
-                                msg: `Process '${command}' unexpectedly disconnected`,
+                                msg: `Process \`${command}\` unexpectedly disconnected`,
                                 properties: {
                                     args,
                                     taskGroup,
@@ -169,12 +169,12 @@ export const RunProcess = async (
                         process.on('exit', (exitCode) => {
                             span.setAttributes({ "process.exitCode": exitCode });
                             if (exitCode == 0) {
-                                logger.info({ msg: `Process '${command}' exited successfully`, properties: { taskGroup, task } });
+                                logger.info({ msg: `Process \`${command}\` exited successfully`, properties: { taskGroup, task } });
                                 span.end();
                                 res(process);
                             }
                             else {
-                                logger.error({ msg: `Process '${command}' exited with non-zero exit code (${exitCode})`, properties: { code: exitCode, taskGroup, task } });
+                                logger.error({ msg: `Process \`${command}\` exited with non-zero exit code \`${exitCode}\``, properties: { code: exitCode, taskGroup, task } });
                                 span.end();
                                 res(process);
                             }
@@ -192,7 +192,7 @@ export const RunProcess = async (
 
             if (process?.exitCode == 0) {
                 logger.info({
-                    msg: `Completed task '${task.label}' in group '${taskGroup.label}'`,
+                    msg: `Completed task \`${task.label}\` in group \`${taskGroup.label}\``,
                     properties: {
                         process,
                         taskGroup,

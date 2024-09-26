@@ -179,7 +179,7 @@
         </span>
 
         @for (segment of line.html; track segment) {
-            <span class="segment" [style]="segment.css" [innerText]="segment.text"></span>
+            <span class="segment {{segment.class || ''}}" [style]="segment.css" [innerText]="segment.text"></span>
         }
     </span>
 </ng-template>
