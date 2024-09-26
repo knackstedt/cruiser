@@ -17,6 +17,7 @@ import { JobInstance } from 'src/types/agent-task';
 import { BindSocketLogger, ViewJsonInMonacoDialog } from 'src/app/utils/utils';
 import { LogMessage, LogRecord } from 'src/types/agent-log';
 import { MaterialSymbols } from 'src/app/utils/mat-symbols';
+import { HTMLSanitizer } from 'src/app/pipes/urlsanitizer.pipe';
 
 type RenderedLine = ({
     level: "error" | "info" | "warn" | "fatal" | "debug" | "stdout" | "stderr"
@@ -49,7 +50,8 @@ type RenderedLine = ({
         TooltipDirective,
         MatIconModule,
         MatCheckboxModule,
-        MatInputModule
+        MatInputModule,
+        HTMLSanitizer
     ],
     standalone: true,
     // changeDetection: ChangeDetectionStrategy.OnPush
@@ -128,6 +130,7 @@ export class JobLogsComponent {
                 withCredentials: true
             });
             BindSocketLogger('logs', socket);
+            let historyFetchTime: number;
 
             socket.on("connect", () => {
                 this.lines = [];
@@ -137,7 +140,9 @@ export class JobLogsComponent {
             });
             socket.on("$connected", () => {
                 this.connected = true;
-                socket.emit("log:get-history", { jobInstance: this.jobInstance.id });
+                historyFetchTime = Date.now();
+
+                socket.emit("$log:get-history", { jobInstanceId: this.jobInstance.id });
             });
             socket.on("disconnect", () => {
                 this.connected = false;
@@ -147,9 +152,11 @@ export class JobLogsComponent {
             socket.on("log:stderr", (data) => this.onReceiveLine(data));
             socket.on("log:agent", (data) => this.onReceiveLine(data));
 
-            socket.on("log:history", (entries: LogMessage[]) => {
+            socket.on("log:history", (entries: LogRecord[]) => {
+                console.log("Fetched history in " + (Date.now() - historyFetchTime) + "ms")
+                console.log(entries)
                 console.time("Parse log history");
-                entries.forEach(e => this.onReceiveLine(e.data, false));
+                entries.forEach(e => this.onReceiveLine(e, false));
 
                 console.timeEnd("Parse log history");
                 // console.log(this.lines);
@@ -191,7 +198,16 @@ export class JobLogsComponent {
             // If the first line is empty don't print it.
             if (i == 0 && !ln.trim()) return;
 
+            // TODO: this is embedding <name>, <file> tags, which are invalid and angular strips out.
+
+
             const html = parse(ln).spans.map(s => {
+                // s.text = s.text.replace(/</g, "&#60;");
+                // s.text = s.text.replace(/>/g, "&gt;");
+                // s.text = s.text.replace(/&/g, "&amp;");
+                // s.text = s.text.replace(/\"/g, "&quot;");
+                // s.text = s.text.replace(/\'/g, "&apos;");
+
                 return {
                     ...s,
                     text: this.parseGitmoji(s.text)
@@ -213,7 +229,7 @@ export class JobLogsComponent {
             });
         });
 
-        console.log(this.lines);
+        // console.log(this.lines);
         if (runHooks) {
             this.filterLines();
         }

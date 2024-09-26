@@ -1,10 +1,11 @@
 import { Server, Socket } from "socket.io";
 import { ulid } from 'ulidx';
-import { JobDefinition, PipelineDefinition } from '../types/pipeline';
+import { PipelineDefinition } from '../types/pipeline';
 import { SessionMiddleware } from '../middleware/session';
-import { Session, SessionData } from 'express-session';
+import { SessionData } from 'express-session';
 import { CheckJobToken } from '../util/token-cache';
 import { JobInstance } from '../types/agent-task';
+import { LogRecord } from '../types/agent-log';
 
 export class SocketTunnelService {
 
@@ -24,7 +25,11 @@ export class SocketTunnelService {
             metadata?: {
                 jobInstance: JobInstance,
                 pipeline: PipelineDefinition,
-            }
+            },
+            // Testing: using this as a memory cache for log messages
+            // TODO: How much of a memory impact could this have?
+            // I expect this would be minimal, but I'm not totally sure.
+            logHistory: LogRecord[]
         }
     } = {};
 
@@ -82,36 +87,48 @@ export class SocketTunnelService {
             });
 
             socket.on("disconnect", () => delete this.connectedClients[id]);
+
+            socket.on("$log:get-history", ({ jobInstanceId }: { jobInstanceId: string }) => {
+                const source = (Object.values(this.connectedSources)
+                    .find(source => source.metadata?.jobInstance?.id == jobInstanceId) ?? {} as any);
+
+                socket.emit("log:history", source.logHistory);
+            });
         });
     }
 
     // Agents will connect here and load data into the streams
     private startSourceService() {
-        // TODO: restrict this to only allow connections from the internal cluster or known agents?
         const io = new Server(this.server, {
             path: "/socket/socket-tunnel-internal",
             maxHttpBufferSize: 1024 ** 3
         });
+        // Only allow connections from agents that were explicitly initialized by the server
+        io.engine.use((req, res, next) => {
+            // TODO: Create authorization tokens for this purpose.
+            const cruiserToken = req.headers["x-cruiser-token"];
+            if (!cruiserToken) return next(401);
+
+            req['_agentToken'] = cruiserToken;
+            CheckJobToken(cruiserToken)
+                .then(hasToken => hasToken ? next() : next(401));
+        });
+
 
         io.on("connection", async socket => {
-            const cruiserToken = socket.handshake.auth["X-Cruiser-Token"];
-            if (!cruiserToken) {
-                socket.disconnect();
-                return;
-            }
-
-            const isAuthenticated = await CheckJobToken(cruiserToken);
-
-            if (!isAuthenticated) {
-                socket.disconnect();
-                return;
-            }
             const id = ulid();
+            const cruiserToken = socket.handshake.auth["X-Cruiser-Token"];
 
-            this.connectedSources[id] = { socket, id };
+            // Check if the token matches
+            // TODO: check the token against the job instance
+            if (!cruiserToken || !await CheckJobToken(cruiserToken)) {
+                socket.disconnect();
+                return;
+            }
+
+            const source = this.connectedSources[id] = { socket, id, logHistory: [] };
             socket.on("disconnect", () => {
-                const oldSrc = this.connectedSources[id];
-                oldSrc.socket.disconnect();
+                source.socket.disconnect();
 
                 delete this.connectedSources[id];
             });
@@ -133,6 +150,22 @@ export class SocketTunnelService {
                 this.connectToWaitingClients(id);
             });
             socket.emit("$get-metadata", { data: id });
+
+            socket.on("log:agent", data => {
+                source.logHistory.push(data);
+            });
+            socket.on("log:stdout", data => {
+                source.logHistory.push(data);
+            });
+            socket.on("log:stderr", data => {
+                source.logHistory.push(data);
+            });
+
+            // We reconnected to the agent and it has log history to share with us
+            socket.on("log:history-populate", data => {
+                source.logHistory = [...data, ...source.logHistory];
+                source.logHistory.sort((a,b) => a.time - b.time);
+            });
         });
     }
 

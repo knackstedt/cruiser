@@ -22,15 +22,11 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
         return null;
     };
 
-    socket.on("log:get-history", ({jobInstance}) => {
-        if (jobInstance != environment.jobInstanceId) {
-            // Somehow things went very bad.
-            return;
-        };
-        // For each record stored in history, emit it to the client.
-        // We emit it to the original emitter, so the records don't
-        // duplicate.
-        originalEmit("log:history", history)
+    // For each record stored in history, emit it to the server.
+    // We emit it to the original emitter, so the records don't
+    // duplicate.
+    socket.on("connect", () => {
+        originalEmit("log:history-populate", history.map(h => h.data))
     });
 
     const decoder = new TextDecoder();

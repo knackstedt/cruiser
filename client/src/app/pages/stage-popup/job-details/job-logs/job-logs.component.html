@@ -171,10 +171,15 @@
     }
 
     <span class="message">
-        <span>{{!['stdout', 'stderr'].includes(line.level) ? '[agent]' : '[' + line.level + ']'}} </span>
+        <span>
+            <!-- The trailing space is **important**! -->
+            @if (line.level == "stdout") {[taskout] }
+            @else if (line.level == "stderr") {[taskerr] }
+            @else {[cruiser] }
+        </span>
 
         @for (segment of line.html; track segment) {
-            <span class="segment" [style]="segment.css" [innerHTML]="segment.text"></span>
+            <span class="segment" [style]="segment.css" [innerText]="segment.text"></span>
         }
     </span>
 </ng-template>
