@@ -7,24 +7,7 @@ USER 0
 ENV NODE_ENV production
 
 # Install node
-RUN apk add nodejs npm git
-
-# Add the nginx apk repository
-RUN printf "%s%s%s%s\n" \
-    "@nginx " \
-    "http://nginx.org/packages/alpine/v" \
-    `egrep -o '^[0-9]+\.[0-9]+' /etc/alpine-release` \
-    "/main" \
-    | tee -a /etc/apk/repositories
-
-# Get the signing key
-RUN wget --output-document=/etc/apk/keys/nginx_signing.rsa.pub https://nginx.org/keys/nginx_signing.rsa.pub
-
-# Install the otel module
-RUN apk add nginx@nginx nginx-module-otel@nginx
-
-# RUN apt update
-# RUN apt install nginx g++ make python3 -y -qq
+RUN apk add nodejs npm git nginx
 
 # Pull in nginx configuration
 COPY ./nginx.conf /etc/nginx/nginx.conf
