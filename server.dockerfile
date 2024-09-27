@@ -1,5 +1,6 @@
 # FROM node:20-bullseye
-FROM node:20-alpine
+# FROM node:20-alpine
+FROM nginx:stable-alpine3.20-otel
 # FROM nginxinc/nginx-unprivileged:stable-alpine3.18
 
 USER 0
@@ -17,9 +18,10 @@ RUN rm /etc/nginx/conf.d/default.conf
 RUN nginx -t -c /etc/nginx/nginx.conf
 
 WORKDIR /app
-RUN chown 1000 /app -R
-
-USER 1000
+RUN chown -R 101:101 "/app"
+RUN mkdir /var/cache/nginx/.npm
+RUN chown -R 101:101 "/var/cache/nginx/.npm"
+USER 101
 
 ADD ./dist/cruiser/browser/ /app/client/
 ADD ./dist/server/ /app/server/
