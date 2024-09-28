@@ -21,6 +21,7 @@ WORKDIR /app
 RUN chown -R 101:101 "/app"
 RUN mkdir /var/cache/nginx/.npm
 RUN chown -R 101:101 "/var/cache/nginx/.npm"
+RUN chmod 1777 /tmp -R
 USER 101
 
 ADD ./dist/cruiser/browser/ /app/client/
