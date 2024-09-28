@@ -1,4 +1,5 @@
 import "./types/cruiser-types";
+import "./util/express-types";
 import dotenv from 'dotenv';
 
 dotenv.config({});

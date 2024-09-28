@@ -44,6 +44,8 @@ export class SocketEventService {
 
             // If we receive a stop job event, we will attempt to end that job
             // via our live websocket connection.
+            // TODO: Fallback to murdering the job via kubectl
+            // also, should this controller be here or elsewhere?
             socket.on("$stop-job", async ({ jobInstanceId }: { jobInstanceId: string; }) => {
                 const { socket } = Object.values(this.socketTunnel.connectedSources)
                     .find(e => e.metadata?.jobInstance.id == jobInstanceId) || {};

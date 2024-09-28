@@ -106,23 +106,28 @@ export const CronScheduler = () => {
 export const CheckAndTriggerStage = async (pipeline: PipelineDefinition, stage: StageDefinition, creatorName: string) => {
     let needsToRun = false;
     for (const source of stage.sources) {
-        // TODO: authorized repos
-        const refs = await GetGitRefs(source.url);
+        try {
+            // TODO: authorized repos
+            const refs = await GetGitRefs(source.url);
 
-        const {hash} = refs.find(r => r.id == source.branch || "main") ?? {};
-        if (!hash) {
-            // TODO: Handle in some manner
-            // The branch is deleted or the source is misconfigured
-            continue;
+            const {hash} = refs.find(r => r.id == source.branch || "main") ?? {};
+            if (!hash) {
+                // TODO: Handle in some manner
+                // The branch is deleted or the source is misconfigured
+                continue;
+            }
+
+            // If the hash is unmodified, do nothing
+            if (hash == source.lastHash)
+                continue;
+
+            // At this point, we know that the stage needs to run
+            needsToRun = true;
+            break;
         }
-
-        // If the hash is unmodified, do nothing
-        if (hash == source.lastHash)
-            continue;
-
-        // At this point, we know that the stage needs to run
-        needsToRun = true;
-        break;
+        catch(ex) {
+            debugger;
+        }
     }
 
     if (needsToRun) {

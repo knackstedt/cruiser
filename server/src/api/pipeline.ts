@@ -66,11 +66,12 @@ router.get('/:id/run', route(async (req, res, next) => {
         ? pipeline.stages.filter(s => !s.stageTrigger || s.stageTrigger.length == 0)
         : pipeline.stages.filter(s => stageIds.includes(s.id));
 
-    await RunPipeline(pipeline, req.session.gh_user.login, stages);
+    const results = await RunPipeline(pipeline, req.session.gh_user.login, stages);
 
     res.send({
         message: "ok",
-        pipeline
+        pipeline,
+        results
     });
 }));
 
@@ -123,13 +124,19 @@ router.get('/:id/:instance/:stage/approve', route(async (req, res, next) => {
     if (forceRun || approval.approvalCount >= stage.requiredApprovals) {
         approval.hasRun = true;
         await db.merge(instance.id, instance);
-        await RunStage(instance, stage);
+        const state = await RunStage(instance, stage);
+        res.send({
+            message: "ok",
+            pipeline,
+            state
+        });
     }
-
-    res.send({
-        message: "ok",
-        pipeline
-    });
+    else {
+        res.send({
+            message: "ok",
+            pipeline
+        });
+    }
 }));
 
 export const PipelineApi = router;
