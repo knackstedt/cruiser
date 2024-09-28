@@ -3,7 +3,7 @@ import { Fetch, MenuItem, ReactMagicWrapperComponent, VscodeComponent } from '@d
 import { ReactFlowComponent } from '../../../components/reactflow/reactflow-wrapper';
 import { PipelineDefinition, SourceConfiguration, StageDefinition, Webhook } from 'src/types/pipeline';
 import { ulid } from 'ulidx';
-import { Edge, Handle, Node, Position } from 'reactflow';
+import { Edge, Handle, MarkerType, Node, Position } from 'reactflow';
 import dagre from '@dagrejs/dagre';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
@@ -193,7 +193,7 @@ export class ReleaseEditorComponent {
                 },
             },
             [
-                React.createElement(Handle, { type: "source", position: Position.Right })
+                React.createElement(Handle, { type: "source", id: "source", position: Position.Right })
             ]
         ),
         webhook: ReactMagicWrapperComponent.WrapAngularComponent(
@@ -333,6 +333,7 @@ export class ReleaseEditorComponent {
             this.initPipelineObject(p);
         }
 
+        this.view = "pipeline";
         if (this.pipeline.id) {
             this.renderGraph();
         }
@@ -556,7 +557,13 @@ export class ReleaseEditorComponent {
                     type: "bezier",
                     style: {
                         strokeWidth: 2,
-                        stroke: '#00c7ff',
+                        stroke: isMissingPreReq ? '#f44336' : '#00c7ff',
+                    },
+                    markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                        width: 16,
+                        height: 16,
+                        color: isMissingPreReq ? '#f44336' : '#00c7ff'
                     },
                     data: {
                         source: this.pipeline.stages.find(s => s.id == precedingStageId),
@@ -572,9 +579,17 @@ export class ReleaseEditorComponent {
                     target: stageUlid,
                     id: "source_edge_" + stage.id,
                     type: "bezier",
+                    sourceHandle: "source",
                     style: {
                         strokeWidth: 2,
-                        stroke: '#00c7ff',
+                        stroke: '#9e9e9e',
+                        opacity: stage.sources.every(s => s.disabled) || stage.disabled ? .5 : 1
+                    },
+                    markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                        width: 16,
+                        height: 16,
+                        color: '#9e9e9e',
                     },
                     data: { target: stage }
                 });
@@ -582,7 +597,7 @@ export class ReleaseEditorComponent {
                 const height = stage.sources.length * 36;
                 sourceNodes.push({
                     id: "source_" + stage.id,
-                    width: 320,
+                    width: 200,
                     height,
                     type: "source",
                     data: {
@@ -604,7 +619,13 @@ export class ReleaseEditorComponent {
                     type: "bezier",
                     style: {
                         strokeWidth: 2,
-                        stroke: '#00c7ff',
+                        stroke: '#9e9e9e',
+                    },
+                    markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                        width: 16,
+                        height: 16,
+                        color: '#9e9e9e'
                     },
                     data: { source: stage }
                 });
@@ -612,7 +633,7 @@ export class ReleaseEditorComponent {
                 const height = stage.webhooks.length * 36;
                 sourceNodes.push({
                     id: "webhook_" + stage.id,
-                    width: 320,
+                    width: 200,
                     height,
                     type: "webhook",
                     data: {

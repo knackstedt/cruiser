@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container" [class.disabled]="stage.disabled">
     @for (source of sources; track source) {
         <div
             class="source"

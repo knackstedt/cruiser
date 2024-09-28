@@ -398,11 +398,12 @@ export class StageEditorComponent {
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
                         width: 16,
-                        height: 16
+                        height: 16,
+                        color: isMissingPreReq ? '#f44336' : '#00c7ff'
                     },
                     style: {
                         strokeWidth: 2,
-                        stroke: '#00c7ff',
+                        stroke: isMissingPreReq ? '#f44336' : '#00c7ff',
                     },
                     data: {
                         source: job.taskGroups.find(s => s.id == preTaskGroupId),
