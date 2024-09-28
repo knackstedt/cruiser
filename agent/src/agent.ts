@@ -25,7 +25,7 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
         const socket = await CreateBaseSocketServer(span, pipeline, jobInstance);
         const logger = await CreateLoggerSocketServer(span, socket);
         const terminal = await CreateTerminalSocketServer(span, socket);
-        const breakpoint = await CreateBreakpointSocketServer(span, socket, jobInstance);
+        const breakpoint = await CreateBreakpointSocketServer(socket, jobInstance);
         const metrics = await CreateMetricsSocketServer(span, socket);
 
 
@@ -94,7 +94,7 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
                     message: err.message ?? err.title ?? err.name
                 }
             })
-            await TripBreakpoint(span, jobInstance, false);
+            await TripBreakpoint(span, jobInstance, false, false);
         }
         span.end();
     })

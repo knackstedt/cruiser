@@ -18,6 +18,7 @@ import { LogMessage, LogRecord } from 'src/types/agent-log';
 import { MaterialSymbols } from 'src/app/utils/mat-symbols';
 import { TaskGroupDefinition } from 'src/types/pipeline';
 import { LogsRendererComponent } from "./logs-renderer/logs-renderer.component";
+import { Breakpoint } from '../job-details.component';
 
 export type RenderedItem = {
     kind: "line" | "block"
@@ -82,6 +83,8 @@ export class JobLogsComponent {
 
     visibleTaskGroups: {[key: string]: { visible: boolean }} = {};
 
+    breakpoints: Breakpoint[] = [];
+
     private socket: Socket;
 
     constructor(
@@ -104,8 +107,14 @@ export class JobLogsComponent {
         this.lineBlockMap = {};
         this.visibleTaskGroups = {};
 
-        // console.log(this);
+        this.initDatasource();
+    }
 
+    ngOnDestroy() {
+        this.socket?.disconnect();
+    }
+
+    async initDatasource() {
         // If the pipeline is no longer running, attempt to load the logs from
         // the disk
         if (['finished', 'failed', 'cancelled'].includes(this.jobInstance.state)) {
@@ -120,8 +129,26 @@ export class JobLogsComponent {
             ].join('/') + '.log';
 
             const data = await this.fetch.get<string>(url, { responseType: "text" });
+            console.time("Parse log history");
+            const lines = data.split('\n');
 
+            const l = lines.length;
+            for (let i = 0; i < l; i++) {
+                const ln = lines[i];
 
+                if (ln[0] == "{") {
+                    this.onReceiveLine(JSON.parse(ln));
+                }
+                else {
+                    this.onReceiveLine({
+                        level: "stderr",
+                        time: i,
+                        msg: ln,
+                    })
+                }
+            }
+
+            console.timeEnd("Parse log history");
             this.filterLines();
         }
         else {
@@ -141,7 +168,7 @@ export class JobLogsComponent {
             socket.on("$connected", () => {
                 this.connected = true;
                 historyFetchTime = Date.now();
-                console.log("we fuckin connect")
+                console.log("we fuckin connect");
                 socket.emit("$log:get-history", { jobInstanceId: this.jobInstance.id });
             });
             socket.on("disconnect", () => {
@@ -153,27 +180,26 @@ export class JobLogsComponent {
             socket.on("log:agent", (data) => this.onReceiveLine(data));
 
             socket.on("log:history", (entries: LogRecord[]) => {
-                console.log("Fetched history in " + (Date.now() - historyFetchTime) + "ms")
-                console.log(entries)
+                console.log("Fetched history in " + (Date.now() - historyFetchTime) + "ms");
+                // console.log(entries);
                 console.time("Parse log history");
                 entries.forEach(e => this.onReceiveLine(e, false));
-
                 console.timeEnd("Parse log history");
-                // console.log(this.lines);
 
                 this.filterLines();
             });
-        }
-    }
 
-    ngOnDestroy() {
-        this.socket?.disconnect();
+
+            socket.on("breakpoint:list", ({ breakpoints }) => {
+                this.breakpoints = breakpoints;
+            });
+        }
     }
 
     onReceiveLine(line: LogRecord, runHooks = true) {
         const iso = (new Date(line.time)).toISOString();
 
-        const lines = line.msg ? [line.msg] : line.chunk;
+        const lines = typeof line.msg == "string" ? [line.msg] : line.chunk;
         const parseMatches = (matches: RegExpMatchArray[]) => {
             const se = matches.map(m => ({
                 start: m.index,
@@ -467,5 +493,12 @@ export class JobLogsComponent {
 
     refocusPanel(delay?) {
         this.logsRenderer.refocusPanel(delay)
+    }
+
+    clearBreakpoint(breakpoint: Breakpoint, action: number) {
+        this.socket.emit("breakpoint:resume", {
+            ...breakpoint,
+            action
+        });
     }
 }

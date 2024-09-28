@@ -4,7 +4,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { io, Socket } from 'socket.io-client';
 import { Fetch, FilemanagerComponent, MenuDirective, NGX_WEB_COMPONENTS_CONFIG, NgxFileManagerConfiguration, TooltipDirective } from '@dotglitch/ngx-common';
-import { JobDefinition, TaskDefinition } from 'src/types/pipeline';
+import { JobDefinition, TaskDefinition, TaskGroupDefinition } from 'src/types/pipeline';
 import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/job-instance-icon.component';
 import { XtermWrapperComponent } from 'src/app/pages/stage-popup/job-details/xterm-wrapper/xterm-wrapper.component';
 import { JobLogsComponent } from 'src/app/pages/stage-popup/job-details/job-logs/job-logs.component';
@@ -14,6 +14,14 @@ import { BindSocketLogger } from 'src/app/utils/utils';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AgentMetricsComponent } from './metrics/metrics.component';
+
+export type Breakpoint = {
+    id: string,
+    task?: TaskDefinition,
+    taskGroup?: TaskGroupDefinition,
+    allowRetry: boolean;
+    allowSkip: boolean;
+}
 
 @Component({
     selector: 'app-job-details',
@@ -51,7 +59,7 @@ export class JobDetailsComponent {
     config: NgxFileManagerConfiguration;
     connected = false;
     socket: Socket;
-    breakpoints: any[] = [];
+    breakpoints: Breakpoint[] = [];
     selectedIndex = 0;
     loadTerminal = false;
 
@@ -112,10 +120,10 @@ export class JobDetailsComponent {
         }
     }
 
-    clearBreakpoint(breakpoint, retry) {
+    clearBreakpoint(breakpoint: Breakpoint, action: number) {
         this.socket.emit("breakpoint:resume", {
             ...breakpoint,
-            retry
+            action
         })
     }
 

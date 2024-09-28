@@ -9,7 +9,6 @@ import { CreateLoggerSocketServer } from '../socket/logger';
 import { TripBreakpoint } from '../socket/breakpoint';
 import { api } from '../util/axios';
 import { decompressTarGZip, decompressTarLrz } from '../util/compression';
-import { cat } from 'shelljs';
 import path from 'path';
 
 const tracer = trace.getTracer('agent-source-fetch');
@@ -186,7 +185,7 @@ export const GetInputs = async (
                                         logger.fatal({
                                             msg: `⏸ Cannot clone \`${repoSlug}\` into non-empty directory \`${cloneDir}\``,
                                             properties: {
-                                                source: sourceForLog.id
+                                                source: sourceForLog
                                             }
                                         });
                                     }
@@ -199,12 +198,12 @@ export const GetInputs = async (
                                         msg: `❌ Failed to access directory \`${cloneDir}\` for \`${repoSlug}\``,
                                         properties: {
                                             path: cloneDir,
-                                            source: sourceForLog.id
+                                            source: sourceForLog
                                         }
                                     });
                                 }
                             }
-                            while (await TripBreakpoint(span, jobInstance, true))
+                            while (await TripBreakpoint(span, jobInstance, true, false))
 
                             await git.clone(source.url, cloneDir, {
                                 "--depth": source.cloneDepth ? source.cloneDepth : '1'
@@ -237,7 +236,7 @@ export const GetInputs = async (
                     logger.error({
                         msg: `❌ Failed to download source \`${source.label || source.url?.split('/').pop() }\`: ` + ex.message,
                         properties: {
-                            source: source.id,
+                            source: sourceForLog,
                             ...ex
                         }
                     });

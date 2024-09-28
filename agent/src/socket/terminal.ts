@@ -1,30 +1,29 @@
 import os from "os";
-import shx from "shelljs";
 import * as pty from "node-pty";
 import { Socket, io } from "socket.io-client";
 import { ulid } from 'ulidx';
 import { environment } from '../util/environment';
-import { CreateLoggerSocketServer } from './logger';
 import { Span } from '@opentelemetry/api';
 import { logger } from '../util/logger';
+
+import { command } from 'execa';
 
 // Make an attempt to get a compatible PTY program.
 const shell = os.platform() == "win32"
     ? "powershell.exe"
-    : shx.which("bash")
-    ? "bash"
-    : shx.which("ash")
-    ? "ash"
-    : shx.which("zsh")
+    : command("which zsh")
     ? "zsh"
-    : shx.which("ksh")
-    ? "ksh"
+    : command("which fish")
+    ? "fish"
+    : command("which bash")
+    ? "bash"
+    : command("which ash")
+    ? "ash"
     : "sh";
 
 export const CreateTerminalSocketServer = async (parentSpan: Span, socket: Socket) => {
 
     let ptyProcess: pty.IPty;
-    let ptyArgs;
 
     const uid = ulid();
 
@@ -33,13 +32,15 @@ export const CreateTerminalSocketServer = async (parentSpan: Span, socket: Socke
         // TODO: restore history on reconnect...
         let history = [];
         try {
-            ptyArgs = {
+            const ptyArgs: pty.IPtyForkOptions = {
                 name: "xterm-color",
                 cwd: environment.buildDir,
                 env: {
                     ...process.env,
                     "COLORTERM": "truecolor"
                 },
+                cols: 80,
+                rows: 40
             };
             ptyProcess = pty.spawn(shell, [], ptyArgs);
         }

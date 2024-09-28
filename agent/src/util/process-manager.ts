@@ -1,222 +1,233 @@
-import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process';
-import { exists, mkdir, mkdirp } from 'fs-extra';
-import { context, Span, trace } from '@opentelemetry/api';
-import {environment} from './environment';
+// import { ChildProcessWithoutNullStreams, exec, spawn } from 'child_process';
+// import { exists, mkdir, mkdirp } from 'fs-extra';
+// import { context, Span, trace } from '@opentelemetry/api';
+// import {environment} from './environment';
 
-import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition, TaskDefinition, TaskGroupDefinition } from '../types/pipeline';
-import { CreateLoggerSocketServer } from '../socket/logger';
-import { JobInstance } from '../types/agent-task';
-import { TripBreakpoint } from '../socket/breakpoint';
-import { ParseCommand } from './command-parser';
-import { api } from './axios';
+// import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition, TaskDefinition, TaskGroupDefinition } from '../types/pipeline';
+// import { CreateLoggerSocketServer } from '../socket/logger';
+// import { JobInstance } from '../types/agent-task';
+// import { TripBreakpoint } from '../socket/breakpoint';
+// import { ParseCommand } from './command-parser';
+// import { api } from './axios';
+// import { ulid } from 'ulidx';
 
-const tracer = trace.getTracer('agent-task');
+// const tracer = trace.getTracer('agent-task');
 
-export const RunProcess = async (
-    parentSpan: Span,
-    pipelineInstance: PipelineInstance,
-    pipeline: PipelineDefinition,
-    stage: StageDefinition,
-    job: JobDefinition,
-    taskGroup: TaskGroupDefinition,
-    task: TaskDefinition,
-    jobInstance: JobInstance,
-    logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>,
-    gid: number,
-    tgid: string
-) => {
-    let retry = false;
-    do {
-        retry = false;
+// export const RunProcess = async (
+//     parentSpan: Span,
+//     pipelineInstance: PipelineInstance,
+//     pipeline: PipelineDefinition,
+//     stage: StageDefinition,
+//     job: JobDefinition,
+//     taskGroup: TaskGroupDefinition,
+//     task: TaskDefinition,
+//     jobInstance: JobInstance,
+//     logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>,
+//     gid: number,
+//     tgid: string
+// ) => {
+//     const correlationId = ulid();
 
-        const ctx = trace.setSpan(context.active(), parentSpan);
-        await tracer.startActiveSpan("Task", undefined, ctx, async span => {
-            const processCWD = task.cwd?.startsWith("/")
-                ? task.cwd
-                : environment.buildDir + (task.cwd ?? '');
+//     let retry = false;
+//     let breakOnNextTask = false;
+//     do {
+//         retry = false;
 
-            span.setAttributes({
-                "taskGroup.id": taskGroup.id,
-                "task.id": task.id,
-                "task.cwd": processCWD
-            });
+//         const ctx = trace.setSpan(context.active(), parentSpan);
+//         await tracer.startActiveSpan("Task", undefined, ctx, async span => {
+//             const processCWD = task.cwd?.startsWith("/")
+//                 ? task.cwd
+//                 : environment.buildDir + (task.cwd ?? '');
 
-            if (task.breakBeforeTask) {
-                logger.info({ msg: `⏸ Tripping on Breakpoint`, properties: { taskGroup, task, gid, tgid } });
-                await TripBreakpoint(span, jobInstance, false, taskGroup, task);
-                logger.info({ msg: `Resuming from Breakpoint`, properties: { taskGroup, task, gid, tgid } });
-            }
+//             span.setAttributes({
+//                 "taskGroup.id": taskGroup.id,
+//                 "task.id": task.id,
+//                 "task.cwd": processCWD
+//             });
 
-            // Try to create the CWD.
-            await mkdirp(processCWD);
+//             if (breakOnNextTask) {
+//                 logger.info({ msg: `BEFORE TASK`, properties: { taskGroup, task, gid, tgid, correlationId } });
+//                 breakOnNextTask = (await TripBreakpoint(span, jobInstance, false, taskGroup, task)) == 2;
+//                 logger.info({ msg: `Resuming from Breakpoint`, properties: { taskGroup, task, gid, tgid } });
+//             }
+//             if (task.breakBeforeTask) {
+//                 logger.info({ msg: `⏸ Tripping on PreExecute Breakpoint`, properties: { taskGroup, task, gid, tgid, correlationId } });
+//                 await TripBreakpoint(span, jobInstance, false, taskGroup, task, correlationId);
+//                 logger.info({ msg: `Resuming from Breakpoint`, properties: { taskGroup, task, gid, tgid } });
+//             }
 
-            const process: ChildProcessWithoutNullStreams =
-                await new Promise<ChildProcessWithoutNullStreams>(async(res, rej) => {
-                try {
-                    // TODO: join env separately.
-                    // const specifiedCommand = task.taskScriptArguments['command'];
+//             // Try to create the CWD.
+//             await mkdirp(processCWD);
 
-                    const {
-                        command,
-                        args,
-                        env
-                    } = ParseCommand(task.taskScriptArguments['command'] + ' ' + task.taskScriptArguments['arguments']);
+//             const process: ChildProcessWithoutNullStreams =
+//                 await new Promise<ChildProcessWithoutNullStreams>(async(res, rej) => {
+//                 try {
+//                     // TODO: join env separately.
+//                     // const specifiedCommand = task.taskScriptArguments['command'];
 
-                    const execEnv = {};
+//                     const {
+//                         command,
+//                         args,
+//                         env
+//                     } = ParseCommand(task.taskScriptArguments['command'] + ' ' + task.taskScriptArguments['arguments']);
 
-                    Object.entries(global.process.env)
-                        // Omit variables that we don't want the underlying program to
-                        // have to deal with
-                        .filter(e => !e[0].startsWith("CI_"))
-                        .filter(e => !e[0].startsWith("CRUISER_"))
-                        .filter(e => !e[0].startsWith("KUBERNETES_"))
-                        .forEach(e => execEnv[e[0]] = e[1]);
+//                     const execEnv = {};
 
-                    // TODO: Parse variables out of command? Will we decide against this?
-                    // Object.entries(env)
+//                     Object.entries(global.process.env)
+//                         // Omit variables that we don't want the underlying program to
+//                         // have to deal with
+//                         .filter(e => !e[0].startsWith("CI_"))
+//                         .filter(e => !e[0].startsWith("CRUISER_"))
+//                         .filter(e => !e[0].startsWith("KUBERNETES_"))
+//                         .forEach(e => execEnv[e[0]] = e[1]);
 
-                    const roots = [ pipeline, stage, job, taskGroup, task ];
+//                     // TODO: Parse variables out of command? Will we decide against this?
+//                     // Object.entries(env)
 
-                    const secretRequests: Promise<{key: string, value: string}>[] = [];
+//                     const roots = [ pipeline, stage, job, taskGroup, task ];
 
-                    // Collect all of the environment variables defined on each level
-                    for (let i = 0; i < roots.length; i++) {
-                        const envList = roots[i].environment ?? [];
+//                     const secretRequests: Promise<{key: string, value: string}>[] = [];
 
-                        for (let j = 0; j < envList.length; j++) {
-                            const envItem = envList[j] ?? {} as any;
+//                     // Collect all of the environment variables defined on each level
+//                     for (let i = 0; i < roots.length; i++) {
+//                         const envList = roots[i].environment ?? [];
 
-                            // If the variable is a secret, we'll request that.
-                            if (envItem.isSecret) {
-                                secretRequests.push(api.get(span, `/api/${roots[i].id}/${envItem.value}`)
-                                    .then(res => ({ key: envItem.name, value: res.data } as any))
-                                    .catch(err => {
-                                        logger.error({
-                                            msg: `Failed to load secret \`${envItem.key}\``,
-                                            properties: {
-                                                stack: err.stack,
-                                                message: err.message,
-                                                gid, tgid
-                                            }
-                                        });
-                                        return { key: envItem.name, value: null, err };
-                                    }));
+//                         for (let j = 0; j < envList.length; j++) {
+//                             const envItem = envList[j] ?? {} as any;
 
-                                continue;
-                            }
-                            else {
-                                execEnv[envItem.name] = envItem.value;
-                            }
-                        }
-                    }
+//                             // If the variable is a secret, we'll request that.
+//                             if (envItem.isSecret) {
+//                                 secretRequests.push(api.get(span, `/api/${roots[i].id}/${envItem.value}`)
+//                                     .then(res => ({ key: envItem.name, value: res.data } as any))
+//                                     .catch(err => {
+//                                         logger.error({
+//                                             msg: `Failed to load secret \`${envItem.key}\``,
+//                                             properties: {
+//                                                 stack: err.stack,
+//                                                 message: err.message,
+//                                                 gid, tgid
+//                                             }
+//                                         });
+//                                         return { key: envItem.name, value: null, err };
+//                                     }));
 
-                    // Resolve all of the secret requests. This allows
-                    // them to be fetched in parallel.
-                    for await (const secret of secretRequests) {
-                        execEnv[secret.key] = secret.value;
-                    }
+//                                 continue;
+//                             }
+//                             else {
+//                                 execEnv[envItem.name] = envItem.value;
+//                             }
+//                         }
+//                     }
 
-                    logger.info({
-                        msg: `Spawning process \`${command}\` for task \`${task.label}\` in group \`${taskGroup.label}\``,
-                        properties: { processCWD, command, args, execEnv, taskGroup, task, gid, tgid }
-                    });
+//                     // Resolve all of the secret requests. This allows
+//                     // them to be fetched in parallel.
+//                     for await (const secret of secretRequests) {
+//                         execEnv[secret.key] = secret.value;
+//                     }
 
-                    const ctx = trace.setSpan(context.active(), span);
-                    await tracer.startActiveSpan("Process", undefined, ctx, async span => {
-                        span.setAttributes({
-                            "process.command": command,
-                            "process.arguments": args,
-                            "process.timeout": task.timeout || 0
-                        });
-                        const process = spawn(command, args, {
-                            env: execEnv,
-                            cwd: processCWD,
-                            timeout: task.timeout || 0,
-                            windowsHide: true
-                        });
+//                     logger.info({
+//                         msg: `Spawning process \`${command}\` for task \`${task.label}\` in group \`${taskGroup.label}\``,
+//                         properties: { processCWD, command, args, execEnv, taskGroup, task, gid, tgid }
+//                     });
 
-                        process.stdout.on('data', (data) => logger.stdout({ time: Date.now(), level: "stdout", chunk: data, properties: { task: task.id, gid, tgid } }));
-                        process.stderr.on('data', (data) => logger.stderr({ time: Date.now(), level: "stderr", chunk: data, properties: { task: task.id, gid, tgid } }));
+//                     const ctx = trace.setSpan(context.active(), span);
+//                     await tracer.startActiveSpan("Process", undefined, ctx, async span => {
+//                         span.setAttributes({
+//                             "process.command": command,
+//                             "process.arguments": args,
+//                             "process.timeout": task.timeout || 0
+//                         });
+//                         const process = spawn(command, args, {
+//                             env: execEnv,
+//                             cwd: processCWD,
+//                             timeout: task.timeout || 0,
+//                             windowsHide: true
+//                         });
 
-                        process.on('error', (err) => {
-                            span.setAttributes({ "process.exitCode": -2 });
-                            logger.error({
-                                msg: "Process error",
-                                properties: {
-                                    stack: err.stack,
-                                    message: err.message,
-                                    gid, tgid
-                                }
-                            })
-                        });
+//                         process.stdout.on('data', (data) => logger.stdout({ time: Date.now(), level: "stdout", chunk: data, properties: { task: task.id, gid, tgid } }));
+//                         process.stderr.on('data', (data) => logger.stderr({ time: Date.now(), level: "stderr", chunk: data, properties: { task: task.id, gid, tgid } }));
 
-                        process.on('disconnect', (...args) => {
-                            span.setAttributes({ "process.exitCode": -1 });
-                            logger.error({
-                                msg: `Process \`${command}\` unexpectedly disconnected`,
-                                properties: { args, taskGroup, task, gid, tgid }
-                            });
-                            res(process);
-                        });
+//                         process.on('error', (err) => {
+//                             span.setAttributes({ "process.exitCode": -2 });
+//                             logger.error({
+//                                 msg: "Process error",
+//                                 properties: {
+//                                     stack: err.stack,
+//                                     message: err.message,
+//                                     gid, tgid
+//                                 }
+//                             });
+//                             // Do I need to set exit code?
+//                             res(process);
+//                         });
 
-                        process.on('exit', (exitCode) => {
-                            span.setAttributes({ "process.exitCode": exitCode });
-                            if (exitCode == 0) {
-                                logger.info({ msg: `Process \`${command}\` exited successfully`, properties: { taskGroup, task, gid, tgid } });
-                                span.end();
-                                res(process);
-                            }
-                            else {
-                                logger.error({ msg: `Process \`${command}\` exited with non-zero exit code \`${exitCode}\``, properties: { code: exitCode, taskGroup, task, gid, tgid } });
-                                span.end();
-                                res(process);
-                            }
-                        });
-                    })
-                }
-                catch(err) {
-                    // Return the process and transmit the error object
-                    res({
-                        exitCode: -1,
-                        err: err
-                    } as any);
-                }
-            });
+//                         process.on('disconnect', (...args) => {
+//                             span.setAttributes({ "process.exitCode": -1 });
+//                             logger.error({
+//                                 msg: `Process \`${command}\` unexpectedly disconnected`,
+//                                 properties: { args, taskGroup, task, gid, tgid }
+//                             });
+//                             res(process);
+//                         });
 
-            if (process?.exitCode == 0) {
-                logger.info({
-                    msg: `Completed task \`${task.label}\` in group \`${taskGroup.label}\``,
-                    properties: { process, taskGroup, task, gid, tgid },
-                    block: "end"
-                });
+//                         process.on('exit', (exitCode) => {
+//                             span.setAttributes({ "process.exitCode": exitCode });
+//                             if (exitCode == 0) {
+//                                 logger.info({ msg: `Process \`${command}\` exited successfully`, properties: { taskGroup, task, gid, tgid } });
+//                                 span.end();
+//                                 res(process);
+//                             }
+//                             else {
+//                                 logger.error({ msg: `Process \`${command}\` exited with non-zero exit code \`${exitCode}\``, properties: { code: exitCode, taskGroup, task, gid, tgid } });
+//                                 span.end();
+//                                 res(process);
+//                             }
+//                         });
+//                     })
+//                 }
+//                 catch(err) {
+//                     // Return the process and transmit the error object
+//                     res({
+//                         exitCode: -1,
+//                         err: err
+//                     } as any);
+//                 }
+//             });
 
-                if (task.breakOnTaskSuccess) {
-                    logger.info({ msg: `⏸ Tripping on Breakpoint`, properties: { taskGroup, task, gid, tgid } });
-                    retry = await TripBreakpoint(span, jobInstance, true, taskGroup, task);
-                    logger.info({ msg: `▶ Resuming from Breakpoint`, properties: { taskGroup, task, gid, tgid } });
-                }
-            }
-            else {
-                // logger.error({
-                //     msg: process.exitCode == -1 ? "Failed to spawn process" : `Process exited with non-zero code (${process.exitCode})`,
-                //     ...(process.exitCode == -1 ? { err: process['err'] } : { process })
-                // });
+//             if (process?.exitCode == 0) {
+//                 logger.info({
+//                     msg: `Completed task \`${task.label}\` in group \`${taskGroup.label}\``,
+//                     properties: { process, taskGroup, task, gid, tgid },
+//                     block: "end"
+//                 });
 
-                if (task.breakOnTaskFailure) {
-                    logger.info({ msg: `⏸ Breaking on error`, properties: { taskGroup, task, gid, tgid } });
-                    retry = await TripBreakpoint(span, jobInstance, true, taskGroup, task);
-                    logger.info({ msg: `▶ Resuming from Breakpoint`, properties: { taskGroup, task, gid, tgid } });
-                }
-            }
+//                 if (task.breakOnTaskSuccess) {
+//                     logger.info({ msg: `⏸ Tripping on Success Breakpoint`, properties: { taskGroup, task, gid, tgid, correlationId } });
+//                     const breakpointResult = await TripBreakpoint(span, jobInstance, true, taskGroup, task, correlationId);
+//                     retry = breakpointResult == 1;
+//                     breakOnNextTask = breakpointResult == 2;
+//                     logger.info({ msg: `▶ Resuming from Breakpoint`, properties: { taskGroup, task, gid, tgid } });
+//                 }
+//             }
+//             // TODO: Should this property be carried up to the pipeline?
+//             else if (task.breakOnTaskFailure) {
+//                 logger.info({ msg: `⏸ Breaking on error`, properties: { taskGroup, task, gid, tgid, correlationId } });
+//                 const breakpointResult = await TripBreakpoint(span, jobInstance, true, taskGroup, task, correlationId);
+//                 retry = breakpointResult == 1;
+//                 breakOnNextTask = breakpointResult == 2;
+//                 logger.info({ msg: `▶ Resuming from Breakpoint`, properties: { taskGroup, task, gid, tgid } });
+//             }
 
-            if (task.breakAfterTask) {
-                logger.info({ msg: `⏸ Tripping on Breakpoint`, properties: { taskGroup, task, gid, tgid } });
-                retry = await TripBreakpoint(span, jobInstance, true, taskGroup, task);
-                logger.info({ msg: `▶ Resuming from Breakpoint`, properties: { taskGroup, task, gid, tgid } });
-            }
+//             if (task.breakAfterTask) {
+//                 logger.info({ msg: `⏸ Tripping on PostExecute Breakpoint`, properties: { taskGroup, task, gid, tgid, correlationId } });
+//                 const breakpointResult = await TripBreakpoint(span, jobInstance, true, taskGroup, task, correlationId);
+//                 retry = breakpointResult == 1;
+//                 breakOnNextTask = breakpointResult == 2;
+//                 logger.info({ msg: `▶ Resuming from Breakpoint`, properties: { taskGroup, task, gid, tgid } });
+//             }
 
-            span.end();
-        });
-    }
-    while(retry)
-}
+//             span.end();
+//         });
+//     }
+//     while(retry)
+// }

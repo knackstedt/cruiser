@@ -1,4 +1,3 @@
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import fs from 'fs-extra';
 import os from 'os';
 import FormData from 'form-data';
@@ -173,7 +172,7 @@ export const UploadArtifacts = async (
                         result
                     }
                 });
-                await TripBreakpoint(span, jobInstance, false);
+                await TripBreakpoint(span, jobInstance, false, false);
             }
         }
 

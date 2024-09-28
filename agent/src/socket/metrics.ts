@@ -18,23 +18,23 @@ export const CreateMetricsSocketServer = async (parentSpan: Span, socket: Socket
     const memDatapoints: { time: number, data: si.Systeminformation.MemData }[] = [];
     const netDatapoints: { time: number, data: si.Systeminformation.NetworkStatsData[] }[] = [];
 
-    setInterval(() => si.currentLoad().then(data => {
-        const item = { time: Date.now(), data};
-        socket.emit("metrics:cpu", item);
+    // setInterval(() => si.currentLoad().then(data => {
+    //     const item = { time: Date.now(), data};
+    //     socket.emit("metrics:cpu", item);
 
-        cpuDatapoints.push(item);
-        if (cpuDatapoints.length >= maxdatapoints)
-            cpuDatapoints.splice(0, 1);
-    }), cpuInterval);
+    //     cpuDatapoints.push(item);
+    //     if (cpuDatapoints.length >= maxdatapoints)
+    //         cpuDatapoints.splice(0, 1);
+    // }), cpuInterval);
 
-    setInterval(() => si.mem().then(data => {
-        const item = { time: Date.now(), data};
-        socket.emit("metrics:mem", item);
+    // setInterval(() => si.mem().then(data => {
+    //     const item = { time: Date.now(), data};
+    //     socket.emit("metrics:mem", item);
 
-        memDatapoints.push(item);
-        if (memDatapoints.length >= maxdatapoints)
-            memDatapoints.splice(0, 1);
-    }), menInterval);
+    //     memDatapoints.push(item);
+    //     if (memDatapoints.length >= maxdatapoints)
+    //         memDatapoints.splice(0, 1);
+    // }), menInterval);
 
     setInterval(() => si.networkStats().then(data => {
         const item = { time: Date.now(), data};

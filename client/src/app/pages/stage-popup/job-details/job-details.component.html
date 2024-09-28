@@ -83,11 +83,16 @@
                         <div style="flex: 1"></div>
 
                         @if (breakpoint.allowRetry) {
-                            <button mat-mini-fab (click)="clearBreakpoint(breakpoint, true)">
+                            <button mat-mini-fab matTooltip="Retry" (click)="clearBreakpoint(breakpoint, 1)">
                                 <mat-icon>replay</mat-icon>
                             </button>
                         }
-                        <button mat-mini-fab (click)="clearBreakpoint(breakpoint, false)">
+                        @if (breakpoint.allowSkip) {
+                            <button mat-mini-fab matTooltip="Step" (click)="clearBreakpoint(breakpoint, 2)">
+                                <mat-icon>step</mat-icon>
+                            </button>
+                        }
+                        <button mat-mini-fab matTooltip="Resume" (click)="clearBreakpoint(breakpoint, 0)">
                             <mat-icon>play_arrow</mat-icon>
                         </button>
                     </div>

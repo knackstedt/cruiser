@@ -1,7 +1,5 @@
 import pino from 'pino';
 import { getHeapStatistics } from 'v8';
-import express from 'express';
-import onFinished from 'on-finished';
 import {environment} from './environment';
 
 export const getLogger = (file: string) => pino({
@@ -78,41 +76,3 @@ process.on("uncaughtException", err => {
 });
 
 export const logger = _logger;
-
-const httpLogger = getLogger("http");
-const router = express.Router();
-
-
-const getDuration = (req, res) => {
-    if (!req._startAt || !res._startAt) {
-        // missing request and/or response start time
-        return null;
-    }
-
-    // calculate diff
-    var ms = (res._startAt[0] - req._startAt[0]) * 1e3 +
-             (res._startAt[1] - req._startAt[1]) * 1e-6;
-
-    // return truncated value
-    return ms.toFixed(2);
-};
-
-router.use((req, res, next) => {
-
-    onFinished(req, () => {
-        const length = parseInt(res.get("content-length"));
-        httpLogger.info({
-            user: req['session']?.['gh_user']?.login,
-            agent: req.get("X-Cruiser-Token") ? req.get("X-Cruiser-Agent") : null,
-            ip: req.ip,
-            method: req.method,
-            status: res.statusCode,
-            url: req.url,
-            size: Number.isNaN(length) ? null : length,
-            duration: getDuration(req, res)
-        });
-    });
-    next();
-})
-
-export const HTTPLogger = router;
