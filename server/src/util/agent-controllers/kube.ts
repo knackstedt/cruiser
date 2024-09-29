@@ -109,7 +109,7 @@ export class KubeAgent implements AgentInitializer {
                     return;
 
 
-                // This tells us when the job is done.
+                // This tells us when the pod is done.
                 if (pod.status.phase == "Failed" || pod.status.phase == "Succeeded") {
                     this.saveLogAndCleanup(pod);
                 }
@@ -155,13 +155,13 @@ export class KubeAgent implements AgentInitializer {
         }
 
         // Use .bind to prevent call stack overflows
-        setTimeout(this.sweepPods.bind(this), flushInterval);
+        // setTimeout(this.sweepPods.bind(this), flushInterval);
     }
 
     // When a job completes, take the log from kube and write it into a log file under storage.
     // TODO: live write the file without bothering with this mess of an API.
     private saveLogAndCleanup = async (pod: k8s.V1Pod) => {
-        const log = '...';
+        const { body: log } = await k8sApi.readNamespacedPodLog(pod.metadata.name, pod.metadata.namespace);
 
         const dir = [
             environment.cruiser_log_dir,

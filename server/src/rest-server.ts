@@ -6,7 +6,6 @@ import { ErrorHandler } from './util/errors';
 import { HTTPLogger, logger } from './util/logger';
 import { DatabaseTableApi } from './api/database-controller';
 import { PipelineApi } from './api/pipeline';
-import { JobActionsApi } from './api/job-actions';
 import { ApiTokenMiddleware } from './middleware/api-token';
 import { SessionMiddleware } from './middleware/session';
 import { OpenIDHandler } from './middleware/sso-openid';
@@ -69,7 +68,6 @@ export const startRestServer = async () => {
     app.use("/api/odata", DatabaseTableApi());
     app.use("/api/pipeline", PipelineApi);
     app.use("/api/sources", SourcesApi);
-    app.use("/api/jobs", JobActionsApi);
     app.use("/api/blobstore", BlobUploadApi);
     app.use("/api/vault", VaultApi);
     app.use("/api/system", SystemApi);

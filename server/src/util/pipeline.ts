@@ -74,8 +74,11 @@ export const RunPipeline = async (
     // If this was triggered by a git change, we only want
     // to run the specific stage flow that's required
     if (triggeredStages) {
-        for (const stage of triggeredStages)
+        for (const stage of triggeredStages) {
+            if (stage.disabled) continue;
+
             result.push(await RunStage(instance, stage));
+        }
 
         return result;
     }
@@ -85,6 +88,7 @@ export const RunPipeline = async (
     else {
         let startedStageNum = 0;
         for (const stage of pipeline.stages) {
+            if (stage.disabled) continue;
             // Stages with a stage trigger will not automatically be ran
             if (stage.stageTrigger?.length > 0) continue;
             startedStageNum++;
@@ -130,6 +134,8 @@ export const RunStage = async (
 
     const results = [];
     for (const job of stage.jobs) {
+        if (job.disabled) continue;
+
         const namespace = environment.cruiser_kube_namespace;
         const id = ulid();
         const podId = id.toLowerCase();

@@ -106,6 +106,8 @@ export const CronScheduler = () => {
 export const CheckAndTriggerStage = async (pipeline: PipelineDefinition, stage: StageDefinition, creatorName: string) => {
     let needsToRun = false;
     for (const source of stage.sources) {
+        if (source.disabled) return;
+
         try {
             // TODO: authorized repos
             const refs = await GetGitRefs(source.url);
