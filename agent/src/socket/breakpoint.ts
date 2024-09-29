@@ -54,7 +54,14 @@ export const CreateBreakpointSocketServer = async (
                 breakpoint.resolve(action);
                 breakpoints[id] = undefined;
                 socket.emit("breakpoint:list", { breakpoints: getBreakpoints() });
-            });
+
+                span.setStatus({ code: 1, message: "Success" });
+                span.end();
+            })
+            .catch(ex => {
+                span.setStatus({ code: 2, message: ex.message });
+                span.end();
+            })
     });
 
     socket.on("breakpoint:get-list", () => {
@@ -109,6 +116,8 @@ export const TripBreakpoint = async (
         }
         catch(ex) {
             debugger;
+            span.setStatus({ code: 2, message: ex.message });
+            span.end();
         }
         return 0;
     });
