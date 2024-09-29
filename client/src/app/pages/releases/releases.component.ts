@@ -431,7 +431,10 @@ export class ReleasesComponent implements OnInit {
     pausePipeline(pipeline: PipelineDefinition) {
     }
 
-    resumePipeline(pipeline: PipelineDefinition) {
+    resumePipeline(tPipeline: PipelineDefinition) {
+        tPipeline.state = "active";
+        this.fetch.patch(`/api/odata/${tPipeline.id}`, tPipeline)
+            .then(({ pipeline }) => Object.assign(tPipeline, pipeline));
     }
 
     filterPipelines() {

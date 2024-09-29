@@ -43,6 +43,11 @@
                         <div class="active_stage">{{pipeline.group}}</div>
                     </div>
                     <div style="flex: 1"></div>
+                    @if (pipeline.state == "paused") {
+                        <div (click)="parent.resumePipeline(pipeline)">
+                            <mat-icon>pause</mat-icon>
+                        </div>
+                    }
                     <div (click)="1">
                         @if (pipeline.isFavorite) {
                             <mat-icon>star</mat-icon>
