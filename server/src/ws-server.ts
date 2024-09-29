@@ -8,6 +8,7 @@ import { EventTriggers } from './singleton/watch-jobinstance';
 import { SocketEventService } from './singleton/socket-service';
 import { environment } from './util/environment';
 import { GitWatcher } from './singleton/watch-git';
+import { AgentController } from './util/agent-controllers/interface';
 
 /**
  * Startup the websocket endpoint listener
@@ -26,9 +27,11 @@ export const startWebsocketServer = (server?: http.Server) => {
     const ses = new SocketEventService(server, sts);
 
     CronScheduler();
-    WatchAndFlushJobs();
     EventTriggers();
     GitWatcher();
+
+    // Tell the agent controller that we're ready to start watching for running agents
+    AgentController.watchRunningAgents();
 
     // TODO: Enable graceful "disconnect" signal to tell clients
     // that they need to reconnect to a new instance of the app

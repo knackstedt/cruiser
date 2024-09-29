@@ -1,7 +1,4 @@
-import { exec } from 'child_process';
 import { ulid } from 'ulidx';
-import * as k8s from '@kubernetes/client-node';
-import fs from 'fs-extra';
 
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
 import { db } from './db';
@@ -9,16 +6,18 @@ import { randomString, sleep } from './util';
 import { JobInstance } from '../types/agent-task';
 import { SetJobToken } from './token-cache';
 import { environment } from './environment';
-import { logger } from './logger';
-import os from 'os';
-
-const kc = new k8s.KubeConfig();
-kc.loadFromDefault();
-const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
+import { LocalAgent } from './agent-controllers/local';
+import { KubeAgent } from './agent-controllers/kube';
+import { getAgentEnvironment } from './agent-environment';
+import { AgentController } from './agent-controllers/interface';
 
 
-export const RunPipeline = async (pipeline: PipelineDefinition, user: string, triggeredStages?: StageDefinition[]) => {
 
+export const RunPipeline = async (
+    pipeline: PipelineDefinition,
+    user: string,
+    triggeredStages?: StageDefinition[]
+) => {
     // If the pipeline has no stages, we'll simply exit.
     if (!pipeline.stages?.[0]) {
         return {
@@ -97,7 +96,10 @@ export const RunPipeline = async (pipeline: PipelineDefinition, user: string, tr
     return result;
 }
 
-export const RunStage = async (instance: PipelineInstance, stage: StageDefinition) => {
+export const RunStage = async (
+    instance: PipelineInstance,
+    stage: StageDefinition
+) => {
     instance.status.startedStages = instance.status.startedStages ?? [];
     instance.status.startedStages.push(stage.id);
 
@@ -158,7 +160,7 @@ export const RunStage = async (instance: PipelineInstance, stage: StageDefinitio
             instance.status.jobInstances.push(jobInstance.id);
             await db.merge(instance.id, instance);
 
-            const kubeJob = await createKubeJob(
+            const kubeJob = await startAgent(
                 instance,
                 instance.spec,
                 stage,
@@ -195,7 +197,7 @@ export const RunStage = async (instance: PipelineInstance, stage: StageDefinitio
     return results;
 }
 
-const createKubeJob = async (
+const startAgent = async (
     pipelineInstance: PipelineInstance,
     pipeline: PipelineDefinition,
     stage: StageDefinition,
@@ -207,163 +209,34 @@ const createKubeJob = async (
     kubeAuthnToken: string
 ) => {
 
-    // TODO: Add a compendium of standard environment variables
-    // https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
-    // https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-env-vars.html
-    // https://developer.harness.io/docs/continuous-integration/troubleshoot-ci/ci-env-var/
-    // https://docs.acquia.com/acquia-cloud-platform/features/pipelines/variables
-    // https://docs.gocd.org/current/faq/dev_use_current_revision_in_build.html
-    // https://learn.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
-    // https://devopsqa.wordpress.com/2019/11/19/list-of-available-jenkins-environment-variables/
-    // https://docs.travis-ci.com/user/environment-variables/
-    // https://www.jetbrains.com/help/teamcity/predefined-build-parameters.html#Build+Branch+Parameters
-    const envVariables = [
-        { name: "CI", value: "true" },
-        // { name: "CI_COMMIT_AUTHOR", value: "true" },
-        // { name: "CI_COMMIT_BEFORE_SHA", value: "true" },
-        // { name: "CI_COMMIT_BRANCH", value: "true" },
-        // { name: "CI_COMMIT_DESCRIPTION", value: "true" },
-        // { name: "CI_COMMIT_MESSAGE", value: "true" },
-        // { name: "CI_COMMIT_REF_NAME", value: "true" },
-        // { name: "CI_COMMIT_REF_PROTECTED", value: "true" },
-        // { name: "CI_COMMIT_REF_SLUG", value: "true" },
-        // { name: "CI_COMMIT_SHA", value: "true" },
-        // { name: "CI_COMMIT_SHORT_SHA", value: "true" },
-        // { name: "CI_COMMIT_TAG", value: "true" },
-        // { name: "CI_COMMIT_TAG_MESSAGE", value: "true" },
-        // { name: "CI_COMMIT_TIMESTAMP", value: "true" },
-        // { name: "CI_COMMIT_TITLE", value: "true" },
-        { name: "CI_ENVIRONMENT", value: "cruiser" },
-        // TODO: calculate this value by introspecting the server
-        // hostname -i => ip address
-        { name: "CRUISER_CLUSTER_URL", value: environment.cruiser_cluster_url },
-        { name: "CRUISER_AGENT_ID", value: jobInstance.id.split(':')[1] },
-        { name: "CRUISER_SERVER_TOKEN", value: kubeAuthnToken },
-
-        // Provide the otel configuration that the server has
-        { name: "OTEL_EXPORTER_OTLP_ENDPOINT", value: process.env['OTEL_EXPORTER_OTLP_ENDPOINT']},
-
-        ...(jobDefinition.environment ?? []),
-        ...(stage.environment ?? []),
-        ...(pipeline.environment ?? [])
-    ].filter(e => !!e.name.trim());
+    const agentEnvironment = getAgentEnvironment(
+        pipelineInstance,
+        pipeline,
+        stage,
+        jobDefinition,
+        jobInstance,
+        namespace,
+        podName,
+        podId,
+        kubeAuthnToken
+    );
 
     // If the environment is not on kube, run the agents on the same device.
     // In the future, this should be able to spawn agents elsewhere
     // (other elastic options and static agents)
     // future: should also support settings based on the job
-    if (environment.is_running_local_agents) {
-        const env = {};
-        envVariables.forEach(v => env[v.name] = v.value);
-
-        // TODO: Replace with build dir
-        const buildDir = os.tmpdir() + '/cruiser_dev/' + ulid();
-
-        await fs.emptyDir(buildDir);
-
-        let log = '';
-        // const proc = exec("ts-node -O '{\"target\": \"esnext\", \"module\": \"commonjs\"}' src/main.ts", {
-        const proc = exec("node --nolazy -r ts-node/register src/main.ts", {
-            cwd: "../agent",
-            env: {
-                ...process.env,
-                ...env,
-                CRUISER_AGENT_BUILD_DIR: buildDir
-            },
-            windowsHide: true
-        });
-
-        proc.stderr.addListener("data", data => log += data);
-        proc.stdout.addListener("data", data => log += data);
-
-        proc.on("exit", async code => {
-            if (code) {
-                const err = new Error("Agent process exited with non-zero code " + code);
-                logger.error(err);
-                console.error(err);
-                await db.merge(jobInstance.id, { status: "failed" });
-            }
-            else {
-                await db.merge(jobInstance.id, { status: "finished" });
-            }
-
-            const dir = [
-                environment.cruiser_log_dir,
-                pipeline.id,
-                pipelineInstance.id,
-                stage.id,
-                jobDefinition.id
-            ].join('/');
-
-            await fs.mkdir(dir, { recursive: true });
-
-            // Write the file to disk.
-            await fs.writeFile(
-                dir + '/' + jobInstance.id + ".log",
-                log
-            );
-        });
-        proc.on("disconnect", () => logger.error(new Error("Agent process disconnected!")));
-
-        return null;
-    }
-    else {
-        return k8sApi.createNamespacedPod(namespace, {
-            apiVersion: "v1",
-            kind: "Pod",
-            metadata: {
-                annotations: {
-                    "cruiser.dev/created-by": "$cruiser",
-                    "cruiser.dev/pipeline-id": pipeline.id,
-                    "cruiser.dev/pipeline-label": pipeline.label,
-                    "cruiser.dev/pipeline-instance-id": pipelineInstance.id,
-                    "cruiser.dev/stage-id": stage.id,
-                    "cruiser.dev/stage-label": stage.label,
-                    "cruiser.dev/job-id": jobDefinition.id,
-                    "cruiser.dev/job-label": jobDefinition.label,
-                    "cruiser.dev/job-instance-id": jobInstance.id,
-                    ...jobDefinition?.kubeJobAnnotations
-                },
-                labels: jobDefinition?.kubeJobLabels,
-                name: podName,
-            },
-            spec: {
-                activeDeadlineSeconds: 15 * 60,
-                restartPolicy: "Never",
-                enableServiceLinks: false,
-                // automountServiceAccountToken: false,
-                containers: [
-                    {
-                        name: podName,
-                        image: jobDefinition?.kubeContainerImage || "ghcr.io/knackstedt/cruiser/cruiser-agent:latest",
-                        imagePullPolicy: 'Always',
-                        securityContext: {
-                            // Must be true for docker build. Urgh.
-                            privileged: true,
-                            // allowPrivilegeEscalation: false,
-                            // capabilities: {
-                            //     drop: ["ALL"]
-                            // }
-                        },
-                        resources: {
-                            limits: {
-                                cpu: jobDefinition?.kubeCpuLimit || '1000m',
-                                memory: jobDefinition?.kubeMemLimit || '4000Mi'
-                            },
-                            requests: {
-                                cpu: jobDefinition?.kubeCpuRequest || '100m',
-                                memory: jobDefinition?.kubeMemRequest || '750Mi'
-                            }
-                        },
-                        env: envVariables // Clear any empty env variables
-                    }
-                ],
-                affinity: jobDefinition?.kubeContainerAffinity,
-                tolerations: jobDefinition?.kubeContainerTolerations
-            }
-        })
-        .then(({body}) => body);
-    }
+    AgentController.spawn(
+        pipelineInstance,
+        pipeline,
+        stage,
+        jobDefinition,
+        jobInstance,
+        namespace,
+        podName,
+        podId,
+        kubeAuthnToken,
+        agentEnvironment
+    );
 }
 
 
