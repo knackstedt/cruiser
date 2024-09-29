@@ -22,13 +22,13 @@
         "simple-git": "^3.22.0",
         "socket.io-client": "^4.7.5",
         "systeminformation": "^5.22.6",
+        "tslib": "^2.6.2",
         "ulidx": "^2.3.0"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.4",
         "@types/node": "^18.19.18",
         "nodemon": "^3.1.0",
-        "tslib": "^2.6.2",
         "typescript": "~4.9.5"
     }
 }

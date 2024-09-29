@@ -21,13 +21,15 @@ RUN npm i --omit=dev
 
 FROM node:20-alpine
 RUN apk add --no-cache lrzip lrzip-extra-scripts
-COPY --from=build /agent/dist /agent
+COPY --from=build /agent/dist /agent/src
+COPY --from=build /agent/dist/package.json /agent/package.json
 COPY --from=build /agent/node_modules /agent/node_modules
 
 RUN chown 1000 /agent -R
+WORKDIR /agent
 
 USER 1000
 
 EXPOSE 8080
 
-CMD ["node", "dist/main.js"]
+CMD ["node", "src/main.js"]
