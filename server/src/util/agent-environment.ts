@@ -1,3 +1,4 @@
+import { ulid } from 'ulidx';
 import { JobInstance } from '../types/agent-task';
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
 import { environment } from './environment';
@@ -48,6 +49,7 @@ export const getAgentEnvironment = (
 
         // Provide the otel configuration that the server has
         { name: "OTEL_EXPORTER_OTLP_ENDPOINT", value: process.env['OTEL_EXPORTER_OTLP_ENDPOINT'] },
+        { name: "CRUISER_AGENT_BUILD_DIR", value: environment.is_running_local_agents ? ('/tmp/' + ulid()) : '' },
 
         ...(jobDefinition.environment ?? []),
         ...(stage.environment ?? []),

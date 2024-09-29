@@ -44,7 +44,7 @@ const WatchSource = (pipeline: PipelineDefinition, stage: StageDefinition, sourc
         // filter to only head refs
         // TODO: Should this support multiple remote types such as PRs?
         const hashArray = lines.map(l => l.split('\t').reverse())
-            .filter(([branchPath]) => branchPath.startsWith('/refs/heads/'));
+            .filter(([branchPath]) => branchPath.startsWith('refs/heads/'));
 
         source.lastGitHash ??= {};
 
@@ -70,21 +70,21 @@ const WatchSource = (pipeline: PipelineDefinition, stage: StageDefinition, sourc
             source.lastGitHash[branch] = hash;
         })
 
-        const [latestPipeline] = await db.select<PipelineDefinition>(pipeline.id);
-
         if (hasDirtyBranch) {
-            RunPipeline(latestPipeline, "$cruiser", [stage]);
+            const [latestPipeline] = await db.select<PipelineDefinition>(pipeline.id);
+
+            await RunPipeline(latestPipeline, "$cruiser", [stage]);
+
+            const remoteStage = latestPipeline.stages.find(ps => ps.id == stage.id);
+            const remoteSource = remoteStage.sources.find(rs => rs.id == source.id);
+
+            // Save the changes for the last git hash.
+            // TODO: This entire process seems overcomplicated and prone to failure
+            remoteSource.lastGitHash = source.lastGitHash;
+
+            // Save the changes
+            await db.merge(latestPipeline.id, latestPipeline);
         }
-
-        const remoteStage = latestPipeline.stages.find(ps => ps.id == stage.id);
-        const remoteSource = remoteStage.sources.find(rs => rs.id == source.id);
-
-        // Save the changes for the last git hash.
-        // TODO: This entire process seems overcomplicated and prone to failure
-        remoteSource.lastGitHash = source.lastGitHash;
-
-        // Save the changes
-        await db.merge(latestPipeline.id, latestPipeline);
     }, (source.pollIntervalSeconds || pollingInterval) * 1000);
 
     watchedSources.push({
@@ -123,6 +123,7 @@ export const GitWatcher = () => {
             // Watch for changes on the pipeline table
             db.live<PipelineDefinition>("pipeline", data => {
                 if (data.action == "CLOSE") return watchPipelines();
+
                 const pipeline = data.result;
                 if (pipeline._isUserEditInstance) return;
 
@@ -144,7 +145,7 @@ export const GitWatcher = () => {
         watchPipelines();
 
         // state != 'paused' AND
-        db.query<PipelineDefinition[][]>("SELECT * FROM pipeline WHERE _isUserEditInstance != true").then(([pipelines]) => {
+        db.query<PipelineDefinition[][]>("SELECT * FROM pipeline WHERE _isUserEditInstance != true AND state == 'active'").then(([pipelines]) => {
             pipelines.forEach(pipeline => {
                 pipeline.stages?.forEach(stage => {
                     WatchStage(pipeline, stage);
