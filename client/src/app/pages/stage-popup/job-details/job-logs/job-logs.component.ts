@@ -19,6 +19,7 @@ import { MaterialSymbols } from 'src/app/utils/mat-symbols';
 import { TaskGroupDefinition } from 'src/types/pipeline';
 import { LogsRendererComponent } from "./logs-renderer/logs-renderer.component";
 import { Breakpoint } from '../job-details.component';
+import { LiveSocketService } from 'src/app/services/live-socket.service';
 
 export type RenderedItem = {
     kind: "line" | "block"
@@ -87,10 +88,27 @@ export class JobLogsComponent {
 
     private socket: Socket;
 
+    private _subscriptions = [
+        this.liveSocket.subscribe(mutation => {
+            // Ignore changes to things that are irrelevant
+            const updated = mutation.data?.result as JobInstance;
+            if (!updated || mutation.ev != "job_instance" || updated.id != this.jobInstance?.id)
+                return;
+
+            // If we're watching it while it completes, we need to switch over to the full
+            // log as provided by the server.
+            if (updated.state != this.jobInstance.state && updated.state == "failed") {
+                this.jobInstance = updated;
+                this.initDatasource();
+            }
+        })
+    ]
+
     constructor(
         private readonly changeDetector: ChangeDetectorRef,
         private readonly fetch: Fetch,
-        private readonly dialog: MatDialog
+        private readonly dialog: MatDialog,
+        private readonly liveSocket: LiveSocketService
     ) {
         this.setColors();
     }
@@ -112,6 +130,7 @@ export class JobLogsComponent {
 
     ngOnDestroy() {
         this.socket?.disconnect();
+        this._subscriptions?.forEach(s => s.unsubscribe());
     }
 
     async initDatasource() {
