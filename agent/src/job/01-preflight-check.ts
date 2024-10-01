@@ -96,7 +96,7 @@ export const PreflightCheck = async (
             // Attempt to resolve all of the missing dependencies.
             for (const dependency of requiredDependencies) {
                 const isInstalled = await command(`which ` + dependency.name)
-                    .then(r => true)
+                    .then(r => !!r.stdout)
                     .catch(r => false);
 
                 // If the program is already installed, continue.
@@ -114,7 +114,7 @@ export const PreflightCheck = async (
                 // Will fail if the user doesn't have access to
                 // install things through the package manager
                 const resolved = await command(correction)
-                    .then(r => true)
+                    .then(r => !!r.stdout)
                     .catch(r => false);
 
                 if (!resolved) {

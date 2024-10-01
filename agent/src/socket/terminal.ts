@@ -8,20 +8,20 @@ import { logger } from '../util/logger';
 
 import { command } from 'execa';
 
-// Make an attempt to get a compatible PTY program.
-const shell = os.platform() == "win32"
-    ? "powershell.exe"
-    : command("which zsh")
-    ? "zsh"
-    : command("which fish")
-    ? "fish"
-    : command("which bash")
-    ? "bash"
-    : command("which ash")
-    ? "ash"
-    : "sh";
-
 export const CreateTerminalSocketServer = async (parentSpan: Span, socket: Socket) => {
+
+    // Make an attempt to get a compatible PTY program.
+    const shell = os.platform() == "win32"
+        ? "powershell.exe"
+        : await command("which zsh").then(r => r.stdout)
+        ? "zsh"
+        : await command("which fish").then(r => r.stdout)
+        ? "fish"
+        : await command("which bash").then(r => r.stdout)
+        ? "bash"
+        : await command("which ash").then(r => r.stdout)
+        ? "ash"
+        : "sh";
 
     let ptyProcess: pty.IPty;
 
