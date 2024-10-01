@@ -42,7 +42,7 @@ export const getConfig = async (parentSpan: Span, taskId) => {
 
             span.end();
             parentSpan.end();
-            await OpenTelemetry.exporter.shutdown();
+            await OpenTelemetry?.exporter.shutdown();
             process.exit(1);
         }
 

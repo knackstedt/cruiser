@@ -13,13 +13,20 @@ if (
     process.exit(1);
 }
 
-RunAgentProcess(environment.jobInstanceId)
-    .then(async () => {
-        await OpenTelemetry.exporter.shutdown();
-        process.exit(0);
-    })
-    .catch(async ex => {
-        await OpenTelemetry.exporter.shutdown();
-        logger.error(ex);
-        process.exit(1);
-    });
+try {
+
+    RunAgentProcess(environment.jobInstanceId)
+        .then(async () => {
+            await OpenTelemetry.exporter?.shutdown();
+            process.exit(0);
+        })
+        .catch(async ex => {
+            await OpenTelemetry.exporter?.shutdown();
+            logger.error(ex);
+            process.exit(1);
+        });
+}
+catch(ex) {
+    logger.error(ex);
+    debugger;
+}

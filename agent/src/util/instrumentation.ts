@@ -15,21 +15,29 @@ if (process.env['NODE_ENV'] != "production") {
     diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.WARN);
 }
 
-const exporter = new OTLPTraceExporter();
+let exporter: OTLPTraceExporter;
+let provider: BasicTracerProvider;
 
-const provider = new BasicTracerProvider({
-    resource: new Resource({
-        [ATTR_SERVICE_NAME]: 'cruiser-agent',
-        [ATTR_SERVICE_VERSION]: pkg.version,
-    })
-});
+// Try to initialize otel -- if there is some fatal error then we'll
+// simply give up.
+if (process.env['OTEL_EXPORTER_OTLP_ENDPOINT']) {
+    exporter = new OTLPTraceExporter();
 
-// This exporter drops data for an unknown reason.
-// provider.addSpanProcessor(new BatchSpanProcessor(exporter, {}));
+    provider = new BasicTracerProvider({
+        resource: new Resource({
+            [ATTR_SERVICE_NAME]: 'cruiser-agent',
+            [ATTR_SERVICE_VERSION]: pkg.version,
+        })
+    });
 
-provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
-// provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
-provider.register();
+    // This exporter drops data for an unknown reason.
+    // provider.addSpanProcessor(new BatchSpanProcessor(exporter, {}));
+
+    provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
+    // provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
+    provider.register();
+}
+
 
 export const OpenTelemetry = {
     exporter,

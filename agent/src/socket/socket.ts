@@ -72,7 +72,7 @@ export const CreateBaseSocketServer = async (parentSpan: Span, pipeline: Pipelin
 
                 // 5ms to allow anything necessary to flush
                 setTimeout(async () => {
-                    await OpenTelemetry.exporter.shutdown();
+                    await OpenTelemetry?.exporter.shutdown();
                     process.exit(0);
                 }, 5)
             });
