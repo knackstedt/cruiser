@@ -11,6 +11,7 @@ import {environment} from '../util/environment';
 import { getFilesInFolderFlat } from '../util/fs';
 import { TripBreakpoint } from '../socket/breakpoint';
 import { compressTarGZip, compressTarLrz } from '../util/compression';
+import path from 'path';
 
 const tracer = trace.getTracer('agent-artifact-upload');
 
@@ -105,7 +106,7 @@ export const UploadArtifacts = async (
 
     try {
         for (const artifact of (job.outputArtifacts ?? [])) {
-            const dir = artifact.source;
+            const dir = path.resolve(artifact.source);
             const dest = artifact.destination || artifact.label;
             const contents = await getFilesInFolderFlat(artifact.source);
 

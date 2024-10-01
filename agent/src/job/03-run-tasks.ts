@@ -13,6 +13,7 @@ import { TripBreakpoint } from '../socket/breakpoint';
 import { ulid } from 'ulidx';
 import { environment } from '../util/environment';
 import { ParseCommand } from '../util/command-parser';
+import path from 'path';
 
 const tracer = trace.getTracer('agent-task-runner');
 
@@ -77,9 +78,10 @@ const executeTaskGroup = async (
 
                 const ctx = trace.setSpan(context.active(), parentSpan);
                 await tracer.startActiveSpan("Task", undefined, ctx, async span => {
+                    // TODO: Force task cwd to start with /build for a security purpose?
                     const processCWD = task.cwd?.startsWith("/")
-                        ? task.cwd
-                        : environment.buildDir + (task.cwd ?? '');
+                        ? path.resolve(task.cwd)
+                        : path.resolve(environment.buildDir, (task.cwd ?? ''));
 
                     span.setAttributes({
                         "taskGroup.id": taskGroup.id,
@@ -109,7 +111,11 @@ const executeTaskGroup = async (
                                     command,
                                     args,
                                     env
-                                } = ParseCommand(task.taskScriptArguments['command'] + ' ' + task.taskScriptArguments['arguments']);
+                                } = ParseCommand(
+                                    task.taskScriptArguments['command'] +
+                                    ' ' +
+                                    task.taskScriptArguments['arguments']
+                                );
 
                                 const execEnv = {};
 

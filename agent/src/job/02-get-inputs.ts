@@ -173,7 +173,7 @@ export const GetInputs = async (
                             };
 
                             const git = simpleGit(options);
-                            const cloneDir = path.resolve(source.targetPath);
+                            const cloneDir = path.resolve(environment.buildDir, source.targetPath);
 
                             logger.info({ msg: `Begin cloning source :git: \`${repoSlug}\``, properties: { source: sourceForLog.id } });
 
