@@ -48,8 +48,10 @@ const executeTaskGroup = async (
 
         const tasks = taskGroup.tasks.sort(orderSort) ?? [];
 
-        const { data: envVars } =
-            await api.get<{ key: string, value: string; }[]>(span, `/api/jobs/${jobInstance.id}/environment`);
+        // TODO: Implement and endpoint to return environment variables?
+        // const { data: envVars } =
+        //     await api.get<{ key: string, value: string; }[]>(span, `/api/jobs/${jobInstance.id}/environment`);
+        const envVars = {};
 
         let breakOnNextTask = false;
 
@@ -290,7 +292,7 @@ const executeTaskGroup = async (
     }
     catch (ex) {
         logger.error({
-            msg: "Unhandled error",
+            msg: ex.message || "Unhandled error",
             properties: {
                 stack: ex.stack,
                 error: ex.message,

@@ -88,10 +88,10 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
         }
         catch(err) {
             logger.fatal({
-                msg: "⏸ Cannot continue build task!",
+                msg: "⏸ Cannot continue build task: " + err.message,
                 properties: {
                     stack: err.stack,
-                    message: err.message ?? err.title ?? err.name
+                    message: err.message
                 }
             })
             await TripBreakpoint(span, jobInstance, false, false);
