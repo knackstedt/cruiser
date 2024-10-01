@@ -116,7 +116,7 @@
                             <div style="display: flex; align-items: center;">
                                 <app-job-instance-icon [jobInstance]="job" />
 
-                                @if (job['_runningJob']) {
+                                @if (job._instance) {
                                     <button mat-icon-button (click)="onViewLogs(job)" matTooltip="Open Job">
                                         <mat-icon>terminal</mat-icon>
                                     </button>
@@ -131,37 +131,41 @@
                                     height="100%"
                                     style="fill: #f00"></rect>
                                 <rect x="0" y="0"
-                                    [attr.width]="getProgressDuration(job._runningJob?.uploadEpoch, job._runningJob?.endEpoch) + '%'"
+                                    [attr.width]="getProgressDuration(job._instance?.uploadEpoch, job._instance?.endEpoch) + '%'"
                                     height="100%"
                                     style="fill: rgb(0, 255, 13)"></rect>
                                 <rect x="0" y="0"
-                                    [attr.width]="getProgressDuration(job._runningJob?.buildEpoch, job._runningJob?.uploadEpoch) + '%'"
+                                    [attr.width]="getProgressDuration(job._instance?.buildEpoch, job._instance?.uploadEpoch) + '%'"
                                     height="100%"
                                     style="fill: rgb(0, 38, 255)"></rect>
                                 <rect x="0" y="0"
-                                    [attr.width]="getProgressDuration(job._runningJob?.startEpoch, job._runningJob?.buildEpoch) + '%'"
+                                    [attr.width]="getProgressDuration(job._instance?.startEpoch, job._instance?.buildEpoch) + '%'"
                                     height="100%"
                                     style="fill: rgb(255, 242, 0)"></rect>
                                 <rect x="0" y="0"
-                                    [attr.width]="getProgressDuration(job._runningJob?.initEpoch, job._runningJob?.startEpoch) + '%'"
+                                    [attr.width]="getProgressDuration(job._instance?.initEpoch, job._instance?.startEpoch) + '%'"
                                     height="100%"
                                     style="fill: rgb(255, 0, 195)"></rect>
                                 <rect x="0" y="0"
-                                    [attr.width]="getProgressDuration(job._runningJob?.queueEpoch, job._runningJob?.initEpoch) + '%'"
+                                    [attr.width]="getProgressDuration(job._instance?.queueEpoch, job._instance?.initEpoch) + '%'"
                                     height="100%"
                                     style="fill: rgb(255, 0, 195)"></rect> -->
                             </svg>
                             <ng-template>
-                                <app-duration-viewer [epoch]="job._runningJob?.queueEpoch" />
-                                <app-duration-viewer [epoch]="job._runningJob?.startEpoch" />
-                                {{job._runningJob?.endEpoch}}
+                                <!-- <app-duration-viewer [epoch]="job._instance?.queueEpoch" /> -->
+                                <!-- <app-duration-viewer [epoch]="job._instance?.startEpoch" /> -->
+                                {{job._instance?.endEpoch}}
                             </ng-template>
                         </td>
                         <td>
-                            <app-duration-viewer [epoch]="job._runningJob?.queueEpoch" />
+                            <app-duration-viewer
+                                [startEpoch]="job._instance?.queueEpoch"
+                                [endEpoch]="job._instance?.endEpoch"
+                            />
                         </td>
                         <td>
-                            {{job._runningJob?.kube?.name}}
+                            <!-- TODO: Link this to _something_ -->
+                            {{job._instance?.kubePodName}}
                         </td>
                     </tr>
                 </ng-template>

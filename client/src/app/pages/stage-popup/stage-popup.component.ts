@@ -11,6 +11,8 @@ import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/j
 import { DurationViewerComponent } from 'src/app/components/duration-viewer/duration-viewer.component';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
+import { JobInstance } from '../../../../../server/src/types/agent-task';
+import { LiveSocketService } from 'src/app/services/live-socket.service';
 
 @Component({
     selector: 'app-stage-popup',
@@ -35,12 +37,31 @@ export class StagePopupComponent {
     @Input() pipelineInstance: PipelineInstance;
     @Input() stage: StageDefinition;
 
-    runningJobs: JobDefinition[] = [];
-    allJobs: JobDefinition[] = [];
+    // runningJobs: JobDefinition[] = [];
+    jobs: (JobDefinition & {
+        _instance: JobInstance
+    })[] = [];
+
+    runningJobs = 0;
+    successfulJobs = 0;
+    failedJobs = 0;
+
+    private _subscriptions = [
+        this.liveSocket.subscribe(s => {
+            const instance = s.data.result;
+            if (s.ev != "job_instance" || s.data.action != "UPDATE") {
+                const job = this.jobs.find(j => j.id == instance.job);
+                // Update the instance (replace)
+                job._instance = instance;
+                this.updateStats();
+            }
+        })
+    ]
 
     constructor(
         private readonly dialog: MatDialog,
-        private readonly fetch: Fetch
+        private readonly fetch: Fetch,
+        private readonly liveSocket: LiveSocketService
     ) {
 
     }
@@ -58,13 +79,23 @@ export class StagePopupComponent {
         runningJobs.forEach(rj => {
             const job = stageJobMap[rj.job];
             if (job) {
-                job['_runningJob'] = rj;
+                job._instance = rj;
             }
         });
-
         // Combine the running jobs and the "defined" jobs
         // this.allJobs = runningJobs.concat(this.stage.jobs.filter(j => !runningJobMap[j.id]));
-        this.stage.jobs = [...this.stage.jobs];
+        this.jobs = this.stage.jobs as any;
+        this.updateStats();
+    }
+
+    ngOnDestroy() {
+        this._subscriptions?.forEach(s => s.unsubscribe());
+    }
+
+    updateStats() {
+        this.runningJobs = this.jobs.filter(j => !["finished", "failed"].includes(j._instance.state)).length;
+        this.successfulJobs = this.jobs.filter(j => j._instance.state == "finished").length;
+        this.failedJobs = this.jobs.filter(j => j._instance.state == "failed").length
     }
 
     onPipelineRestart() {
@@ -75,7 +106,7 @@ export class StagePopupComponent {
         this.dialog.open(JobDetailsComponent, {
             data: {
                 job,
-                jobInstance: job['_runningJob']
+                jobInstance: job['_instance']
             }
         })
     }

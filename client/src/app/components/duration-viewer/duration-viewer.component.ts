@@ -7,7 +7,8 @@ import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
     standalone: true
 })
 export class DurationViewerComponent {
-    @Input() epoch: number;
+    @Input() startEpoch: number;
+    @Input() endEpoch: number;
 
     private interval;
 
@@ -16,7 +17,14 @@ export class DurationViewerComponent {
     ngAfterViewInit() {
         const el = this.elementRef.nativeElement as HTMLElement;
         this.interval = setInterval(() => {
-            el.innerText = this.printDuration(this.epoch);
+            if (this.endEpoch > 0) {
+                // If the job is complete or is completed, disable the interval.
+                this.ngOnDestroy();
+                el.innerText = this.printDuration(this.startEpoch, this.endEpoch);
+            }
+            else {
+                el.innerText = this.printDuration(this.startEpoch);
+            }
         }, 100);
     }
 
@@ -24,8 +32,11 @@ export class DurationViewerComponent {
         clearInterval(this.interval);
     }
 
-    printDuration(epoch: number) {
-        const duration = (Date.now() - epoch);
+    printDuration(startEpoch: number, endEpoch = Date.now()) {
+        if (!startEpoch)
+            return '⏳';
+        // debugger;
+        const duration = (endEpoch - startEpoch);
 
         const date = new Date(Date.UTC(0, 0, 0, 0, 0, 0, duration));
 
