@@ -22,7 +22,7 @@ try {
         })
         .catch(async ex => {
             await OpenTelemetry.exporter?.shutdown();
-            logger.error(ex);
+            console.error(ex);
             process.exit(1);
         });
 }

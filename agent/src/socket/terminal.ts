@@ -13,13 +13,13 @@ export const CreateTerminalSocketServer = async (parentSpan: Span, socket: Socke
     // Make an attempt to get a compatible PTY program.
     const shell = os.platform() == "win32"
         ? "powershell.exe"
-        : await command("which zsh").then(r => r.stdout)
+        : await command("which zsh").then(r => !!r.stdout).catch(e => false)
         ? "zsh"
-        : await command("which fish").then(r => r.stdout)
+        : await command("which fish").then(r => !!r.stdout).catch(e => false)
         ? "fish"
-        : await command("which bash").then(r => r.stdout)
+        : await command("which bash").then(r => !!r.stdout).catch(e => false)
         ? "bash"
-        : await command("which ash").then(r => r.stdout)
+        : await command("which ash").then(r => !!r.stdout).catch(e => false)
         ? "ash"
         : "sh";
 
