@@ -84,5 +84,19 @@ export class LocalAgent implements AgentInitializer {
 
     async watchRunningAgents() {
         // ???
+
+        // Finalize any previously started instances.
+        const pipelineInstances = await db.select<PipelineInstance>("pipeline_instance where status.phase != 'stopped'");
+        for (const instance of pipelineInstances) {
+            instance.status.phase = "stopped";
+            await db.merge(instance.id, instance);
+        }
+        const jobInstances = await db.select<JobInstance>("job_instance where status != 'finished' OR state != 'finished'");
+        for (const instance of jobInstances) {
+            instance.state = "finished";
+            // TODO: Investigate where this gets populated
+            instance['status'] = "finished";
+            await db.merge(instance.id, instance);
+        }
     };
 }

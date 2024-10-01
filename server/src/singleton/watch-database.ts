@@ -71,6 +71,18 @@ export class SocketLiveService {
                 socket.on("disconnect", () => {
                     activeSockets.splice(activeSockets.indexOf(socket), 1);
                 });
+                socket.on("$connected", () => {
+                    // TODO: Filter pipeline instance and job instance to the current UI view.
+                    db.select("pipeline").then(results => {
+                        results.forEach(result => socket.emit("live:pipeline", { action: "UPDATE", result }));
+                    })
+                    db.select("pipeline_instance").then(results => {
+                        results.forEach(result => socket.emit("live:pipeline_instance", { action: "UPDATE", result }));
+                    })
+                    db.select("job_instance").then(results => {
+                        results.forEach(result => socket.emit("live:job_instance", { action: "UPDATE", result }));
+                    })
+                });
             });
         });
     }

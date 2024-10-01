@@ -108,6 +108,8 @@ const SaveLogAndCleanup = async (pod: k8s.V1Pod) => {
             pod.status.phase == "Succeeded" ? "finished" :
                 "failed";
 
+        // Ensure that the end time has been set by now.
+        jobInstance.endEpoch ??= Date.now();
         await db.merge(jobInstance.id, jobInstance);
     }
 

@@ -101,8 +101,7 @@ const ProcessStageTriggers = async (
     if (stagesToTrigger.length > 0) {
         // Trigger all of the stages that need to be run.
         for (const stage of stagesToTrigger) {
-            if (stage.disabled)
-                continue;
+            if (stage.disabled) continue;
 
             // Prevent duplicate executions
             if (stageCompletions[pipelineInstance.id + '_' + stage.id])
