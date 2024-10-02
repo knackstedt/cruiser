@@ -4,6 +4,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
+import stripAnsi from 'strip-ansi';
+import ansiRegex from 'ansi-regex';
 
 import { Fetch, TooltipDirective } from '@dotglitch/ngx-common';
 import { NgScrollbar, NgScrollbarModule } from 'ngx-scrollbar';
@@ -49,6 +51,71 @@ export type RenderedItem = {
     // TODO: Remove this
     _index: number,
 };
+
+const modes: {[key: string]: string} = {
+    0: 'clear_all',
+    1: 'set:font:bold',
+    22: 'rm:font:bold',
+    2: 'set:font:dim',
+    // 22: 'rm:font:dim',
+    3: 'set:font:italic',
+    23: 'rm:font:italic',
+    4: 'set:font:underline',
+    24: 'rm:font:underline',
+    5: 'set:font:blink',
+    25: 'rm:font:blink',
+    7: 'set:font:inverse',
+    27: 'rm:font:inverse',
+    8: 'set:font:invisible',
+    28: 'rm:font:invisible',
+    9: 'set:font:strikethrough',
+    29: 'rm:font:strikethrough',
+
+    30: "set:colorfg:black",
+    40: "set:colorbg:black",
+    31: "set:colorfg:red",
+    41: "set:colorbg:red",
+    32: "set:colorfg:green",
+    42: "set:colorbg:green",
+    33: "set:colorfg:yellow",
+    43: "set:colorbg:yellow",
+    34: "set:colorfg:blue",
+    44: "set:colorbg:blue",
+    35: "set:colorfg:magenta",
+    45: "set:colorbg:magenta",
+    36: "set:colorfg:cyan",
+    46: "set:colorbg:cyan",
+    37: "set:colorfg:white",
+    47: "set:colorbg:white",
+    // if 5 is the following digit, 256 color mode
+    // if 2 if the following digit, RGB mode
+    38: "set:colorfg:RGB",
+    48: "set:colorbg:RGB",
+    39: "set:colorfg:default",
+    49: "set:colorbg:default",
+
+    90: "set:colorfg:bright-black",
+    100: "set:colorbg:bright-black",
+    91: "set:colorfg:bright-red",
+    101: "set:colorbg:bright-red",
+    92: "set:colorfg:bright-green",
+    102: "set:colorbg:bright-green",
+    93: "set:colorfg:bright-yellow",
+    103: "set:colorbg:bright-yellow",
+    94: "set:colorfg:bright-blue",
+    104: "set:colorbg:bright-blue",
+    95: "set:colorfg:bright-magenta",
+    105: "set:colorbg:bright-magenta",
+    96: "set:colorfg:bright-cyan",
+    106: "set:colorbg:bright-cyan",
+    97: "set:colorfg:bright-white",
+    107: "set:colorbg:bright-white",
+    99: "set:colorfg:bright-default",
+    109: "set:colorbg:bright-default",
+}
+// Reverse the keys and values of modes above.
+const modesInverse: {[key: string]: string} = {};
+Object.entries(modes).forEach(([k,v]) => modesInverse[v] = k);
 
 @Component({
     selector: 'app-job-logs',
@@ -215,6 +282,22 @@ export class JobLogsComponent {
         }
     }
 
+    private defaults = {
+        bold: false,
+        dim: false,
+        italic: false,
+        underline: false,
+        blink: false,
+        inverse: false,
+        invisible: false,
+        strikethrough: false,
+
+        colorfg: "default",
+        colorbg: "default"
+    };
+
+    private ansi = {...this.defaults};
+
     onReceiveLine(line: LogRecord, runHooks = true) {
         const iso = (new Date(line.time)).toISOString();
 
@@ -265,11 +348,103 @@ export class JobLogsComponent {
         lines.forEach((ln, i) => {
             // If the first line is empty don't print it.
             if (i == 0 && !ln.trim()) return;
-            // TODO: Should plaintext strip ANSI codes?
+
+
+            // Written with help from https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
+            let lastAnsiStyles = '';
+            if (line.level[0] == 's') {
+                Object.entries(this.defaults).forEach(([k,v]) => {
+                    // If the current stored value doesn't match,
+                    // we need to apply the style ANSI sequence
+                    if (this.ansi[k] !== v) {
+                        // Find the numeric code.
+                        if (typeof this.ansi[k] == "boolean") {
+                            const numCode = modesInverse[(this.ansi[k] ? "set:" : "rm:") + "font:" + k];
+                            lastAnsiStyles += '\x1b[' + numCode + 'm';
+                        }
+                        // If it's RGB we need to attach the value itself
+                        else if (typeof this.ansi[k] == "string" && this.ansi[k].includes(';')) {
+                            lastAnsiStyles += '\x1b[' + this.ansi[k] + 'm';
+                        }
+                        else {
+                            const numCode = modesInverse["set:" + k + ':' + this.ansi[k]];
+                            lastAnsiStyles += '\x1b[' + numCode + 'm';
+                        }
+                    }
+                });
+                // console.log("lastANSIStyles", lastAnsiStyles);
+
+                // Read through the string and identify all of the escape sequences.
+                // We'll track these and merge them onto the rest of the output from the process so that
+                // we can render the log output correctly AND in realtime as the stream is written.
+                const length = ln.length;
+                for (let k = 0; k < length; k++) {
+                    const c = ln[k];
+                    // If the character isn't the initiation of an escape sequence,
+                    // ignore it and continue
+                    if (c.charCodeAt(0) != 0x1b) continue;
+
+                    let chars = []; // we do not need 0x1b here.
+
+                    for (let j = k; j < length && k < length; j++, k++) {
+                        const c = ln[j];
+                        const code = c.charCodeAt(0);
+                        if (code == 0x4d || code == 0x6d) {
+                            break;
+                        }
+                        // We don't want to track 1b and the square bracket
+                        else if (code != 0x1b && code != 0x5b) {
+                            chars.push(c);
+                            // we hit an 'm' or 'M' so terminate the detection process.
+                        }
+                    }
+
+                    const expression = chars.join('');
+                    const [mode, ...additional] = expression.split(';');
+
+                    const modeData = modes[mode];
+                    if (!modeData) {
+                        // If we don't have a known mode data for it, we won't do anything.
+                        // console.warn("Unknown ANSI sequence was detected. Will not be tracked for further log output rendering", { mode, additional });
+                        continue;
+                    }
+                    // This is a special action that wipes ALL styling properties.
+                    if (modeData == "clear_all") {
+                        this.ansi = {...this.defaults};
+                        continue;
+                    }
+
+                    const [setOrRm, property, name] = modeData.split(':');
+
+                    // Specifically this number clears BOTH bold AND dim
+                    if (chars[0] == 0x16) {
+                        this.ansi.bold = false;
+                        this.ansi.dim = false;
+                        continue;
+                    }
+                    // If this is a font property just update the mode
+                    if (property == "font") {
+                        this.ansi[name] = setOrRm == "set";
+                        continue;
+                    }
+                    // If this is a color property we'll need to be more cautious
+                    else {
+                        if (name == "RGB") {
+                            this.ansi[property] = mode + ';' + additional.join(';');
+                        }
+                        else {
+                            this.ansi[property] = name;
+                        }
+                        continue;
+                    }
+                }
+                // console.log({ ...this.ansi, ln })
+            }
 
             // If this is an agent log, perform some mutations that wouldn't normally occur.
             const item = (() => {
-                if (!["stdout", "stderr"].includes(line.level)) {
+                // Agent records are processed here.
+                if (line.level[0] != 's') {
                     const codeRanges = parseMatches([...ln.matchAll(/(`[^`]+?`)/g)]);
                     let html: ParsedSpan[] = [];
 
@@ -321,10 +496,15 @@ export class JobLogsComponent {
                     };
                 }
                 else {
-                    const html = parse(ln).spans.map(s => {
+
+                    const html = parse(lastAnsiStyles + ln).spans.map(s => {
                         s.text = this.parseGitmoji(s.text);
+
+                        // Strip out any leftover ANSI markers.
+                        s.text = stripAnsi(s.text);
                         return s;
                     });
+
                     return {
                         kind: "line",
                         _index: 0,
@@ -339,20 +519,7 @@ export class JobLogsComponent {
                 }
             })();
 
-            // If the line is grouped, find it's group and add it
-            // const gid = line.properties?.['gid'];
-            // const tgid = line.properties?.['tgid'];
-
-            // // Now find the task group within the block
-            // const block = this.lineBlockMap[gid]?.taskGroups.find(e => e.tgid == tgid);
-            // if (gid && block) {
-            //     // debugger;
-            //     block.lines.push(item as RenderedItem);
-            // }
-            // else {
-                // debugger;
-                this.lines.push(item as RenderedItem);
-            // }
+            this.lines.push(item as RenderedItem);
         });
 
         // console.log(this.lines);
