@@ -276,7 +276,7 @@ export class ReleasesComponent implements OnInit {
                 `?$filter=spec.id eq '${this.selectedPipeline.id}'` +
                 `&$orderby=id desc` +
                 `&$fetch=status.jobInstances` +
-                `&$top=2`
+                `&$top=20`
             );
             this._pipelineInstances = instances;
             this.parseInstances(instances);
@@ -316,10 +316,14 @@ export class ReleasesComponent implements OnInit {
                 stage['_isReadyForApproval'] = approval?.readyForApproval;
                 stage['_isApproved'] = approval?.approvalCount >= stage.requiredApprovals;
 
+                // TODO: This is simply messed up now.
                 const states = Object.keys(compositeState);
                 stage['_state'] =
                     states.length == 0
                     ? (
+                        instance.status.phase == "stopped" && instance.status.failedStages?.length > 0
+                            ? "failed"
+                            :
                         ["started", "running", "starting", "waiting"].includes(instance.status.phase)
                             ? 'pending'
                             : instance.status.phase
@@ -333,6 +337,7 @@ export class ReleasesComponent implements OnInit {
                     : states.includes("cancelled")
                     ? 'cancelled'
                     : 'building';
+
             });
         });
 
@@ -399,8 +404,8 @@ export class ReleasesComponent implements OnInit {
     async triggerPipeline(pipeline = this.selectedPipeline) {
         await this.fetch.get(`/api/pipeline/${pipeline.id}/run`)
             .then(({ pipeline: newPipeline }) => {
+                Object.keys(pipeline).forEach(k => delete pipeline[k]);
                 Object.assign(pipeline, newPipeline);
-                // this.selectPipeline(pipeline);
             });
     }
 
@@ -413,8 +418,8 @@ export class ReleasesComponent implements OnInit {
     async approveStage(instance: PipelineInstance, stage: StageDefinition) {
         await this.fetch.get(`/api/pipeline/${this.selectedPipeline.id}/${instance.id}/${stage.id}/approve`)
             .then(({ pipeline }) => {
+                Object.keys(this.selectedPipeline).forEach(k => delete pipeline[k]);
                 Object.assign(this.selectedPipeline, pipeline);
-                // this.selectPipeline(this.selectedPipeline);
             });
     }
 
