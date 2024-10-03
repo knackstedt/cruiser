@@ -2,7 +2,6 @@ import http from 'http';
 
 import { SocketTunnelService } from './singleton/socket-tunnel';
 import { CronScheduler } from './util/scheduler';
-import { WatchAndFlushJobs } from './singleton/watch-kube-jobs';
 import { SocketLiveService } from './singleton/watch-database';
 import { EventTriggers } from './singleton/watch-jobinstance';
 import { SocketEventService } from './singleton/socket-service';

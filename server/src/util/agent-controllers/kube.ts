@@ -163,6 +163,11 @@ export class KubeAgent implements AgentInitializer {
     private saveLogAndCleanup = async (pod: k8s.V1Pod) => {
         const { body: log } = await k8sApi.readNamespacedPodLog(pod.metadata.name, pod.metadata.namespace);
 
+        // If the log has this property, it's actually an error (unclear why it's not thrown...)
+        if (log['code']) {
+            throw log;
+        }
+
         const dir = [
             environment.cruiser_log_dir,
             pod.metadata.annotations['cruiser.dev/pipeline-id'],

@@ -72,11 +72,15 @@ export class SocketLiveService {
                     activeSockets.splice(activeSockets.indexOf(socket), 1);
                 });
                 socket.on("$connected", () => {
+                    // TODO: this seems stupid. This causes all old job instances and pipeline instances to be fed to the
+                    // client even if it's not rendering them. It's probably better to simply update the containing pipeline
+                    // stats and let change detection do it's thing to auto refresh the list of pipeline instances.
+
                     // TODO: Filter pipeline instance and job instance to the current UI view.
                     db.select("pipeline").then(results => {
                         results.forEach(result => socket.emit("live:pipeline", { action: "UPDATE", result }));
                     })
-                    db.select("pipeline_instance").then(results => {
+                    db.query<[PipelineInstance[]]>("SELECT * FROM pipeline_instance FETCH status.jobInstances").then(([results]) => {
                         results.forEach(result => socket.emit("live:pipeline_instance", { action: "UPDATE", result }));
                     })
                     db.select("job_instance").then(results => {

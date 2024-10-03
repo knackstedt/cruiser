@@ -48,7 +48,7 @@ export const getAgentEnvironment = (
         { name: "CRUISER_SERVER_TOKEN", value: kubeAuthnToken },
 
         // Provide the otel configuration that the server has
-        { name: "OTEL_EXPORTER_OTLP_ENDPOINT", value: process.env['OTEL_EXPORTER_OTLP_ENDPOINT'] },
+        // { name: "OTEL_EXPORTER_OTLP_ENDPOINT", value: process.env['OTEL_EXPORTER_OTLP_ENDPOINT'] },
         { name: "CRUISER_AGENT_BUILD_DIR", value: environment.is_running_local_agents ? ('/tmp/' + ulid()) : '' },
 
         ...(jobDefinition.environment ?? []),
