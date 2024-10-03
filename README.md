@@ -20,6 +20,7 @@ and you have been warned :)
 ## Roadmap
 > Ordered by priority.
 - [ ] Add CRON triggers
+- [ ] Add "nightly" additional that's fixed on system time
 - [ ] Pipeline instance labels can be defined from simple JS scripts
 - [ ] Support Pipeline definition as code file (YAML, JSON)
 - [ ] Pipeline, stage, job failure hooks
@@ -27,6 +28,7 @@ and you have been warned :)
 - [ ] Env vars & secrets on "global system"
 - [ ] Env vars & secrets on "project"
 - [ ] Auto-trigger and approve next release if previous release has been deployed and not redacted
+- [ ] Detect OOM crashes from known languages / build tools
 - [ ] Add support for pipeline templates
 - [ ] Add support for non-git based code repos
 - [ ] Create base worker images and sample k8s setup
@@ -70,6 +72,4 @@ and you have been warned :)
 - [X] Env vars & secrets on "task"
 - [X] Enable disabling pipelines, jobs, stages, task groups etc.
 - [X] Create breakpoints and allow remote terminal connections through web UI
-
-
 
