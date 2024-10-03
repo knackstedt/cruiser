@@ -51,6 +51,10 @@ export class StagePopupComponent {
             const instance = s.data.result;
             if (s.ev != "job_instance" || s.data.action != "UPDATE") {
                 const job = this.jobs.find(j => j.id == instance.job);
+                if (!job) {
+                    return;
+                    debugger;
+                }
                 // Update the instance (replace)
                 job._instance = instance;
                 this.updateStats();

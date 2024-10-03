@@ -223,14 +223,31 @@ export class JobLogsComponent {
                 const ln = lines[i];
 
                 if (ln[0] == "{") {
-                    this.onReceiveLine(JSON.parse(ln));
+                    const obj = JSON.parse(ln);
+                    this.onReceiveLine(obj);
+                }
+                else if (ln[0] == ">") {
+                    // >1:100:01J95KKQYSEMHP1TE0BRM55CHZ:1727891045738;[32mblue
+                    // debugger;
+                    const [props, ...msg] = ln.split(';');
+                    const [stream, gid, tgid, time] = props.split(':');
+                    this.onReceiveLine({
+                        level: stream[1] == '1' ? "stdout" : 'stderr',
+                        time: parseInt(time),
+                        msg: msg.join(';'),
+                        properties: {
+                            gid: gid,
+                            tgid: tgid.includes(":") ? tgid : "pipeline_task_group:" + tgid
+                        }
+                    })
                 }
                 else {
-                    this.onReceiveLine({
-                        level: "stderr",
-                        time: i,
-                        msg: ln,
-                    })
+                    // These messages seem to always be pointless
+                    // this.onReceiveLine({
+                    //     level: "stderr",
+                    //     time: i,
+                    //     msg: ln,
+                    // })
                 }
             }
 
@@ -438,7 +455,10 @@ export class JobLogsComponent {
                         continue;
                     }
                 }
-                // console.log({ ...this.ansi, ln })
+            }
+            // If the line is the start of a new process clear out any leftover ansi color modes.
+            else if (line.properties?.['processCWD']) {
+                this.ansi = {...this.defaults};
             }
 
             // If this is an agent log, perform some mutations that wouldn't normally occur.

@@ -1,10 +1,8 @@
 import { Socket, io } from "socket.io-client";
-import { getLogger } from '../util/logger';
+import { logger } from '../util/logger';
 import { Span } from '@opentelemetry/api';
 import { LogRecord } from '../types/agent-log';
 import { environment } from '../util/environment';
-
-const logger = getLogger("agent");
 
 export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket) => {
     const history: {
@@ -47,7 +45,8 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
                 ...obj
             };
 
-            logger.info(object);
+            logger.info(object as LogRecord);
+            // console.log(object);
             socket.emit("log:agent", object);
         },
         info: (obj: Omit<LogRecord, 'level' | 'time'>) => {
@@ -57,7 +56,7 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
                 ...obj
             };
 
-            logger.info(object);
+            logger.info(object as LogRecord);
             socket.emit("log:agent", object);
         },
         warn: (obj: Omit<LogRecord, 'level' | 'time'>) => {
@@ -67,7 +66,7 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
                 ...obj
             };
 
-            logger.warn(object);
+            logger.warn(object as LogRecord);
             socket.emit("log:agent", object);        },
         error: (obj: Omit<LogRecord, 'level' | 'time'>) => {
             const object = {
@@ -76,7 +75,7 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
                 ...obj
             };
 
-            logger.error(object);
+            logger.error(object as LogRecord);
             socket.emit("log:agent", object);
         },
         fatal: (obj: Omit<LogRecord, 'level' | 'time'>) => {
@@ -86,7 +85,7 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
                 ...obj
             };
 
-            logger.fatal(object);
+            logger.fatal(object as LogRecord);
             socket.emit("log:agent", object);
         },
         stdout: (obj: LogRecord) => {
@@ -104,7 +103,7 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
 
                 // Write all entries to stdout
                 lines.forEach(line =>
-                    line != '' && process.stdout.write(`log:stdout ${t};${line}\n`)
+                    line != '' && process.stdout.write(`>1:${obj.properties['gid']}:${obj.properties['tgid'].split(':')[1]}:${t};${line}\n`)
                 )
             }
         },
@@ -123,7 +122,7 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
 
                 // Write all entries to stderr
                 lines.forEach(line =>
-                    line != '' && process.stderr.write(`log:stderr ${t};${line}\n`)
+                    line != '' && process.stderr.write(`>2:${obj.properties['gid']}:${obj.properties['tgid'].split(':')[1]}:${t};${line}\n`)
                 );
             }
         }

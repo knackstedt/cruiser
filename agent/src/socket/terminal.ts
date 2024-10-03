@@ -46,10 +46,10 @@ export const CreateTerminalSocketServer = async (parentSpan: Span, socket: Socke
         }
         catch (ex) {
             logger.warn({
-                msg: "Failed to spawn PTY",
+                msg: "Failed to spawn PTY: " + ex.message,
                 properties: {
                     stack: ex.stack,
-                    message: ex.message ?? ex.title ?? ex.name
+                    msg: ex.message
                 }
             });
             socket.emit("ssh:fatal", ex);

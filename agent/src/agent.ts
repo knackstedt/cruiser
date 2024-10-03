@@ -1,4 +1,6 @@
 import { trace } from '@opentelemetry/api';
+import { getHeapStatistics } from 'v8';
+
 import { GetInputs } from './job/02-get-inputs';
 import { api } from './util/axios';
 import { getConfig } from './util/config';
@@ -30,10 +32,25 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
 
 
         try {
+            const heapStats = getHeapStatistics();
+            const toGb = (stat) => {
+                if (stat > 1024 ** 3)
+                    return (stat / 1024 ** 3).toFixed(2) + "GB";
+                if (stat > 1024 ** 2)
+                    return (stat / 1024 ** 2).toFixed(2) + "MB";
+                if (stat > 1024)
+                    return (stat / 1024).toFixed(2) + "KB";
+                return stat + "B";
+            };
+
             logger.info({
                 msg: "Agent starting",
                 block: "start",
                 properties: {
+                    cwd: process.cwd(),
+                    ...Object.entries(heapStats).map(([k, v]) => ({
+                        [k]: toGb(v)
+                    })).reduce((a, b) => ({ ...a, ...b }), {}),
                     pipelineInstance,
                     pipeline,
                     stage,
@@ -91,7 +108,7 @@ export const RunAgentProcess = async (jobInstanceId: string) => {
                 msg: "⏸ Cannot continue build task: " + err.message,
                 properties: {
                     stack: err.stack,
-                    message: err.message
+                    msg: err.message
                 }
             })
             await TripBreakpoint(span, jobInstance, false, false);

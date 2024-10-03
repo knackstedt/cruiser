@@ -72,7 +72,7 @@ const uploadBinary = async (
             properties: {
                 path,
                 name: err.name,
-                message: err.message,
+                msg: err.message,
                 stack: err.stack,
                 code: err.code,
                 headers: err.config.headers,
@@ -185,7 +185,7 @@ export const UploadArtifacts = async (
         logger.fatal({
             msg: "Failed to seal outputArtifacts",
             properties: {
-                message: ex.message,
+                msg: ex.message,
                 stack: ex.stack
             }
         })

@@ -289,9 +289,13 @@ export class ReleasesComponent implements OnInit {
             const jobInstanceList = (instance.status.jobInstances as any as JobInstance[]);
 
             instance.spec.stages?.forEach(stage => {
+                if (stage.disabled) return;
+
                 const compositeState = {};
                 const stateList = [];
                 if (stage.jobs?.length == 0) {
+                    // ???
+                    // TODO: is this mangled for approval stages? I don't recall.
                     const jobInstance = jobInstanceList?.find(j => j.stage == stage.id);
                     if (jobInstance) {
                         compositeState[jobInstance?.state] = 1;
@@ -302,7 +306,7 @@ export class ReleasesComponent implements OnInit {
                         const jobInstance = jobInstanceList?.find(j => j.job == job.id);
                         if (!jobInstance) return;
 
-                        job['_jobInstance'] = jobInstance;
+                        job['_instance'] = jobInstance;
 
                         compositeState[jobInstance.state] = compositeState[jobInstance.state] ?? 0;
                         compositeState[jobInstance.state]++;
@@ -318,26 +322,28 @@ export class ReleasesComponent implements OnInit {
 
                 // TODO: This is simply messed up now.
                 const states = Object.keys(compositeState);
-                stage['_state'] =
-                    states.length == 0
-                    ? (
-                        instance.status.phase == "stopped" && instance.status.failedStages?.length > 0
-                            ? "failed"
-                            :
-                        ["started", "running", "starting", "waiting"].includes(instance.status.phase)
-                            ? 'pending'
-                            : instance.status.phase
-                    )
-                    : states.length == 1
-                    ? states[0]
-                    : states.includes("failed")
-                    ? 'failed'
-                    : states.includes("frozen")
-                    ? 'frozen'
-                    : states.includes("cancelled")
-                    ? 'cancelled'
-                    : 'building';
 
+                // If all jobs are the same state, no complex logic applies
+                if (states.length == 1) {
+                    stage['_state'] = states[0] as JobInstance['state'];
+                }
+                else {
+                    // At least 2 jobs have different states, so we need to compare
+                    // them based on priority
+                    const hasFailed = states.includes("failed");
+                    const hasFrozen = states.includes("frozen");
+                    const hasCancelled = states.includes("cancelled");
+                    const hasBuilding = states.includes("building");
+
+                    if (hasFailed) stage['_state'] = 'failed';
+                    else if (hasCancelled) stage['_state'] = 'cancelled';
+                    else if (hasFrozen) stage['_state'] = 'frozen';
+                    else if (hasBuilding) stage['_state'] = 'building';
+                }
+                if (!stage['_state']) {
+                    debugger;
+                }
+                console.log(stage['_state'])
             });
         });
 

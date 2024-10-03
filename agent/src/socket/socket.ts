@@ -1,14 +1,12 @@
 import { Socket, io } from "socket.io-client";
 import {environment} from '../util/environment';
-import { getLogger } from '../util/logger';
 import { JobDefinition, PipelineDefinition } from '../types/pipeline';
 import { DefaultEventsMap } from '@socket.io/component-emitter';
 import { api } from '../util/axios';
 import { JobInstance } from '../types/agent-task';
 import { Span } from '@opentelemetry/api';
 import { OpenTelemetry } from '../util/instrumentation';
-
-const logger = getLogger("agent");
+import { logger } from '../util/logger';
 const showDebug = !!process.env['AGENT_WEBSOCKETS_VERBOSE'];
 
 export const CreateBaseSocketServer = async (parentSpan: Span, pipeline: PipelineDefinition, jobInstance: JobInstance) => {
@@ -25,8 +23,6 @@ export const CreateBaseSocketServer = async (parentSpan: Span, pipeline: Pipelin
             }
         });
 
-        logger.info("Connecting to socket...");
-
         if (showDebug) {
             socket.onAny((msg, ...args) => {
                 console.log("\x1b[36m --> " + msg +"\x1b[0m " + args.length);
@@ -40,15 +36,15 @@ export const CreateBaseSocketServer = async (parentSpan: Span, pipeline: Pipelin
 
         return new Promise<Socket<DefaultEventsMap, DefaultEventsMap>>((res, rej) => {
             socket.on("connect", () => {
-                logger.info("Socket connected");
+                // logger.info({ msg: "Agent connected" })
                 res(socket);
             });
             socket.on("connect_error", (err) => {
-                logger.error(`connect_error due to ${err.message}`);
+                logger.error({ msg: `Agent connection failed: ${err.message}`, properties: { stack: err.stack } });
                 rej(err);
             });
             socket.on("disconnect", () => {
-                logger.warn("Socket lost connection to cluster");
+                logger.warn({ msg: "Agent lost connection to cluster!" })
             });
             // During the connect handshake, we need to tell the server
             // what this job is
@@ -66,9 +62,7 @@ export const CreateBaseSocketServer = async (parentSpan: Span, pipeline: Pipelin
                     endEpoch: Date.now()
                 });
 
-                logger.warn({
-                    msg: "Task cancelled by user. Shutting down..."
-                });
+                logger.warn({ msg: "Job being shut down preemptively by cluster. Shutting down." })
 
                 // 5ms to allow anything necessary to flush
                 setTimeout(async () => {
@@ -78,14 +72,14 @@ export const CreateBaseSocketServer = async (parentSpan: Span, pipeline: Pipelin
             });
 
             socket.on("error", (err) => {
-                logger.error(err);
+                logger.warn({ msg: err.message, properties: { stack: err.stack } })
                 rej(err);
             });
             socket.connect();
         });
     }
     catch (ex) {
-        logger.error(ex);
+        logger.warn({ msg: ex.message, properties: { stack: ex.stack } })
     }
 
     return socket;

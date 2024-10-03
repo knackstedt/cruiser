@@ -17,7 +17,7 @@
             "sourceMaps": true,
             "cwd": "${workspaceRoot}/server",
             "env": {
-                "CRUISER_GLOBAL_STORAGE_PATH": "/home/knackstedt/source/@me/dot-ops/data",
+                "CRUISER_GLOBAL_STORAGE_PATH": "/home/knackstedt/source/@me/cruiser/data",
                 "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318/"
             },
         },

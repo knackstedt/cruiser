@@ -78,7 +78,7 @@ export const PreflightCheck = async (
             // Parse the os release file
             const data = await fs.readFile(`/etc/os-release`, 'utf8')
                 .catch(err => {
-                    logger.fatal("Cannot identify linux distro");
+                    logger.fatal({ msg: "Cannot identify linux distro" });
                     return '';
                 });
 
@@ -120,8 +120,10 @@ export const PreflightCheck = async (
                 if (!resolved) {
                     logger.fatal({
                         msg: "Failed to automatically install required dependency",
-                        dependency: dependency.name,
-                        correction
+                        properties: {
+                            dependency: dependency.name,
+                            correction
+                        }
                     })
                 }
             }

@@ -152,7 +152,7 @@ const executeTaskGroup = async (
                                                         msg: `Failed to load secret \`${envItem.key}\``,
                                                         properties: {
                                                             stack: err.stack,
-                                                            message: err.message,
+                                                            msg: err.message,
                                                             gid, tgid
                                                         }
                                                     });
@@ -201,7 +201,7 @@ const executeTaskGroup = async (
                                             msg: "Process error",
                                             properties: {
                                                 stack: err.stack,
-                                                message: err.message,
+                                                msg: err.message,
                                                 gid, tgid
                                             }
                                         });

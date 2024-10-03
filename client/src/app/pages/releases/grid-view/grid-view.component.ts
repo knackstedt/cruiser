@@ -8,7 +8,7 @@ import { Fetch, MenuDirective, TabulatorComponent, TooltipDirective } from '@dot
 import Sortable from 'sortablejs';
 
 import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/job-instance-icon.component';
-import { StageSvgDiagramComponent } from 'src/app/components/stage-svg-diagram/stage-svg-diagram.component';
+import { StageSvgDiagramComponent } from 'src/app/pages/releases/grid-view/stage-svg-diagram/stage-svg-diagram.component';
 import { ReleasesComponent } from 'src/app/pages/releases/releases.component';
 import { StagePopupComponent } from 'src/app/pages/stage-popup/stage-popup.component';
 

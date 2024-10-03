@@ -60,6 +60,8 @@ export class StageSvgDiagramComponent {
         const edges = [];
 
         this.pipeline.stages.forEach(stage => {
+            if (stage.disabled) return;
+
             for (const precedingStageId of (stage.stageTrigger ?? [])) {
                 edges.push({
                     source: precedingStageId.split(':')[1],
