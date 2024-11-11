@@ -19,11 +19,11 @@
         "fs-extra": "^11.2.0",
         "node-pty": "^1.0.0",
         "pino": "^8.19.0",
-        "simple-git": "^3.22.0",
-        "socket.io-client": "^4.7.5",
-        "systeminformation": "^5.22.6",
-        "tslib": "^2.6.2",
-        "ulidx": "^2.3.0"
+        "simple-git": "^3.27.0",
+        "socket.io-client": "^4.8.0",
+        "systeminformation": "^5.23.5",
+        "tslib": "^2.7.0",
+        "ulidx": "^2.4.1"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.4",
