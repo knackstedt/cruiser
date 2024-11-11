@@ -38,7 +38,8 @@
                 "start",
                 "--user=root",
                 "--pass=root",
-                "file:./data/database"
+                "-A",
+                "surrealkv:./data/database"
             ],
             "isBackground": true,
             "problemMatcher": {
