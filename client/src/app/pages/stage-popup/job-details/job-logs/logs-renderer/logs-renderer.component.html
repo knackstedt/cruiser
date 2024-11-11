@@ -14,7 +14,7 @@
 <ng-scrollbar
     #scrollbar
     class="console"
-    [class.shadow]="scrollbar?.viewport?.scrollTop > 2"
+    [class.shadow]="(scrollbar?.viewport?.scrollTop || 0) > 2"
     track="all"
 >
     <div
