@@ -1,7 +1,7 @@
 import * as express from "express";
 import axios from 'axios';
 import { randomString, route } from '../util/util';
-import { afterDatabaseConnected, connectDatabase, db } from '../util/db';
+import { afterDatabaseConnected, db } from '../util/db';
 import { logger } from '../util/logger';
 import { CruiserUserProfile, CruiserUserRole } from '../types/cruiser-types';
 import { GitHubUser } from '../types/user';
@@ -15,7 +15,7 @@ const getProfile = async (userId: string, roles?: CruiserUserRole[]) => {
 
     // Establish the database user
     if (!profile) {
-        [ profile ] = await db.create("users:ulid()", {
+        [ profile ] = await db.create("users", {
             login: userId,
             roles: roles || []
         }) as any;

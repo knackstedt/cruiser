@@ -51,6 +51,9 @@ export const startRestServer = async () => {
             SessionMiddleware(req, res, next);
         }
     });
+    app.use((req, res, next) => {
+        next();
+    });
 
     /**
      * Login APIs _must_ be bound before the below

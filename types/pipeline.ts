@@ -4,7 +4,7 @@ import { EnvironmentVariable } from './environment';
 import { AxiosProxyConfig } from 'axios';
 
 export type InputArtifact = {
-    id: `artifact_input:${string}`
+    id: string
     label: string
     description?: string
 
@@ -14,7 +14,7 @@ export type InputArtifact = {
 }
 
 export type OutputArtifact = {
-    id: `artifact_output:${string}`
+    id: string
     label: string
     description?: string
     source: string
@@ -23,7 +23,7 @@ export type OutputArtifact = {
 }
 
 export type TaskDefinition = {
-    id: `pipeline_task:${string}`;
+    id: string;
     label: string
     disabled: boolean,
     timeout: number
@@ -56,7 +56,7 @@ export type TaskDefinition = {
 }
 
 export type TaskGroupDefinition = {
-    id: `pipeline_task_group:${string}`
+    id: string
     label: string
     description?: string
     order: number
@@ -70,7 +70,7 @@ export type TaskGroupDefinition = {
 }
 
 export type JobDefinition = {
-    id: `pipeline_job:${string}`;
+    id: string;
     label: string
     description?: string
     order: number
@@ -108,7 +108,7 @@ export type JobDefinition = {
 }
 
 export type Webhook = {
-    id: `pipeline_stage_webhook:${string}`,
+    id: string,
     label: string,
     description?: string,
     disabled?: boolean
@@ -126,7 +126,7 @@ export type Webhook = {
 }
 
 export type StageDefinition = {
-    id: `pipeline_stage:${string}`
+    id: string
     renderMode: "normal" | "gateway" | "job_container"
     label: string
     description?: string
@@ -155,7 +155,7 @@ export type StageDefinition = {
 }
 
 export type SourceConfiguration = Partial<{
-    id: `pipeline_source:${string}`
+    id: string
     label: string
     description: string
     targetPath: string
@@ -192,7 +192,7 @@ export type SourceConfiguration = Partial<{
 
 
 export type PipelineDefinition = {
-    id: `pipeline:${string}`
+    id: string
     label: string
     description: string
     labelTemplate: string
@@ -236,7 +236,7 @@ export type PipelineDefinition = {
 }
 
 export type PipelineInstance = {
-    id: `pipeline_instance:${string}`,
+    id: string,
     identifier: string,
     spec: PipelineDefinition,
     metadata: unknown,

@@ -10,7 +10,7 @@ export const getLogger = (file: string) => pino({
             logLevel: { 10: "TRACE", 20: "DEBUG", 30: "INFO", 40: "WARN", 50: "ERROR", 60: "FATAL" }[level],
         };
     },
-    transport: {
+    transport: environment.is_production ? {
         targets: [
             {
                 level: 'trace',
@@ -24,7 +24,8 @@ export const getLogger = (file: string) => pino({
                 target: 'pino/file', level: 'trace', options: { destination: 1 }
             }
         ]
-    }
+    } : {
+        target: "pino-pretty", options: { colorize: true }}
 });
 
 const _logger = getLogger(`server-${Date.now()}`);

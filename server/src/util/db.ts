@@ -1,4 +1,4 @@
-import Surreal from 'surrealdb.js';
+import Surreal from 'surrealdb';
 import { environment } from './environment';
 import { logger } from './logger';
 
@@ -13,6 +13,7 @@ const databaseConnected = new Promise(async (resolve) => {
         }
     }, 10)
 });
+dbc.emitter.subscribe('error', console.log);
 export const db = dbc;
 
 export const connectDatabase = async (

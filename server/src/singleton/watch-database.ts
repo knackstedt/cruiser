@@ -29,31 +29,31 @@ export class SocketLiveService {
 
         afterDatabaseConnected(() => {
             const watchPipelines = () =>
-                db.live("pipeline", data =>
-                    data.action == "CLOSE"
+                db.live("pipeline", (action, result) =>
+                    action == "CLOSE"
                         ? watchPipelines()
-                        : activeSockets.forEach(s => s.emit("live:pipeline", data)
+                        : activeSockets.forEach(s => s.emit("live:pipeline", { action, result })
                     )
                 );
 
             const watchPipelineInstances = () =>
-                db.live<PipelineInstance>("pipeline_instance", data => {
-                    if (data.action == "CLOSE")
+                db.live<PipelineInstance>("pipeline_instance", (action, result) => {
+                    if (action == "CLOSE")
                         return watchPipelineInstances();
 
-                    db.query<[[PipelineInstance]]>(`select * from '${data.result.id}' fetch status.jobInstances`)
+                    db.query<[[PipelineInstance]]>(`select * from $id fetch status.jobInstances`, { id: (result as any).id })
                         .then(([[instance]]) => {
-                            data.result = instance;
-                            activeSockets.forEach(s => s.emit("live:pipeline_instance", data));
+                            result = instance;
+                            activeSockets.forEach(s => s.emit("live:pipeline_instance", { action, result }));
                         })
                     .catch(err => { /* TODO */})
                 });
 
             const watchJobInstances = () =>
-                db.live("job_instance", data =>
-                    data.action == "CLOSE"
+                db.live("job_instance", (action, result) =>
+                    action == "CLOSE"
                         ? watchJobInstances()
-                        : activeSockets.forEach(s => s.emit("live:job_instance", data)
+                        : activeSockets.forEach(s => s.emit("live:job_instance", { action, result })
                     )
                 );
 

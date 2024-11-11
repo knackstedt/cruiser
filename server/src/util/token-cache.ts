@@ -14,5 +14,5 @@ export const CheckJobToken = async (token: string) => {
 };
 export const SetJobToken = (token: string) => {
     tokenCache.push(token);
-    db.create(`agent_tokens:ulid()`, { token });
+    db.create(`agent_tokens`, { token });
 };

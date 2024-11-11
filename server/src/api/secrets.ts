@@ -23,7 +23,7 @@ router.get('/:id', route(async (req, res, next) => {
 }));
 
 router.post('/', route(async (req, res, next) => {
-    (await db.create("secret:ulid()", req.body))[0];
+    (await db.create("secret", req.body))[0];
 
     res.send({ message: "ok" });
 }));

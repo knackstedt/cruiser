@@ -121,14 +121,14 @@ export const GitWatcher = () => {
     afterDatabaseConnected(() => {
         const watchPipelines = () => {
             // Watch for changes on the pipeline table
-            db.live<PipelineDefinition>("pipeline", data => {
-                if (data.action == "CLOSE") return watchPipelines();
+            db.live<PipelineDefinition>("pipeline", (action, result) => {
+                if (action == "CLOSE") return watchPipelines();
 
-                const pipeline = data.result;
+                const pipeline = result;
                 if (pipeline._isUserEditInstance) return;
 
                 // Remove the watchers
-                if (data.action == "DELETE" || pipeline.state != "active") {
+                if (action == "DELETE" || pipeline.state != "active") {
                     pipeline.stages?.forEach(stage => {
                         UnwatchStage(stage);
                     })

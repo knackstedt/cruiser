@@ -41,5 +41,7 @@ const isDedicatedSocketService = !!process.env['SOCKET_LISTENER'];
             startWebsocketServer(server);
         })
     }
-})();
+})().catch(err => {
+    debugger;
+});
 

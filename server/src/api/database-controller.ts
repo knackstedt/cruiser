@@ -5,6 +5,7 @@ import { Visitor } from '@dotglitch/odatav4/dist/visitor';
 
 import { db } from '../util/db';
 import { CruiserUserRole } from '../types/cruiser-types';
+import { r, StringRecordId, RecordId, Table } from 'surrealdb';
 
 // List of tables that cannot be accessed through this endpoint.
 const tableBlackList = [
@@ -13,7 +14,7 @@ const tableBlackList = [
 export const checkSurrealResource = (resource: string) => {
     const [table, id] = resource.split(':');
 
-    if (id && !/^[0-7][0-9A-Z]{25}$/.test(id))
+    if (id && !/^[0-9A-Za-z]{20,}$/.test(id))
         throw { status: 400, message: "Invalid resource" };
 
     if (tableBlackList.includes(table.toLowerCase()))
@@ -37,7 +38,7 @@ const tableGuard = (req, res, next) => {
 
     const [table, id] = (targetId ?? target).split(':');
 
-    if (id && !/^[0-7][0-9A-Z]{25}$/.test(id))
+    if (id && !/^[0-9A-Za-z]{20,}$/.test(id))
         throw { status: 400, message: "Invalid resource" };
 
     if (tableBlackList.includes(table.toLowerCase()))
@@ -120,6 +121,9 @@ const requestToOdataGet = async (
         finalQuery.push(char);
     }
     const finalQueryString = finalQuery.join('').replace(/[&?]\$fetch=[^&]+/, '');
+
+    // TODO: createQuery throws an error if there is leaing or trailing whitespace on odata params
+    // It also throws an error if there are query params that aren't known to the odata spec.
 
     const query = hasFilter ? createQuery(decodeURIComponent(finalQueryString), {
         type: SQLLang.SurrealDB
@@ -267,7 +271,7 @@ export const DatabaseTableApi = () => {
         // If the target includes a colon, then we're acting on 1 record
         if (req.params['table']?.includes(":")) {
             // TODO: How should this be sanitized?
-            let [result] = await db.select<any>(req.params['table']);
+            let result = await db.select<any>(new StringRecordId(req.params['table']));
 
             if (typeof tableConfig.afterGet == "function")
                 result = await tableConfig.afterGet(result);
@@ -323,9 +327,11 @@ export const DatabaseTableApi = () => {
             if (typeof tableConfig.beforePost == "function")
                 data = await tableConfig.beforePost(data);
 
-            let [result] = await db.create(id + ":ulid()", data);
+            let result = await db.create(id.includes(":") ? new StringRecordId(id) : new Table(id) as any, data);
+            if (Array.isArray(result)) result = result[0];
+
             if (typeof tableConfig.afterPost == "function")
-                result = await tableConfig.afterPost(result);
+                result = await tableConfig.afterPost(result) as any;
 
             res.send(result);
         }
@@ -334,7 +340,7 @@ export const DatabaseTableApi = () => {
                 data = await Promise.all(data.map(d => tableConfig.beforePost(d)));
 
             let result = await Promise.all(
-                data.map((item) => db.create(id + ":ulid()", item))
+                data.map((item) => db.create(new StringRecordId(id), item))
             );
 
             if (typeof tableConfig.afterPost == "function")
@@ -358,7 +364,7 @@ export const DatabaseTableApi = () => {
                 throw { message: "payload id does not match id in uri", status: 400 }
             }
 
-            let [result] = await db.update(data.id, data);
+            let result = await db.update(new RecordId(data.id.split(":")[0], data.id.split(":")[1]), data) as any;
 
             if (typeof tableConfig.afterPut == "function")
                 result = await tableConfig.afterPut(result);
@@ -370,7 +376,7 @@ export const DatabaseTableApi = () => {
                 data = await Promise.all(data.map(d => tableConfig.beforePut(d)));
 
             let result = await Promise.all(
-                data.map((item) => db.update(item.id, item))
+                data.map((item) => db.update(new StringRecordId(item.id), item))
             );
 
             if (typeof tableConfig.afterPut == "function")
@@ -394,10 +400,10 @@ export const DatabaseTableApi = () => {
             //     throw { message: "payload id does not match id in uri", status: 400 };
             // }
 
-            let [result] = await db.merge(id, data);
+            let result = await db.merge(new StringRecordId(id), data);
 
             if (typeof tableConfig.afterPatch == "function")
-                result = await tableConfig.afterPatch(result);
+                result = await tableConfig.afterPatch(result) as any;
 
             res.send(result);
         }
@@ -406,7 +412,7 @@ export const DatabaseTableApi = () => {
                 data = await Promise.all(data.map(d => tableConfig.beforePatch(d)));
 
             let result = await Promise.all(
-                data.map((item) => db.merge(item.id, item))
+                data.map((item) => db.merge(new StringRecordId(item.id), item))
             );
 
             if (typeof tableConfig.afterPatch == "function")
@@ -422,7 +428,7 @@ export const DatabaseTableApi = () => {
         let data = req.body;
 
         if (!Array.isArray(req.body)) {
-            let [result] = await db.delete(id);
+            let result = await db.delete(new StringRecordId(id));
 
             res.send(result);
         }
@@ -431,7 +437,7 @@ export const DatabaseTableApi = () => {
                 data = await Promise.all(data.map(d => tableConfig.beforeDelete(d)));
 
             let result = await Promise.all(
-                data.map((item) => db.delete(item.id))
+                data.map((item) => db.delete(new StringRecordId(item.id)))
             );
 
             if (typeof tableConfig.afterDelete == "function")

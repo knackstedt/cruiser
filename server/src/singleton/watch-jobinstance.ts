@@ -149,10 +149,10 @@ const ProcessStageTriggers = async (
 export const EventTriggers = () => {
     afterDatabaseConnected(() => {
         const watchJobInstances = () => {
-            db.live<JobInstance>("job_instance", data => {
-                if (data.action == "CLOSE") return watchJobInstances();
+            db.live<JobInstance>("job_instance", (action, result) => {
+                if (action == "CLOSE") return watchJobInstances();
 
-                const job = data.result;
+                const job = result;
                 if (["failed", "finished", "cancelled"].includes(job.state) && !job.hasProcessedTriggers) {
                     job.hasProcessedTriggers = true;
                     db.merge(job.id, job).then(() => processJobTriggers(job));

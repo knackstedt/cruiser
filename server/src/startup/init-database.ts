@@ -26,6 +26,6 @@ export const InitDatabase = async () => {
         // Replace all of the builtin tasks.
         await db.query("DELETE task_definition WHERE immutable = true");
 
-        await Promise.all(tasks.map(t => db.insert("task_definition:ulid()", t)));
+        await Promise.all(tasks.map(t => db.insert("task_definition", t)));
     }
 }

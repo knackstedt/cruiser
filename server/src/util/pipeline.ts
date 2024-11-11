@@ -10,6 +10,7 @@ import { LocalAgent } from './agent-controllers/local';
 import { KubeAgent } from './agent-controllers/kube';
 import { getAgentEnvironment } from './agent-environment';
 import { AgentController } from './agent-controllers/interface';
+import { RecordId } from 'surrealdb';
 
 
 
@@ -48,7 +49,7 @@ export const RunPipeline = async (
     // Create a pipeline instance for this run
     // Load in a soft clone of the pipeline so we know what the current release
     // instance needs to run from
-    const [ instance ] = await db.create<PipelineInstance>("pipeline_instance:ulid()", {
+    const [ instance ] = await db.create<PipelineInstance>("pipeline_instance", {
         spec: pipeline,
         identifier: (count || 1).toString(),
         metadata: {
@@ -109,7 +110,7 @@ export const RunStage = async (
 
     if (stage.jobs?.length < 1) {
         return (async() => {
-            const [jobInstance] = (await db.create<Omit<JobInstance, "id">>(`job_instance:ulid()`, {
+            const [jobInstance] = (await db.create<Omit<JobInstance, "id">>(`job_instance`, {
                 state: "finished",
                 queueEpoch: Date.now(),
                 endEpoch: Date.now(),
@@ -145,7 +146,7 @@ export const RunStage = async (
         try {
             SetJobToken(kubeAuthnToken);
 
-            const [jobInstance] = (await db.create<Omit<JobInstance, "id">>(`job_instance:${id}`, {
+            const [jobInstance] = (await db.create<Omit<JobInstance, "id">>(new RecordId(`job_instance`, id), {
                 state: "queued",
                 queueEpoch: Date.now(),
                 errorCount: 0,

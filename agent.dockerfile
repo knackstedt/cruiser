@@ -35,6 +35,4 @@ RUN chown 1000 /build
 
 USER 1000
 
-EXPOSE 8080
-
 CMD ["node", "/agent/src/main.js"]

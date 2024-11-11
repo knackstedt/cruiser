@@ -7,7 +7,7 @@ export const environment = {
     cruiserUrl: process.env['CRUISER_CLUSTER_URL'],
     cruiserToken: process.env['CRUISER_SERVER_TOKEN'],
     buildDir: is_production ? '/build/' : `../data/build/${id}`,
-    jobInstanceId: `job_instance:` + id,
+    jobInstanceId: id,
     agentIsWindowsHost: os.platform() == "win32",
     is_production,
 

@@ -33,7 +33,7 @@ router.post('/add', route(async (req, res, next) => {
     const rolesToAdd = req.body.roles as string[];
     const targetUserId = req.body.userId as string;
 
-    const [profile] = await db.create("users:ulid()", {
+    const [profile] = await db.create("users", {
         login: targetUserId,
         roles: rolesToAdd || []
     } as CruiserUserProfile);
@@ -59,7 +59,7 @@ router.post('/grant-role/:id', route(async (req, res, next) => {
 
     profile.roles.push(role as any);
 
-    [profile] = await db.merge(id, {
+    [profile] = await db.merge<CruiserUserProfile>(id, {
         roles: profile.roles
     } as CruiserUserProfile);
 
@@ -84,7 +84,7 @@ router.post('/revoke-role/:id', route(async (req, res, next) => {
 
     profile.roles.splice(profile.roles.indexOf(role as any), 1);
 
-    [profile] = await db.merge(id, {
+    [profile] = await db.merge<CruiserUserProfile>(id, {
         roles: profile.roles
     } as CruiserUserProfile);
 
