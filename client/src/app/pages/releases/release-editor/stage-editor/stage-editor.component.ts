@@ -1,5 +1,5 @@
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { ApplicationRef, Component, EventEmitter, Inject, Injector, Input, Optional, Output } from '@angular/core';
+import { ApplicationRef, Component, EventEmitter, Inject, Injector, Input, NgZone, Optional, Output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -112,39 +112,35 @@ export class StageEditorComponent {
     }[] = [];
 
     nodeTypes = {
-        taskGroup: ReactMagicWrapperComponent.WrapAngularComponent(
-            TaskGroupNodeComponent,
-            this.appRef,
-            this.injector,
-            {
+        taskGroup: ReactMagicWrapperComponent.WrapAngularComponent({
+            component: TaskGroupNodeComponent,
+            appRef: this.appRef,
+            injector: this.injector,
+            ngZone: this.ngZone,
+            staticInputs: {
                 taskMenu: this.taskMenu,
                 dropListGroup: []
             },
-            {
+            staticOutputs: {
                 onTaskGroupSelect: ({ job, taskGroup }) => { this.selectTaskGroup(taskGroup); },
                 onTaskClick: ({ job, taskGroup, task }) => { this.selectTask(task); this.renderJobs();},
                 onAddTask: ({ job, taskGroup }) => { this.addTask(taskGroup); this.renderJobs();},
                 onTaskDrop: ({ job, taskGroup, event }) => { this.taskDrop(job, taskGroup, event); this.renderJobs(); },
             },
-            [
+            additionalChildren: [
                 React.createElement(Handle, { type: "target", position: Position.Left }),
                 React.createElement(Handle, { type: "source", position: Position.Right })
             ]
-        ),
-        impossible: ReactMagicWrapperComponent.WrapAngularComponent(
-            ImpossibleNodeComponent,
-            this.appRef,
-            this.injector,
-            {
-                // inputs
-            },
-            {
-                // outputs
-            },
-            [
+        }),
+        impossible: ReactMagicWrapperComponent.WrapAngularComponent({
+            component: ImpossibleNodeComponent,
+            appRef: this.appRef,
+            injector: this.injector,
+            ngZone: this.ngZone,
+            additionalChildren: [
                 React.createElement(Handle, { type: "source", position: Position.Right })
             ]
-        )
+        })
     }
 
     constructor(
@@ -152,7 +148,8 @@ export class StageEditorComponent {
         public  readonly fs: FileUploadService,
         public  readonly dialog: MatDialog,
         private readonly injector: Injector,
-        private readonly appRef: ApplicationRef
+        private readonly appRef: ApplicationRef,
+        private readonly ngZone: NgZone
     ) {
     }
 
@@ -166,11 +163,11 @@ export class StageEditorComponent {
 
         if (this.stage.jobs.length == 0) {
             this.stage.jobs.push({
-                id: `pipeline_job:${ulid()}`,
+                id: ulid(),
                 label: "Job 1",
                 order: 0,
                 taskGroups: [{
-                    id: `pipeline_task_group:${ulid()}`,
+                    id: ulid(),
                     label: "Task Group 1",
                     order: 0,
                     tasks: []
@@ -203,12 +200,12 @@ export class StageEditorComponent {
     async addJob() {
         this.stage.jobs ??= [];
         const job = {
-            id: "pipeline_job:" + ulid(),
+            id: ulid(),
             label: 'Job - ' + (this.stage.jobs.length + 1),
             order: this.stage.jobs.length + 1,
             taskGroups: [
                 {
-                    id: `pipeline_task_group:${ulid()}`,
+                    id: ulid(),
                     label: "Task Group 1",
                     order: 0,
                     tasks: []
@@ -241,7 +238,7 @@ export class StageEditorComponent {
         job.taskGroups ??= [];
 
         const taskGroup = {
-            id: "pipeline_task_group:" + ulid(),
+            id: ulid(),
             label: 'Task Group - ' + (job.taskGroups.length + 1),
             order: job.taskGroups.length + 1,
             tasks: []
@@ -275,7 +272,7 @@ export class StageEditorComponent {
         taskGroup.tasks ??= [];
 
         const task = {
-            id: "pipeline_task:" + ulid(),
+            id: ulid(),
             label: 'Task - ' + (taskGroup.tasks.length + 1),
             order: taskGroup.tasks.length + 1,
             taskScriptArguments: {},

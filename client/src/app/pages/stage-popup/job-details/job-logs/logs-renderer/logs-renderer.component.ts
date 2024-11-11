@@ -88,7 +88,8 @@ export class LogsRendererComponent {
         const lines = this.lines;
 
         const top    = this.scrollbar.viewport.scrollTop;
-        const bottom = top + this.scrollbar.viewport.clientHeight;
+        // !!! clientHeight !!!
+        const bottom = top + this.scrollbar.viewport.contentHeight;
 
         const VIRTUAL_SCROLLING_OVERLAP = this.lineHeight * this.bufferLines;
 

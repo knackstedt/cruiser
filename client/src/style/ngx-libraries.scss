@@ -30,6 +30,11 @@ ng-scrollbar.ng-scrollbar {
     outline: 0;
 }
 
+// Something (that I likely caused) makes the scroll viewport 0px tall.
+cdk-virtual-scroll-viewport {
+    contain: content!important;
+}
+
 .ngx-menu ngx-menu a {
     color: #e0e0e0;
 }

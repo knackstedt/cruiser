@@ -67,7 +67,7 @@ export class ArtifactsSectionComponent implements OnInit {
 
     addInputArtifact() {
         this.job.inputArtifacts.push({
-            id: `artifact_input:${ulid()}`,
+            id: ulid(),
             label: '',
             destination: '',
             job: '',
@@ -77,7 +77,7 @@ export class ArtifactsSectionComponent implements OnInit {
 
     addOutputArtifact() {
         this.job.outputArtifacts.push({
-            id: `artifact_output:${ulid()}`,
+            id: ulid(),
             label: '',
             destination: '',
             source: ''

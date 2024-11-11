@@ -62,6 +62,7 @@ mat-sidenav-container {
 mat-sidenav {
     width: 640px;
     min-width: 400px;
+    padding: 12px;
 
     ::ng-deep {
         .ng-scroll-content {

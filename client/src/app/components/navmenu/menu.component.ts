@@ -7,6 +7,7 @@ import { Pages } from '../../component.registry';
 import { Fetch, MenuDirective, MenuItem, NavigationService, ThemeService } from '@dotglitch/ngx-common';
 import pack from '../../../../../package.json';
 import { UserService } from 'src/app/services/user.service';
+import { ProjectService } from 'src/app/services/project.service';
 
 @Component({
     selector: 'app-menu',
@@ -50,6 +51,7 @@ export class NavMenuComponent {
     constructor(
         public  readonly sanitizer: DomSanitizer,
         public  readonly navigator: NavigationService,
+        public  readonly project: ProjectService,
         private readonly theme: ThemeService,
         private readonly fetch: Fetch
     ) {

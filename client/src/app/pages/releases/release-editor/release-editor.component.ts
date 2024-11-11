@@ -75,11 +75,12 @@ export class ReleaseEditorComponent {
     nodes: Node[] = [];
     edges: Edge[] = [];
     nodeTypes = {
-        stage: ReactMagicWrapperComponent.WrapAngularComponent(
-            StageNodeComponent,
-            this.appRef,
-            this.injector,
-            {
+        stage: ReactMagicWrapperComponent.WrapAngularComponent({
+            component: StageNodeComponent,
+            appRef: this.appRef,
+            injector: this.injector,
+            ngZone: this.ngZone,
+            staticInputs: {
                 contextMenu: [
                     { label: "Edit Stage", action: s => this.editStage(s) },
                     { label: "Disable Stage", action: s => this.disableStage(s), isVisible: s => !s.disabled },
@@ -87,7 +88,7 @@ export class ReleaseEditorComponent {
                     { label: "Delete Stage", action: s => this.deleteStage(s) }
                 ] as MenuItem<StageDefinition>[]
             },
-            {
+            staticOutputs: {
                 onEditStage:         ({ stage }) => this.editStage(stage),
 
                 onJobsClick:         ({ stage }) => (this.mode = "view") && (this.view = 'jobs')           && this.selectStage(stage),
@@ -113,26 +114,26 @@ export class ReleaseEditorComponent {
                 onStageAddClick:     ({ stage }) => this.addStage({ stageTrigger: [stage.id] }),
                 onStageCloneClick:   ({ stage }) => this.cloneStage(stage),
             },
-            [
+            additionalChildren: [
                 React.createElement(Handle, { type: "target", position: Position.Left }),
                 React.createElement(Handle, { type: "source", position: Position.Right })
             ]
-        ),
-        impossible: ReactMagicWrapperComponent.WrapAngularComponent(
-            ImpossibleNodeComponent,
-            this.appRef,
-            this.injector,
-            { /* inputs */ },
-            { /* outputs */ },
-            [
+        }),
+        impossible: ReactMagicWrapperComponent.WrapAngularComponent({
+            component: ImpossibleNodeComponent,
+            appRef: this.appRef,
+            injector: this.injector,
+            ngZone: this.ngZone,
+            additionalChildren: [
                 React.createElement(Handle, { type: "source", position: Position.Right })
             ]
-        ),
-        source: ReactMagicWrapperComponent.WrapAngularComponent(
-            SourceNodeComponent,
-            this.appRef,
-            this.injector,
-            {
+        }),
+        source: ReactMagicWrapperComponent.WrapAngularComponent({
+            component: SourceNodeComponent,
+            appRef: this.appRef,
+            injector: this.injector,
+            ngZone: this.ngZone,
+            staticInputs: {
                 /* inputs */
                 contextMenu: [
                     {
@@ -180,7 +181,7 @@ export class ReleaseEditorComponent {
                     }
                 ] as MenuItem<{ stage: StageDefinition, source: SourceConfiguration }>[]
             },
-            {
+            staticOutputs: {
                 // outputs
                 onEditSource: ({ stage, source }) => {
                     this.ngZone.run(() => {
@@ -192,15 +193,16 @@ export class ReleaseEditorComponent {
                     })
                 },
             },
-            [
+            additionalChildren: [
                 React.createElement(Handle, { type: "source", id: "source", position: Position.Right })
             ]
-        ),
-        webhook: ReactMagicWrapperComponent.WrapAngularComponent(
-            WebhookNodeComponent,
-            this.appRef,
-            this.injector,
-            {
+        }),
+        webhook: ReactMagicWrapperComponent.WrapAngularComponent({
+            component: WebhookNodeComponent,
+            appRef: this.appRef,
+            injector: this.injector,
+            ngZone: this.ngZone,
+            staticInputs: {
                 /* inputs */
                 contextMenu: [
                     {
@@ -248,7 +250,7 @@ export class ReleaseEditorComponent {
                     }
                 ] as MenuItem<{ stage: StageDefinition, webhook: Webhook }>[]
             },
-            {
+            staticOutputs: {
                 // outputs
                 onEditWebhook: ({ stage, webhook }) => {
                     this.ngZone.run(() => {
@@ -260,10 +262,10 @@ export class ReleaseEditorComponent {
                     })
                 },
             },
-            [
+            additionalChildren: [
                 React.createElement(Handle, { type: "target", position: Position.Left })
             ]
-        )
+        })
     }
 
     mode: "edit" | "view" = "edit";
@@ -350,16 +352,16 @@ export class ReleaseEditorComponent {
 
         if (p.stages.length == 0) {
             p.stages.push({
-                id: `pipeline_stage:${ulid()}`,
+                id: ulid(),
                 label: "Stage 1",
                 renderMode: "normal",
                 order: 0,
                 jobs: [
                     {
-                        id: `pipeline_job:${ulid()}`,
+                        id: ulid(),
                         taskGroups: [
                             {
-                                id: `pipeline_task_group:${ulid()}`,
+                                id: ulid(),
                                 label: "Task Group 1",
                                 order: 0,
                                 tasks: []
@@ -429,7 +431,7 @@ export class ReleaseEditorComponent {
     async addStage(partial: Partial<StageDefinition> = {}) {
         this.pipeline.stages ??= [];
         const stage = {
-            id: "pipeline_stage:" + ulid(),
+            id: ulid(),
             label: 'Stage - ' + (this.pipeline.stages.length + 1),
             order: this.pipeline.stages.length,
             jobs: [],
@@ -444,7 +446,7 @@ export class ReleaseEditorComponent {
 
     async cloneStage(stage: StageDefinition) {
         const newStage = structuredClone(stage);
-        newStage.id = `pipeline_stage:${ulid()}`;
+        newStage.id = ulid();
         newStage.label += " (clone)";
 
         this.pipeline.stages.push(newStage);
@@ -467,7 +469,7 @@ export class ReleaseEditorComponent {
     addWebhook(stage: StageDefinition) {
         stage.webhooks ??= [];
         stage.webhooks.push(this.selectedWebhook = {
-            id: `pipeline_stage_webhook:${ulid()}`,
+            id: ulid(),
             label: "",
             method: "GET",
             headers: []
@@ -486,7 +488,7 @@ export class ReleaseEditorComponent {
     addSource(stage: StageDefinition) {
         stage.sources ??= [];
         stage.sources.push(this.selectedSource = {
-            id: `pipeline_source:${ulid()}`,
+            id: ulid(),
             label: "",
             targetPath: '.',
             cloneDepth: 1

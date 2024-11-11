@@ -1,6 +1,20 @@
 <!-- 200px expanded; 56px collapsed. 300px when expanded on mobile -->
 <div class="menu" [class.collapsed]="collapsed">
 
+    <!-- Current project -->
+    <!-- <div class="project">
+        <div style="display: flex;">
+            <div class="icon">
+                <img [src]="123"/>
+            </div>
+            <div class="details">
+                <div class="title"></div>
+                <div class="key"></div>
+                <div class="kind"></div>
+            </div>
+        </div>
+    </div> -->
+
     <!-- Create a side-by-side pane that can transition between views -->
     @for (page of pages; track page) {
         @if (page.link) {
