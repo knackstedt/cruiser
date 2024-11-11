@@ -5,11 +5,8 @@ import { environment } from './util/environment';
 import { OpenTelemetry } from './util/instrumentation';
 import { logger } from './util/logger';
 
-if (
-    !process.env['CRUISER_AGENT_ID'] ||
-    !/^[0-7][0-9A-Z]{25}$/i.test(process.env['CRUISER_AGENT_ID'].toUpperCase())
-) {
-    logger.fatal({ msg: "Invalid agent identifier" });
+if (!process.env['CRUISER_AGENT_ID'].trim()) {
+    logger.fatal({ msg: "Missing agent ID!" });
     process.exit(1);
 }
 
