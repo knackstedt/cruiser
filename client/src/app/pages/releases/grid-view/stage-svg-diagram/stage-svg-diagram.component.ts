@@ -64,15 +64,15 @@ export class StageSvgDiagramComponent {
 
             for (const precedingStageId of (stage.stageTrigger ?? [])) {
                 edges.push({
-                    source: precedingStageId.split(':')[1],
-                    target: stage.id.split(':')[1],
-                    id: precedingStageId.split(':')[1] + "_" + stage.id.split(':')[1],
+                    source: precedingStageId,
+                    target: stage.id,
+                    id: precedingStageId + "_" + stage.id,
                 });
             }
 
             nodes.push({
                 ...stage,
-                id: stage.id.split(':')[1],
+                id: stage.id,
                 position: {
                     x: 0,
                     y: 0

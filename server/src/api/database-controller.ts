@@ -363,8 +363,9 @@ export const DatabaseTableApi = () => {
             if (data.id != id) {
                 throw { message: "payload id does not match id in uri", status: 400 }
             }
-
-            let result = await db.update(new RecordId(data.id.split(":")[0], data.id.split(":")[1]), data) as any;
+            const [table, idx] = data.id.split(":");
+            delete data.id;
+            let result = await db.update(new RecordId(table, idx), data) as any;
 
             if (typeof tableConfig.afterPut == "function")
                 result = await tableConfig.afterPut(result);

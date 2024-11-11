@@ -30,7 +30,7 @@ router.post('/:scope/:key', route(async (req, res, next) => {
 
     const encryptionKey = KeyGen();
     const enc = Encrypt(req.body.value, encryptionKey);
-    db.create("secrets:ulid()", {
+    db.create("secrets", {
         scope,
         key,
         value: enc,

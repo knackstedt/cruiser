@@ -6,6 +6,7 @@ import { logger } from '../logger';
 import { environment } from '../environment';
 import { db } from '../db';
 import { AgentInitializer } from './interface';
+import { StringRecordId } from 'surrealdb';
 
 
 const kc = new k8s.KubeConfig();
@@ -180,10 +181,12 @@ export class KubeAgent implements AgentInitializer {
         await fs.mkdir(dir, { recursive: true });
         await fs.writeFile(
             dir + '/' + pod.metadata.annotations['cruiser.dev/job-instance-id'] + ".log",
-            log
+            log as any instanceof Object ? JSON.stringify(log) : log
         );
 
-        const [jobInstance] = await db.select<JobInstance>(pod.metadata.annotations['cruiser.dev/job-instance-id']);
+        const jobInstance = await db.select<JobInstance>(
+            new StringRecordId(pod.metadata.annotations['cruiser.dev/job-instance-id'])
+        );
 
         // If the pod has terminated with any other state than this list, we
         // will infer the correct state to coerce the job into.
@@ -192,7 +195,7 @@ export class KubeAgent implements AgentInitializer {
                 pod.status.phase == "Succeeded" ? "finished" :
                     "failed";
 
-            await db.merge(jobInstance.id, jobInstance);
+            await db.merge(new StringRecordId(jobInstance.id), jobInstance);
         }
 
         // Cleanup the pod now that the log has been stored

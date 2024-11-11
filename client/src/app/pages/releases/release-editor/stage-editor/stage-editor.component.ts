@@ -383,8 +383,8 @@ export class StageEditorComponent {
                     isMissingPreReq = true;
                 }
 
-                const source = isMissingPreReq ? '_impossible' : preTaskGroupId.split(':')[1];
-                const target = taskGroup.id.split(':')[1];
+                const source = isMissingPreReq ? '_impossible' : preTaskGroupId;
+                const target = taskGroup.id;
 
                 edges.push({
                     source: source,
@@ -411,7 +411,7 @@ export class StageEditorComponent {
 
 
             return {
-                id: taskGroup.id.split(':')[1],
+                id: taskGroup.id,
                 width: 320,
                 height: 32 * (taskGroup.tasks?.length || 1) + 40 + 24,
                 type: "taskGroup",

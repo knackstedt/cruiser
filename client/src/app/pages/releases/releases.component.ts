@@ -273,7 +273,7 @@ export class ReleasesComponent implements OnInit {
         if (this.selectedPipeline) {
             const { value: instances } = await this.fetch.get<{ value: PipelineInstance[]; }>(
                 `/api/odata/pipeline_instance` +
-                `?$filter=spec.id eq '${this.selectedPipeline.id}'` +
+                `?$filter=spec.id eq '${this.selectedPipeline.id.split(':')[1]}'` +
                 `&$orderby=id desc` +
                 `&$fetch=status.jobInstances` +
                 `&$top=20`
@@ -339,10 +339,13 @@ export class ReleasesComponent implements OnInit {
                     else if (hasCancelled) stage['_state'] = 'cancelled';
                     else if (hasFrozen) stage['_state'] = 'frozen';
                     else if (hasBuilding) stage['_state'] = 'building';
+
+                    // This last fallthrough occurs if the agent hasn't yet been queued on the backend.
+                    stage['_state'] = 'pending';
                 }
-                if (!stage['_state']) {
-                    debugger;
-                }
+                // if (!stage['_state']) {
+                //     debugger;
+                // }
                 console.log(stage['_state'])
             });
         });

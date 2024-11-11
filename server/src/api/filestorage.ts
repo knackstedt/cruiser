@@ -6,6 +6,7 @@ import { environment } from '../util/environment';
 import { JobInstance } from '../types/agent-task';
 import { db } from '../util/db';
 import path from 'path';
+import { StringRecordId } from 'surrealdb';
 
 if (!environment.cruiser_blob_dir.endsWith('/')) environment.cruiser_blob_dir += '/';
 fs.mkdirSync(environment.cruiser_blob_dir, { recursive: true });
@@ -29,7 +30,7 @@ router.use('/upload', route(async (req, res, next) => {
 
             let jobInstance: JobInstance;
             if (jobInstanceId) {
-                [jobInstance] = await db.select<JobInstance>(jobInstanceId);
+                jobInstance = await db.select<JobInstance>(new StringRecordId(jobInstanceId));
 
                 const contents = data.contents;
 

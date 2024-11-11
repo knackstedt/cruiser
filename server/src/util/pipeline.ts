@@ -10,7 +10,7 @@ import { LocalAgent } from './agent-controllers/local';
 import { KubeAgent } from './agent-controllers/kube';
 import { getAgentEnvironment } from './agent-environment';
 import { AgentController } from './agent-controllers/interface';
-import { RecordId } from 'surrealdb';
+import { RecordId, StringRecordId } from 'surrealdb';
 
 
 
@@ -49,8 +49,11 @@ export const RunPipeline = async (
     // Create a pipeline instance for this run
     // Load in a soft clone of the pipeline so we know what the current release
     // instance needs to run from
+    const spec = structuredClone(pipeline);
+    spec.id = spec.id.toString();
+
     const [ instance ] = await db.create<PipelineInstance>("pipeline_instance", {
-        spec: pipeline,
+        spec,
         identifier: (count || 1).toString(),
         metadata: {
             "$triggered_by": user,
@@ -124,7 +127,7 @@ export const RunStage = async (
             instance.status.jobInstances = instance.status.jobInstances ?? [];
             instance.status.jobInstances.push(jobInstance.id);
 
-            await db.merge(instance.id, instance);
+            await db.merge(new StringRecordId(instance.id), instance);
 
             return {
                 status: 409,
@@ -146,7 +149,7 @@ export const RunStage = async (
         try {
             SetJobToken(kubeAuthnToken);
 
-            const [jobInstance] = (await db.create<Omit<JobInstance, "id">>(new RecordId(`job_instance`, id), {
+            const jobInstance = (await db.create<Omit<JobInstance, "id">>(new RecordId(`job_instance`, id), {
                 state: "queued",
                 queueEpoch: Date.now(),
                 errorCount: 0,
@@ -159,7 +162,7 @@ export const RunStage = async (
                 kubeNamespace: namespace,
                 kubePodName: podName,
                 kubeAuthnToken
-            })) as any as JobInstance[];
+            })) as any as JobInstance;
 
             job.jobInstance = jobInstance.id;
 
@@ -189,8 +192,8 @@ export const RunStage = async (
         catch(ex) {
             results.push({
                 status: 500,
-                message: "Failed to start job",
-                err: ex
+                message: ex.message,
+                stack: ex.stack
             });
             continue;
         }

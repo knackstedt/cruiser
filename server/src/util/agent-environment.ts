@@ -44,7 +44,7 @@ export const getAgentEnvironment = (
         // TODO: calculate this value by introspecting the server
         // hostname -i => ip address
         { name: "CRUISER_CLUSTER_URL", value: environment.cruiser_cluster_url },
-        { name: "CRUISER_AGENT_ID", value: jobInstance.id.split(':')[1] },
+        { name: "CRUISER_AGENT_ID", value: jobInstance.id },
         { name: "CRUISER_SERVER_TOKEN", value: kubeAuthnToken },
 
         // Provide the otel configuration that the server has

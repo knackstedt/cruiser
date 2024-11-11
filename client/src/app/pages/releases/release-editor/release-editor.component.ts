@@ -538,7 +538,7 @@ export class ReleaseEditorComponent {
         const edges: Edge[] = [];
         const sourceNodes: Node[] = [];
         const nodes: Node[] = this.pipeline.stages?.map(stage => {
-            const stageUlid = stage.id.split(':')[1];
+            const stageUlid = stage.id;
 
             stage.stageTrigger ??= [];
             for (const precedingStageId of stage.stageTrigger) {
@@ -549,7 +549,7 @@ export class ReleaseEditorComponent {
                     isMissingPreReq = true;
                 }
 
-                const source = isMissingPreReq ? '_impossible' : precedingStageId.split(':')[1];
+                const source = isMissingPreReq ? '_impossible' : precedingStageId;
 
                 edges.push({
                     source: source,

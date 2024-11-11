@@ -1,3 +1,4 @@
+import { StringRecordId } from 'surrealdb';
 import { CruiserToken } from '../types/cruiser-token';
 import { db } from '../util/db';
 import { checksum } from '../util/util';
@@ -26,8 +27,8 @@ export const ApiTokenMiddleware = (req, res, next) => {
             return next(401);
 
 
-        db.select<CruiserToken>('api_tokens:`' + pubKey + '`')
-            .then(([token]) => {
+        db.select<CruiserToken>(new StringRecordId('api_tokens:`' + pubKey + '`'))
+            .then((token) => {
                 if (!token) return next(401);
 
                 const hash = checksum('sha256', privKey);

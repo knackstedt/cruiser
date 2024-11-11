@@ -5,6 +5,7 @@ import { PipelineDefinition, PipelineInstance, StageDefinition } from '../types/
 // import { GetAllRunningJobs } from '../util/kube';
 import { RunPipeline, RunStage } from '../util/pipeline';
 import { JobInstance } from '../types/agent-task';
+import { StringRecordId } from 'surrealdb';
 
 const router = express.Router();
 
@@ -35,7 +36,7 @@ router.get('/', route(async (req, res, next) => {
 }));
 
 router.use('/:id', route(async (req, res, next) => {
-    const [ pipeline ] = await db.select<PipelineDefinition>(req.params['id']);
+    const pipeline = await db.select<PipelineDefinition>(new StringRecordId(req.params['id']));
 
     if (!pipeline) throw { message: "Pipeline does not exist", status: 404 };
 
@@ -76,8 +77,8 @@ router.get('/:id/run', route(async (req, res, next) => {
 }));
 
 router.get('/:id/:instance/:stage/run', route(async (req, res, next) => {
-    const [pipeline] = await db.select<PipelineDefinition>(req.params['id']);
-    const [instance] = await db.select<PipelineInstance>(req.params['instance']);
+    const pipeline = await db.select<PipelineDefinition>(new StringRecordId(req.params['id']));
+    const instance = await db.select<PipelineInstance>(new StringRecordId(req.params['instance']));
     const stage = pipeline?.stages?.find(s => s.id == req.params['stage']);
 
     if (instance.spec.id != pipeline.id || !stage)
@@ -96,7 +97,7 @@ router.get('/:id/:instance/:stage/approve', route(async (req, res, next) => {
     const pipeline: PipelineDefinition = req['pipeline'];
 
     const forceRun = !!req.query['forceRun'];
-    const [instance] = await db.select<PipelineInstance>(req.params['instance']);
+    const instance = await db.select<PipelineInstance>(new StringRecordId(req.params['instance']));
     const stage = instance?.spec?.stages?.find(s => s.id == req.params['stage']);
 
     if (!stage) return next(404);
@@ -115,7 +116,7 @@ router.get('/:id/:instance/:stage/approve', route(async (req, res, next) => {
     approval.approvers.push(req.session.gh_user.login);
 
     // Update the approvals
-    await db.merge(instance.id, instance);
+    await db.merge(new StringRecordId(instance.id), instance);
 
     if (forceRun) {
         // User is forcing the run, log it.
@@ -123,7 +124,7 @@ router.get('/:id/:instance/:stage/approve', route(async (req, res, next) => {
     // Run the stage if we have sufficient approvals.
     if (forceRun || approval.approvalCount >= stage.requiredApprovals) {
         approval.hasRun = true;
-        await db.merge(instance.id, instance);
+        await db.merge(new StringRecordId(instance.id), instance);
         const state = await RunStage(instance, stage);
         res.send({
             message: "ok",

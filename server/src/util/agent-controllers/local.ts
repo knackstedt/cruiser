@@ -9,6 +9,7 @@ import { logger } from '../logger';
 import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../../types/pipeline';
 import { JobInstance } from '../../types/agent-task';
 import { AgentInitializer } from './interface';
+import { StringRecordId } from 'surrealdb';
 
 export class LocalAgent implements AgentInitializer {
     async spawn(
@@ -55,10 +56,10 @@ export class LocalAgent implements AgentInitializer {
                 const err = new Error("Agent process exited with non-zero code " + code);
                 logger.error(err);
                 console.error(err);
-                await db.merge(jobInstance.id, { status: "failed" });
+                await db.merge(new StringRecordId(jobInstance.id), { status: "failed" });
             }
             else {
-                await db.merge(jobInstance.id, { status: "finished" });
+                await db.merge(new StringRecordId(jobInstance.id), { status: "finished" });
             }
 
             const dir = [
@@ -86,17 +87,18 @@ export class LocalAgent implements AgentInitializer {
         // ???
 
         // Finalize any previously started instances.
+        // TODO: These are broken, right?
         const pipelineInstances = await db.select<PipelineInstance>("pipeline_instance where status.phase != 'stopped'");
         for (const instance of pipelineInstances) {
             instance.status.phase = "stopped";
-            await db.merge(instance.id, instance);
+            await db.merge(new StringRecordId(instance.id), instance);
         }
         const jobInstances = await db.select<JobInstance>("job_instance where status != 'finished' OR state != 'finished'");
         for (const instance of jobInstances) {
             instance.state = "finished";
             // TODO: Investigate where this gets populated
             instance['status'] = "finished";
-            await db.merge(instance.id, instance);
+            await db.merge(new StringRecordId(instance.id), instance);
         }
     };
 }

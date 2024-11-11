@@ -3,6 +3,7 @@ import { logger } from '../util/logger';
 import { afterDatabaseConnected, db } from '../util/db';
 import { PipelineDefinition, SourceConfiguration, StageDefinition } from '../types/pipeline';
 import { RunPipeline, RunStage } from '../util/pipeline';
+import { StringRecordId } from 'surrealdb';
 
 
 const pollingInterval = 15;
@@ -71,7 +72,7 @@ const WatchSource = (pipeline: PipelineDefinition, stage: StageDefinition, sourc
         })
 
         if (hasDirtyBranch) {
-            const [latestPipeline] = await db.select<PipelineDefinition>(pipeline.id);
+            const latestPipeline = await db.select<PipelineDefinition>(new StringRecordId(pipeline.id));
 
             await RunPipeline(latestPipeline, "$cruiser", [stage]);
 
@@ -83,7 +84,7 @@ const WatchSource = (pipeline: PipelineDefinition, stage: StageDefinition, sourc
             remoteSource.lastGitHash = source.lastGitHash;
 
             // Save the changes
-            await db.merge(latestPipeline.id, latestPipeline);
+            await db.merge(new StringRecordId(latestPipeline.id), latestPipeline);
         }
     }, (source.pollIntervalSeconds || pollingInterval) * 1000);
 

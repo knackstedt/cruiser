@@ -3,6 +3,7 @@ import { route } from '../util/util';
 import { CruiserUserProfile } from '../types/cruiser-types';
 import { AdministratorRoleGuard } from '../guards/role-guards';
 import { db } from '../util/db';
+import { StringRecordId } from 'surrealdb';
 
 const router = express.Router();
 
@@ -49,7 +50,7 @@ router.post('/grant-role/:id', route(async (req, res, next) => {
 
     const role = req.body.role as string;
 
-    let [profile] = await db.select<CruiserUserProfile>(id);
+    let profile = await db.select<CruiserUserProfile>(new StringRecordId(id));
 
     // Prevent duplicate role additions
     if (profile.roles.includes(role as any)) {
@@ -59,7 +60,7 @@ router.post('/grant-role/:id', route(async (req, res, next) => {
 
     profile.roles.push(role as any);
 
-    [profile] = await db.merge<CruiserUserProfile>(id, {
+    profile = await db.merge<CruiserUserProfile>(new StringRecordId(id), {
         roles: profile.roles
     } as CruiserUserProfile);
 
@@ -84,7 +85,7 @@ router.post('/revoke-role/:id', route(async (req, res, next) => {
 
     profile.roles.splice(profile.roles.indexOf(role as any), 1);
 
-    [profile] = await db.merge<CruiserUserProfile>(id, {
+    profile = await db.merge<CruiserUserProfile>(new StringRecordId(id), {
         roles: profile.roles
     } as CruiserUserProfile);
 

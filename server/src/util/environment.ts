@@ -35,5 +35,5 @@ export const environment = Object.seal({
 
     is_production: process.env["NODE_ENV"]?.toLowerCase() == "production",
 
-    is_running_local_agents: process.env["KUBERNETES"]
+    is_running_local_agents: !process.env["KUBERNETES"]
 });

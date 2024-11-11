@@ -4,11 +4,12 @@ import { JobInstance } from '../types/agent-task';
 import { PipelineInstance, StageDefinition } from '../types/pipeline';
 import { RunStage } from '../util/pipeline';
 import axios from 'axios';
+import { StringRecordId } from 'surrealdb';
 
 
 const processJobTriggers = async (jobInstance: JobInstance) => {
     // TODO: Process triggers for the subsequent jobs
-    const [pipelineInstance] = await db.select<PipelineInstance>(jobInstance.pipeline_instance);
+    const pipelineInstance = await db.select<PipelineInstance>(new StringRecordId(jobInstance.pipeline_instance));
 
     const stage = pipelineInstance.spec.stages.find(s => s.id == jobInstance.stage);
 
@@ -26,7 +27,7 @@ const processJobTriggers = async (jobInstance: JobInstance) => {
 
         pipelineInstance.status.finishedStages = pipelineInstance.status.finishedStages ?? [];
         pipelineInstance.status.finishedStages.push(stage.id);
-        await db.merge(pipelineInstance.id, pipelineInstance);
+        await db.merge(new StringRecordId(pipelineInstance.id), pipelineInstance);
 
         return ProcessStageTriggers(pipelineInstance, stage, false);
     }
@@ -35,7 +36,7 @@ const processJobTriggers = async (jobInstance: JobInstance) => {
 
         pipelineInstance.status.failedStages = pipelineInstance.status.failedStages ?? [];
         pipelineInstance.status.failedStages.push(stage.id);
-        await db.merge(pipelineInstance.id, pipelineInstance);
+        await db.merge(new StringRecordId(pipelineInstance.id), pipelineInstance);
 
         return ProcessStageTriggers(pipelineInstance, stage, true);
     }
@@ -119,7 +120,7 @@ const ProcessStageTriggers = async (
                     approvers: [],
                     hasRun: false
                 });
-                await db.merge(pipelineInstance.id, pipelineInstance);
+                await db.merge(new StringRecordId(pipelineInstance.id), pipelineInstance);
                 continue;
             }
 
@@ -142,7 +143,7 @@ const ProcessStageTriggers = async (
         }
         pipelineInstance.status.endEpoch = Date.now();
         pipelineInstance.stats.totalRuntime = pipelineInstance.status.endEpoch - pipelineInstance.status.startEpoch;
-        await db.merge(pipelineInstance.id, pipelineInstance);
+        await db.merge(new StringRecordId(pipelineInstance.id), pipelineInstance);
     }
 };
 
@@ -155,7 +156,7 @@ export const EventTriggers = () => {
                 const job = result;
                 if (["failed", "finished", "cancelled"].includes(job.state) && !job.hasProcessedTriggers) {
                     job.hasProcessedTriggers = true;
-                    db.merge(job.id, job).then(() => processJobTriggers(job));
+                    db.merge(new StringRecordId(job.id), job).then(() => processJobTriggers(job));
                 }
             });
         };
