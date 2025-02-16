@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { getPriorStages } from 'src/app/utils/utils';
-import { OutputArtifact, JobDefinition, PipelineDefinition, StageDefinition } from 'src/types/pipeline';
+import { OutputArtifact, PipelineJobDefinition, PipelineDefinition, PipelineStage } from 'src/types/pipeline';
 import { ulid } from 'ulidx';
 
 @Component({
@@ -25,13 +25,13 @@ export class ArtifactsSectionComponent implements OnInit {
     @Input() kind: "input" | "output" = "output";
 
     @Input() pipeline: PipelineDefinition;
-    @Input() stage: StageDefinition;
-    @Input() job: JobDefinition;
+    @Input() stage: PipelineStage;
+    @Input() job: PipelineJobDefinition;
 
     @Output() valueChange = new EventEmitter();
 
-    priorStages: StageDefinition[] = [];
-    availableArtifacts: { stage: StageDefinition, artifacts: OutputArtifact[]}[] = [];
+    priorStages: PipelineStage[] = [];
+    availableArtifacts: { stage: PipelineStage, artifacts: OutputArtifact[]}[] = [];
 
     readonly compressionAlgorithms = [
         { name: "lrzip", extension: ".tar.lrz" },

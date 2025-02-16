@@ -1,6 +1,6 @@
 import { ulid } from 'ulidx';
 
-import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
+import { PipelineJobDefinition, PipelineDefinition, PipelineInstance, PipelineStage } from '../types/pipeline';
 import { db } from './db';
 import { randomString, sleep } from './util';
 import { JobInstance } from '../types/agent-task';
@@ -17,7 +17,7 @@ import { RecordId, StringRecordId } from 'surrealdb';
 export const RunPipeline = async (
     pipeline: PipelineDefinition,
     user: string,
-    triggeredStages?: StageDefinition[]
+    triggeredStages?: PipelineStage[]
 ) => {
     // If the pipeline has no stages, we'll simply exit.
     if (!pipeline.stages?.[0]) {
@@ -43,18 +43,20 @@ export const RunPipeline = async (
     await db.merge(pipeline.id, pipeline);
 
     // TODO: Add custom logic for calculating release id
-    const [ qResult ] = await db.query(`select count() from pipeline_instance where spec.id = '${pipeline.id}' group all`);
-    const { count } = qResult[0] ?? {};
+    const [qResult] = await db.query(`select count() from pipeline_instance where spec.id = $id group all`, { id: pipeline.id['id'] });
+    let { count } = qResult[0] ?? { count: 0 };
+    count ??= 0;
 
     // Create a pipeline instance for this run
     // Load in a soft clone of the pipeline so we know what the current release
     // instance needs to run from
     const spec = structuredClone(pipeline);
-    spec.id = spec.id.toString();
+    spec.id = spec.id['id'];
 
     const [ instance ] = await db.create<PipelineInstance>("pipeline_instance", {
+        id: ulid(),
         spec,
-        identifier: (count || 1).toString(),
+        identifier: (count + 1).toString(),
         metadata: {
             "$triggered_by": user,
             "$trigger_stages": triggeredStages?.map(ts => ts.id).join(',')
@@ -106,7 +108,7 @@ export const RunPipeline = async (
 
 export const RunStage = async (
     instance: PipelineInstance,
-    stage: StageDefinition
+    stage: PipelineStage
 ) => {
     instance.status.startedStages = instance.status.startedStages ?? [];
     instance.status.startedStages.push(stage.id);
@@ -210,8 +212,8 @@ export const RunStage = async (
 const startAgent = async (
     pipelineInstance: PipelineInstance,
     pipeline: PipelineDefinition,
-    stage: StageDefinition,
-    jobDefinition: JobDefinition,
+    stage: PipelineStage,
+    jobDefinition: PipelineJobDefinition,
     jobInstance: JobInstance,
     namespace: string,
     podName: string,

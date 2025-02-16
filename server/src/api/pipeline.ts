@@ -1,7 +1,7 @@
 import * as express from "express";
 import { route } from '../util/util';
 import { db } from '../util/db';
-import { PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
+import { PipelineDefinition, PipelineInstance, PipelineStage } from '../types/pipeline';
 // import { GetAllRunningJobs } from '../util/kube';
 import { RunPipeline, RunStage } from '../util/pipeline';
 import { JobInstance } from '../types/agent-task';
@@ -37,7 +37,6 @@ router.get('/', route(async (req, res, next) => {
 
 router.use('/:id', route(async (req, res, next) => {
     const pipeline = await db.select<PipelineDefinition>(new StringRecordId(req.params['id']));
-
     if (!pipeline) throw { message: "Pipeline does not exist", status: 404 };
 
     if (!Array.isArray(pipeline.stages)) {

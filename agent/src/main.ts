@@ -5,7 +5,7 @@ import { environment } from './util/environment';
 import { OpenTelemetry } from './util/instrumentation';
 import { logger } from './util/logger';
 
-if (!process.env['CRUISER_AGENT_ID'].trim()) {
+if (!environment.jobInstanceId) {
     logger.fatal({ msg: "Missing agent ID!" });
     process.exit(1);
 }

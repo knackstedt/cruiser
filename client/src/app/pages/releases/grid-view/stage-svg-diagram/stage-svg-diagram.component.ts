@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { PipelineDefinition, PipelineInstance, StageDefinition } from 'src/types/pipeline';
+import { PipelineDefinition, PipelineInstance, PipelineStage } from 'src/types/pipeline';
 import dagre from '@dagrejs/dagre';
 import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/job-instance-icon.component';
 import { Fetch, MenuDirective } from '@dotglitch/ngx-common';
@@ -24,7 +24,7 @@ export class StageSvgDiagramComponent {
     @Input() pipeline: PipelineDefinition;
     instance: PipelineInstance;
 
-    stages: (StageDefinition & { position: {x,y}; })[] = []
+    stages: (PipelineStage & { position: {x,y}; })[] = []
 
     constructor(
         public readonly pipelinesComponent: ReleasesComponent,

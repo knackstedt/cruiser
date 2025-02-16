@@ -4,7 +4,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { io, Socket } from 'socket.io-client';
 import { Fetch, FilemanagerComponent, MenuDirective, NGX_WEB_COMPONENTS_CONFIG, NgxFileManagerConfiguration, TooltipDirective } from '@dotglitch/ngx-common';
-import { JobDefinition, TaskDefinition, TaskGroupDefinition } from 'src/types/pipeline';
+import { PipelineJobDefinition, PipelineTask, PipelineTaskGroup } from 'src/types/pipeline';
 import { JobInstanceIconComponent } from 'src/app/components/job-instance-icon/job-instance-icon.component';
 import { XtermWrapperComponent } from 'src/app/pages/stage-popup/job-details/xterm-wrapper/xterm-wrapper.component';
 import { JobLogsComponent } from 'src/app/pages/stage-popup/job-details/job-logs/job-logs.component';
@@ -17,8 +17,8 @@ import { AgentMetricsComponent } from './metrics/metrics.component';
 
 export type Breakpoint = {
     id: string,
-    task?: TaskDefinition,
-    taskGroup?: TaskGroupDefinition,
+    task?: PipelineTask,
+    taskGroup?: PipelineTaskGroup,
     allowRetry: boolean;
     allowSkip: boolean;
 }
@@ -54,7 +54,7 @@ export class JobDetailsComponent {
     readonly completeStates = ['finished', 'failed', 'cancelled'];
 
     public jobInstance: JobInstance;
-    public job: JobDefinition;
+    public job: PipelineJobDefinition;
 
     config: NgxFileManagerConfiguration;
     connected = false;

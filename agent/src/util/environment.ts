@@ -1,7 +1,7 @@
 import os from 'os';
 
 const is_production = process.env['NODE_ENV'] == "production";
-const id = process.env['CRUISER_AGENT_ID']?.toUpperCase();
+const id = process.env['CRUISER_AGENT_ID'];
 
 export const environment = {
     cruiserUrl: process.env['CRUISER_CLUSTER_URL'],

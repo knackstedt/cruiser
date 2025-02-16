@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { DialogService, Fetch, MenuDirective, MenuItem, TooltipDirective } from '@dotglitch/ngx-common';
 import { JobInstance } from 'src/types/agent-task';
-import { PipelineDefinition, PipelineInstance, StageDefinition } from 'src/types/pipeline';
+import { PipelineDefinition, PipelineInstance, PipelineStage } from 'src/types/pipeline';
 import * as k8s from '@kubernetes/client-node';
 import { LiveSocketService } from 'src/app/services/live-socket.service';
 import { ListViewComponent } from 'src/app/pages/releases/list-view/list-view.component';
@@ -100,7 +100,7 @@ export class ReleasesComponent implements OnInit {
         },
     ];
 
-    readonly stageCtxMenu: MenuItem<{ pipeline: PipelineDefinition, instance: PipelineInstance, stage: StageDefinition }>[] = [
+    readonly stageCtxMenu: MenuItem<{ pipeline: PipelineDefinition, instance: PipelineInstance, stage: PipelineStage }>[] = [
         ...this.instanceCtxMenu,
         {
             label: "Run",
@@ -424,7 +424,7 @@ export class ReleasesComponent implements OnInit {
         pipeline.stats.runCount += 1;
     }
 
-    async approveStage(instance: PipelineInstance, stage: StageDefinition) {
+    async approveStage(instance: PipelineInstance, stage: PipelineStage) {
         await this.fetch.get(`/api/pipeline/${this.selectedPipeline.id}/${instance.id}/${stage.id}/approve`)
             .then(({ pipeline }) => {
                 Object.keys(this.selectedPipeline).forEach(k => delete pipeline[k]);

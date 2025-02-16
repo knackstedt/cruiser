@@ -1,13 +1,13 @@
 import { ulid } from 'ulidx';
 import { JobInstance } from '../types/agent-task';
-import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
+import { PipelineJobDefinition, PipelineDefinition, PipelineInstance, PipelineStage } from '../types/pipeline';
 import { environment } from './environment';
 
 export const getAgentEnvironment = (
     pipelineInstance: PipelineInstance,
     pipeline: PipelineDefinition,
-    stage: StageDefinition,
-    jobDefinition: JobDefinition,
+    stage: PipelineStage,
+    jobDefinition: PipelineJobDefinition,
     jobInstance: JobInstance,
     namespace: string,
     podName: string,

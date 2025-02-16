@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import * as k8s from '@kubernetes/client-node';
-import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../../types/pipeline';
+import { PipelineJobDefinition, PipelineDefinition, PipelineInstance, PipelineStage } from '../../types/pipeline';
 import { JobInstance } from '../../types/agent-task';
 import { logger } from '../logger';
 import { environment } from '../environment';
@@ -20,8 +20,8 @@ export class KubeAgent implements AgentInitializer {
     async spawn(
         pipelineInstance: PipelineInstance,
         pipeline: PipelineDefinition,
-        stage: StageDefinition,
-        jobDefinition: JobDefinition,
+        stage: PipelineStage,
+        jobDefinition: PipelineJobDefinition,
         jobInstance: JobInstance,
         namespace: string,
         podName: string,
@@ -162,10 +162,20 @@ export class KubeAgent implements AgentInitializer {
     // When a job completes, take the log from kube and write it into a log file under storage.
     // TODO: live write the file without bothering with this mess of an API.
     private saveLogAndCleanup = async (pod: k8s.V1Pod) => {
-        const { body: log } = await k8sApi.readNamespacedPodLog(pod.metadata.name, pod.metadata.namespace);
+        const { body: log } = await k8sApi.readNamespacedPodLog(pod.metadata.name, pod.metadata.namespace)
+            .catch(ex => {
+                logger.error({ msg: "Failed to locate pod " + pod.metadata.name, namespace: pod.metadata.namespace })
+                return { body: null }
+            });
+
+        // TODO: Should we handle the job instance specially if this
+        // path ultimately occurs?
+        if (!log) {
+            return;
+        }
 
         // If the log has this property, it's actually an error (unclear why it's not thrown...)
-        if (log['code']) {
+        if (log?.['code']) {
             throw log;
         }
 
@@ -195,7 +205,7 @@ export class KubeAgent implements AgentInitializer {
                 pod.status.phase == "Succeeded" ? "finished" :
                     "failed";
 
-            await db.merge(new StringRecordId(jobInstance.id), jobInstance);
+            await db.merge(jobInstance.id, jobInstance);
         }
 
         // Cleanup the pod now that the log has been stored

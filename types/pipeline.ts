@@ -1,7 +1,5 @@
-import * as k8s from '@kubernetes/client-node';
 import { HistoryObject } from './history-object';
 import { EnvironmentVariable } from './environment';
-import { AxiosProxyConfig } from 'axios';
 
 export type InputArtifact = {
     id: string
@@ -22,7 +20,7 @@ export type OutputArtifact = {
     compressionAlgorithm?: "lrzip" | "gzip" | "zip" | "zstd" | "zstd_max" | "bzip" | "plzip" | "plzip_max" | "xz" | "xz_max";
 }
 
-export type TaskDefinition = {
+export type PipelineTask = {
     id: string;
     label: string
     disabled: boolean,
@@ -55,7 +53,7 @@ export type TaskDefinition = {
     taskScriptArguments: Object
 }
 
-export type TaskGroupDefinition = {
+export type PipelineTaskGroup = {
     id: string
     label: string
     description?: string
@@ -64,12 +62,12 @@ export type TaskGroupDefinition = {
 
 
     environment?: EnvironmentVariable[]
-    tasks?: TaskDefinition[],
+    tasks?: PipelineTask[],
     preTaskGroups?: string[],
     branchFilter?: string[]
 }
 
-export type JobDefinition = {
+export type PipelineJobDefinition = {
     id: string;
     label: string
     description?: string
@@ -86,7 +84,7 @@ export type JobDefinition = {
 
     branchFilter?: string[]
 
-    taskGroups: TaskGroupDefinition[]
+    taskGroups: PipelineTaskGroup[]
     inputArtifacts?: InputArtifact[]
     outputArtifacts?: OutputArtifact[]
     environment?: EnvironmentVariable[]
@@ -94,8 +92,8 @@ export type JobDefinition = {
     kubeNamespace?: string,
     kubeJobAnnotations?: { [key: string]: string },
     kubeJobLabels?: { [key: string]: string },
-    kubeContainerTolerations?: k8s.V1Toleration[];
-    kubeContainerAffinity?: k8s.V1Affinity;
+    kubeContainerTolerations?: any[];
+    kubeContainerAffinity?: any;
     kubeContainerAnnotations?: { [key: string]: string },
     kubeContainerLabels?: { [key: string]: string },
     kubeContainerImage?: string,
@@ -117,7 +115,15 @@ export type Webhook = {
     method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
     headers?: [string, string][],
     body?: string,
-    proxy?: AxiosProxyConfig;
+    proxy?: {
+        host: string;
+        port: number;
+        auth?: {
+            username: string;
+            password: string;
+        };
+        protocol?: string;
+    };
 
     // For the webhook instance, we will set state
     state?: "success" | "fail";
@@ -125,7 +131,7 @@ export type Webhook = {
     executeOnFailure?: boolean
 }
 
-export type StageDefinition = {
+export type PipelineStage = {
     id: string
     renderMode: "normal" | "gateway" | "job_container"
     label: string
@@ -137,10 +143,10 @@ export type StageDefinition = {
     cleanDirectory?: boolean
     autoTriggerOnPreviousStageCompletion?: boolean
     environment?: EnvironmentVariable[]
-    jobs?: JobDefinition[],
+    jobs?: PipelineJobDefinition[],
     disabled?: boolean
 
-    sources?: SourceConfiguration[];
+    sources?: PipelineSource[];
 
     stageTrigger?: string[]
     cronTrigger?: string,
@@ -154,7 +160,7 @@ export type StageDefinition = {
     branchFilter?: string[]
 }
 
-export type SourceConfiguration = Partial<{
+export type PipelineSource = Partial<{
     id: string
     label: string
     description: string
@@ -217,9 +223,9 @@ export type PipelineDefinition = {
     trackingToolUri: string
 
     order: number
-    stages?: StageDefinition[]
+    stages?: PipelineStage[]
     environment?: EnvironmentVariable[]
-    sources?: SourceConfiguration[],
+    sources?: PipelineSource[],
     history?: HistoryObject[]
 
     lastScheduledEpoch?: number,

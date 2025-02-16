@@ -91,29 +91,30 @@ const getDuration = (req, res) => {
     }
 
     // calculate diff
-    var ms = (res._startAt[0] - req._startAt[0]) * 1e3 +
+    const ms = (res._startAt[0] - req._startAt[0]) * 1e3 +
              (res._startAt[1] - req._startAt[1]) * 1e-6;
 
     // return truncated value
     return ms.toFixed(2);
 };
 
-router.use((req, res, next) => {
-
-    onFinished(req, () => {
-        const length = parseInt(res.get("content-length"));
-        httpLogger.info({
-            user: req['session']?.gh_user?.login,
-            agent: req.get("X-Cruiser-Token") ? req.get("X-Cruiser-Agent") : null,
-            ip: req.ip,
-            method: req.method,
-            status: res.statusCode,
-            url: req.url,
-            size: Number.isNaN(length) ? null : length,
-            duration: getDuration(req, res)
+if (environment.is_production) {
+    router.use((req, res, next) => {
+        onFinished(req, () => {
+            const length = parseInt(res.get("content-length"));
+            httpLogger.info({
+                user: req['session']?.gh_user?.login,
+                agent: req.get("X-Cruiser-Token") ? req.get("X-Cruiser-Agent") : null,
+                ip: req.ip,
+                method: req.method,
+                status: res.statusCode,
+                url: req.url,
+                size: Number.isNaN(length) ? null : length,
+                duration: getDuration(req, res)
+            });
         });
-    });
-    next();
-})
+        next();
+    })
+}
 
 export const HTTPLogger = router;

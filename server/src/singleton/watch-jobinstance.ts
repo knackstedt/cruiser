@@ -1,7 +1,7 @@
 import { logger } from '../util/logger';
 import { afterDatabaseConnected, db } from '../util/db';
 import { JobInstance } from '../types/agent-task';
-import { PipelineInstance, StageDefinition } from '../types/pipeline';
+import { PipelineInstance, PipelineStage } from '../types/pipeline';
 import { RunStage } from '../util/pipeline';
 import axios from 'axios';
 import { StringRecordId } from 'surrealdb';
@@ -9,7 +9,7 @@ import { StringRecordId } from 'surrealdb';
 
 const processJobTriggers = async (jobInstance: JobInstance) => {
     // TODO: Process triggers for the subsequent jobs
-    const pipelineInstance = await db.select<PipelineInstance>(new StringRecordId(jobInstance.pipeline_instance));
+    const pipelineInstance = await db.select<PipelineInstance>(jobInstance.pipeline_instance as any as StringRecordId);
 
     const stage = pipelineInstance.spec.stages.find(s => s.id == jobInstance.stage);
 
@@ -51,7 +51,7 @@ const stageCompletions: {
 } = {};
 const ProcessStageTriggers = async (
     pipelineInstance: PipelineInstance,
-    stage: StageDefinition,
+    stage: PipelineStage,
     isFailure: boolean,
 ) => {
     // Execute the webhooks.
@@ -120,7 +120,7 @@ const ProcessStageTriggers = async (
                     approvers: [],
                     hasRun: false
                 });
-                await db.merge(new StringRecordId(pipelineInstance.id), pipelineInstance);
+                await db.merge(pipelineInstance.id, pipelineInstance);
                 continue;
             }
 
@@ -143,7 +143,7 @@ const ProcessStageTriggers = async (
         }
         pipelineInstance.status.endEpoch = Date.now();
         pipelineInstance.stats.totalRuntime = pipelineInstance.status.endEpoch - pipelineInstance.status.startEpoch;
-        await db.merge(new StringRecordId(pipelineInstance.id), pipelineInstance);
+        await db.merge(pipelineInstance.id, pipelineInstance);
     }
 };
 
@@ -156,7 +156,7 @@ export const EventTriggers = () => {
                 const job = result;
                 if (["failed", "finished", "cancelled"].includes(job.state) && !job.hasProcessedTriggers) {
                     job.hasProcessedTriggers = true;
-                    db.merge(new StringRecordId(job.id), job).then(() => processJobTriggers(job));
+                    db.merge(job.id, job).then(() => processJobTriggers(job));
                 }
             });
         };

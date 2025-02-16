@@ -45,7 +45,6 @@ export class FormioWrapperComponent {
     }
 
     resetForm() {
-        console.log("init form with schema", this.formSchema)
         if (!this.hasRendered || !this.formSchema || !this.formSchema['components']) return;
         this.ngOnDestroy();
 

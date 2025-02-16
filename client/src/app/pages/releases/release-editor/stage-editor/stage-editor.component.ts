@@ -1,32 +1,31 @@
-import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { ApplicationRef, Component, EventEmitter, Inject, Injector, Input, NgZone, Optional, Output } from '@angular/core';
+import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { ApplicationRef, Component, EventEmitter, Injector, Input, NgZone, Output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatTabsModule } from '@angular/material/tabs';
-import dagre from '@dagrejs/dagre';
-import { Fetch, MenuDirective, MenuItem, ReactMagicWrapperComponent, openMenu } from '@dotglitch/ngx-common';
-import { ulid } from 'ulidx';
-import { JobDefinition, PipelineDefinition, StageDefinition, TaskDefinition, TaskGroupDefinition } from 'src/types/pipeline';
-import { NgScrollbarModule } from 'ngx-scrollbar';
-import { FormioWrapperComponent } from 'src/app/components/formio-wrapper/formio-wrapper.component';
-import { Schemas, DefaultSchema } from './task-schemas';
-import { StackEditorComponent } from 'ngx-stackedit';
-import { FormsModule } from '@angular/forms';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { BehaviorSubject, Subject, debounceTime } from 'rxjs';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { FileUploadService } from 'src/app/services/file-upload.service';
-import { VariablesSectionComponent } from 'src/app/components/variables-section/variables-section.component';
-import { ArtifactsSectionComponent } from 'src/app/components/artifacts-section/artifacts-section.component';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { ReactFlowComponent } from 'src/app/components/reactflow/reactflow-wrapper';
-import { Edge, Handle, MarkerType, Node, Position } from 'reactflow';
-import { TaskGroupNodeComponent } from '../reactflow-nodes/task-group-node/task-group-node.component';
-import React from 'react';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import dagre from '@dagrejs/dagre';
+import { Fetch, MenuDirective, MenuItem, openMenu } from '@dotglitch/ngx-common';
+import { NgScrollbarModule } from 'ngx-scrollbar';
+import { StackEditorComponent } from 'ngx-stackedit';
+import { XYFlowModule } from 'ngx-xyflow';
+import { Edge, MarkerType, Node } from '@xyflow/react';
+import { Subject, debounceTime } from 'rxjs';
+import { ArtifactsSectionComponent } from 'src/app/components/artifacts-section/artifacts-section.component';
+import { FormioWrapperComponent } from 'src/app/components/formio-wrapper/formio-wrapper.component';
+import { VariablesSectionComponent } from 'src/app/components/variables-section/variables-section.component';
+import { FileUploadService } from 'src/app/services/file-upload.service';
+import { PipelineJobDefinition, PipelineDefinition, PipelineStage, PipelineTask, PipelineTaskGroup } from 'src/types/pipeline';
+import { ulid } from 'ulidx';
 import { ImpossibleNodeComponent } from '../reactflow-nodes/impossible-node/impossible-node.component';
+import { TaskGroupNodeComponent } from '../reactflow-nodes/task-group-node/task-group-node.component';
+import { DefaultSchema, Schemas } from './task-schemas';
 
 @Component({
     selector: 'app-stage-editor',
@@ -47,7 +46,9 @@ import { ImpossibleNodeComponent } from '../reactflow-nodes/impossible-node/impo
         MenuDirective,
         VariablesSectionComponent,
         ArtifactsSectionComponent,
-        ReactFlowComponent
+        XYFlowModule,
+        TaskGroupNodeComponent,
+        ImpossibleNodeComponent
     ],
     templateUrl: './stage-editor.component.html',
     styleUrl: './stage-editor.component.scss'
@@ -65,29 +66,29 @@ export class StageEditorComponent {
     readonly defaultContainerImage = "ghcr.io/knackstedt/cruiser/cruiser-agent:latest";
 
     @Input() pipeline: PipelineDefinition = {} as any;
-    @Input() stage: StageDefinition = {} as any;
+    @Input() stage: PipelineStage = {} as any;
 
     @Output() close = new EventEmitter();
 
-    selectedJob: JobDefinition;
-    selectedTaskGroup: TaskGroupDefinition;
-    selectedTask: TaskDefinition;
+    selectedJob: PipelineJobDefinition;
+    selectedTaskGroup: PipelineTaskGroup;
+    selectedTask: PipelineTask;
 
     selectedJobIndex = 0;
 
     currentSelection: "pipeline" | "stage" | "job" | "taskGroup" | "task" = 'task';
 
-    jobMenu: MenuItem<JobDefinition>[] = [
+    jobMenu: MenuItem<PipelineJobDefinition>[] = [
         { label: "Enable Job", action: item => this.enableJob(item), isVisible: item => item.disabled },
         { label: "Disable Job", action: item => this.disableJob(item), isVisible: item => !item.disabled },
         { label: "Delete Job", action: item => this.deleteJob(item) }
     ];
-    taskGroupMenu: MenuItem<{ job: JobDefinition, taskGroup: TaskGroupDefinition}>[] = [
+    taskGroupMenu: MenuItem<{ job: PipelineJobDefinition, taskGroup: PipelineTaskGroup}>[] = [
         { label: "Enable Task Group", action: item => this.enableTaskGroup(item.job, item.taskGroup), isVisible: item => item.taskGroup.disabled },
         { label: "Disable Task Group", action: item => this.disableTaskGroup(item.job, item.taskGroup), isVisible: item => !item.taskGroup.disabled },
         { label: "Delete Task Group", action: item => this.deleteTaskGroup(item.job, item.taskGroup) }
     ];
-    taskMenu: MenuItem<{ taskGroup: TaskGroupDefinition, task: TaskDefinition}>[] = [
+    taskMenu: MenuItem<{ taskGroup: PipelineTaskGroup, task: PipelineTask}>[] = [
         { label: "Enable Task", action: item => this.enableTask(item.taskGroup, item.task), isVisible: item => item.task.disabled },
         { label: "Disable Task", action: item => this.disableTask(item.taskGroup, item.task), isVisible: item => !item.task.disabled },
         { label: "Delete Task", action: item => this.deleteTask(item.taskGroup, item.task) },
@@ -110,38 +111,6 @@ export class StageEditorComponent {
         nodes: Node[]
         edges: Edge[]
     }[] = [];
-
-    nodeTypes = {
-        taskGroup: ReactMagicWrapperComponent.WrapAngularComponent({
-            component: TaskGroupNodeComponent,
-            appRef: this.appRef,
-            injector: this.injector,
-            ngZone: this.ngZone,
-            staticInputs: {
-                taskMenu: this.taskMenu,
-                dropListGroup: []
-            },
-            staticOutputs: {
-                onTaskGroupSelect: ({ job, taskGroup }) => { this.selectTaskGroup(taskGroup); },
-                onTaskClick: ({ job, taskGroup, task }) => { this.selectTask(task); this.renderJobs();},
-                onAddTask: ({ job, taskGroup }) => { this.addTask(taskGroup); this.renderJobs();},
-                onTaskDrop: ({ job, taskGroup, event }) => { this.taskDrop(job, taskGroup, event); this.renderJobs(); },
-            },
-            additionalChildren: [
-                React.createElement(Handle, { type: "target", position: Position.Left }),
-                React.createElement(Handle, { type: "source", position: Position.Right })
-            ]
-        }),
-        impossible: ReactMagicWrapperComponent.WrapAngularComponent({
-            component: ImpossibleNodeComponent,
-            appRef: this.appRef,
-            injector: this.injector,
-            ngZone: this.ngZone,
-            additionalChildren: [
-                React.createElement(Handle, { type: "source", position: Position.Right })
-            ]
-        })
-    }
 
     constructor(
         private readonly fetch: Fetch,
@@ -211,7 +180,7 @@ export class StageEditorComponent {
                     tasks: []
                 }
             ]
-        } as JobDefinition;
+        } as PipelineJobDefinition;
 
         this.stage.jobs.push(job);
 
@@ -221,20 +190,20 @@ export class StageEditorComponent {
         this.selectJob(job);
     }
 
-    async deleteJob(job: JobDefinition) {
+    async deleteJob(job: PipelineJobDefinition) {
         this.stage.jobs = this.stage.jobs.filter(j => j != job);
         this.patchPipeline();
     }
-    async disableJob(job: JobDefinition) {
+    async disableJob(job: PipelineJobDefinition) {
         job.disabled = true;
         this.patchPipeline();
     }
-    async enableJob(job: JobDefinition) {
+    async enableJob(job: PipelineJobDefinition) {
         job.disabled = false;
         this.patchPipeline();
     }
 
-    async addTaskGroup(job: JobDefinition) {
+    async addTaskGroup(job: PipelineJobDefinition) {
         job.taskGroups ??= [];
 
         const taskGroup = {
@@ -242,7 +211,7 @@ export class StageEditorComponent {
             label: 'Task Group - ' + (job.taskGroups.length + 1),
             order: job.taskGroups.length + 1,
             tasks: []
-        } as TaskGroupDefinition;
+        } as PipelineTaskGroup;
 
         job.taskGroups.push(taskGroup);
 
@@ -251,24 +220,24 @@ export class StageEditorComponent {
         this.renderJobs();
     }
 
-    async deleteTaskGroup(job: JobDefinition, taskGroup: TaskGroupDefinition) {
+    async deleteTaskGroup(job: PipelineJobDefinition, taskGroup: PipelineTaskGroup) {
         job.taskGroups = job.taskGroups.filter(tg => tg.id != taskGroup.id);
 
         this.patchPipeline();
         this.renderJobs()
     }
-    async disableTaskGroup(job: JobDefinition, taskGroup: TaskGroupDefinition) {
+    async disableTaskGroup(job: PipelineJobDefinition, taskGroup: PipelineTaskGroup) {
         taskGroup.disabled = true;
 
         this.patchPipeline();
     }
-    async enableTaskGroup(job: JobDefinition, taskGroup: TaskGroupDefinition) {
+    async enableTaskGroup(job: PipelineJobDefinition, taskGroup: PipelineTaskGroup) {
         taskGroup.disabled = false;
 
         this.patchPipeline();
     }
 
-    addTask(taskGroup: TaskGroupDefinition) {
+    addTask(taskGroup: PipelineTaskGroup) {
         taskGroup.tasks ??= [];
 
         const task = {
@@ -281,7 +250,7 @@ export class StageEditorComponent {
             breakBeforeTask: false,
             breakOnTaskFailure: true,
             breakOnTaskSuccess: false
-        } as TaskDefinition;
+        } as PipelineTask;
 
         taskGroup.tasks.push(task);
 
@@ -289,28 +258,28 @@ export class StageEditorComponent {
         this.selectTask(task);
     }
 
-    async deleteTask(taskGroup: TaskGroupDefinition, task: TaskDefinition) {
+    async deleteTask(taskGroup: PipelineTaskGroup, task: PipelineTask) {
         taskGroup.tasks = taskGroup.tasks.filter(t => t != task);
 
         this.patchPipeline();
     }
-    async disableTask(taskGroup: TaskGroupDefinition, task: TaskDefinition) {
+    async disableTask(taskGroup: PipelineTaskGroup, task: PipelineTask) {
         task.disabled = true;
 
         this.patchPipeline();
     }
-    async enableTask(taskGroup: TaskGroupDefinition, task: TaskDefinition) {
+    async enableTask(taskGroup: PipelineTaskGroup, task: PipelineTask) {
         task.disabled = false;
 
         this.patchPipeline();
     }
-    async cloneTask(taskGroup: TaskGroupDefinition, task: TaskDefinition) {
+    async cloneTask(taskGroup: PipelineTaskGroup, task: PipelineTask) {
         taskGroup.tasks.push(structuredClone(task));
 
         this.patchPipeline();
     }
 
-    async taskDrop(job: JobDefinition, taskGroup: TaskGroupDefinition, event: CdkDragDrop<any, any, any>) {
+    async taskDrop(job: PipelineJobDefinition, taskGroup: PipelineTaskGroup, event: CdkDragDrop<any, any, any>) {
         // Simple reordering
         if (event.previousContainer === event.container) {
             if (event.previousIndex == event.currentIndex) return;
@@ -344,18 +313,18 @@ export class StageEditorComponent {
         this.patchPipeline();
     }
 
-    selectJob(job: JobDefinition) {
+    selectJob(job: PipelineJobDefinition) {
         this.selectedJob = job;
         this.currentSelection = 'job';
         this.renderJobs();
     }
 
-    selectTaskGroup(taskGroup: TaskGroupDefinition) {
+    selectTaskGroup(taskGroup: PipelineTaskGroup) {
         this.selectedTaskGroup = taskGroup;
         this.currentSelection = 'taskGroup';
     }
 
-    selectTask(task: TaskDefinition) {
+    selectTask(task: PipelineTask) {
         if (!task) return;
         // Ensure that the task has the proper argument object
         if (!task.taskScriptArguments) task.taskScriptArguments = {};
@@ -369,7 +338,7 @@ export class StageEditorComponent {
         this.stage.jobs.forEach((job, i) => this.renderGraph(job, i))
     }
 
-    renderGraph(job: JobDefinition, i: number) {
+    renderGraph(job: PipelineJobDefinition, i: number) {
         let hasImpossibleNodes = false;
         const edges: Edge[] = [];
         const nodes: Node[] = job.taskGroups?.map(taskGroup => {
@@ -390,7 +359,7 @@ export class StageEditorComponent {
                     source: source,
                     target: target,
                     id: source + "_" + target,
-                    sourceHandle: "source",
+                    // sourceHandle: "source",
                     type: "bezier",
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
@@ -470,11 +439,11 @@ export class StageEditorComponent {
         }
     }
 
-    filterPrecedingTaskGroups(taskGroup: TaskGroupDefinition) {
+    filterPrecedingTaskGroups(taskGroup: PipelineTaskGroup) {
         return this.selectedJob.taskGroups.filter(tg => tg != taskGroup);
     }
 
-    filterMissingPrecedingTaskGroups(taskGroup: TaskGroupDefinition) {
+    filterMissingPrecedingTaskGroups(taskGroup: PipelineTaskGroup) {
         const jobTaskGroups = this.selectedJob.taskGroups;
 
         // Find all of the task groups that do not exist.

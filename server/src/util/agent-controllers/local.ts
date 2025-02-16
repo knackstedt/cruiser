@@ -6,7 +6,7 @@ import { ulid } from 'ulidx';
 import { db } from '../db';
 import { environment } from '../environment';
 import { logger } from '../logger';
-import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../../types/pipeline';
+import { PipelineJobDefinition, PipelineDefinition, PipelineInstance, PipelineStage } from '../../types/pipeline';
 import { JobInstance } from '../../types/agent-task';
 import { AgentInitializer } from './interface';
 import { StringRecordId } from 'surrealdb';
@@ -15,8 +15,8 @@ export class LocalAgent implements AgentInitializer {
     async spawn(
         pipelineInstance: PipelineInstance,
         pipeline: PipelineDefinition,
-        stage: StageDefinition,
-        jobDefinition: JobDefinition,
+        stage: PipelineStage,
+        jobDefinition: PipelineJobDefinition,
         jobInstance: JobInstance,
         namespace: string,
         podName: string,
@@ -55,11 +55,10 @@ export class LocalAgent implements AgentInitializer {
             if (code) {
                 const err = new Error("Agent process exited with non-zero code " + code);
                 logger.error(err);
-                console.error(err);
-                await db.merge(new StringRecordId(jobInstance.id), { status: "failed" });
+                await db.merge(jobInstance.id, { status: "failed" });
             }
             else {
-                await db.merge(new StringRecordId(jobInstance.id), { status: "finished" });
+                await db.merge(jobInstance.id, { status: "finished" });
             }
 
             const dir = [

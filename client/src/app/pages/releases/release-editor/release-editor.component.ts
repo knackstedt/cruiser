@@ -1,40 +1,38 @@
-import { ApplicationRef, ElementRef, Input, ViewChild, Injector, Component, NgZone } from '@angular/core';
-import { Fetch, MenuItem, ReactMagicWrapperComponent, VscodeComponent } from '@dotglitch/ngx-common';
-import { ReactFlowComponent } from '../../../components/reactflow/reactflow-wrapper';
-import { PipelineDefinition, SourceConfiguration, StageDefinition, Webhook } from 'src/types/pipeline';
-import { ulid } from 'ulidx';
-import { Edge, Handle, MarkerType, Node, Position } from 'reactflow';
-import dagre from '@dagrejs/dagre';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { NgScrollbarModule } from 'ngx-scrollbar';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { ApplicationRef, Component, ElementRef, Injector, Input, NgZone, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatSelectModule } from '@angular/material/select';
-import { MatInputModule } from '@angular/material/input';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { StackEditorComponent } from 'ngx-stackedit';
-import { Subject, debounceTime, firstValueFrom } from 'rxjs';
-import { FileUploadService } from 'src/app/services/file-upload.service';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
-import { StageEditorComponent } from './stage-editor/stage-editor.component';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import dagre from '@dagrejs/dagre';
+import { Fetch, MenuDirective, MenuItem, VscodeComponent } from '@dotglitch/ngx-common';
+import { Edge, MarkerType, Node } from '@xyflow/react';
+import { NgScrollbarModule } from 'ngx-scrollbar';
+import { StackEditorComponent } from 'ngx-stackedit';
 import { ToastrService } from 'ngx-toastr';
-import { UserService } from 'src/app/services/user.service';
+import { XYFlowModule } from 'ngx-xyflow';
+import { Subject, debounceTime } from 'rxjs';
 import { VariablesSectionComponent } from 'src/app/components/variables-section/variables-section.component';
-import { ImpossibleNodeComponent } from './reactflow-nodes/impossible-node/impossible-node.component';
-import { StageNodeComponent } from 'src/app/pages/releases/release-editor/reactflow-nodes/stage-node/stage-node.component';
-import React from 'react';
 import { SourceNodeComponent } from 'src/app/pages/releases/release-editor/reactflow-nodes/source-node/source-node.component';
+import { StageNodeComponent } from 'src/app/pages/releases/release-editor/reactflow-nodes/stage-node/stage-node.component';
 import { WebhookNodeComponent } from 'src/app/pages/releases/release-editor/reactflow-nodes/webhook-node/webhook-node.component';
-
+import { FileUploadService } from 'src/app/services/file-upload.service';
+import { UserService } from 'src/app/services/user.service';
+import { PipelineDefinition, PipelineSource, PipelineStage, Webhook } from 'src/types/pipeline';
+import { ulid } from 'ulidx';
+import { ImpossibleNodeComponent } from './reactflow-nodes/impossible-node/impossible-node.component';
+import { StageEditorComponent } from './stage-editor/stage-editor.component';
 
 @Component({
     selector: 'app-release-editor',
     standalone: true,
     imports: [
-        ReactFlowComponent,
+        XYFlowModule,
         MatSidenavModule,
         MatButtonModule,
         MatIconModule,
@@ -47,7 +45,12 @@ import { WebhookNodeComponent } from 'src/app/pages/releases/release-editor/reac
         StackEditorComponent,
         VscodeComponent,
         VariablesSectionComponent,
+        MenuDirective,
         StageEditorComponent,
+        StageNodeComponent,
+        ImpossibleNodeComponent,
+        SourceNodeComponent,
+        WebhookNodeComponent,
         FormsModule
     ],
     templateUrl: './release-editor.component.html',
@@ -55,7 +58,7 @@ import { WebhookNodeComponent } from 'src/app/pages/releases/release-editor/reac
 })
 export class ReleaseEditorComponent {
     @ViewChild("canvas") canvasRef: ElementRef<any>;
-    @ViewChild(ReactFlowComponent) reactFlow: ReactFlowComponent;
+    // @ViewChild(ReactFlowComponent) reactFlow: ReactFlowComponent;
 
     get container() { return this.canvasRef.nativeElement }
 
@@ -74,204 +77,110 @@ export class ReleaseEditorComponent {
 
     nodes: Node[] = [];
     edges: Edge[] = [];
-    nodeTypes = {
-        stage: ReactMagicWrapperComponent.WrapAngularComponent({
-            component: StageNodeComponent,
-            appRef: this.appRef,
-            injector: this.injector,
-            ngZone: this.ngZone,
-            staticInputs: {
-                contextMenu: [
-                    { label: "Edit Stage", action: s => this.editStage(s) },
-                    { label: "Disable Stage", action: s => this.disableStage(s), isVisible: s => !s.disabled },
-                    { label: "Enable Stage", action: s => this.enableStage(s), isVisible: s => s.disabled },
-                    { label: "Delete Stage", action: s => this.deleteStage(s) }
-                ] as MenuItem<StageDefinition>[]
-            },
-            staticOutputs: {
-                onEditStage:         ({ stage }) => this.editStage(stage),
 
-                onJobsClick:         ({ stage }) => (this.mode = "view") && (this.view = 'jobs')           && this.selectStage(stage),
-                onNodeClick:         ({ stage }) => (this.mode = "view") && (this.view = 'stage')          && this.selectStage(stage),
+    readonly stageNodeCtxMenu: MenuItem<PipelineStage>[] = [
+        { label: 'Edit Stage', action: s => this.editStage(s) },
+        { label: 'Disable Stage', action: s => this.disableStage(s), isVisible: s => !s.disabled },
+        { label: 'Enable Stage', action: s => this.enableStage(s), isVisible: s => s.disabled },
+        { label: 'Delete Stage', action: s => this.deleteStage(s) }
+    ];
 
-                onTriggerClick:      ({ stage }) => (this.mode = "view") && (this.view = 'trigger')        && this.selectStage(stage),
-                onTriggerEditClick:  ({ stage }) => (this.mode = "edit") && (this.view = 'trigger')        && this.selectStage(stage),
+    readonly sourceCtxMenu: MenuItem<{ stage: PipelineStage, source: PipelineSource; }>[] = [
+        {
+            label: "Edit Source",
+            action: ({ stage, source }) => {
+                this.ngZone.run(() => {
+                    this.mode = "edit";
+                    this.selectedStage = stage;
+                    this.selectedSource = source;
+                    this.renderGraph();
+                    this.view = 'source';
+                });
+            }
+        },
+        {
+            label: "Enable Source",
+            isVisible: ({ source }) => source.disabled,
+            action: ({ stage, source }) => {
+                this.ngZone.run(() => {
+                    source.disabled = false;
+                    this.renderGraph();
+                });
+            }
+        },
+        {
+            label: "Disable Source",
+            isVisible: ({ source }) => !source.disabled,
+            action: ({ stage, source }) => {
+                this.ngZone.run(() => {
+                    source.disabled = true;
+                    this.renderGraph();
+                });
+            }
+        },
+        {
+            label: "Delete Source",
+            action: ({ stage, source }) => {
+                this.ngZone.run(() => {
+                    stage.sources.splice(stage.sources.indexOf(source), 1);
+                    this.dataChangeEmitter.next(0);
+                    this.renderGraph();
+                    this.selectStage(stage);
+                });
+            }
+        }
+    ];
 
-                onSourceClick:       ({ stage }) => (this.mode = "view") && (this.view = 'sources')         && this.selectStage(stage),
-                onSourceEditClick:   ({ stage }) => (this.mode = "edit") && (this.view = 'sources')         && this.selectStage(stage),
-
-                onScheduleClick:     ({ stage }) => (this.mode = "view") && (this.view = 'schedule')       && this.selectStage(stage),
-                onScheduleEditClick: ({ stage }) => (this.mode = "edit") && (this.view = 'schedule')       && this.selectStage(stage),
-
-                onManualRunClick:    ({ stage }) => (this.mode = "view") && (this.view = 'manual_trigger') && this.selectStage(stage),
-
-                onApproverClick:     ({ stage }) => (this.mode = "view") && (this.view = 'approver')       && this.selectStage(stage),
-                onApproverEditClick: ({ stage }) => (this.mode = "edit") && (this.view = 'approver')       && this.selectStage(stage),
-
-                onWebhookEditClick:  ({ stage }) => (this.mode = "edit") && (this.view = 'webhook')        && this.selectStage(stage),
-                onWebhookClick:      ({ stage }) => (this.mode = "view") && (this.view = 'webhook')        && this.selectStage(stage),
-
-                onStageAddClick:     ({ stage }) => this.addStage({ stageTrigger: [stage.id] }),
-                onStageCloneClick:   ({ stage }) => this.cloneStage(stage),
-            },
-            additionalChildren: [
-                React.createElement(Handle, { type: "target", position: Position.Left }),
-                React.createElement(Handle, { type: "source", position: Position.Right })
-            ]
-        }),
-        impossible: ReactMagicWrapperComponent.WrapAngularComponent({
-            component: ImpossibleNodeComponent,
-            appRef: this.appRef,
-            injector: this.injector,
-            ngZone: this.ngZone,
-            additionalChildren: [
-                React.createElement(Handle, { type: "source", position: Position.Right })
-            ]
-        }),
-        source: ReactMagicWrapperComponent.WrapAngularComponent({
-            component: SourceNodeComponent,
-            appRef: this.appRef,
-            injector: this.injector,
-            ngZone: this.ngZone,
-            staticInputs: {
-                /* inputs */
-                contextMenu: [
-                    {
-                        label: "Edit Source",
-                        action: ({stage, source}) => {
-                            this.ngZone.run(() => {
-                                this.mode = "edit";
-                                this.selectedStage = stage;
-                                this.selectedSource = source;
-                                this.renderGraph();
-                                this.view = 'source';
-                            })
-                        }
-                    },
-                    {
-                        label: "Enable Source",
-                        isVisible: ({source}) => source.disabled,
-                        action: ({stage, source}) => {
-                            this.ngZone.run(() => {
-                                source.disabled = false;
-                                this.renderGraph();
-                            })
-                        }
-                    },
-                    {
-                        label: "Disable Source",
-                        isVisible: ({source}) => !source.disabled,
-                        action: ({stage, source}) => {
-                            this.ngZone.run(() => {
-                                source.disabled = true;
-                                this.renderGraph();
-                            })
-                        }
-                    },
-                    {
-                        label: "Delete Source",
-                        action: ({ stage, source }) => {
-                            this.ngZone.run(() => {
-                                stage.sources.splice(stage.sources.indexOf(source), 1);
-                                this.dataChangeEmitter.next(0);
-                                this.renderGraph();
-                                this.selectStage(stage);
-                            });
-                        }
-                    }
-                ] as MenuItem<{ stage: StageDefinition, source: SourceConfiguration }>[]
-            },
-            staticOutputs: {
-                // outputs
-                onEditSource: ({ stage, source }) => {
-                    this.ngZone.run(() => {
-                        this.mode = "edit";
-                        this.selectedStage = stage;
-                        this.selectedSource = source;
-                        this.renderGraph();
-                        this.view = 'source';
-                    })
-                },
-            },
-            additionalChildren: [
-                React.createElement(Handle, { type: "source", id: "source", position: Position.Right })
-            ]
-        }),
-        webhook: ReactMagicWrapperComponent.WrapAngularComponent({
-            component: WebhookNodeComponent,
-            appRef: this.appRef,
-            injector: this.injector,
-            ngZone: this.ngZone,
-            staticInputs: {
-                /* inputs */
-                contextMenu: [
-                    {
-                        label: "Edit Webhook",
-                        action: ({stage, webhook}) => {
-                            this.ngZone.run(() => {
-                                this.mode = "edit";
-                                this.selectedStage = stage;
-                                this.selectedWebhook = webhook;
-                                this.renderGraph();
-                                this.view = 'webhook';
-                            })
-                        }
-                    },
-                    {
-                        label: "Enable Webhook",
-                        isVisible: ({webhook}) => webhook.disabled,
-                        action: ({stage, webhook}) => {
-                            this.ngZone.run(() => {
-                                webhook.disabled = false;
-                                this.renderGraph();
-                            })
-                        }
-                    },
-                    {
-                        label: "Disable Webhook",
-                        isVisible: ({webhook}) => !webhook.disabled,
-                        action: ({stage, webhook}) => {
-                            this.ngZone.run(() => {
-                                webhook.disabled = true;
-                                this.renderGraph();
-                            })
-                        }
-                    },
-                    {
-                        label: "Delete Webhook",
-                        action: ({ stage, webhook }) => {
-                            this.ngZone.run(() => {
-                                stage.webhooks.splice(stage.webhooks.indexOf(webhook), 1);
-                                this.dataChangeEmitter.next(0);
-                                this.renderGraph();
-                                this.selectStage(stage);
-                            });
-                        }
-                    }
-                ] as MenuItem<{ stage: StageDefinition, webhook: Webhook }>[]
-            },
-            staticOutputs: {
-                // outputs
-                onEditWebhook: ({ stage, webhook }) => {
-                    this.ngZone.run(() => {
-                        this.mode = "edit";
-                        this.selectedStage = stage;
-                        this.selectedWebhook = webhook;
-                        this.renderGraph();
-                        this.view = 'webhook';
-                    })
-                },
-            },
-            additionalChildren: [
-                React.createElement(Handle, { type: "target", position: Position.Left })
-            ]
-        })
-    }
+    readonly webhookCtxMenu: MenuItem<{ stage: PipelineStage, webhook: Webhook; }>[] = [
+        {
+            label: "Edit Webhook",
+            action: ({ stage, webhook }) => {
+                this.ngZone.run(() => {
+                    this.mode = "edit";
+                    this.selectedStage = stage;
+                    this.selectedWebhook = webhook;
+                    this.renderGraph();
+                    this.view = 'webhook';
+                });
+            }
+        },
+        {
+            label: "Enable Webhook",
+            isVisible: ({ webhook }) => webhook.disabled,
+            action: ({ stage, webhook }) => {
+                this.ngZone.run(() => {
+                    webhook.disabled = false;
+                    this.renderGraph();
+                });
+            }
+        },
+        {
+            label: "Disable Webhook",
+            isVisible: ({ webhook }) => !webhook.disabled,
+            action: ({ stage, webhook }) => {
+                this.ngZone.run(() => {
+                    webhook.disabled = true;
+                    this.renderGraph();
+                });
+            }
+        },
+        {
+            label: "Delete Webhook",
+            action: ({ stage, webhook }) => {
+                this.ngZone.run(() => {
+                    stage.webhooks.splice(stage.webhooks.indexOf(webhook), 1);
+                    this.dataChangeEmitter.next(0);
+                    this.renderGraph();
+                    this.selectStage(stage);
+                });
+            }
+        }
+    ];
 
     mode: "edit" | "view" = "edit";
     view: string = "";
-    selectedStage: StageDefinition;
-    selectedSource: SourceConfiguration;
+    selectedStage: PipelineStage;
+    selectedSource: PipelineSource;
     selectedWebhook: Webhook;
 
     users = [];
@@ -415,7 +324,7 @@ export class ReleaseEditorComponent {
         location.href = "#/Pipelines";
     }
 
-    selectStage(stage: StageDefinition) {
+    selectStage(stage: PipelineStage) {
         this.selectedSource = null;
         // This prevents zone detection loss
         // Should be removed when the react bridge no longer drops zone
@@ -428,7 +337,7 @@ export class ReleaseEditorComponent {
         })
     }
 
-    async addStage(partial: Partial<StageDefinition> = {}) {
+    async addStage(partial: Partial<PipelineStage> = {}) {
         this.pipeline.stages ??= [];
         const stage = {
             id: ulid(),
@@ -444,7 +353,7 @@ export class ReleaseEditorComponent {
         this.renderGraph();
     }
 
-    async cloneStage(stage: StageDefinition) {
+    async cloneStage(stage: PipelineStage) {
         const newStage = structuredClone(stage);
         newStage.id = ulid();
         newStage.label += " (clone)";
@@ -455,18 +364,18 @@ export class ReleaseEditorComponent {
         this.renderGraph();
     }
 
-    filterPrecedingStages(stage: StageDefinition) {
+    filterPrecedingStages(stage: PipelineStage) {
         return this.pipeline.stages
             .filter(s => s.id != stage.id);
     }
 
-    filterMissingPrecedingStages(stage: StageDefinition) {
+    filterMissingPrecedingStages(stage: PipelineStage) {
         const stages = this.pipeline.stages;
 
         return stage.stageTrigger?.filter(st => !stages.find(s => s.id == st));
     }
 
-    addWebhook(stage: StageDefinition) {
+    addWebhook(stage: PipelineStage) {
         stage.webhooks ??= [];
         stage.webhooks.push(this.selectedWebhook = {
             id: ulid(),
@@ -479,13 +388,13 @@ export class ReleaseEditorComponent {
         this.renderGraph();
     }
 
-    deleteWebhook(stage: StageDefinition, webhook: Webhook) {
+    deleteWebhook(stage: PipelineStage, webhook: Webhook) {
         stage.webhooks.splice(stage.webhooks.indexOf(webhook), 1);
         this.dataChangeEmitter.next(0);
         this.renderGraph();
     }
 
-    addSource(stage: StageDefinition) {
+    addSource(stage: PipelineStage) {
         stage.sources ??= [];
         stage.sources.push(this.selectedSource = {
             id: ulid(),
@@ -498,7 +407,7 @@ export class ReleaseEditorComponent {
         this.renderGraph();
     }
 
-    deleteSource(stage: StageDefinition, source: SourceConfiguration) {
+    deleteSource(stage: PipelineStage, source: PipelineSource) {
         stage.sources.splice(stage.sources.indexOf(source), 1);
 
         this.view = "stage";
@@ -506,25 +415,25 @@ export class ReleaseEditorComponent {
         this.renderGraph();
     }
 
-    editStage(stage: StageDefinition) {
+    editStage(stage: PipelineStage) {
         this.editingStage = true;
         this.selectedStage = stage;
     }
 
-    deleteStage(stage: StageDefinition) {
+    deleteStage(stage: PipelineStage) {
         this.pipeline.stages = this.pipeline.stages.filter(s => s != stage);
 
         this.dataChangeEmitter.next(0);
         this.renderGraph();
     }
 
-    disableStage(stage: StageDefinition) {
+    disableStage(stage: PipelineStage) {
         stage.disabled = true;
         this.dataChangeEmitter.next(0);
         this.renderGraph();
     }
 
-    enableStage(stage: StageDefinition) {
+    enableStage(stage: PipelineStage) {
         stage.disabled = false;
         this.dataChangeEmitter.next(0);
 
@@ -555,7 +464,6 @@ export class ReleaseEditorComponent {
                     source: source,
                     target: stageUlid,
                     id: source + "_" + stageUlid,
-                    sourceHandle: "source",
                     type: "bezier",
                     style: {
                         strokeWidth: 2,
@@ -712,7 +620,7 @@ export class ReleaseEditorComponent {
             };
         });
 
-        // console.log({ nodes, edges })
+        console.log({ nodes, edges })
 
         this.edges = edges;
         this.nodes = nodes;

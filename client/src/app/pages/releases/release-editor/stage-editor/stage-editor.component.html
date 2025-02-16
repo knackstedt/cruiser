@@ -51,13 +51,50 @@
                     </mat-tab>
                 </mat-tab-group>
 
-                <ngx-reactflow
+                <!-- <ngx-reactflow
                     [id]="selectedJob.id"
                     [nodes]="diagramList[selectedJobIndex]?.nodes ?? []"
                     [edges]="diagramList[selectedJobIndex]?.edges ?? []"
                     [nodeTypes]="nodeTypes"
                     (onNodeContextMenu)="onNodeCtxMenu($event)"
-                />
+                /> -->
+                <ngx-xyflow
+                    [id]="selectedJob.id"
+                    [nodes]="diagramList[selectedJobIndex]?.nodes ?? []"
+                    [edges]="diagramList[selectedJobIndex]?.edges ?? []"
+                    colorMode="dark"
+                >
+                    <ngx-xyflow-controls/>
+
+                    <ngx-xyflow-background
+                        color="#383948"
+                        bgColor="#121314"
+                        [gap]="20"
+                        [size]="2"
+                    />
+
+                    <ngx-xyflow-node nodeType="taskGroup">
+                        <ng-template let-data>
+                            <app-task-group-node
+                                [data]="data"
+                                [taskMenu]="taskMenu"
+                                (onTaskGroupSelect)="selectTaskGroup($event.taskGroup);"
+                                (onTaskClick)="selectTask($event.task); renderJobs()"
+                                (onAddTask)="addTask($event.taskGroup); renderJobs()"
+                                (onTaskDrop)="taskDrop($event.job, $event.taskGroup, $event.event); renderJobs();"
+                            />
+                        </ng-template>
+                        <ngx-xyflow-handle type="target" position="left"/>
+                        <ngx-xyflow-handle type="source" position="right"/>
+                    </ngx-xyflow-node>
+
+                    <ngx-xyflow-node nodeType="impossible">
+                        <ng-template let-data>
+                            <app-impossible-node [data]="data"/>
+                        </ng-template>
+                        <ngx-xyflow-handle type="source" position="right"/>
+                    </ngx-xyflow-node>
+                </ngx-xyflow>
             </div>
 
             <div class="shadow-right"></div>

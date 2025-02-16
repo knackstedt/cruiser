@@ -24,7 +24,7 @@ export const checkSurrealResource = (resource: string) => {
 }
 
 const tableGuard = (req, res, next) => {
-    let target = req.params.table;
+    let target = req.params.table as string;
 
     let targetId: string;
     if (target.startsWith("(")) {
@@ -365,7 +365,7 @@ export const DatabaseTableApi = () => {
             }
             const [table, idx] = data.id.split(":");
             delete data.id;
-            let result = await db.update(new RecordId(table, idx), data) as any;
+            let result = await db.upsert(new RecordId(table, idx), data) as any;
 
             if (typeof tableConfig.afterPut == "function")
                 result = await tableConfig.afterPut(result);
@@ -377,7 +377,7 @@ export const DatabaseTableApi = () => {
                 data = await Promise.all(data.map(d => tableConfig.beforePut(d)));
 
             let result = await Promise.all(
-                data.map((item) => db.update(new StringRecordId(item.id), item))
+                data.map((item) => db.upsert(new StringRecordId(item.id), item))
             );
 
             if (typeof tableConfig.afterPut == "function")
@@ -400,7 +400,7 @@ export const DatabaseTableApi = () => {
             // if (data.id != id) {
             //     throw { message: "payload id does not match id in uri", status: 400 };
             // }
-
+            data.id = undefined;
             let result = await db.merge(new StringRecordId(id), data);
 
             if (typeof tableConfig.afterPatch == "function")

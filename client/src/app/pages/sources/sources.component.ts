@@ -6,7 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { Fetch, MenuDirective, MenuItem } from '@dotglitch/ngx-common';
 import { EditSourceComponent } from 'src/app/pages/sources/edit-source/edit-source.component';
 import { TableModule } from 'primeng/table';
-import { SourceConfiguration } from 'src/types/pipeline';
+import { PipelineSource } from 'src/types/pipeline';
 
 @Component({
     selector: 'app-sources',
@@ -23,9 +23,9 @@ import { SourceConfiguration } from 'src/types/pipeline';
 })
 export class SourcesComponent {
 
-    sources: SourceConfiguration[] = [];
+    sources: PipelineSource[] = [];
 
-    menu: MenuItem<SourceConfiguration>[] = [
+    menu: MenuItem<PipelineSource>[] = [
         { label: "Remove" },
     ]
 

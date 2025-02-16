@@ -1,6 +1,6 @@
 import { Socket, io } from "socket.io-client";
 import {environment} from '../util/environment';
-import { JobDefinition, PipelineDefinition } from '../types/pipeline';
+import { PipelineJobDefinition, PipelineDefinition } from '../types/pipeline';
 import { DefaultEventsMap } from '@socket.io/component-emitter';
 import { api } from '../util/axios';
 import { JobInstance } from '../types/agent-task';

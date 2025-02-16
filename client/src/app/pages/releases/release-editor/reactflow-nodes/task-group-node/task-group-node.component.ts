@@ -4,7 +4,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MenuDirective, MenuItem } from '@dotglitch/ngx-common';
-import { JobDefinition, TaskGroupDefinition } from 'src/types/pipeline';
+import { StageEditorComponent } from 'src/app/pages/releases/release-editor/stage-editor/stage-editor.component';
+import { PipelineJobDefinition, PipelineTaskGroup } from 'src/types/pipeline';
 
 @Component({
     selector: 'app-task-group-node',
@@ -31,8 +32,8 @@ export class TaskGroupNodeComponent {
         this.peers = this.job.taskGroups.map(tg => tg.id);
     }
 
-    job: JobDefinition;
-    taskGroup: TaskGroupDefinition;
+    job: PipelineJobDefinition;
+    taskGroup: PipelineTaskGroup;
     peers: string[] = [];
 
     @Input() taskGroupMenu: MenuItem[];
@@ -45,7 +46,8 @@ export class TaskGroupNodeComponent {
     @Output() onTaskDrop = new EventEmitter();
 
     constructor(
-        private readonly viewContainer: ViewContainerRef
+        private readonly viewContainer: ViewContainerRef,
+        public readonly stageEditor: StageEditorComponent
     ) { }
 
     onNodeSelect() {

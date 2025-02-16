@@ -18,7 +18,7 @@ import { JobInstance } from 'src/types/agent-task';
 import { BindSocketLogger, ViewJsonInMonacoDialog } from 'src/app/utils/utils';
 import { LogMessage, LogRecord } from 'src/types/agent-log';
 import { MaterialSymbols } from 'src/app/utils/mat-symbols';
-import { TaskGroupDefinition } from 'src/types/pipeline';
+import { PipelineTaskGroup } from 'src/types/pipeline';
 import { LogsRendererComponent } from "./logs-renderer/logs-renderer.component";
 import { Breakpoint } from '../job-details.component';
 import { LiveSocketService } from 'src/app/services/live-socket.service';
@@ -235,10 +235,7 @@ export class JobLogsComponent {
                         level: stream[1] == '1' ? "stdout" : 'stderr',
                         time: parseInt(time),
                         msg: msg.join(';'),
-                        properties: {
-                            gid: gid,
-                            tgid: tgid.includes(":") ? tgid : "pipeline_task_group:" + tgid
-                        }
+                        properties: { gid, tgid }
                     })
                 }
                 else {
@@ -318,7 +315,7 @@ export class JobLogsComponent {
     onReceiveLine(line: LogRecord, runHooks = true) {
         const iso = (new Date(line.time)).toISOString();
 
-        const lines = typeof line.msg == "string" ? [line.msg] : line.chunk;
+        const lines = typeof line.msg == "string" ? [line.msg] : line.chunk as any as string[];
         const parseMatches = (matches: RegExpMatchArray[]) => {
             const se = matches.map(m => ({
                 start: m.index,
@@ -335,7 +332,7 @@ export class JobLogsComponent {
             // debugger;
             const gid = line.properties?.['gid'];
             // TODO: This should be slimmed down somehow.
-            const taskGroups = line.properties['taskGroups'] as TaskGroupDefinition[];
+            const taskGroups = line.properties['taskGroups'] as PipelineTaskGroup[];
             taskGroups.forEach((tg, i) => {
                 this.visibleTaskGroups[tg.id] = {
                     visible: i == 0
@@ -554,6 +551,8 @@ export class JobLogsComponent {
 
         lines = lines.filter(l => {
             const tgid = l.record.properties?.['tgid'];
+            if (tgid && ! this.visibleTaskGroups[tgid])
+                debugger;
             return !tgid || this.visibleTaskGroups[tgid].visible;
         });
 

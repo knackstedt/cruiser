@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { JobDefinition } from 'src/types/pipeline';
+import { PipelineJobDefinition } from 'src/types/pipeline';
 
 @Component({
     selector: 'app-impossible-node',
@@ -18,5 +18,5 @@ export class ImpossibleNodeComponent {
         this.job = job;
     }
 
-    job: JobDefinition;
+    job: PipelineJobDefinition;
 }

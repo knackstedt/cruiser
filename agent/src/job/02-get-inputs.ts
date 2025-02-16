@@ -2,7 +2,7 @@ import { createWriteStream, exists, mkdir, mkdirp, readdir } from 'fs-extra';
 import { simpleGit, SimpleGitProgressEvent, SimpleGitOptions, SimpleGit } from 'simple-git';
 import { context, Span, trace } from '@opentelemetry/api';
 
-import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
+import { PipelineJobDefinition, PipelineDefinition, PipelineInstance, PipelineStage } from '../types/pipeline';
 import { environment } from '../util/environment';
 import { JobInstance } from '../types/agent-task';
 import { CreateLoggerSocketServer } from '../socket/logger';
@@ -17,8 +17,8 @@ export const GetInputs = async (
     parentSpan: Span,
     pipelineInstance: PipelineInstance,
     pipeline: PipelineDefinition,
-    stage: StageDefinition,
-    job: JobDefinition,
+    stage: PipelineStage,
+    job: PipelineJobDefinition,
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => {

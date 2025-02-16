@@ -62,8 +62,12 @@ export class LogsRendererComponent {
     }
 
     ngAfterViewInit(delay = false) {
+        const viewport = this.scroller;
+        if (!viewport) {
+            setTimeout(() => this.ngAfterViewInit(), 25);
+            return;
+        }
         this.ngZone.runOutsideAngular(() => {
-            const viewport = this.scroller;
             viewport.onscroll = (evt: WheelEvent) => {
                 this.ngZone.run(() => {
                     this.updateVirtualLines();

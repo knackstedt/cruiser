@@ -1,7 +1,7 @@
 import simpleGit, { SimpleGit } from 'simple-git';
 import { logger } from '../util/logger';
 import { afterDatabaseConnected, db } from '../util/db';
-import { PipelineDefinition, SourceConfiguration, StageDefinition } from '../types/pipeline';
+import { PipelineDefinition, PipelineSource, PipelineStage } from '../types/pipeline';
 import { RunPipeline, RunStage } from '../util/pipeline';
 import { StringRecordId } from 'surrealdb';
 
@@ -10,11 +10,11 @@ const pollingInterval = 15;
 const watchedSources: {
     id: string
     interval: number,
-    stage: StageDefinition,
-    source: SourceConfiguration
+    stage: PipelineStage,
+    source: PipelineSource
 }[] = [];
 
-const WatchSource = (pipeline: PipelineDefinition, stage: StageDefinition, source: SourceConfiguration) => {
+const WatchSource = (pipeline: PipelineDefinition, stage: PipelineStage, source: PipelineSource) => {
     UnwatchSource(stage, source);
 
     // Start polling
@@ -96,14 +96,14 @@ const WatchSource = (pipeline: PipelineDefinition, stage: StageDefinition, sourc
     });
 }
 
-const WatchStage = (pipeline: PipelineDefinition, stage: StageDefinition) => {
+const WatchStage = (pipeline: PipelineDefinition, stage: PipelineStage) => {
     stage.sources?.forEach(source => {
         if (source.pollForUpdates === false) return;
         WatchSource(pipeline, stage, source);
     })
 }
 
-const UnwatchSource = (stage: StageDefinition, source: SourceConfiguration) => {
+const UnwatchSource = (stage: PipelineStage, source: PipelineSource) => {
     const id = stage.id + '_' + source.id;
     const sourceWatcher = watchedSources.find(r => r.id == id);
 
@@ -114,7 +114,7 @@ const UnwatchSource = (stage: StageDefinition, source: SourceConfiguration) => {
     watchedSources.splice(watchedSources.indexOf(sourceWatcher), 1);
 }
 
-const UnwatchStage = (stage: StageDefinition) => {
+const UnwatchStage = (stage: PipelineStage) => {
     stage.sources?.forEach(source => UnwatchSource(stage, source));
 }
 

@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MenuDirective, MenuItem } from '@dotglitch/ngx-common';
-import { StageDefinition } from 'src/types/pipeline';
+import { PipelineStage } from 'src/types/pipeline';
 
 @Component({
     selector: 'app-stage-node',
@@ -20,7 +20,7 @@ import { StageDefinition } from 'src/types/pipeline';
 })
 export class StageNodeComponent {
 
-    @Input('data') stage: StageDefinition;
+    @Input('data') stage: PipelineStage;
     @Input() editing = true;
     @Input() contextMenu: MenuItem[] = [];
 

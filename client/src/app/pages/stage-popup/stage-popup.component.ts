@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from 'src/types/pipeline';
+import { PipelineJobDefinition, PipelineDefinition, PipelineInstance, PipelineStage } from 'src/types/pipeline';
 import { TableModule } from 'primeng/table';
 import { MatDialog } from '@angular/material/dialog';
 import { JobDetailsComponent } from './job-details/job-details.component';
@@ -35,10 +35,10 @@ import { LiveSocketService } from 'src/app/services/live-socket.service';
 })
 export class StagePopupComponent {
     @Input() pipelineInstance: PipelineInstance;
-    @Input() stage: StageDefinition;
+    @Input() stage: PipelineStage;
 
     // runningJobs: JobDefinition[] = [];
-    jobs: (JobDefinition & {
+    jobs: (PipelineJobDefinition & {
         _instance: JobInstance
     })[] = [];
 
@@ -106,7 +106,7 @@ export class StagePopupComponent {
 
     }
 
-    onViewLogs(job: JobDefinition) {
+    onViewLogs(job: PipelineJobDefinition) {
         this.dialog.open(JobDetailsComponent, {
             data: {
                 job,

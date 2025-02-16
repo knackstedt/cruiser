@@ -20,6 +20,7 @@
             #_
             class="task draggable-task"
             [class.disabled]="task.disabled"
+            [class.selected]="task.id == stageEditor.selectedTask.id"
             cdkDrag
             [cdkDragData]="task"
             cdkDragBoundary=".react-flow__pane"

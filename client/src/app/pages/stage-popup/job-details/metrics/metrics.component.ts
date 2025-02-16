@@ -9,7 +9,6 @@ import { LiveGraphComponent } from './live-graph/live-graph.component';
 import { CellComponent } from 'tabulator-tables';
 import { CommonModule } from '@angular/common';
 import { TabulatorComponent } from '@dotglitch/ngx-common';
-import { BindSocketLogger } from 'src/app/utils/utils';
 import { JobInstance } from 'src/types/agent-task';
 
 export function formatBytes(bytes, decimals = 2) {

@@ -2,7 +2,7 @@ import { Socket, io } from "socket.io-client";
 import { ulid } from 'ulidx';
 import { JobInstance } from '../types/agent-task';
 import { api } from '../util/axios';
-import { TaskDefinition, TaskGroupDefinition } from '../types/pipeline';
+import { PipelineTask, PipelineTaskGroup } from '../types/pipeline';
 import { context, Span, trace } from '@opentelemetry/api';
 
 const tracer = trace.getTracer('agent-breakpoint');
@@ -13,8 +13,8 @@ const breakpoints: {
         reject: Function,
         span: Span,
         id: string,
-        task: TaskDefinition,
-        taskGroup: TaskGroupDefinition,
+        task: PipelineTask,
+        taskGroup: PipelineTaskGroup,
         allowRetry: boolean;
         allowSkip: boolean
     };
@@ -76,8 +76,8 @@ export const TripBreakpoint = async (
     jobInstance: JobInstance,
     allowRetry: boolean,
     allowSkip: boolean,
-    taskGroup?: TaskGroupDefinition,
-    task?: TaskDefinition,
+    taskGroup?: PipelineTaskGroup,
+    task?: PipelineTask,
     uid = ulid()
 ) => {
     parentSpan.addEvent("Breakpoint:Trip", {

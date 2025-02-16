@@ -133,6 +133,10 @@
         --filled-background-color: #69ccf0;
         --filled-color: #1b435e;
     }
+    &.frozen {
+        --filled-background-color: #9575cd;
+        --filled-color: #4527a0;
+    }
     &.filled {
         background-color: var(--filled-background-color, var(--background-color));
         color: var(--filled-color);

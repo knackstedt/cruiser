@@ -1,7 +1,7 @@
 import * as cron from 'node-cron';
 import { getLogger } from './logger';
 import { db } from './db';
-import { PipelineDefinition, StageDefinition } from '../types/pipeline';
+import { PipelineDefinition, PipelineStage } from '../types/pipeline';
 import { GetGitRefs } from '../api/sources';
 import { RunPipeline, RunStage } from './pipeline';
 import { environment } from './environment';
@@ -12,7 +12,7 @@ const pollInterval = environment.cruiser_scheduler_poll_interval * 1000;
 const scheduledCronTasks: { [key: string]: (
     cron.ScheduledTask & {
         _touched: number,
-        _stage: StageDefinition
+        _stage: PipelineStage
     }
 )} = {};
 
@@ -103,7 +103,7 @@ export const CronScheduler = () => {
  * Check if any of the sources for the stage have been updated
  * If so, trigger a build.
  */
-export const CheckAndTriggerStage = async (pipeline: PipelineDefinition, stage: StageDefinition, creatorName: string) => {
+export const CheckAndTriggerStage = async (pipeline: PipelineDefinition, stage: PipelineStage, creatorName: string) => {
     let needsToRun = false;
     for (const source of stage.sources) {
         if (source.disabled) return;

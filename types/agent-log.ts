@@ -5,8 +5,7 @@ export type LogRecord = {
 
     // Must have EITHER a msg or data chunk.
     msg?: string,
-    // This is a byte array I think
-    chunk?: string[];
+    chunk?: string;
 
     state?: string,
     properties?: {

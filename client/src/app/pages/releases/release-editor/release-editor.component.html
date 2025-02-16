@@ -46,11 +46,87 @@
                         Save
                     </button>
                 </div>
-                <ngx-reactflow
+                <ngx-xyflow
                     [nodes]="nodes"
                     [edges]="edges"
-                    [nodeTypes]="nodeTypes"
-                />
+                    theme="dark"
+                >
+                    <ngx-xyflow-background
+                        color="#383948"
+                        bgColor="#121314"
+                        [gap]="20"
+                        [size]="2"
+                    />
+
+                    <ngx-xyflow-controls/>
+
+                    <ngx-xyflow-node nodeType="stage">
+                        <ng-template let-data>
+                            <app-stage-node
+                                [data]="data"
+                                [ngx-contextmenu]="stageNodeCtxMenu"
+                                (onEditStage)="editStage(data)"
+                                (onJobsClick)="mode = 'view'; view = 'jobs'; selectStage(data)"
+                                (onNodeClick)="mode = 'view'; view = 'stage'; selectStage(data)"
+                                (onTriggerClick)="mode = 'view'; view = 'trigger'; selectStage(data)"
+                                (onTriggerEditClick)="mode = 'edit'; view = 'trigger'; selectStage(data)"
+                                (onSourceClick)="mode = 'view'; view = 'sources'; selectStage(data)"
+                                (onSourceEditClick)="mode = 'edit'; view = 'sources'; selectStage(data)"
+                                (onScheduleClick)="mode = 'view'; view = 'schedule'; selectStage(data)"
+                                (onScheduleEditClick)="mode = 'edit'; view = 'schedule'; selectStage(data)"
+                                (onManualRunClick)="mode = 'view'; view = 'manual_trigger'; selectStage(data)"
+                                (onApproverClick)="mode = 'view'; view = 'approver'; selectStage(data)"
+                                (onApproverEditClick)="mode = 'edit'; view = 'approver'; selectStage(data)"
+                                (onWebhookEditClick)="mode = 'edit'; view = 'webhook'; selectStage(data)"
+                                (onWebhookClick)="mode = 'view'; view = 'webhook'; selectStage(data)"
+                                (onStageAddClick)="addStage({ stageTrigger: [data.id] })"
+                                (onStageCloneClick)="cloneStage(data)"
+                            />
+                        </ng-template>
+                        <ngx-xyflow-handle type="target" position="left"/>
+                        <ngx-xyflow-handle type="source" position="right"/>
+                    </ngx-xyflow-node>
+
+                    <ngx-xyflow-node nodeType="impossible">
+                        <ng-template let-data>
+                            <app-impossible-node [data]="data"/>
+                        </ng-template>
+                        <ngx-xyflow-handle type="source" position="right"/>
+                    </ngx-xyflow-node>
+
+                    <ngx-xyflow-node nodeType="source">
+                        <ng-template let-data>
+                            <app-source-node
+                                [data]="data"
+                                (onEditSource)="
+                                    mode = 'edit';
+                                    selectedStage = $event.stage;
+                                    selectedSource = $event.source;
+                                    renderGraph();
+                                    view = 'source';
+                                "
+                            />
+                        </ng-template>
+                        <!-- May need id=source -->
+                        <ngx-xyflow-handle type="source" id="source" position="right"/>
+                    </ngx-xyflow-node>
+
+                    <ngx-xyflow-node nodeType="webhook">
+                        <ng-template let-data>
+                            <app-webhook-node
+                                [data]="data"
+                                (onEditWebhook)="
+                                    mode = 'edit';
+                                    selectedStage = $event.stage;
+                                    selectedWebhook = $event.webhook;
+                                    renderGraph();
+                                    view = 'webhook';
+                                "
+                            />
+                        </ng-template>
+                        <ngx-xyflow-handle type="target" position="left"/>
+                    </ngx-xyflow-node>
+                </ngx-xyflow>
             </div>
             <div class="shadow-right"></div>
         </mat-sidenav-content>

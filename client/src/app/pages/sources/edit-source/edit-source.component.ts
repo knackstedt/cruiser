@@ -8,7 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Fetch } from '@dotglitch/ngx-common';
 import { Subject, debounceTime } from 'rxjs';
-import { SourceConfiguration } from 'src/types/pipeline';
+import { PipelineSource } from 'src/types/pipeline';
 
 @Component({
     selector: 'app-edit-source',
@@ -27,7 +27,7 @@ import { SourceConfiguration } from 'src/types/pipeline';
 })
 export class EditSourceComponent {
 
-    @Input() source: SourceConfiguration = {} as any;
+    @Input() source: PipelineSource = {} as any;
     // @Input() type: "github" | "git";
 
     branches: string[] = [];

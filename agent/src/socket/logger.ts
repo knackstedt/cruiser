@@ -27,8 +27,6 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
         originalEmit("log:history-populate", history.map(h => h.data))
     });
 
-    const decoder = new TextDecoder();
-
     let stdout = '';
     let stderr = '';
 
@@ -89,7 +87,7 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
             socket.emit("log:agent", object);
         },
         stdout: (obj: LogRecord) => {
-            stdout += decoder.decode(obj['chunk'] as any);
+            stdout += obj['chunk'] as any;
 
             const charIndex = stdout.lastIndexOf('\n');
             const t = Date.now();
@@ -103,12 +101,12 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
 
                 // Write all entries to stdout
                 lines.forEach(line =>
-                    line != '' && process.stdout.write(`>1:${obj.properties['gid']}:${obj.properties['tgid'].split(':')[1]}:${t};${line}\n`)
+                    line != '' && process.stdout.write(`>1:${obj.properties['gid']}:${obj.properties['tgid']}:${t};${line}\n`)
                 )
             }
         },
         stderr: (obj: LogRecord) => {
-            stderr += decoder.decode(obj['chunk'] as any);
+            stderr += obj['chunk'] as any;
 
             const charIndex = stderr.lastIndexOf('\n');
             const t = Date.now();
@@ -122,7 +120,7 @@ export const CreateLoggerSocketServer = async (parentSpan: Span, socket: Socket)
 
                 // Write all entries to stderr
                 lines.forEach(line =>
-                    line != '' && process.stderr.write(`>2:${obj.properties['gid']}:${obj.properties['tgid'].split(':')[1]}:${t};${line}\n`)
+                    line != '' && process.stderr.write(`>2:${obj.properties['gid']}:${obj.properties['tgid']}:${t};${line}\n`)
                 );
             }
         }

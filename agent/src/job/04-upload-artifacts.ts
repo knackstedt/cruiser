@@ -5,7 +5,7 @@ import { context, Span, trace } from '@opentelemetry/api';
 
 import { CreateLoggerSocketServer } from '../socket/logger';
 import { JobInstance } from '../types/agent-task';
-import { JobDefinition, PipelineDefinition, PipelineInstance, StageDefinition } from '../types/pipeline';
+import { PipelineJobDefinition, PipelineDefinition, PipelineInstance, PipelineStage } from '../types/pipeline';
 import { api } from '../util/axios';
 import {environment} from '../util/environment';
 import { getFilesInFolderFlat } from '../util/fs';
@@ -89,8 +89,8 @@ export const UploadArtifacts = async (
     parentSpan: Span,
     pipelineInstance: PipelineInstance,
     pipeline: PipelineDefinition,
-    stage: StageDefinition,
-    job: JobDefinition,
+    stage: PipelineStage,
+    job: PipelineJobDefinition,
     jobInstance: JobInstance,
     logger: Awaited<ReturnType<typeof CreateLoggerSocketServer>>
 ) => tracer.startActiveSpan(
