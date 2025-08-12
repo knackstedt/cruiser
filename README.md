@@ -1,29 +1,80 @@
-# Cruiser
-Revolutionizing CICD with Kubernetes.
+# Cruiser: The Modern Kubernetes-Native CI/CD Platform
 
-## Motivation
+Cruiser is a powerful and intuitive Continuous Integration/Continuous Deployment (CI/CD) platform designed for the modern cloud-native ecosystem. It runs natively on Kubernetes and provides a rich set of features to streamline your development and delivery workflows, from code to production.
 
-It'd be sweet to have a CI/CD platform that doesn't require constant jerry-rigging to work
-the way you need it to. Your automation tools should **just work**,
+-----
 
-Enter Cruiser, a robust approach to CI/CD, with enterprise-grade
-security and extensibility. With native Kubernetes support and an interface made
-for humans, it's the next best thing in DevSecOps!
+## Key Features
 
-> #### ⚠️ ALPHA STATE
+### 🚀 **Kubernetes-Native & Scalable**
 
-The project is currently in its early alpha stages. We are in the process of
-solidifying the base of the framework and stabilizing the architecture. There will be bugs, 
-and you have been warned :)
+Cruiser is built from the ground up to run on Kubernetes, leveraging its native scaling and orchestration capabilities. This ensures high availability, fault tolerance, and efficient resource utilization, allowing your pipelines to scale effortlessly with your needs.
+
+### 💻 **Integrated Debugging & IDE-like Experience**
+
+Tired of debugging pipeline failures with logs alone? Cruiser brings the power of an Integrated Development Environment (IDE) to your CI/CD pipelines. You can interact directly with your running tasks, inspect variables, and step through your code, making troubleshooting faster and more efficient than ever before.
+
+### ⏸️ **Task Breakpoints & Resume Functionality**
+
+Gain granular control over your pipeline execution. Set **breakpoints** on specific tasks to pause a run, allowing you to examine the state of your environment before proceeding. Once you've diagnosed an issue or made a change, you can **resume** the pipeline from the exact point it was paused.
+
+### ⚙️ **Intuitive UI & Parallel Execution**
+
+Cruiser's user-friendly interface provides a clear and comprehensive view of your pipelines. Visualize your entire workflow and monitor its status in real-time. The platform also supports **parallel task execution**, allowing you to run multiple independent tasks concurrently to drastically reduce pipeline run times.
+
+### 📊 **Live Pipeline Statuses**
+
+Stay informed with real-time updates. The Cruiser UI offers a live dashboard showing the status of your pipelines and individual tasks. Instantly see which tasks are running, which have succeeded, and which have failed, giving you immediate feedback on your deployment health.
+
+<!-- ----- -->
+
+<!-- ## Getting Started -->
+
+
+
+<!-- 1.  **Prerequisites:** Ensure you have a running Kubernetes cluster and `kubectl` configured.
+2.  **Installation:** Install Cruiser using the Helm chart.
+    ```bash
+    helm repo add cruiser https://charts.cruiser.io
+    helm install cruiser cruiser/cruiser
+    ```
+3.  **Access the UI:** After installation, forward the UI port to your local machine.
+    ```bash
+    kubectl port-forward svc/cruiser-ui 8080:80
+    ```
+    Then, navigate to `http://localhost:8080` in your browser.
+
+For more detailed information, please refer to our [official documentation](https://www.google.com/search?q=https://docs.cruiser.io). -->
+
+-----
+
+## Contributing
+
+We welcome contributions\! Please see our [contributing guide](https://github.com/knackstedt/cruiser/blob/main/CONTRIBUTING.md) for more details on how to get involved.
+
+-----
+
+## License
+
+This project is licensed under the MIT License.
 
 
 ## Roadmap
-> Ordered by priority.
+- [X] Pipeline, stage, job failure hooks
+- [X] Add stage "Triggers"
+- [X] Add stage "Approvers"
+- [X] Add stage webhook support
+- [X] Env vars & secrets on "pipeline"
+- [X] Env vars & secrets on "stage"
+- [X] Env vars & secrets on "job"
+- [X] Env vars & secrets on "task group"
+- [X] Env vars & secrets on "task"
+- [X] Enable disabling pipelines, jobs, stages, task groups etc.
+- [X] Create breakpoints and allow remote terminal connections through web UI
 - [ ] Add CRON triggers
 - [ ] Add "nightly" additional that's fixed on system time
 - [ ] Pipeline instance labels can be defined from simple JS scripts
 - [ ] Support Pipeline definition as code file (YAML, JSON)
-- [ ] Pipeline, stage, job failure hooks
 - [ ] Projects that can group pipelines and teams / boards
 - [ ] Env vars & secrets on "global system"
 - [ ] Env vars & secrets on "project"
@@ -62,14 +113,5 @@ and you have been warned :)
 - [ ] Create Kube CRDs that define build and release pipelines
 - [ ] Static build agent support
 - [ ] Destroy all humans
-- [X] Add stage "Triggers"
-- [X] Add stage "Approvers"
-- [X] Add stage webhook support
-- [X] Env vars & secrets on "pipeline"
-- [X] Env vars & secrets on "stage"
-- [X] Env vars & secrets on "job"
-- [X] Env vars & secrets on "task group"
-- [X] Env vars & secrets on "task"
-- [X] Enable disabling pipelines, jobs, stages, task groups etc.
-- [X] Create breakpoints and allow remote terminal connections through web UI
+
 

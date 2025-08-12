@@ -13,7 +13,7 @@ Before starting your contribution, make sure to have NodeJS (V22, V20) installed
 To contribute, you first need to fork this repository by clicking on the "Fork" button at the top right corner of this GitHub page. Clone your fork locally:
 
 ```bash
-git clone https://github.com/your-username/cruiser.git
+git clone https://github.com/knackstedt/cruiser.git
 cd cruiser
 npm install
 ```
@@ -22,7 +22,7 @@ npm install
 
 ### VSCode
 
-Within our repo, we include several recommended extensions -- install them. Once you have them installed, there are a few notable things to point out. One being that there are 3 tasks in your status bar (the horizontal bar at the bottom of VSCode). The `▶ web` task will start the Angular dev server. Generally you won't need to restart this unless you change the angular.json file or something in the proxy.config.json file. The `▶ surrealdb` task will start a SurrealDB instance with preset values for the username and password. This will store data locally to the project folder. The `▶ otel viewer` task will start an OpenTelemetry reciever that provides a web interface to inspect OpenTelemetry traces. You don't need this running unless you're debugging something around Otel.
+Within our repo, we include several recommended extensions -- install them. Once you have them installed, there are a few notable things to point out. One being that there are 3 tasks in your status bar (the horizontal bar at the bottom of VSCode). The `▶ web` task will start the Angular dev server. Generally you won't need to restart this unless you change the angular.json file or something in the proxy.config.json file. The `▶ surrealdb` task will start a SurrealDB instance with preset values for the username and password. This will store data locally to the project folder. The `▶ otel viewer` task will start an OpenTelemetry receiver that provides a web interface to inspect OpenTelemetry traces. You don't need this running unless you're debugging something around Otel.
 
 ## Synchronizing changes
 
