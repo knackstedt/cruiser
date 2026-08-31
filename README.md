@@ -1,3 +1,28 @@
+# ⚠️ Archived
+
+**This repository is archived and not actively maintained.**
+
+## What was Cruiser?
+
+Cruiser was a CI/CD platform built around a novel idea: **breakpoints for pipelines**. Instead of only reading logs after the fact, you could pause a running workflow mid-step, inspect state, and step through execution like a debugger — rather than the usual guess-and-push-and-wait loop of iterating on CI configs.
+
+## Why it's archived
+
+Two reasons:
+
+- **Complexity.** Supporting real breakpoint/step semantics across arbitrary CI workflows turned out to require a lot of moving parts (execution graph processing, step isolation, step retrying and skipping, resumable runners) for a platform that also had to do all the normal things a CI system does. That complexity never fully paid for itself.
+- **The core problem got smaller.** The main value of Cruiser was cutting down the pain of debugging CI runs. With AI-assisted development, it's now much easier to reason about a failing workflow, spot the issue, and fix it without needing a live debugger attached to the pipeline. The gap Cruiser was built to fill has largely closed on its own.
+
+Combined with lack of adoption, it didn't make sense to keep developing or supporting it.
+
+## Status
+
+- No further commits, releases, or issue triage.
+- Feel free to fork if any of the ideas here are useful to you.
+- Not recommended for production use.
+
+---
+
 # Cruiser: The Modern Kubernetes-Native CI/CD Platform
 
 Cruiser is a powerful and intuitive Continuous Integration/Continuous Deployment (CI/CD) platform designed for the modern cloud-native ecosystem. It runs natively on Kubernetes and provides a rich set of features to streamline your development and delivery workflows, from code to production.
